@@ -1,13 +1,9 @@
 component extends="quick.models.Relationships.BaseRelationship" {
 
-    function init( related, foreignKey, foreignKeyValue ) {
-        variables.related = arguments.related;
-        related.where( foreignKey, foreignKeyValue );
-        return this;
-    }
+    variables.defaultValue = [];
 
     function retrieve() {
-        return related.get();
+        return related.where( foreignKey, foreignKeyValue ).get();
     }
 
 }

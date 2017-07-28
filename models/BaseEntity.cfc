@@ -11,12 +11,14 @@ component accessors="true" {
 
     property name="attributes";
     property name="relationships";
+    property name="eagerLoad";
 
     variables.loaded = false;
 
     function init() {
         variables.attributes = {};
         variables.relationships = {};
+        variables.eagerLoad = [];
         metadataInspection();
     }
 
@@ -28,10 +30,69 @@ component accessors="true" {
     }
 
     function get() {
-        return getQuery().get().map( function( attributes ) {
-            return wirebox.getInstance( getFullName() )
-                .setAttributes( attributes );
+        return eagerLoadRelations(
+            getQuery().get().map( function( attributes ) {
+                return wirebox.getInstance( getFullName() )
+                    .setAttributes( attributes );
+            } )
+        );
+    }
+
+    private function eagerLoadRelations( entities ) {
+        if ( arrayIsEmpty( entities ) || arrayIsEmpty( variables.eagerLoad ) ) {
+            return entities;
+        }
+
+        arrayEach( variables.eagerLoad, function( relation ) {
+            entities = eagerLoadRelation( relation, entities );
         } );
+
+        return entities;
+    }
+
+    private function eagerLoadRelation( relation, entities ) {
+        var keys = {};
+        for ( var entity in entities ) {
+            var foreignKeyValue = invoke( entity, relation ).getForeignKeyValue();
+            keys[ foreignKeyValue ] = 1;
+        }
+        keys = structKeyArray( keys );
+        var relatedEntity = invoke( entities[ 1 ], relation ).getRelated();
+        var owningKey = invoke( entities[ 1 ], relation ).getOwningKey();
+        var relations = relatedEntity.whereIn( owningKey, keys ).get();
+
+        return matchRelations( entities, relations, relation );
+    }
+
+    private function matchRelations( entities, relations, relationName ) {
+        var groupedRelations = {};
+        var relationship = invoke( entities[ 1 ], relationName );
+        for ( var relation in relations ) {
+            var key = relation.getAttribute( relationship.getOwningKey() );
+            if ( ! structKeyExists( groupedRelations, key ) ) {
+                groupedRelations[ key ] = [];
+            }
+            arrayAppend( groupedRelations[ key ], relation );
+        }
+        for ( var entity in entities ) {
+            var relationship = invoke( entity, relationName );
+            if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
+                entity.setRelationship( relationName, groupedRelations[ relationship.getForeignKeyValue() ] );
+            }
+            else {
+                entity.setRelationship( relationName, relationship.getDefaultValue() );
+            }
+        }
+        return entities;
+    }
+
+    function setRelationship( name, value ) {
+        variables.relationships[ name ] = value;
+        return this;
+    }
+
+    function getAttribute( name ) {
+        return variables.attributes[ name ];
     }
 
     function first() {
@@ -87,8 +148,13 @@ component accessors="true" {
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = lcase( "#related.getEntityName()#_#related.getKey()#" );
         }
+        if ( isNull( arguments.owningKey ) ) {
+            arguments.owningKey = related.getKey();
+        }
         return wirebox.getInstance( name = "BelongsTo@quick", initArguments = {
             related = related,
+            foreignKey = foreignKey,
+            owningKey = owningKey,
             foreignKeyValue = variables.attributes[ arguments.foreignKey ]
         } );
     }
@@ -110,11 +176,24 @@ component accessors="true" {
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = lcase( "#getEntityName()#_#getKey()#" );
         }
+        if ( isNull( arguments.owningKey ) ) {
+            arguments.owningKey = "#getEntityName()#_#getKey()#";
+        }
         return wirebox.getInstance( name = "HasMany@quick", initArguments = {
             related = related,
             foreignKey = foreignKey,
-            foreignKeyValue = variables.attributes[ getKey() ]
+            foreignKeyValue = variables.attributes[ getKey() ],
+            owningKey = owningKey
         } );
+    }
+
+    function with( relation ) {
+        arrayAppend( variables.eagerLoad, relation );
+        return this;
+    }
+
+    function getKeyValue() {
+        return variables.attributes[ getKey() ];
     }
 
     function onMissingMethod( missingMethodName, missingMethodArguments ) {

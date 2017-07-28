@@ -15,7 +15,8 @@
     "description":"A ColdBox ORM Engine",
     "type":"modules",
     "dependencies":{
-        
+        "qb":"^3.0.0",
+        "str":"github:elpete/str"
     },
     "devDependencies":{
         "coldbox":"^4.3.0+188",
@@ -23,7 +24,9 @@
     },
     "installPaths":{
         "testbox":"testbox",
-        "coldbox":"tests/resources/app/coldbox"
+        "coldbox":"tests/resources/app/coldbox",
+        "qb":"modules/qb",
+        "str":"modules/str"
     },
     "scripts":{
         "postVersion":"package set location='elpete/quick#v`package version`'",

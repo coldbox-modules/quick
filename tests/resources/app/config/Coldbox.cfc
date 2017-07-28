@@ -45,6 +45,12 @@
 			viewCaching				= false
 		};
 
+		moduleSettings = {
+			qb = {
+				defaultGrammar = "MySQLGrammar"
+			}
+		};
+
 		// custom settings
 		settings = {
 

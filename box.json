@@ -36,6 +36,10 @@
     "ignore":[
         "**/.*",
         "test",
-        "tests"
+        "tests",
+        ".engine",
+        ".travis.yml",
+        ".gitignore",
+        "server.json"
     ]
 }

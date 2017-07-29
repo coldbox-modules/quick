@@ -12,12 +12,15 @@ component accessors="true" {
     property name="attributes";
     property name="relationships";
     property name="eagerLoad";
+    property name="loaded";
 
     function init() {
         setAttributes( {} );
         setRelationships( {} );
         setEagerLoad( [] );
+        setLoaded( false );
         metadataInspection();
+        return this;
     }
 
     function all() {
@@ -110,16 +113,13 @@ component accessors="true" {
             .setAttributes( attributes );
     }
 
-    function isLoaded() {
-        return variables.loaded;
-    }
-
     function setAttributes( attributes ) {
-        if ( isNull( attributes ) ) {
-            variables.loaded = false;
+        if ( isNull( arguments.attributes ) ) {
+            setLoaded( false );
+            variables.attributes = {};
             return this;
         }
-        variables.loaded = true;
+        setLoaded( true );
         variables.attributes = arguments.attributes;
         return this;
     }

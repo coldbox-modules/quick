@@ -139,7 +139,7 @@ component accessors="true" {
             related = related,
             foreignKey = foreignKey,
             owningKey = owningKey,
-            foreignKeyValue = variables.attributes[ arguments.foreignKey ]
+            foreignKeyValue = getAttribute( arguments.foreignKey )
         } );
     }
 
@@ -151,7 +151,7 @@ component accessors="true" {
         return wirebox.getInstance( name = "HasOne@quick", initArguments = {
             related = related,
             foreignKey = foreignKey,
-            foreignKeyValue = variables.attributes[ getKey() ]
+            foreignKeyValue = getKeyValue()
         } );
     }
 
@@ -166,7 +166,7 @@ component accessors="true" {
         return wirebox.getInstance( name = "HasMany@quick", initArguments = {
             related = related,
             foreignKey = foreignKey,
-            foreignKeyValue = variables.attributes[ getKey() ],
+            foreignKeyValue = getKeyValue(),
             owningKey = owningKey
         } );
     }

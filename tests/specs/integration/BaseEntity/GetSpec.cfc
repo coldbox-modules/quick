@@ -11,6 +11,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( getInstance( "User" ).find( 999 ) )
                     .toBeNull( "The user instance should be null because it could not be found, but was not." );
             } );
+
+            it( "throws an exception if no entity is found using find or fail", function() {
+                expect( function() { 
+                    getInstance( "User" ).findOrFail( 1 );
+                } ).notToThrow();
+
+                expect( function() { 
+                    getInstance( "User" ).findOrFail( 999 );
+                } ).toThrow( type = "ModelNotFound" );
+            } );
         } );
     }
 

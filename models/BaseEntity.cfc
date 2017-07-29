@@ -87,6 +87,17 @@ component accessors="true" {
         return wirebox.getInstance( getFullName() )
             .setAttributes( attributes );
     }
+
+    function findOrFail( id ) {
+        var entity = variables.find( id );
+        if ( isNull( entity ) ) {
+            throw(
+                type = "ModelNotFound",
+                message = "No [#getEntityName()#] found with id [#id#]"
+            );
+        }
+        return entity;
+    }
     
     /*=====================================
     =            Relationships            =

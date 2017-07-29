@@ -15,7 +15,7 @@
     "description":"A ColdBox ORM Engine",
     "type":"modules",
     "dependencies":{
-        "qb":"^3.0.0",
+        "qb":"github:elpete/qb#development",
         "str":"github:elpete/str"
     },
     "devDependencies":{

@@ -80,7 +80,7 @@ component accessors="true" {
     }
 
     function find( id ) {
-        var attributes = builder.get().from( getTable() ).find( id, getKey() );
+        var attributes = getQuery().from( getTable() ).find( id, getKey() );
         if ( structIsEmpty( attributes ) ) {
             return;
         }
@@ -237,12 +237,12 @@ component accessors="true" {
         var columnName = mid( missingMethodName, 4, len( missingMethodName ) - 3 );
 
         if ( structKeyExists( variables.attributes, columnName ) ) {
-            return variables.attributes[ columnName ];
+            return getAttribute( columnName );
         }
 
         var snakeCaseColumnName = str.snake( columnName );
         if ( structKeyExists( variables.attributes, snakeCaseColumnName ) ) {
-            return variables.attributes[ snakeCaseColumnName ];   
+            return getAttribute( snakeCaseColumnName );
         }
 
         return;
@@ -256,10 +256,10 @@ component accessors="true" {
         var relationshipName = mid( missingMethodName, 4, len( missingMethodName ) - 3 );
 
         if ( ! structKeyExists( variables.relationships, relationshipName ) ) {
-            variables.relationships[ relationshipName ] = invoke( this, relationshipName ).retrieve();
+            setRelationship( relationshipName, invoke( this, relationshipName ).retrieve() );
         }
 
-        return variables.relationships[ relationshipName ];
+        return getRelationship( relationshipName );
     }
 
     private function tryScopes( missingMethodName, missingMethodArguments ) {

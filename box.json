@@ -33,6 +33,9 @@
         "onRelease":"publish",
         "postPublish":"!git push && !git push --tags"
     },
+    "testbox": {
+        "reporter": "json"
+    },
     "ignore":[
         "**/.*",
         "test",

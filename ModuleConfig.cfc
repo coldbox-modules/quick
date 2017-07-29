@@ -7,6 +7,8 @@ component {
     this.cfmapping = "quick";
 
     function configure() {
-        //
+        settings = {
+            defaultAttributeCasing = "none"
+        };
     }
 }

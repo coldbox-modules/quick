@@ -335,7 +335,7 @@ component accessors="true" {
         setEntityName( md.entityName );
         param md.table = str.plural( lcase( getEntityName() ) );
         setTable( md.table );
-        param md.attributecasing = "none";
+        param md.attributecasing = settings.defaultAttributeCasing;
         setAttributeCasing( md.attributecasing );
     }
 

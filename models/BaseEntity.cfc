@@ -132,6 +132,12 @@ component accessors="true" {
         return entity;
     }
 
+    function refresh() {
+        setRelationships( {} );
+        setAttributes( getQuery().from( getTable() ).find( getKeyValue(), getKey() ) );
+        return this;
+    }
+
     /*===========================================
     =            Persistence Methods            =
     ===========================================*/

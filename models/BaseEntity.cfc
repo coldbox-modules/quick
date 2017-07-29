@@ -142,7 +142,7 @@ component accessors="true" {
         }
         else {
             var result = newQuery().insert( getAttributes() );
-            setAttribute( getKey(), result.generatedKey );
+            setAttribute( getKey(), result[ "generated_key" ] );
         }
         setOriginalAttributes( getAttributes() );
         return this;

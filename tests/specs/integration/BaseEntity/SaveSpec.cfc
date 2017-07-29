@@ -21,6 +21,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newUser.setUsername( "new_user" );
                 newUser.setFirstName( "New" );
                 newUser.setLastName( "User" );
+                newUser.setPassword( hash( "password" ) );
                 var userRowsPreSave = queryExecute( "SELECT * FROM users" );
                 expect( userRowsPreSave ).toHaveLength( 2 );
                 newUser.save();
@@ -33,6 +34,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newUser.setUsername( "new_user" );
                 newUser.setFirstName( "New" );
                 newUser.setLastName( "User" );
+                newUser.setPassword( hash( "password" ) );
                 newUser.save();
                 expect( newUser.getAttributes() ).toHaveKey( "id" );
             } );
@@ -42,6 +44,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newUser.setUsername( "new_user" );
                 newUser.setFirstName( "New" );
                 newUser.setLastName( "User" );
+                newUser.setPassword( hash( "password" ) );
                 newUser.save();
                 expect( newUser.isDirty() ).toBeFalse();
             } );

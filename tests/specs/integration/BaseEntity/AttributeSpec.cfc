@@ -20,6 +20,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( post.getPostPk() ).toBe( 1 );
                 expect( post.getUserId() ).toBe( 1 );
             } );
+
+            it( "can set the value of an attribute using the `setColumnName` magic methods", function() {
+                var user = getInstance( "User" ).find( 1 );
+                expect( user.getUsername() ).toBe( "elpete" );
+                user.setUsername( "new_username" );
+                expect( user.getUsername() ).toBe( "new_username" );
+            } );
         } );
     }
 

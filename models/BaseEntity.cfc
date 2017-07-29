@@ -58,7 +58,7 @@ component accessors="true" {
     }
 
     function setAttribute( name, value ) {
-        variables.attribute[ name ] = value;
+        variables.attributes[ name ] = value;
         return this;
     }
 
@@ -243,7 +243,7 @@ component accessors="true" {
     =====================================*/
 
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
-        var columnValue = tryColumnName( missingMethodName );
+        var columnValue = tryColumnName( missingMethodName, missingMethodArguments );
         if ( ! isNull( columnValue ) ) { return columnValue; }
         var q = tryScopes( missingMethodName, missingMethodArguments );
         if ( ! isNull( q ) ) {
@@ -255,7 +255,15 @@ component accessors="true" {
         return forwardToQB( missingMethodName, missingMethodArguments );
     }
 
-    private function tryColumnName( missingMethodName ) {
+    private function tryColumnName( missingMethodName, missingMethodArguments ) {
+        var getColumnValue = tryColumnGetters( missingMethodName );
+        if ( ! isNull( getColumnValue ) ) { return getColumnValue; }
+        var setColumnValue = tryColumnSetters( missingMethodName, missingMethodArguments );
+        if ( ! isNull( setColumnValue ) ) { return setColumnValue; }
+        return;
+    }
+
+    private function tryColumnGetters( missingMethodName ) {
         if ( ! str.startsWith( missingMethodName, "get" ) ) {
             return;
         }
@@ -271,6 +279,16 @@ component accessors="true" {
         }
 
         return;
+    }
+
+    private function tryColumnSetters( missingMethodName, missingMethodArguments ) {
+        if ( ! str.startsWith( missingMethodName, "set" ) ) {
+            return;
+        }
+
+        var columnName = str.slice( missingMethodName, 4 );
+        setAttribute( columnName, missingMethodArguments[ 1 ] );
+        return missingMethodArguments[ 1 ];
     }
 
     private function tryRelationships( missingMethodName ) {

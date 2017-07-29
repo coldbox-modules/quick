@@ -23,6 +23,38 @@ component accessors="true" {
         return this;
     }
 
+    /*==================================
+    =            Attributes            =
+    ==================================*/
+    
+    function getKeyValue() {
+        return variables.attributes[ getKey() ];
+    }
+
+    function setAttributes( attributes ) {
+        if ( isNull( arguments.attributes ) ) {
+            setLoaded( false );
+            variables.attributes = {};
+            return this;
+        }
+        setLoaded( true );
+        variables.attributes = arguments.attributes;
+        return this;
+    }
+
+    function getAttribute( name ) {
+        return variables.attributes[ name ];
+    }
+
+    function setAttribute( name, value ) {
+        variables.attribute[ name ] = value;
+        return this;
+    }
+
+    /*=====================================
+    =            Query Methods            =
+    =====================================*/
+    
     function all() {
         return eagerLoadRelations(
             newQuery().from( getTable() ).get()
@@ -42,15 +74,6 @@ component accessors="true" {
         );
     }
 
-    function setRelationship( name, value ) {
-        variables.relationships[ name ] = value;
-        return this;
-    }
-
-    function getAttribute( name ) {
-        return variables.attributes[ name ];
-    }
-
     function first() {
         return wirebox.getInstance( getFullName() )
             .setAttributes( getQuery().first() );
@@ -64,46 +87,19 @@ component accessors="true" {
         return wirebox.getInstance( getFullName() )
             .setAttributes( attributes );
     }
-
-    function setAttributes( attributes ) {
-        if ( isNull( arguments.attributes ) ) {
-            setLoaded( false );
-            variables.attributes = {};
-            return this;
-        }
-        setLoaded( true );
-        variables.attributes = arguments.attributes;
-        return this;
-    }
-
-    private function newQuery() {
-        variables.query = builder.get().from( getTable() );
-        return variables.query;
-    }
-
-    private function getQuery() {
-        param variables.query = builder.get().from( getTable() );
-        return variables.query;
-    }
-
-    private function metadataInspection() {
-        var md = getMetadata( this );
-        setFullName( md.fullname );
-        param md.entityName = listLast( md.name, "." );
-        setEntityName( md.entityName );
-        param md.table = pluralize( lcase( getEntityName() ) );
-        setTable( md.table );
-    }
-
-    private function pluralize( word ) {
-        // obviously needs to be better
-        // probably defer to the Str module
-        return word & "s";
-    }
-
+    
     /*=====================================
     =            Relationships            =
     =====================================*/
+
+    function getRelationship( name ) {
+        return variables.relationships[ name ];
+    }
+
+    function setRelationship( name, value ) {
+        variables.relationships[ name ] = value;
+        return this;
+    }
 
     private function belongsTo( mapping, foreignKey ) {
         var related = wirebox.getInstance( mapping );
@@ -202,9 +198,23 @@ component accessors="true" {
         return entities;
     }
 
-    function getKeyValue() {
-        return variables.attributes[ getKey() ];
+    /*=======================================
+    =            QB Utilities            =
+    =======================================*/
+
+    private function newQuery() {
+        variables.query = builder.get().from( getTable() );
+        return variables.query;
     }
+
+    private function getQuery() {
+        param variables.query = builder.get().from( getTable() );
+        return variables.query;
+    }
+
+    /*=====================================
+    =            Magic Methods            =
+    =====================================*/
 
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
         var columnValue = tryColumnName( missingMethodName );
@@ -265,6 +275,25 @@ component accessors="true" {
     private function forwardToQB( missingMethodName, missingMethodArguments ) {
         invoke( getQuery(), missingMethodName, missingMethodArguments );
         return this;
+    }
+
+    /*=======================================
+    =            Other Utilities            =
+    =======================================*/
+    
+    private function metadataInspection() {
+        var md = getMetadata( this );
+        setFullName( md.fullname );
+        param md.entityName = listLast( md.name, "." );
+        setEntityName( md.entityName );
+        param md.table = pluralize( lcase( getEntityName() ) );
+        setTable( md.table );
+    }
+
+    private function pluralize( word ) {
+        // obviously needs to be better
+        // probably defer to the Str module
+        return word & "s";
     }
 
 }

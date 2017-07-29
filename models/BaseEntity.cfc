@@ -165,8 +165,8 @@ component accessors="true" {
         return this;
     }
 
-    private function belongsTo( mapping, foreignKey ) {
-        var related = wirebox.getInstance( mapping );
+    private function belongsTo( relationName, foreignKey ) {
+        var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = lcase( "#related.getEntityName()#_#related.getKey()#" );
         }
@@ -181,8 +181,8 @@ component accessors="true" {
         } );
     }
 
-    private function hasOne( mapping, foreignKey ) {
-        var related = wirebox.getInstance( mapping );
+    private function hasOne( relationName, foreignKey ) {
+        var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = getKey();
         }
@@ -197,8 +197,8 @@ component accessors="true" {
         } );
     }
 
-    private function hasMany( mapping, foreignKey ) {
-        var related = wirebox.getInstance( mapping );
+    private function hasMany( relationName, foreignKey ) {
+        var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = lcase( "#getEntityName()#_#getKey()#" );
         }
@@ -210,6 +210,31 @@ component accessors="true" {
             foreignKey = foreignKey,
             foreignKeyValue = getKeyValue(),
             owningKey = owningKey
+        } );
+    }
+
+    private function belongsToMany( relationName, table, foreignKey, relatedKey ) {
+        var related = wirebox.getInstance( relationName );
+        if ( isNull( arguments.table ) ) {
+            if ( compareNoCase( related.getTable(), getTable() ) < 0 ) {
+                arguments.table = lcase( "#related.getTable()#_#getTable()#" );
+            }
+            else {
+                arguments.table = lcase( "#getTable()#_#related.getTable()#" );
+            }
+        }
+        if ( isNull( arguments.relatedKey ) ) {
+            arguments.relatedKey = lcase( "#related.getEntityName()#_#related.getKey()#" );
+        }
+        if ( isNull( arguments.foreignKey ) ) {
+            arguments.foreignKey = "#getEntityName()#_#getKey()#";
+        }
+        return wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
+            related = related,
+            table = table,
+            foreignKey = foreignKey,
+            foreignKeyValue = getKeyValue(),
+            relatedKey = relatedKey
         } );
     }
 

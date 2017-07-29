@@ -7,6 +7,7 @@ component accessors="true" {
     property name="entityName";
     property name="fullName";
     property name="table";
+    property name="attributeCasing" default="none";
     property name="key" default="id";
 
     property name="attributes";
@@ -138,20 +139,24 @@ component accessors="true" {
         return wirebox.getInstance( name = "BelongsTo@quick", initArguments = {
             related = related,
             foreignKey = foreignKey,
-            owningKey = owningKey,
-            foreignKeyValue = getAttribute( arguments.foreignKey )
+            foreignKeyValue = getAttribute( arguments.foreignKey ),
+            owningKey = owningKey
         } );
     }
 
     private function hasOne( mapping, foreignKey ) {
         var related = wirebox.getInstance( mapping );
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = lcase( "#getEntityName()#_#getKey()#" );
+            arguments.foreignKey = getKey();
+        }
+        if ( isNull( arguments.owningKey ) ) {
+            arguments.owningKey = lcase( "#getEntityName()#_#getKey()#" );
         }
         return wirebox.getInstance( name = "HasOne@quick", initArguments = {
             related = related,
             foreignKey = foreignKey,
-            foreignKeyValue = getKeyValue()
+            foreignKeyValue = getKeyValue(),
+            owningKey = owningKey
         } );
     }
 
@@ -268,14 +273,12 @@ component accessors="true" {
             return;
         }
 
-        var columnName = str.slice( missingMethodName, 4 );
+        var columnName = applyCasingTransformation(
+            str.slice( missingMethodName, 4 )
+        );
+
         if ( hasAttribute( columnName ) ) {
             return getAttribute( columnName );
-        }
-
-        var snakeCaseColumnName = str.snake( columnName );
-        if ( hasAttribute( snakeCaseColumnName ) ) {
-            return getAttribute( snakeCaseColumnName );
         }
 
         return;
@@ -286,7 +289,9 @@ component accessors="true" {
             return;
         }
 
-        var columnName = str.slice( missingMethodName, 4 );
+        var columnName = applyCasingTransformation(
+            str.slice( missingMethodName, 4 )
+        );
         setAttribute( columnName, missingMethodArguments[ 1 ] );
         return missingMethodArguments[ 1 ];
     }
@@ -330,6 +335,16 @@ component accessors="true" {
         setEntityName( md.entityName );
         param md.table = str.plural( lcase( getEntityName() ) );
         setTable( md.table );
+        param md.attributecasing = "none";
+        setAttributeCasing( md.attributecasing );
+    }
+
+    private function applyCasingTransformation( word ) {
+        if ( getAttributeCasing() == "none" ) {
+            return word;
+        }
+
+        return invoke( str, getAttributeCasing(), { 1 = word } );
     }
 
 }

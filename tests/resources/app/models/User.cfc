@@ -1,4 +1,4 @@
-component extends="quick.models.BaseEntity" {
+component extends="quick.models.BaseEntity" attributecasing="snake" {
 
     function scopeLatest( builder ) {
         return builder.orderBy( "created_date", "desc" );
@@ -9,7 +9,7 @@ component extends="quick.models.BaseEntity" {
     }
 
     function latestPost() {
-        return hasOne( "Post" ).latest();
+        return hasOne( "Post", "post_pk" ).latest();
     }
 
 }

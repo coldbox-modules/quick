@@ -16,12 +16,22 @@ component {
     this.mappings[ "/coldbox" ] = testsPath & "resources/app/coldbox";
     this.mappings[ "/testbox" ] = rootPath & "/testbox";
 
-    this.datasources[ "quick" ] = {
-        driver = "other",
-        class = "org.h2.Driver",
-        url = "jdbc:h2:mem:;MODE=MySQL",
-        username = "sa"
-    };
+    if ( server.keyExists( "lucee" ) ) {
+        this.datasources[ "quick" ] = {
+            driver = "other",
+            class = "org.h2.Driver",
+            connectionString = "jdbc:h2:mem:;MODE=MySQL",
+            username = "sa"
+        };    
+    }
+    else {
+        this.datasources[ "quick" ] = {
+            driver = "other",
+            class = "org.h2.Driver",
+            url = "jdbc:h2:mem:;MODE=MySQL",
+            username = "sa"
+        };
+    }
 
     this.datasource = "quick";
 
@@ -31,11 +41,9 @@ component {
     }
 
     private function setUpDatabase() {
-        // queryExecute( "DROP DATABASE IF EXISTS quick" );
-        // queryExecute( "CREATE DATABASE quick" );
-        // queryExecute( "USE quick" );
+        queryExecute( "DROP ALL OBJECTS" );
         queryExecute( "
-            CREATE TABLE `users`  (
+            CREATE TABLE `users` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `username` varchar(50) NOT NULL,
               `first_name` varchar(50) NOT NULL,
@@ -53,7 +61,7 @@ component {
             INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `created_date`, `modified_date`) VALUES (2, 'johndoe', 'John', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', '2017-07-28 02:07:16', '2017-07-28 02:07:16');
         " );
         queryExecute( "
-            CREATE TABLE `my_posts`  (
+            CREATE TABLE `my_posts` (
               `post_pk` int(11) NOT NULL AUTO_INCREMENT,
               `user_id` int(11) NOT NULL,
               `body` text NOT NULL,
@@ -69,7 +77,7 @@ component {
             INSERT INTO `my_posts`(`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (2, 1, 'My second awesome post body', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
         " );
         queryExecute( "
-            CREATE TABLE `tags`  (
+            CREATE TABLE `tags` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `name` varchar(50) NOT NULL,
               PRIMARY KEY (`id`)
@@ -78,7 +86,7 @@ component {
         queryExecute( "INSERT INTO `tags` (`id`, `name`) VALUES (1, 'programming')" );
         queryExecute( "INSERT INTO `tags` (`id`, `name`) VALUES (2, 'music')" );
         queryExecute( "
-            CREATE TABLE `my_posts_tags`  (
+            CREATE TABLE `my_posts_tags` (
               `post_pk` int(11) NOT NULL,
               `tag_id` int(11) NOT NULL,
               PRIMARY KEY (`post_pk`, `tag_id`)

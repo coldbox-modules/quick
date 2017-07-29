@@ -20,6 +20,44 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 user.setUsername( "new_username" );
                 expect( user.getUsername() ).toBe( "new_username" );
             } );
+
+            describe( "original", function() {
+                it( "can retrieve the original attributes of a loaded entity", function() {
+                    var user = getInstance( "User" ).find( 1 );
+                    var originalAttributes = user.getAttributes();
+                    user.setUsername( "new_username" );
+                    expect( originalAttributes ).notToBe( user.getAttributes() );
+                    expect( originalAttributes ).toBe( user.getOriginalAttributes() );
+                } );
+            } );
+
+            describe( "dirty", function() {
+                it( "new entites are not dirty", function() {
+                    var user = getInstance( "User" );
+                    expect( user.isDirty() ).toBeFalse();
+                } );
+
+                it( "newly loaded entites are not dirty", function() {
+                    var user = getInstance( "User" ).find( 1 );
+                    expect( user.isDirty() ).toBeFalse();
+                } );
+
+                it( "changing any attribute sets the entity as `dirty`", function() {
+                    var user = getInstance( "User" );
+                    user.setUsername( "new_username" );
+                    expect( user.isDirty() ).toBeTrue();
+                } );
+
+                it( "changing a changed attribute back to the original restores the entity to not dirty", function() {
+                    var user = getInstance( "User" ).find( 1 );
+                    expect( user.getUsername() ).toBe( "elpete" );
+                    expect( user.isDirty() ).toBeFalse();
+                    user.setUsername( "new_username" );
+                    expect( user.isDirty() ).toBeTrue();
+                    user.setUsername( "elpete" );
+                    expect( user.isDirty() ).toBeFalse();
+                } );
+            } );
         } );
     }
 

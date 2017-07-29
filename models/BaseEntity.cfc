@@ -3,6 +3,7 @@ component accessors="true" {
     property name="builder" inject="provider:Builder@qb" getter="false" setter="false";
     property name="wirebox" inject="wirebox" getter="false" setter="false";
     property name="str" inject="Str@str" getter="false" setter="false";
+    property name="settings" inject="coldbox:modulesettings:quick" getter="false" setter="false";
 
     property name="entityName";
     property name="fullName";
@@ -11,6 +12,7 @@ component accessors="true" {
     property name="key" default="id";
 
     property name="attributes";
+    property name="originalAttributes";
     property name="relationships";
     property name="eagerLoad";
     property name="loaded";
@@ -22,6 +24,7 @@ component accessors="true" {
 
     function setDefaultProperties() {
         setAttributes( {} );
+        setOriginalAttributes( {} );
         setRelationships( {} );
         setEagerLoad( [] );
         setLoaded( false );
@@ -39,6 +42,10 @@ component accessors="true" {
         return variables.attributes[ getKey() ];
     }
 
+    function getAttributes() {
+        return duplicate( variables.attributes );
+    }
+
     function setAttributes( attributes ) {
         if ( isNull( arguments.attributes ) ) {
             setLoaded( false );
@@ -52,6 +59,15 @@ component accessors="true" {
 
     function hasAttribute( name ) {
         return structKeyExists( variables.attributes, name );
+    }
+
+    function setOriginalAttributes( attributes ) {
+        variables.originalAttributes = duplicate( attributes );
+        return this;
+    }
+
+    function isDirty() {
+        return ! deepEqual( getOriginalAttributes(), getAttributes() );
     }
 
     function getAttribute( name ) {
@@ -72,7 +88,8 @@ component accessors="true" {
             newQuery().from( getTable() ).get()
                 .map( function( attributes ) {
                     return wirebox.getInstance( getFullName() )
-                    .setAttributes( attributes );
+                        .setAttributes( attributes )
+                        .setOriginalAttributes( attributes );
                 } )
         );
     }
@@ -81,14 +98,17 @@ component accessors="true" {
         return eagerLoadRelations(
             getQuery().get().map( function( attributes ) {
                 return wirebox.getInstance( getFullName() )
-                    .setAttributes( attributes );
+                    .setAttributes( attributes )
+                    .setOriginalAttributes( attributes );
             } )
         );
     }
 
     function first() {
+        var attributes = getQuery().first();
         return wirebox.getInstance( getFullName() )
-            .setAttributes( getQuery().first() );
+            .setAttributes( attributes )
+            .setOriginalAttributes( attributes );
     }
 
     function find( id ) {
@@ -97,7 +117,8 @@ component accessors="true" {
             return;
         }
         return wirebox.getInstance( getFullName() )
-            .setAttributes( attributes );
+            .setAttributes( attributes )
+            .setOriginalAttributes( attributes );
     }
 
     function findOrFail( id ) {
@@ -109,6 +130,22 @@ component accessors="true" {
             );
         }
         return entity;
+    }
+
+    /*===========================================
+    =            Persistence Methods            =
+    ===========================================*/
+    
+    function save() {
+        if ( getLoaded() ) {
+            newQuery().where( getKey(), getKeyValue() ).update( getAttributes() );
+        }
+        else {
+            var result = newQuery().insert( getAttributes() );
+            setAttribute( getKey(), result.generatedKey );
+        }
+        setOriginalAttributes( getAttributes() );
+        return this;
     }
     
     /*=====================================
@@ -345,6 +382,135 @@ component accessors="true" {
         }
 
         return invoke( str, getAttributeCasing(), { 1 = word } );
+    }
+
+    private function deepEqual( required expected, required actual ) {
+        // Numerics
+        if (
+            isNumeric( arguments.actual ) &&
+            isNumeric( arguments.expected ) &&
+            toString( arguments.actual ) == toString( arguments.expected )
+        ) {
+            return true;
+        }
+
+        // Other Simple values
+        if (
+            isSimpleValue( arguments.actual ) &&
+            isSimpleValue( arguments.expected ) &&
+            arguments.actual == arguments.expected
+        ) {
+            return true;
+        }
+
+        // Queries
+        if ( isQuery( arguments.actual ) && isQuery( arguments.expected ) ) {
+            // Check number of records
+            if ( arguments.actual.recordCount != arguments.expected.recordCount ) {
+                return false;
+            }
+
+            // Get both column lists and sort them the same
+            var actualColumnList = listSort( arguments.actual.columnList, "textNoCase" );
+            var expectedColumnList = listSort( arguments.expected.columnList, "textNoCase" );
+
+            // Check column lists
+            if ( actualColumnList != expectedColumnList ) {
+                return false;
+            }
+
+            for ( var i = 1; i <= arguments.actual.recordCount; i++ ) {
+                for ( var column in listToArray( actualColumnList ) ) {
+                    if ( arguments.actual[ column ][ i ] != arguments.expected[ column ][ i ] ) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        // UDFs
+        if (
+            isCustomFunction( arguments.actual ) &&
+            isCustomFunction( arguments.expected ) &&
+            arguments.actual.toString() == arguments.expected.toString()
+        ) {
+            return true;
+        }
+
+        // XML
+        if (
+            IsXmlDoc( arguments.actual ) &&
+            IsXmlDoc( arguments.expected ) &&
+            toString( arguments.actual ) == toString( arguments.expected )
+        ) {
+            return true;
+        }
+
+        // Arrays
+        if ( isArray( arguments.actual ) && isArray( arguments.expected ) ) {
+            if ( arrayLen( arguments.actual ) neq arrayLen( arguments.expected ) ) {
+                return false;
+            }
+
+            for ( var i = 1; i <= arrayLen( arguments.actual ); i++ ) {
+                if ( arrayIsDefined( arguments.actual, i ) && arrayIsDefined( arguments.expected, i ) ) {
+                    // check for both nulls
+                    if ( isNull( arguments.actual[ i ] ) && isNull( arguments.expected[ i ] ) ) {
+                        continue;
+                    }
+                    // check if one is null mismatch
+                    if ( isNull( arguments.actual[ i ] ) || isNull( arguments.expected[ i ] ) ) {
+                        return false;
+                    }
+                    // And make sure they match
+                    if ( ! deepEqual( arguments.actual[ i ], arguments.expected[ i ] ) ) {
+                        return false;
+                    }
+                    continue;
+                }
+                // check if both not defined, then continue to next element
+                if ( ! arrayIsDefined( arguments.actual, i ) && ! arrayIsDefined( arguments.expected, i ) ) {
+                    continue;
+                } else {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Structs / Object
+        if ( isStruct( arguments.actual ) && isStruct( arguments.expected ) ) {
+
+            var actualKeys = listSort( structKeyList( arguments.actual ), "textNoCase" );
+            var expectedKeys = listSort( structKeyList( arguments.expected ), "textNoCase" );
+
+            if ( actualKeys != expectedKeys ) {
+                return false;
+            }
+
+            // Loop over each key
+            for ( var key in arguments.actual ) {
+                // check for both nulls
+                if ( isNull( arguments.actual[ key ] ) && isNull( arguments.expected[ key ] ) ) {
+                    continue;
+                }
+                // check if one is null mismatch
+                if ( isNull( arguments.actual[ key ] ) || isNull( arguments.expected[ key ] ) ) {
+                    return false;
+                }
+                // And make sure they match when actual values exist
+                if ( ! deepEqual( arguments.actual[ key ], arguments.expected[ key ] ) ) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
 }

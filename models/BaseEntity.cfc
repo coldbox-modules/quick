@@ -149,8 +149,8 @@ component accessors="true" {
         } );
     }
 
-    function with( relation ) {
-        arrayAppend( variables.eagerLoad, relation );
+    function with( relationName ) {
+        arrayAppend( variables.eagerLoad, relationName );
         return this;
     }
 
@@ -159,25 +159,25 @@ component accessors="true" {
             return entities;
         }
 
-        arrayEach( variables.eagerLoad, function( relation ) {
-            entities = eagerLoadRelation( relation, entities );
+        arrayEach( variables.eagerLoad, function( relationName ) {
+            entities = eagerLoadRelation( relationName, entities );
         } );
 
         return entities;
     }
 
-    private function eagerLoadRelation( relation, entities ) {
+    private function eagerLoadRelation( relationName, entities ) {
         var keys = {};
         for ( var entity in entities ) {
-            var foreignKeyValue = invoke( entity, relation ).getForeignKeyValue();
+            var foreignKeyValue = invoke( entity, relationName ).getForeignKeyValue();
             keys[ foreignKeyValue ] = 1;
         }
         keys = structKeyArray( keys );
-        var relatedEntity = invoke( entities[ 1 ], relation ).getRelated();
-        var owningKey = invoke( entities[ 1 ], relation ).getOwningKey();
+        var relatedEntity = invoke( entities[ 1 ], relationName ).getRelated();
+        var owningKey = invoke( entities[ 1 ], relationName ).getOwningKey();
         var relations = relatedEntity.whereIn( owningKey, keys ).get();
 
-        return matchRelations( entities, relations, relation );
+        return matchRelations( entities, relations, relationName );
     }
 
     private function matchRelations( entities, relations, relationName ) {

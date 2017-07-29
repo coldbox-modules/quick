@@ -21,10 +21,13 @@ component accessors="true" {
     }
 
     function all() {
-        var attributesArray = builder.get().from( getTable() ).get();
-        return attributesArray.map( function( attributes ) {
-            return wirebox.getInstance( getFullName() ).setAttributes( attributes );
-        } );
+        return eagerLoadRelations(
+            newQuery().from( getTable() ).get()
+                .map( function( attributes ) {
+                    return wirebox.getInstance( getFullName() )
+                    .setAttributes( attributes );
+                } )
+        );
     }
 
     function get() {
@@ -119,6 +122,11 @@ component accessors="true" {
         variables.loaded = true;
         variables.attributes = arguments.attributes;
         return this;
+    }
+
+    private function newQuery() {
+        variables.query = builder.get().from( getTable() );
+        return variables.query;
     }
 
     private function getQuery() {

@@ -15,12 +15,19 @@ component accessors="true" {
     property name="loaded";
 
     function init() {
+        setDefaultProperties();
+        return this;
+    }
+
+    function setDefaultProperties() {
         setAttributes( {} );
         setRelationships( {} );
         setEagerLoad( [] );
         setLoaded( false );
+    }
+
+    function onDIComplete() {
         metadataInspection();
-        return this;
     }
 
     /*==================================
@@ -40,6 +47,10 @@ component accessors="true" {
         setLoaded( true );
         variables.attributes = arguments.attributes;
         return this;
+    }
+
+    function hasAttribute( name ) {
+        return structKeyExists( variables.attributes, name );
     }
 
     function getAttribute( name ) {
@@ -102,6 +113,10 @@ component accessors="true" {
     /*=====================================
     =            Relationships            =
     =====================================*/
+
+    function hasRelationship( name ) {
+        return structKeyExists( variables.relationships, name );
+    }
 
     function getRelationship( name ) {
         return variables.relationships[ name ];
@@ -241,18 +256,17 @@ component accessors="true" {
     }
 
     private function tryColumnName( missingMethodName ) {
-        if ( len( missingMethodName ) < 3 || left( missingMethodName, 3 ) != "get" ) {
+        if ( ! str.startsWith( missingMethodName, "get" ) ) {
             return;
         }
 
-        var columnName = mid( missingMethodName, 4, len( missingMethodName ) - 3 );
-
-        if ( structKeyExists( variables.attributes, columnName ) ) {
+        var columnName = str.slice( missingMethodName, 4 );
+        if ( hasAttribute( columnName ) ) {
             return getAttribute( columnName );
         }
 
         var snakeCaseColumnName = str.snake( columnName );
-        if ( structKeyExists( variables.attributes, snakeCaseColumnName ) ) {
+        if ( hasAttribute( snakeCaseColumnName ) ) {
             return getAttribute( snakeCaseColumnName );
         }
 
@@ -260,13 +274,12 @@ component accessors="true" {
     }
 
     private function tryRelationships( missingMethodName ) {
-        if ( len( missingMethodName ) < 3 || left( missingMethodName, 3 ) != "get" ) {
+        if ( ! str.startsWith( missingMethodName, "get" ) ) {
             return;
         }
 
-        var relationshipName = mid( missingMethodName, 4, len( missingMethodName ) - 3 );
-
-        if ( ! structKeyExists( variables.relationships, relationshipName ) ) {
+        var relationshipName = str.slice( missingMethodName, 4 );
+        if ( ! hasRelationship( relationshipName ) ) {
             setRelationship( relationshipName, invoke( this, relationshipName ).retrieve() );
         }
 
@@ -297,14 +310,8 @@ component accessors="true" {
         setFullName( md.fullname );
         param md.entityName = listLast( md.name, "." );
         setEntityName( md.entityName );
-        param md.table = pluralize( lcase( getEntityName() ) );
+        param md.table = str.plural( lcase( getEntityName() ) );
         setTable( md.table );
-    }
-
-    private function pluralize( word ) {
-        // obviously needs to be better
-        // probably defer to the Str module
-        return word & "s";
     }
 
 }

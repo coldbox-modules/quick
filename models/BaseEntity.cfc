@@ -13,8 +13,6 @@ component accessors="true" {
     property name="relationships";
     property name="eagerLoad";
 
-    variables.loaded = false;
-
     function init() {
         variables.attributes = {};
         variables.relationships = {};

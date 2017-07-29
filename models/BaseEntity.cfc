@@ -14,9 +14,9 @@ component accessors="true" {
     property name="eagerLoad";
 
     function init() {
-        variables.attributes = {};
-        variables.relationships = {};
-        variables.eagerLoad = [];
+        setAttributes( {} );
+        setRelationships( {} );
+        setEagerLoad( [] );
         metadataInspection();
     }
 

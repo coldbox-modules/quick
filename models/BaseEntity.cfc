@@ -132,6 +132,10 @@ component accessors="true" {
         return entity;
     }
 
+    function fresh() {
+        return variables.find( getKeyValue() );
+    }
+
     function refresh() {
         setRelationships( {} );
         setAttributes( getQuery().from( getTable() ).find( getKeyValue(), getKey() ) );

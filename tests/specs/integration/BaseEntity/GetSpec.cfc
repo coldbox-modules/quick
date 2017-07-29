@@ -29,6 +29,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getUsername() ).toBe( "new_username" );
             } );
 
+            it( "can get a fresh instance from the database", function() {
+                var user = getInstance( "User" ).find( 1 );
+                expect( user.getUsername() ).toBe( "elpete" );
+                queryExecute( "UPDATE `users` SET `username` = ? WHERE `id` = ?", [ "new_username", 1 ] );
+                expect( user.getUsername() ).toBe( "elpete" );
+                var freshUser = user.fresh();
+                expect( user.getUsername() ).toBe( "elpete" );
+                expect( freshUser.getUsername() ).toBe( "new_username" );
+            } );
+
             describe( "loaded", function() {
                 it( "a new entity returns false when asked if it loaded", function() {
                     expect( getInstance( "User" ).getLoaded() ).toBeFalse();

@@ -52,7 +52,6 @@ component accessors="true" {
             variables.attributes = {};
             return this;
         }
-        setLoaded( true );
         variables.attributes = arguments.attributes;
         return this;
     }
@@ -87,9 +86,10 @@ component accessors="true" {
         return eagerLoadRelations(
             newQuery().from( getTable() ).get()
                 .map( function( attributes ) {
-                    return wirebox.getInstance( getFullName() )
+                    return newEntity()
                         .setAttributes( attributes )
-                        .setOriginalAttributes( attributes );
+                        .setOriginalAttributes( attributes )
+                        .setLoaded( true );
                 } )
         );
     }
@@ -97,18 +97,20 @@ component accessors="true" {
     function get() {
         return eagerLoadRelations(
             getQuery().get().map( function( attributes ) {
-                return wirebox.getInstance( getFullName() )
+                return newEntity()
                     .setAttributes( attributes )
-                    .setOriginalAttributes( attributes );
+                    .setOriginalAttributes( attributes )
+                    .setLoaded( true );
             } )
         );
     }
 
     function first() {
         var attributes = getQuery().first();
-        return wirebox.getInstance( getFullName() )
+        return newEntity()
             .setAttributes( attributes )
-            .setOriginalAttributes( attributes );
+            .setOriginalAttributes( attributes )
+            .setLoaded( true );
     }
 
     function find( id ) {
@@ -116,9 +118,10 @@ component accessors="true" {
         if ( structIsEmpty( attributes ) ) {
             return;
         }
-        return wirebox.getInstance( getFullName() )
+        return newEntity()
             .setAttributes( attributes )
-            .setOriginalAttributes( attributes );
+            .setOriginalAttributes( attributes )
+            .setLoaded( true );
     }
 
     function findOrFail( id ) {
@@ -130,6 +133,10 @@ component accessors="true" {
             );
         }
         return entity;
+    }
+
+    function newEntity() {
+        return wirebox.getInstance( getFullName() );
     }
 
     function fresh() {
@@ -156,7 +163,12 @@ component accessors="true" {
             setAttribute( getKey(), generatedKey );
         }
         setOriginalAttributes( getAttributes() );
+        setLoaded( true );
         return this;
+    }
+
+    function create( attributes = {} ) {
+        return newEntity().setAttributes( attributes ).save();
     }
     
     /*=====================================

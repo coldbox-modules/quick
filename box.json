@@ -33,8 +33,11 @@
         "onRelease":"publish",
         "postPublish":"!git push && !git push --tags"
     },
-    "testbox": {
-        "reporter": "json"
+    "testbox":{
+        "reporter":"json",
+        "runner":"http://127.0.0.1:52482/tests/runner.cfm",
+        "verbose":"false",
+        "watchDelay":"1000"
     },
     "ignore":[
         "**/.*",

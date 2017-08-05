@@ -334,12 +334,12 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "HasManyThrough@quick", initArguments = {
             related = related,
+            owning = this,
             intermediate = intermediate,
             foreignKey = foreignKey,
             foreignKeyValue = getKeyValue(),
             intermediateKey = intermediateKey,
-            owningKey = owningKey,
-            owning = this
+            owningKey = owningKey
         } );
     }
 
@@ -367,24 +367,17 @@ component accessors="true" {
             keys[ foreignKeyValue ] = 1;
         } );
         keys = structKeyArray( keys );
-        var relatedEntity = invoke( entities.toArray()[ 1 ], relationName ).getRelated();
-        var owningKey = invoke( entities.toArray()[ 1 ], relationName ).getOwningKey();
+        var relatedEntity = invoke( entities.get( 1 ), relationName ).getRelated();
+        var owningKey = invoke( entities.get( 1 ), relationName ).getOwningKey();
         var relations = relatedEntity.whereIn( owningKey, keys ).get();
 
         return matchRelations( entities, relations, relationName );
     }
 
     private function matchRelations( entities, relations, relationName ) {
-        var groupedRelations = {};
-        var relationship = invoke( entities.toArray()[ 1 ], relationName );
-        relations.each( function( relation ) {
-            var key = relation.getAttribute( relationship.getOwningKey() );
-            if ( ! structKeyExists( groupedRelations, key ) ) {
-                groupedRelations[ key ] = [];
-            }
-            arrayAppend( groupedRelations[ key ], relation );
-        } );
-        entities.each( function( entity ) {
+        var relationship = invoke( entities.get( 1 ), relationName );
+        var groupedRelations = relations.groupBy( key = relationship.getOwningKey(), forceLookup = true );
+        return entities.each( function( entity ) {
             var relationship = invoke( entity, relationName );
             if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
                 entity.setRelationship( relationName, groupedRelations[ relationship.getForeignKeyValue() ] );
@@ -393,7 +386,6 @@ component accessors="true" {
                 entity.setRelationship( relationName, relationship.getDefaultValue() );
             }
         } );
-        return entities;
     }
 
     /*=======================================

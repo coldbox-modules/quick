@@ -437,7 +437,7 @@ component accessors="true" {
         setFullName( md.fullname );
         param md.entityName = listLast( md.name, "." );
         setEntityName( md.entityName );
-        param md.table = str.plural( lcase( getEntityName() ) );
+        param md.table = str.plural( str.snake( getEntityName() ) );
         setTable( md.table );
         param md.attributecasing = settings.defaultAttributeCasing;
         setAttributeCasing( md.attributecasing );

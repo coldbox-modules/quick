@@ -39,6 +39,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     var post = getInstance( "User" );
                     expect( post.getTable() ).toBe( "users" );
                 } );
+
+                it( "uses the snake case plural version of the component name", function() {
+                    var post = getInstance( "BankAccount" );
+                    expect( post.getTable() ).toBe( "bank_accounts" );
+                } );
             } );
 
             describe( "primary key", function() {

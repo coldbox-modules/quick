@@ -17,7 +17,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( postA.getBody() ).notToBe( "The new body" );
                 expect( postB.getBody() ).notToBe( "The new body" );
 
-                getInstance( "Post" ).massUpdate( {
+                getInstance( "Post" ).updateAll( {
                     "body" = "The new body"
                 } );
 

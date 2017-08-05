@@ -197,8 +197,14 @@ component accessors="true" {
         return this;
     }
 
-    function create( attributes = {} ) {
-        return newEntity().setAttributes( attributes ).save();
+    function delete() {
+        newQuery().delete( getKeyValue(), getKey() );
+        return this;
+    }
+
+    function deleteAll() {
+        getQuery().delete();
+        return this;
     }
 
     function update( attributes = {} ) {
@@ -206,7 +212,11 @@ component accessors="true" {
         return save();
     }
 
-    function massUpdate( attributes = {} ) {
+    function create( attributes = {} ) {
+        return newEntity().setAttributes( attributes ).save();
+    }
+
+    function updateAll( attributes = {} ) {
         getQuery().update( attributes );
         return this;
     }

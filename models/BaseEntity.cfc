@@ -203,6 +203,11 @@ component accessors="true" {
         mergeAttributes( attributes );
         return save();
     }
+
+    function massUpdate( attributes = {} ) {
+        getQuery().update( attributes );
+        return this;
+    }
     
     /*=====================================
     =            Relationships            =

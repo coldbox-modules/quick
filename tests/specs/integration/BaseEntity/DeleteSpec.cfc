@@ -32,6 +32,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     getInstance( "User" ).whereUsername( "johndoe" ).firstOrFail();
                 } ).toThrow( type = "ModelNotFound" );
             } );
+
+            it( "can delete multiple ids at once", function() {
+                getInstance( "User" ).deleteAll( [ 2 ] );
+                expect( getInstance( "User" ).count() ).toBe( 1 );
+                expect( function() {
+                    getInstance( "User" ).findOrFail( 2 );
+                } ).toThrow( type = "ModelNotFound" );
+            } );
         } );
     }
 

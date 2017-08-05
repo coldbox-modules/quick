@@ -202,11 +202,6 @@ component accessors="true" {
         return this;
     }
 
-    function deleteAll() {
-        getQuery().delete();
-        return this;
-    }
-
     function update( attributes = {} ) {
         fill( attributes );
         return save();
@@ -218,6 +213,16 @@ component accessors="true" {
 
     function updateAll( attributes = {} ) {
         getQuery().update( attributes );
+        return this;
+    }
+
+    function deleteAll( ids = [] ) {
+        if ( ! arrayIsEmpty( ids ) ) {
+            newQuery().whereIn( getKey(), ids ).delete();
+            return this;
+        }
+        
+        getQuery().delete();
         return this;
     }
     

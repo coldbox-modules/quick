@@ -21,14 +21,31 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getUsername() ).toBe( "new_username" );
             } );
 
-            describe( "original", function() {
-                it( "can retrieve the original attributes of a loaded entity", function() {
-                    var user = getInstance( "User" ).find( 1 );
-                    var originalAttributes = user.getAttributes();
-                    user.setUsername( "new_username" );
-                    expect( originalAttributes ).notToBe( user.getAttributes() );
-                    expect( originalAttributes ).toBe( user.getOriginalAttributes() );
+            it( "can retrieve the original attributes of a loaded entity", function() {
+                var user = getInstance( "User" ).find( 1 );
+                var originalAttributes = user.getAttributes();
+                user.setUsername( "new_username" );
+                expect( originalAttributes ).notToBe( user.getAttributes() );
+                expect( originalAttributes ).toBe( user.getOriginalAttributes() );
+            } );
+
+            it( "can fill some attributes while leaving the others alone", function() {
+                var user = getInstance( "User" );
+                user.setUsername( "janedoe" );
+                user.setFirstName( "Jane" );
+
+                expect( user.getUsername() ).toBe( "janedoe" );
+                expect( user.getFirstName() ).toBe( "Jane" );
+                expect( user.hasAttribute( "last_name" ) ).toBeFalse();
+
+                user.fill( {
+                    "first_name" = "Janice",
+                    "last_name" = "Doe"
                 } );
+
+                expect( user.getUsername() ).toBe( "janedoe" );
+                expect( user.getFirstName() ).toBe( "Janice" );
+                expect( user.getLastName() ).toBe( "Doe" );
             } );
 
             describe( "dirty", function() {

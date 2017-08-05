@@ -65,8 +65,10 @@ component accessors="true" {
         return this;
     }
 
-    function mergeAttributes( attributes ) {
-        structAppend( variables.attributes, arguments.attributes, true );
+    function fill( attributes ) {
+        for ( var key in attributes ) {
+            setAttribute( key, attributes[ key ] );
+        }
         return this;
     }
 
@@ -88,7 +90,7 @@ component accessors="true" {
     }
 
     function setAttribute( name, value ) {
-        variables.attributes[ name ] = value;
+        variables.attributes[ applyCasingTransformation( name ) ] = value;
         return this;
     }
 
@@ -200,7 +202,7 @@ component accessors="true" {
     }
 
     function update( attributes = {} ) {
-        mergeAttributes( attributes );
+        fill( attributes );
         return save();
     }
 

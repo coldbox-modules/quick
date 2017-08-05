@@ -1,16 +1,25 @@
 component accessors="true" {
 
+    /*====================================
+    =            Dependencies            =
+    ====================================*/
     property name="builder" inject="provider:Builder@qb" getter="false" setter="false";
     property name="wirebox" inject="wirebox" getter="false" setter="false";
     property name="str" inject="Str@str" getter="false" setter="false";
     property name="settings" inject="coldbox:modulesettings:quick" getter="false" setter="false";
 
+    /*===========================================
+    =            Metadata Properties            =
+    ===========================================*/
     property name="entityName";
     property name="fullName";
     property name="table";
     property name="attributeCasing" default="none";
     property name="key" default="id";
 
+    /*=====================================
+    =            Instance Data            =
+    =====================================*/
     property name="attributes";
     property name="originalAttributes";
     property name="relationships";
@@ -53,6 +62,11 @@ component accessors="true" {
             return this;
         }
         variables.attributes = arguments.attributes;
+        return this;
+    }
+
+    function mergeAttributes( attributes ) {
+        structAppend( variables.attributes, arguments.attributes, true );
         return this;
     }
 
@@ -145,7 +159,7 @@ component accessors="true" {
 
     function refresh() {
         setRelationships( {} );
-        setAttributes( getQuery().from( getTable() ).find( getKeyValue(), getKey() ) );
+        setAttributes( newQuery().from( getTable() ).find( getKeyValue(), getKey() ) );
         return this;
     }
 
@@ -169,6 +183,11 @@ component accessors="true" {
 
     function create( attributes = {} ) {
         return newEntity().setAttributes( attributes ).save();
+    }
+
+    function update( attributes = {} ) {
+        mergeAttributes( attributes );
+        return save();
     }
     
     /*=====================================

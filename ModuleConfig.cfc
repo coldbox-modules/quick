@@ -19,7 +19,7 @@ component {
             .initArg( name = "utils", ref = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = function( q ) {
                 return application.wirebox.getInstance(
-                    name = "Collection@CFCollection",
+                    name = "QuickCollection@quick",
                     initArguments = { collection = q }
                 );
             } );

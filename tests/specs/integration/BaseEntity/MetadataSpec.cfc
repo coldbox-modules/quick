@@ -29,6 +29,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
             } );
 
+            describe( "mapping name", function() {
+                it( "takes the mapping name from the file name", function() {
+                    var post = getInstance( "Post" );
+                    expect( post.getMapping() ).toBe( "Post" );
+                } );
+            } );
+
             describe( "table name", function() {
                 it( "determines the table name from the metadata if a `table` attribute is present", function() {
                     var post = getInstance( "Post" );

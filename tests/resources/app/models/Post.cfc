@@ -13,6 +13,10 @@ component entityname="MyPost" table="my_posts" extends="quick.models.BaseEntity"
         );
     }
 
+    function comments() {
+        return polymorphicHasMany( "Comment", "commentable" );
+    }
+
     function scopeLatest( builder ) {
         return builder.orderBy( "created_date", "desc" );
     }

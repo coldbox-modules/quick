@@ -12,6 +12,7 @@ component accessors="true" {
     =            Metadata Properties            =
     ===========================================*/
     property name="entityName";
+    property name="mapping";
     property name="fullName";
     property name="table";
     property name="attributeCasing" default="none";
@@ -363,6 +364,35 @@ component accessors="true" {
         } );
     }
 
+    private function polymorphicHasMany( relationName, prefix ) {
+        var related = wirebox.getInstance( relationName );
+        return wirebox.getInstance( name = "PolymorphicHasMany@quick", initArguments = {
+            related = related,
+            relationName = relationName,
+            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
+            owning = this,
+            foreignKey = "",
+            foreignKeyValue = "",
+            owningKey = "",
+            prefix = prefix
+        } );
+    }
+
+    private function polymorphicBelongsTo( prefix ) {
+        var relationName = getAttribute( "#prefix#_type" );
+        var related = wirebox.getInstance( relationName );
+        return wirebox.getInstance( name = "PolymorphicBelongsTo@quick", initArguments = {
+            related = related,
+            relationName = relationName,
+            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
+            owning = this,
+            foreignKey = related.getKey(),
+            foreignKeyValue = getAttribute( "#prefix#_id" ),
+            owningKey = "",
+            prefix = prefix
+        } );
+    }
+
     function with( relationName ) {
         arrayAppend( variables.eagerLoad, relationName );
         return this;
@@ -513,6 +543,8 @@ component accessors="true" {
     private function metadataInspection() {
         var md = getMetadata( this );
         setFullName( md.fullname );
+        param md.mapping = listLast( md.fullname, "." );
+        setMapping( md.mapping );
         param md.entityName = listLast( md.name, "." );
         setEntityName( md.entityName );
         param md.table = str.plural( str.snake( getEntityName() ) );

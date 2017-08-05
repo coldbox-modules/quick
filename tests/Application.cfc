@@ -93,6 +93,43 @@ component {
             INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (2, 1, 'My second awesome post body', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
         " );
         queryExecute( "
+            CREATE TABLE `videos` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `url` varchar(50) NOT NULL,
+              `title` varchar(50) NOT NULL,
+              `description` varchar(50) NOT NULL,
+              `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`)
+            )
+        " );
+        queryExecute( "
+            INSERT INTO `videos` (`id`, `url`, `title`, `description`, `created_date`, `modified_date`) VALUES (1, 'https://www.youtube.com/watch?v=JDzIypmP0eo', 'Building KiteTail with Adam Wathan', 'Awesome live coding experience', '2017-06-28 02:07:36', '2017-06-30 12:17:24')
+        " );
+        queryExecute( "
+            INSERT INTO `videos` (`id`, `url`, `title`, `description`, `created_date`, `modified_date`) VALUES (2, 'https://www.youtube.com/watch?v=BgAlQuqzl8o', 'Cello Wars', 'Star Wars Cello Parody', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
+        " );
+        queryExecute( "
+            CREATE TABLE `comments` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `body` text NOT NULL,
+              `commentable_id` int(11) NOT NULL,
+              `commentable_type` varchar(50) NOT NULL,
+              `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`)
+            )
+        " );
+        queryExecute( "
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (1, 'I thought this post was great', 1, 'Post', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
+        " );
+        queryExecute( "
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (2, 'I thought this post was not so good', 1, 'Post', '2017-07-04 04:14:22', '2017-07-04 04:14:22')
+        " );
+        queryExecute( "
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (3, 'What a great video! So fun!', 2, 'Video', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
+        " );
+        queryExecute( "
             CREATE TABLE `tags` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `name` varchar(50) NOT NULL,

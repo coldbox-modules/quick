@@ -286,7 +286,7 @@ component accessors="true" {
     }
 
     private function eagerLoadRelations( entities ) {
-        if ( arrayIsEmpty( entities ) || arrayIsEmpty( variables.eagerLoad ) ) {
+        if ( entities.empty() || arrayIsEmpty( variables.eagerLoad ) ) {
             return entities;
         }
 
@@ -299,13 +299,13 @@ component accessors="true" {
 
     private function eagerLoadRelation( relationName, entities ) {
         var keys = {};
-        for ( var entity in entities ) {
+        entities.each( function( entity ) {
             var foreignKeyValue = invoke( entity, relationName ).getForeignKeyValue();
             keys[ foreignKeyValue ] = 1;
-        }
+        } );
         keys = structKeyArray( keys );
-        var relatedEntity = invoke( entities[ 1 ], relationName ).getRelated();
-        var owningKey = invoke( entities[ 1 ], relationName ).getOwningKey();
+        var relatedEntity = invoke( entities.toArray()[ 1 ], relationName ).getRelated();
+        var owningKey = invoke( entities.toArray()[ 1 ], relationName ).getOwningKey();
         var relations = relatedEntity.whereIn( owningKey, keys ).get();
 
         return matchRelations( entities, relations, relationName );
@@ -313,15 +313,15 @@ component accessors="true" {
 
     private function matchRelations( entities, relations, relationName ) {
         var groupedRelations = {};
-        var relationship = invoke( entities[ 1 ], relationName );
-        for ( var relation in relations ) {
+        var relationship = invoke( entities.toArray()[ 1 ], relationName );
+        relations.each( function( relation ) {
             var key = relation.getAttribute( relationship.getOwningKey() );
             if ( ! structKeyExists( groupedRelations, key ) ) {
                 groupedRelations[ key ] = [];
             }
             arrayAppend( groupedRelations[ key ], relation );
-        }
-        for ( var entity in entities ) {
+        } );
+        entities.each( function( entity ) {
             var relationship = invoke( entity, relationName );
             if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
                 entity.setRelationship( relationName, groupedRelations[ relationship.getForeignKeyValue() ] );
@@ -329,7 +329,7 @@ component accessors="true" {
             else {
                 entity.setRelationship( relationName, relationship.getDefaultValue() );
             }
-        }
+        } );
         return entities;
     }
 

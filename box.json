@@ -16,7 +16,8 @@
     "type":"modules",
     "dependencies":{
         "qb":"github:elpete/qb#development",
-        "str":"github:elpete/str"
+        "str":"github:elpete/str",
+        "cfcollection":"^2.8.0"
     },
     "devDependencies":{
         "coldbox":"^4.3.0+188",
@@ -26,7 +27,8 @@
         "testbox":"testbox",
         "coldbox":"tests/resources/app/coldbox",
         "qb":"modules/qb",
-        "str":"modules/str"
+        "str":"modules/str",
+        "cfcollection":"modules/cfcollection"
     },
     "scripts":{
         "postVersion":"package set location='elpete/quick#v`package version`'",

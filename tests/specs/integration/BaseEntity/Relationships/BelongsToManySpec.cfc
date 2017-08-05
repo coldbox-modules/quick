@@ -8,14 +8,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "can get the related entities", function() {
                 var post = getInstance( "Post" ).find( 1 );
-                var tags = post.getTags();
+                var tags = post.getTags().toArray();
                 expect( tags ).toBeArray();
                 expect( tags ).toHaveLength( 2 );
             } );
 
             it( "can get the related entities from the inverse relationship", function() {
                 var tag = getInstance( "Tag" ).find( 1 );
-                var posts = tag.getPosts();
+                var posts = tag.getPosts().toArray();
                 expect( posts ).toBeArray();
                 expect( posts ).toHaveLength( 2 );
             } );

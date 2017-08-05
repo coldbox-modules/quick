@@ -253,6 +253,7 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "BelongsTo@quick", initArguments = {
             related = related,
+            owning = this,
             foreignKey = foreignKey,
             foreignKeyValue = getAttribute( arguments.foreignKey ),
             owningKey = owningKey
@@ -269,6 +270,7 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "HasOne@quick", initArguments = {
             related = related,
+            owning = this,
             foreignKey = foreignKey,
             foreignKeyValue = getKeyValue(),
             owningKey = owningKey
@@ -285,6 +287,7 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "HasMany@quick", initArguments = {
             related = related,
+            owning = this,
             foreignKey = foreignKey,
             foreignKeyValue = getKeyValue(),
             owningKey = owningKey
@@ -309,10 +312,34 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
             related = related,
+            owning = this,
             table = table,
             foreignKey = foreignKey,
             foreignKeyValue = getKeyValue(),
             relatedKey = relatedKey
+        } );
+    }
+
+    private function hasManyThrough( relationName, intermediateName, foreignKey, intermediateKey, owningKey ) {
+        var related = wirebox.getInstance( relationName );
+        var intermediate = wirebox.getInstance( intermediateName );
+        if ( isNull( arguments.intermediateKey ) ) {
+            arguments.intermediateKey = lcase( "#intermediate.getEntityName()#_#intermediate.getKey()#" );
+        }
+        if ( isNull( arguments.foreignKey ) ) {
+            arguments.foreignKey = lcase( "#getEntityName()#_#getKey()#" );
+        }
+        if ( isNull( arguments.owningKey ) ) {
+            arguments.owningKey = getKey();
+        }
+        return wirebox.getInstance( name = "HasManyThrough@quick", initArguments = {
+            related = related,
+            intermediate = intermediate,
+            foreignKey = foreignKey,
+            foreignKeyValue = getKeyValue(),
+            intermediateKey = intermediateKey,
+            owningKey = owningKey,
+            owning = this
         } );
     }
 

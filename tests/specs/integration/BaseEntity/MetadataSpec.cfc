@@ -41,8 +41,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 it( "uses the snake case plural version of the component name", function() {
-                    var post = getInstance( "BankAccount" );
-                    expect( post.getTable() ).toBe( "bank_accounts" );
+                    var post = getInstance( "PhoneNumber" );
+                    expect( post.getTable() ).toBe( "phone_numbers" );
                 } );
             } );
 

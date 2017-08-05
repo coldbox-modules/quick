@@ -5,8 +5,8 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
 
     variables.defaultValue = [];
 
-    function init( related, owning, table, foreignKey, foreignKeyValue, relatedKey ) {
-        super.init( related, owning, foreignKey, foreignKeyValue, relatedKey );
+    function init( related, relationName, relationMethodName, owning, table, foreignKey, foreignKeyValue, relatedKey ) {
+        super.init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, relatedKey );
         setTable( arguments.table );
         return this;
     }
@@ -30,6 +30,8 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
             };
         } ) );
 
+        getOwning().clearRelationship( getRelationMethodName() );
+
         return this;
     }
 
@@ -50,6 +52,8 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
             .where( getForeignKey(), getForeignKeyValue() )
             .whereIn( getOwningKey(), arguments.ids )
             .delete();
+
+        getOwning().clearRelationship( getRelationMethodName() );
 
         return this;
     }

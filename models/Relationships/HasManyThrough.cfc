@@ -5,8 +5,8 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
 
     variables.defaultValue = [];
 
-    function init( related, owning, intermediate, foreignKey, foreignKeyValue, intermediateKey ) {
-        super.init( related, owning, foreignKey, foreignKeyValue, owningKey );
+    function init( related, relationName, relationMethodName, owning, intermediate, foreignKey, foreignKeyValue, intermediateKey ) {
+        super.init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey );
         setIntermediate( intermediate );
         setIntermediateKey( intermediateKey );
         return this;

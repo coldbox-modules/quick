@@ -68,7 +68,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
 
                         post.tags().attach( tag.getId() );
-                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 3 );
@@ -85,7 +84,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
 
                         post.tags().attach( tag );
-                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 3 );
@@ -106,7 +104,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
 
                         post.tags().attach( [ tagA.getId(), tagB ] );
-                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 4 );
@@ -123,7 +120,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         var tag = post.getTags().toArray()[ 1 ];
 
                         post.tags().detatch( tag.getId() );
-                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 1 );
@@ -138,7 +134,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         var tag = post.getTags().toArray()[ 1 ];
 
                         post.tags().detatch( tag );
-                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 1 );
@@ -152,7 +147,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         expect( tags ).toHaveLength( 2 );
 
                         post.tags().detatch( [ tags[ 1 ].getId(), tags[ 2 ] ] );
-                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toBeEmpty();
@@ -183,7 +177,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         ];
 
                         post.tags().sync( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
-                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 3 );

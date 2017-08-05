@@ -243,6 +243,16 @@ component accessors="true" {
         return this;
     }
 
+    function clearRelationships() {
+        variables.relationships = {};
+        return this;
+    }
+
+    function clearRelationship( name ) {
+        variables.relationships.delete( name );
+        return this;
+    }
+
     private function belongsTo( relationName, foreignKey ) {
         var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
@@ -253,6 +263,8 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "BelongsTo@quick", initArguments = {
             related = related,
+            relationName = relationName,
+            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
             owning = this,
             foreignKey = foreignKey,
             foreignKeyValue = getAttribute( arguments.foreignKey ),
@@ -270,6 +282,8 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "HasOne@quick", initArguments = {
             related = related,
+            relationName = relationName,
+            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
             owning = this,
             foreignKey = foreignKey,
             foreignKeyValue = getKeyValue(),
@@ -287,6 +301,8 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "HasMany@quick", initArguments = {
             related = related,
+            relationName = relationName,
+            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
             owning = this,
             foreignKey = foreignKey,
             foreignKeyValue = getKeyValue(),
@@ -312,6 +328,8 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
             related = related,
+            relationName = relationName,
+            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
             owning = this,
             table = table,
             foreignKey = foreignKey,
@@ -334,6 +352,8 @@ component accessors="true" {
         }
         return wirebox.getInstance( name = "HasManyThrough@quick", initArguments = {
             related = related,
+            relationName = relationName,
+            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
             owning = this,
             intermediate = intermediate,
             foreignKey = foreignKey,

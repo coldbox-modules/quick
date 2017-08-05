@@ -149,6 +149,20 @@ component accessors="true" {
         return entity;
     }
 
+    function firstOrFail() {
+        var attributes = getQuery().first();
+        if ( structIsEmpty( attributes ) ) {
+            throw(
+                type = "ModelNotFound",
+                message = "No [#getEntityName()#] found with constraints [#serializeJSON( getQuery().getBindings() )#]"
+            );
+        }
+        return newEntity()
+            .setAttributes( attributes )
+            .setOriginalAttributes( attributes )
+            .setLoaded( true );
+    }
+
     function newEntity() {
         return wirebox.getInstance( getFullName() );
     }

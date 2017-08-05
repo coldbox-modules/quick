@@ -438,7 +438,10 @@ component accessors="true" {
     }
 
     private function forwardToQB( missingMethodName, missingMethodArguments ) {
-        invoke( getQuery(), missingMethodName, missingMethodArguments );
+        var result = invoke( getQuery(), missingMethodName, missingMethodArguments );
+        if ( isSimpleValue( result ) ) {
+            return result;
+        }
         return this;
     }
 

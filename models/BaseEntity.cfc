@@ -56,6 +56,16 @@ component accessors="true" {
         return duplicate( variables.attributes );
     }
 
+    function clearAttribute( name, setToNull = false ) {
+        if ( setToNull ) {
+            variables.attributes[ applyCasingTransformation( name ) ] = javacast( "null", "" );
+        }
+        else {
+            variables.attributes.delete( name );
+        }
+        return this;
+    }
+
     function setAttributes( attributes ) {
         if ( isNull( arguments.attributes ) ) {
             setLoaded( false );
@@ -186,7 +196,11 @@ component accessors="true" {
     
     function save() {
         if ( getLoaded() ) {
-            newQuery().where( getKey(), getKeyValue() ).update( getAttributes() );
+            newQuery()
+                .where( getKey(), getKeyValue() )
+                .update( getAttributes().map( function( key, value, attributes ) {
+                    return isNull( value ) ? { value = "", null = true } : value;
+                } ) );
         }
         else {
             var result = newQuery().insert( getAttributes() );
@@ -268,7 +282,7 @@ component accessors="true" {
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
             owning = this,
             foreignKey = foreignKey,
-            foreignKeyValue = getAttribute( arguments.foreignKey ),
+            foreignKeyValue = hasAttribute( arguments.foreignKey ) ? getAttribute( arguments.foreignKey ) : "",
             owningKey = owningKey
         } );
     }
@@ -326,6 +340,7 @@ component accessors="true" {
         }
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = "#getEntityName()#_#getKey()#";
+
         }
         return wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
             related = related,
@@ -411,15 +426,12 @@ component accessors="true" {
     }
 
     private function eagerLoadRelation( relationName, entities ) {
-        var keys = {};
-        entities.each( function( entity ) {
-            var foreignKeyValue = invoke( entity, relationName ).getForeignKeyValue();
-            keys[ foreignKeyValue ] = 1;
-        } );
-        keys = structKeyArray( keys );
+        var keys = entities.map( function( entity ) {
+            return invoke( entity, relationName ).getForeignKeyValue();
+        } ).unique();
         var relatedEntity = invoke( entities.get( 1 ), relationName ).getRelated();
         var owningKey = invoke( entities.get( 1 ), relationName ).getOwningKey();
-        var relations = relatedEntity.whereIn( owningKey, keys ).get();
+        var relations = relatedEntity.whereIn( owningKey, keys.get() ).get();
 
         return matchRelations( entities, relations, relationName );
     }

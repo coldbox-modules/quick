@@ -5,16 +5,19 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
     variables.defaultValue = [];
 
     function init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey, prefix ) {
-        super.init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey );
         setPrefix( arguments.prefix );
+        super.init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey );
         return this;
     }
 
-    function retrieve() {
-        return related
+    function apply() {
+        getRelated()
             .where( "#getPrefix()#_type", getOwning().getMapping() )
-            .where( "#getPrefix()#_id", getOwning().getKeyValue() )
-            .get();
+            .where( "#getPrefix()#_id", getOwning().getKeyValue() );
+    }
+
+    function retrieve() {
+        return getRelated().get();
     }
 
 }

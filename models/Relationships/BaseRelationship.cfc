@@ -1,5 +1,7 @@
 component accessors="true" {
 
+    property name="wirebox" inject="wirebox" getter="false" setter="false";
+
     property name="related";
     property name="relationName";
     property name="relationMethodName";
@@ -18,11 +20,16 @@ component accessors="true" {
         setForeignKeyValue( arguments.foreignKeyValue );
         setOwningKey( arguments.owningKey );
 
+        apply();
+
         return this;
     }
 
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
-        invoke( variables.related, missingMethodName, missingMethodArguments );
+        var result = invoke( variables.related, missingMethodName, missingMethodArguments );
+        if ( isSimpleValue( result ) ) {
+            return result;
+        }
         return this;
     }
 

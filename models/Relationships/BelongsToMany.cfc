@@ -6,9 +6,23 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
     variables.defaultValue = [];
 
     function init( related, relationName, relationMethodName, owning, table, foreignKey, foreignKeyValue, relatedKey ) {
-        super.init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, relatedKey );
         setTable( arguments.table );
+        super.init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, relatedKey );
         return this;
+    }
+
+    function apply() {
+        getRelated().join( getTable(), function( j ) {
+            j.on(
+                "#getRelated().getTable()#.#getRelated().getKey()#",
+                "#getTable()#.#getOwningKey()#"
+            );
+            j.where( "#getTable()#.#getForeignKey()#", getForeignKeyValue() );
+        } );
+    }
+
+    function retrieve() {
+        return getRelated().get();
     }
 
     function attach( ids ) {
@@ -78,16 +92,6 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
         attach( arguments.ids );
 
         return this;
-    }
-
-    function retrieve() {
-        return related.join( getTable(), function( j ) {
-            j.on(
-                "#getRelated().getTable()#.#getRelated().getKey()#",
-                "#getTable()#.#getOwningKey()#"
-            );
-            j.where( "#getTable()#.#getForeignKey()#", getForeignKeyValue() );
-        } ).get();
     }
 
 }

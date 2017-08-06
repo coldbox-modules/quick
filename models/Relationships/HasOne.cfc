@@ -1,7 +1,11 @@
 component extends="quick.models.Relationships.BaseRelationship" {
 
+    function apply() {
+        getRelated().where( getOwningKey(), getForeignKeyValue() );
+    }
+
     function retrieve() {
-        return related.where( owningKey, foreignKeyValue ).first();
+        return getRelated().first();
     }
 
 }

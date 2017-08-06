@@ -1,9 +1,5 @@
 component extends="cfcollection.models.Collection" {
 
-    public Collection function collect( any items = [] ) {
-        return new QuickCollection( items );
-    }
-
     function load( relationName ) {
         return empty() ? this : eagerLoadRelation( relationName );
     }

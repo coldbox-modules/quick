@@ -1,6 +1,6 @@
 component accessors="true" extends="quick.models.Relationships.BaseRelationship" {
 
-    property name="builder" inject="provider:Builder@qb" getter="false" setter="false";
+    property name="builder" inject="provider:QueryBuilder@qb" getter="false" setter="false";
     property name="table";
 
     variables.defaultValue = [];

@@ -3,7 +3,7 @@ component accessors="true" {
     /*====================================
     =            Dependencies            =
     ====================================*/
-    property name="builder" inject="provider:Builder@qb" getter="false" setter="false";
+    property name="builder" inject="provider:QueryBuilder@qb" getter="false" setter="false";
     property name="wirebox" inject="wirebox" getter="false" setter="false";
     property name="str" inject="Str@str" getter="false" setter="false";
     property name="settings" inject="coldbox:modulesettings:quick" getter="false" setter="false";
@@ -546,6 +546,10 @@ component accessors="true" {
             return result;
         }
         return this;
+    }
+
+    function $renderdata() {
+        return getAttributes();
     }
 
     /*=======================================

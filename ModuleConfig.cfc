@@ -13,8 +13,8 @@ component {
     }
 
     function onLoad() {
-        binder.map( alias = "builder@qb", force = true )
-            .to( "qb.models.Query.Builder" )
+        binder.map( alias = "QueryBuilder@qb", force = true )
+            .to( "qb.models.Query.QueryBuilder" )
             .initArg( name = "grammar", ref = "DefaultGrammar@qb" )
             .initArg( name = "utils", ref = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = function( q ) {

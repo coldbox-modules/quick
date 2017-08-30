@@ -47,7 +47,7 @@ component accessors="true" {
     /*==================================
     =            Attributes            =
     ==================================*/
-    
+
     function getKeyValue() {
         return variables.attributes[ getKey() ];
     }
@@ -108,7 +108,7 @@ component accessors="true" {
     /*=====================================
     =            Query Methods            =
     =====================================*/
-    
+
     function all() {
         return eagerLoadRelations(
             newQuery().from( getTable() ).get()
@@ -193,7 +193,7 @@ component accessors="true" {
     /*===========================================
     =            Persistence Methods            =
     ===========================================*/
-    
+
     function save() {
         if ( getLoaded() ) {
             newQuery()
@@ -236,11 +236,11 @@ component accessors="true" {
             newQuery().whereIn( getKey(), ids ).delete();
             return this;
         }
-        
+
         getQuery().delete();
         return this;
     }
-    
+
     /*=====================================
     =            Relationships            =
     =====================================*/
@@ -551,7 +551,7 @@ component accessors="true" {
     /*=======================================
     =            Other Utilities            =
     =======================================*/
-    
+
     private function metadataInspection() {
         var md = getMetadata( this );
         setFullName( md.fullname );

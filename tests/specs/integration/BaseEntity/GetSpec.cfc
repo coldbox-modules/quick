@@ -50,21 +50,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "throws an exception if no entity is found using find or fail", function() {
-                expect( function() { 
+                expect( function() {
                     getInstance( "User" ).findOrFail( 1 );
                 } ).notToThrow();
 
-                expect( function() { 
+                expect( function() {
                     getInstance( "User" ).findOrFail( 999 );
                 } ).toThrow( type = "ModelNotFound" );
             } );
 
             it( "throws an exception if no entity is found using first or fail", function() {
-                expect( function() { 
+                expect( function() {
                     getInstance( "User" ).whereUsername( "johndoe" ).firstOrFail();
                 } ).notToThrow();
 
-                expect( function() { 
+                expect( function() {
                     getInstance( "User" ).whereUsername( "doesnt-exist" ).firstOrFail();
                 } ).toThrow( type = "ModelNotFound" );
             } );

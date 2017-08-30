@@ -15,9 +15,9 @@
     "description":"A ColdBox ORM Engine",
     "type":"modules",
     "dependencies":{
-        "qb":"github:elpete/qb#development",
+        "qb":"folder:/Users/elpete/code/github/elpete/qb/",
         "str":"github:elpete/str",
-        "cfcollection":"^2.9.0"
+        "cfcollection":"^2.10.0"
     },
     "devDependencies":{
         "coldbox":"^4.3.0+188",
@@ -26,7 +26,7 @@
     "installPaths":{
         "testbox":"testbox",
         "coldbox":"tests/resources/app/coldbox",
-        "qb":"modules/qb",
+        "qb":"modules/qb/",
         "str":"modules/str",
         "cfcollection":"modules/cfcollection/"
     },

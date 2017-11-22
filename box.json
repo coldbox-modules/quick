@@ -2,21 +2,21 @@
     "name":"quick",
     "version":"0.0.0",
     "author":"",
-    "location":"elpete/quick#v0.0.0",
-    "homepage":"https://github.com/elpete/quick",
-    "documentation":"https://github.com/elpete/quick",
+    "location":"coldbox-modules/quick#v0.0.0",
+    "homepage":"https://github.com/coldbox-modules/quick",
+    "documentation":"https://github.com/coldbox-modules/quick",
     "repository":{
         "type":"git",
-        "URL":"https://github.com/elpete/quick"
+        "URL":"https://github.com/coldbox-modules/quick"
     },
-    "bugs":"https://github.com/elpete/quick/issues",
+    "bugs":"https://github.com/coldbox-modules/quick/issues",
     "slug":"quick",
     "shortDescription":"A ColdBox ORM Engine",
     "description":"A ColdBox ORM Engine",
     "type":"modules",
     "dependencies":{
-        "qb":"folder:/Users/elpete/code/github/elpete/qb/",
-        "str":"github:elpete/str",
+        "qb":"^5.0.0",
+        "str":"^1.0.0",
         "cfcollection":"^2.10.0"
     },
     "devDependencies":{
@@ -31,7 +31,7 @@
         "cfcollection":"modules/cfcollection/"
     },
     "scripts":{
-        "postVersion":"package set location='elpete/quick#v`package version`'",
+        "postVersion":"package set location='coldbox-modules/quick#v`package version`'",
         "onRelease":"publish",
         "postPublish":"!git push && !git push --tags"
     },

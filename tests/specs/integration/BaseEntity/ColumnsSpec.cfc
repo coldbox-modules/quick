@@ -20,6 +20,39 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "USERNAME"
                 ] );
             } );
+
+            it( "always retrieves the primary key", function() {
+                var link = getInstance( "Link" ).findOrFail( 1 );
+
+                var configuredAttributes = link.getAttributes();
+                expect( configuredAttributes ).toBeStruct();
+                expect( configuredAttributes ).notToHaveKey( "link_id" );
+
+                var attributeNames = link.getAttributeNames();
+                arraySort( attributeNames, "textnocase" );
+                expect( attributeNames ).toBeArray();
+                expect( attributeNames ).toHaveLength( 2 );
+                expect( attributeNames ).toBe( [ "link_id", "link_url" ] );
+            } );
+
+            it( "can access the attributes by their alias", function() {
+                var link = getInstance( "Link" ).findOrFail( 1 );
+
+                var configuredAttributes = link.getAttributes();
+                expect( configuredAttributes ).toBeStruct();
+                expect( configuredAttributes ).notToHaveKey( "link_id" );
+
+                var attributeNames = link.getAttributeNames();
+                arraySort( attributeNames, "textnocase" );
+                expect( attributeNames ).toBeArray();
+                expect( attributeNames ).toHaveLength( 2 );
+                expect( attributeNames ).toBe( [ "link_id", "link_url" ] );
+
+                expect( link.getId() ).toBe( 1 );
+                expect( link.getId() ).toBe( link.getAttributesData()[ "link_id" ] );
+                expect( link.getUrl() ).toBe( "http://example.com/some-link" );
+                expect( link.getUrl() ).toBe( link.getAttributesData()[ "link_url" ] );
+            } );
         } );
     }
 

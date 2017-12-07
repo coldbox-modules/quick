@@ -22,7 +22,7 @@ component {
             class = "org.h2.Driver",
             connectionString = "jdbc:h2:mem:;MODE=MySQL",
             username = "sa"
-        };    
+        };
     }
     else {
         this.datasources[ "quick" ] = {
@@ -149,5 +149,17 @@ component {
         queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (1, 2)" );
         queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (2, 1)" );
         queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (2, 2)" );
+        queryExecute( "
+            CREATE TABLE `links` (
+              `link_id` int(11) NOT NULL AUTO_INCREMENT,
+              `link_url` varchar(255 char) NOT NULL,
+              `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`link_id`)
+            )
+        " );
+        queryExecute( "
+            INSERT INTO `links` (`link_id`, `link_url`, `created_date`, `modified_date`) VALUES (1, 'http://example.com/some-link', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
+        " );
     }
 }

@@ -17,6 +17,7 @@ component accessors="true" {
     property name="table";
     property name="attributeCasing" default="none";
     property name="key" default="id";
+    property name="attributes" default="*";
 
     /*=====================================
     =            Instance Data            =
@@ -91,6 +92,11 @@ component accessors="true" {
         return structKeyExists( variables.attributesData, name );
     }
 
+    function hasColumnAlias( name ) {
+        return ! isSimpleValue( getAttributes() ) &&
+            structKeyExists( getAttributes(), name );
+    }
+
     function setOriginalAttributes( attributes ) {
         variables.originalAttributes = duplicate( attributes );
         return this;
@@ -145,13 +151,21 @@ component accessors="true" {
     }
 
     function find( id ) {
-        var attributes = getQuery().from( getTable() ).find( id, getKey() );
-        if ( structIsEmpty( attributes ) ) {
+        var data = getQuery()
+            .when( ! isSimpleValue( getAttributes() ), function( q ) {
+                q.select( arrayMap( structKeyArray( getAttributes() ), function( key ) {
+                    return getAttributes()[ key ];
+                } ) );
+                q.addSelect( getKey() );
+            } )
+            .from( getTable() )
+            .find( id, getKey() );
+        if ( structIsEmpty( data ) ) {
             return;
         }
         return newEntity()
-            .setAttributesData( attributes )
-            .setOriginalAttributes( attributes )
+            .setAttributesData( data )
+            .setOriginalAttributes( data )
             .setLoaded( true );
     }
 
@@ -501,6 +515,10 @@ component accessors="true" {
         var columnName = applyCasingTransformation(
             str.slice( missingMethodName, 4 )
         );
+
+        if ( hasColumnAlias( columnName ) ) {
+            return getAttribute( getAttributes()[ columnName ] );
+        }
 
         if ( hasAttribute( columnName ) ) {
             return getAttribute( columnName );

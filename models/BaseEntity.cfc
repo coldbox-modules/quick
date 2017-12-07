@@ -56,6 +56,10 @@ component accessors="true" {
         return duplicate( variables.attributesData );
     }
 
+    function getAttributeNames() {
+        return structKeyArray( variables.attributesData );
+    }
+
     function clearAttribute( name, setToNull = false ) {
         if ( setToNull ) {
             variables.attributesData[ applyCasingTransformation( name ) ] = javacast( "null", "" );

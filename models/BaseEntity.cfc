@@ -21,7 +21,7 @@ component accessors="true" {
     /*=====================================
     =            Instance Data            =
     =====================================*/
-    property name="attributes";
+    property name="attributesData";
     property name="originalAttributes";
     property name="relationships";
     property name="eagerLoad";
@@ -33,7 +33,7 @@ component accessors="true" {
     }
 
     function setDefaultProperties() {
-        setAttributes( {} );
+        setAttributesData( {} );
         setOriginalAttributes( {} );
         setRelationships( {} );
         setEagerLoad( [] );
@@ -49,30 +49,30 @@ component accessors="true" {
     ==================================*/
 
     function getKeyValue() {
-        return variables.attributes[ getKey() ];
+        return variables.attributesData[ getKey() ];
     }
 
-    function getAttributes() {
-        return duplicate( variables.attributes );
+    function getAttributesData() {
+        return duplicate( variables.attributesData );
     }
 
     function clearAttribute( name, setToNull = false ) {
         if ( setToNull ) {
-            variables.attributes[ applyCasingTransformation( name ) ] = javacast( "null", "" );
+            variables.attributesData[ applyCasingTransformation( name ) ] = javacast( "null", "" );
         }
         else {
-            variables.attributes.delete( name );
+            variables.attributesData.delete( name );
         }
         return this;
     }
 
-    function setAttributes( attributes ) {
+    function setAttributesData( attributes ) {
         if ( isNull( arguments.attributes ) ) {
             setLoaded( false );
-            variables.attributes = {};
+            variables.attributesData = {};
             return this;
         }
-        variables.attributes = arguments.attributes;
+        variables.attributesData = arguments.attributes;
         return this;
     }
 
@@ -84,7 +84,7 @@ component accessors="true" {
     }
 
     function hasAttribute( name ) {
-        return structKeyExists( variables.attributes, name );
+        return structKeyExists( variables.attributesData, name );
     }
 
     function setOriginalAttributes( attributes ) {
@@ -93,15 +93,15 @@ component accessors="true" {
     }
 
     function isDirty() {
-        return ! deepEqual( getOriginalAttributes(), getAttributes() );
+        return ! deepEqual( getOriginalAttributes(), getAttributesData() );
     }
 
     function getAttribute( name ) {
-        return variables.attributes[ name ];
+        return variables.attributesData[ name ];
     }
 
     function setAttribute( name, value ) {
-        variables.attributes[ applyCasingTransformation( name ) ] = value;
+        variables.attributesData[ applyCasingTransformation( name ) ] = value;
         return this;
     }
 
@@ -114,7 +114,7 @@ component accessors="true" {
             newQuery().from( getTable() ).get()
                 .map( function( attributes ) {
                     return newEntity()
-                        .setAttributes( attributes )
+                        .setAttributesData( attributes )
                         .setOriginalAttributes( attributes )
                         .setLoaded( true );
                 } )
@@ -125,7 +125,7 @@ component accessors="true" {
         return eagerLoadRelations(
             getQuery().get().map( function( attributes ) {
                 return newEntity()
-                    .setAttributes( attributes )
+                    .setAttributesData( attributes )
                     .setOriginalAttributes( attributes )
                     .setLoaded( true );
             } )
@@ -135,7 +135,7 @@ component accessors="true" {
     function first() {
         var attributes = getQuery().first();
         return newEntity()
-            .setAttributes( attributes )
+            .setAttributesData( attributes )
             .setOriginalAttributes( attributes )
             .setLoaded( true );
     }
@@ -146,7 +146,7 @@ component accessors="true" {
             return;
         }
         return newEntity()
-            .setAttributes( attributes )
+            .setAttributesData( attributes )
             .setOriginalAttributes( attributes )
             .setLoaded( true );
     }
@@ -171,7 +171,7 @@ component accessors="true" {
             );
         }
         return newEntity()
-            .setAttributes( attributes )
+            .setAttributesData( attributes )
             .setOriginalAttributes( attributes )
             .setLoaded( true );
     }
@@ -186,7 +186,7 @@ component accessors="true" {
 
     function refresh() {
         setRelationships( {} );
-        setAttributes( newQuery().from( getTable() ).find( getKeyValue(), getKey() ) );
+        setAttributesData( newQuery().from( getTable() ).find( getKeyValue(), getKey() ) );
         return this;
     }
 
@@ -198,16 +198,16 @@ component accessors="true" {
         if ( getLoaded() ) {
             newQuery()
                 .where( getKey(), getKeyValue() )
-                .update( getAttributes().map( function( key, value, attributes ) {
+                .update( getAttributesData().map( function( key, value, attributes ) {
                     return isNull( value ) ? { value = "", null = true } : value;
                 } ) );
         }
         else {
-            var result = newQuery().insert( getAttributes() );
+            var result = newQuery().insert( getAttributesData() );
             var generatedKey = result.keyExists( "generated_key" ) ? result[ "generated_key" ] : result[ "generatedKey" ];
             setAttribute( getKey(), generatedKey );
         }
-        setOriginalAttributes( getAttributes() );
+        setOriginalAttributes( getAttributesData() );
         setLoaded( true );
         return this;
     }
@@ -223,7 +223,7 @@ component accessors="true" {
     }
 
     function create( attributes = {} ) {
-        return newEntity().setAttributes( attributes ).save();
+        return newEntity().setAttributesData( attributes ).save();
     }
 
     function updateAll( attributes = {} ) {
@@ -549,7 +549,7 @@ component accessors="true" {
     }
 
     function $renderdata() {
-        return getAttributes();
+        return getAttributesData();
     }
 
     /*=======================================

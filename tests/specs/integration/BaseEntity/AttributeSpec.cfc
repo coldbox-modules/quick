@@ -23,9 +23,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "can retrieve the original attributes of a loaded entity", function() {
                 var user = getInstance( "User" ).find( 1 );
-                var originalAttributes = user.getAttributes();
+                var originalAttributes = user.getAttributesData();
                 user.setUsername( "new_username" );
-                expect( originalAttributes ).notToBe( user.getAttributes() );
+                expect( originalAttributes ).notToBe( user.getAttributesData() );
                 expect( originalAttributes ).toBe( user.getOriginalAttributes() );
             } );
 

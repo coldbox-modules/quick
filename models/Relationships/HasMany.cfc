@@ -18,7 +18,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
     function create( attributes ) {
         getOwning().clearRelationship( getRelationMethodName() );
         return wirebox.getInstance( getRelationName() )
-            .setAttributes( attributes )
+            .setAttributesData( attributes )
             .setAttribute( getForeignKey(), getForeignKeyValue() )
             .save();
     }

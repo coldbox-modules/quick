@@ -31,7 +31,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     newUser.setLastName( "User" );
                     newUser.setPassword( hash( "password" ) );
                     newUser.save();
-                    expect( newUser.getAttributes() ).toHaveKey( "id" );
+                    expect( newUser.getAttributesData() ).toHaveKey( "id" );
                 } );
 
                 it( "a saved entity is not dirty", function() {

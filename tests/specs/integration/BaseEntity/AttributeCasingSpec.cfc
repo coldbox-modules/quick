@@ -5,8 +5,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "defaults to no transformation", function() {
                 var post = getInstance( "Post" ).find( 1 );
 
-                expect( post.getAttributes() ).toHaveKey( "post_pk" );
-                expect( post.getAttributes() ).notToHaveKey( "PostPk" );
+                expect( post.getAttributesData() ).toHaveKey( "post_pk" );
+                expect( post.getAttributesData() ).notToHaveKey( "PostPk" );
 
                 expect( function() {
                     post.getPostPk();
@@ -18,15 +18,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 post.setCreatedDate( now() );
 
-                expect( post.getAttributes() ).toHaveKey( "createdDate" );
-                expect( post.getAttributes() ).toHaveKey( "created_date" );
+                expect( post.getAttributesData() ).toHaveKey( "createdDate" );
+                expect( post.getAttributesData() ).toHaveKey( "created_date" );
             } );
 
             it( "converts stores all attributes internally as snake case when the `attributecasing` metadata property is set to `snake`", function() {
                 var user = getInstance( "User" ).find( 1 );
 
-                expect( user.getAttributes() ).toHaveKey( "first_name" );
-                expect( user.getAttributes() ).notToHaveKey( "firstName" );
+                expect( user.getAttributesData() ).toHaveKey( "first_name" );
+                expect( user.getAttributesData() ).notToHaveKey( "firstName" );
 
                 expect( function() {
                     user.getFirstName();
@@ -38,8 +38,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 user.setCreatedDate( now() );
 
-                expect( user.getAttributes() ).notToHaveKey( "createdDate" );
-                expect( user.getAttributes() ).toHaveKey( "created_date" );
+                expect( user.getAttributesData() ).notToHaveKey( "createdDate" );
+                expect( user.getAttributesData() ).toHaveKey( "created_date" );
             } );
         } );
     }

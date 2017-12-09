@@ -93,12 +93,7 @@ component accessors="true" {
 
     function fill( attributes ) {
         for ( var key in attributes ) {
-            guardAgainstReadOnlyAttribute( key );
-            var value = attributes[ key ];
-            if ( isColumnAlias( key ) ) {
-                key = getColumnForAlias( key );
-            }
-            setAttribute( key, value );
+            setAttribute( key, attributes[ key ] );
         }
         return this;
     }
@@ -141,6 +136,9 @@ component accessors="true" {
 
     function setAttribute( name, value ) {
         guardAgainstReadOnlyAttribute( name );
+        if ( isColumnAlias( name ) ) {
+            name = getColumnForAlias( name );
+        }
         variables.attributesData[ applyCasingTransformation( name ) ] = value;
         return this;
     }

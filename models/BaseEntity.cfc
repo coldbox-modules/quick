@@ -78,12 +78,23 @@ component accessors="true" {
             variables.attributesData = {};
             return this;
         }
-        variables.attributesData = arguments.attributes;
+        variables.attributesData = attributes.reduce( function( acc, name, value ) {
+            var key = name;
+            if ( isColumnAlias( name ) ) {
+                key = getColumnForAlias( name );
+            }
+            acc[ key ] = value;
+            return acc;
+        }, {} );
         return this;
     }
 
     function fill( attributes ) {
         for ( var key in attributes ) {
+            var value = attributes[ key ];
+            if ( isColumnAlias( key ) ) {
+                value = getColumnForAlias( key );
+            }
             setAttribute( key, attributes[ key ] );
         }
         return this;
@@ -93,9 +104,13 @@ component accessors="true" {
         return structKeyExists( variables.attributesData, name );
     }
 
-    function hasColumnAlias( name ) {
+    function isColumnAlias( name ) {
         return ! isSimpleValue( getAttributes() ) &&
             structKeyExists( getAttributes(), name );
+    }
+
+    function getColumnForAlias( name ) {
+        return getAttributes()[ name ];
     }
 
     function setOriginalAttributes( attributes ) {
@@ -155,7 +170,7 @@ component accessors="true" {
         var data = getQuery()
             .when( ! isSimpleValue( getAttributes() ), function( q ) {
                 q.select( arrayMap( structKeyArray( getAttributes() ), function( key ) {
-                    return getAttributes()[ key ];
+                    return getColumnForAlias( key );
                 } ) );
                 q.addSelect( getKey() );
             } )
@@ -517,8 +532,8 @@ component accessors="true" {
             str.slice( missingMethodName, 4 )
         );
 
-        if ( hasColumnAlias( columnName ) ) {
-            return getAttribute( getAttributes()[ columnName ] );
+        if ( isColumnAlias( columnName ) ) {
+            return getAttribute( getColumnForAlias( columnName ) );
         }
 
         if ( hasAttribute( columnName ) ) {

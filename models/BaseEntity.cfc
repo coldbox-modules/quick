@@ -74,6 +74,7 @@ component accessors="true" {
     }
 
     function setAttributesData( attributes ) {
+        guardAgainstReadOnlyAttributes( attributes );
         if ( isNull( arguments.attributes ) ) {
             setLoaded( false );
             variables.attributesData = {};
@@ -92,11 +93,12 @@ component accessors="true" {
 
     function fill( attributes ) {
         for ( var key in attributes ) {
+            guardAgainstReadOnlyAttribute( key );
             var value = attributes[ key ];
             if ( isColumnAlias( key ) ) {
-                value = getColumnForAlias( key );
+                key = getColumnForAlias( key );
             }
-            setAttribute( key, attributes[ key ] );
+            setAttribute( key, value );
         }
         return this;
     }
@@ -114,6 +116,16 @@ component accessors="true" {
         return getAttributes()[ name ];
     }
 
+    function transformAttributeAliases( attributes ) {
+        return attributes.reduce( function( acc, key, value ) {
+            if ( isColumnAlias( key ) ) {
+                key = getColumnForAlias( key );
+            }
+            acc[ key ] = value;
+            return acc;
+        }, {} );
+    }
+
     function setOriginalAttributes( attributes ) {
         variables.originalAttributes = duplicate( attributes );
         return this;
@@ -128,6 +140,7 @@ component accessors="true" {
     }
 
     function setAttribute( name, value ) {
+        guardAgainstReadOnlyAttribute( name );
         variables.attributesData[ applyCasingTransformation( name ) ] = value;
         return this;
     }
@@ -265,7 +278,10 @@ component accessors="true" {
 
     function updateAll( attributes = {} ) {
         guardReadOnly();
-        getQuery().update( attributes );
+        guardAgainstReadOnlyAttributes( attributes );
+        getQuery().update(
+            transformAttributeAliases( attributes )
+        );
         return this;
     }
 
@@ -781,6 +797,35 @@ component accessors="true" {
 
     private function isReadOnly() {
         return getReadOnly();
+    }
+
+    private function guardAgainstReadOnlyAttributes( attributes ) {
+        for ( var name in attributes ) {
+            guardAgainstReadOnlyAttribute( name );
+        }
+    }
+
+    private function guardAgainstReadOnlyAttribute( name ) {
+        if ( isReadOnlyAttribute( name ) ) {
+            throw(
+                type = "QuickReadOnlyException",
+                message = "[#name#] is a read-only property on [#getEntityName()#]"
+            );
+        }
+    }
+
+    private function isReadOnlyAttribute( name ) {
+        var md = getMetadata();
+        if ( ! md.keyExists( "properties" ) || arrayIsEmpty( md.properties ) ) {
+            return false;
+        }
+        var foundProperties = arrayFilter( md.properties, function( prop ) {
+            return prop.name == name;
+        } );
+        if ( arrayIsEmpty( foundProperties ) ) {
+            return false;
+        }
+        return foundProperties[ 1 ].keyExists( "readonly" ) && foundProperties[ 1 ].readonly;
     }
 
 }

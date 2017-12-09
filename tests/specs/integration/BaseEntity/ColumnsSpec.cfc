@@ -39,8 +39,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var attributeNames = link.getAttributeNames();
                 arraySort( attributeNames, "textnocase" );
                 expect( attributeNames ).toBeArray();
-                expect( attributeNames ).toHaveLength( 2 );
-                expect( attributeNames ).toBe( [ "link_id", "link_url" ] );
+                expect( attributeNames ).toHaveLength( 3 );
+                expect( attributeNames ).toBe( [ "created_date", "link_id", "link_url" ] );
             } );
 
             it( "can access the attributes by their alias", function() {
@@ -53,8 +53,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var attributeNames = link.getAttributeNames();
                 arraySort( attributeNames, "textnocase" );
                 expect( attributeNames ).toBeArray();
-                expect( attributeNames ).toHaveLength( 2 );
-                expect( attributeNames ).toBe( [ "link_id", "link_url" ] );
+                expect( attributeNames ).toHaveLength( 3 );
+                expect( attributeNames ).toBe( [ "created_date", "link_id", "link_url" ] );
 
                 expect( link.getId() ).toBe( 1 );
                 expect( link.getId() ).toBe( link.getAttributesData()[ "link_id" ] );

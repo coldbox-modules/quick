@@ -53,6 +53,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( link.getUrl() ).toBe( "http://example.com/some-link" );
                 expect( link.getUrl() ).toBe( link.getAttributesData()[ "link_url" ] );
             } );
+
+            it( "ignores non-persistent attributes", function() {
+                expect( function() {
+                     var link = getInstance( "Link" ).findOrFail( 1 );
+                } ).notToThrow();
+            } );
         } );
     }
 

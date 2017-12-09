@@ -591,6 +591,24 @@ component accessors="true" {
         setTable( md.table );
         param md.attributecasing = settings.defaultAttributeCasing;
         setAttributeCasing( md.attributecasing );
+        param md.properties = [];
+        setAttributesFromProperties( md.properties );
+    }
+
+    private function setAttributesFromProperties( properties ) {
+        if ( properties.isEmpty() ) {
+            return setAttributes( "*" );
+        }
+        return setAttributes(
+            properties.reduce( function( acc, prop ) {
+                param prop.column = prop.name;
+                param prop.persistent = true;
+                if ( prop.persistent ) {
+                    acc[ prop.name ] = prop.column;
+                }
+                return acc;
+            }, {} )
+        );
     }
 
     private function applyCasingTransformation( word ) {

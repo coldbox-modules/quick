@@ -18,6 +18,7 @@ component accessors="true" {
     property name="attributeCasing" default="none";
     property name="key" default="id";
     property name="attributes" default="*";
+    property name="metadata";
 
     /*=====================================
     =            Instance Data            =
@@ -580,6 +581,7 @@ component accessors="true" {
 
     private function metadataInspection() {
         var md = getMetadata( this );
+        setMetadata( md );
         setFullName( md.fullname );
         param md.mapping = listLast( md.fullname, "." );
         setMapping( md.mapping );

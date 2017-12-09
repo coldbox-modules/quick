@@ -2,14 +2,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function run() {
         describe( "Delete Spec", function() {
-            aroundEach( function( spec ) {
-                transaction action="begin" {
-                    try { arguments.spec.body(); }
-                    catch ( any e ) { rethrow; }
-                    finally { transaction action="rollback"; }
-                }
-            } );
-
             it( "can delete an entity", function() {
                 var user = getInstance( "User" ).findOrFail( 2 );
                 user.delete();

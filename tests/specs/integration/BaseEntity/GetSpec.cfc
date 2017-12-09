@@ -2,14 +2,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function run() {
         describe( "Get Spec", function() {
-            aroundEach( function( spec ) {
-                transaction action="begin" {
-                    try { arguments.spec.body(); }
-                    catch ( any e ) { rethrow; }
-                    finally { transaction action="rollback"; }
-                }
-            } );
-
             it( "finds an entity by the primary key", function() {
                 var user = getInstance( "User" ).find( 1 );
                 expect( user.getLoaded() ).toBeTrue( "The user instance should be found and loaded, but was not." );

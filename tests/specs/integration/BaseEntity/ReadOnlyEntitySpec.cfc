@@ -2,14 +2,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function run() {
         describe( "Read Only models", function() {
-            aroundEach( function( spec ) {
-                transaction action="begin" {
-                    try { arguments.spec.body(); }
-                    catch ( any e ) { rethrow; }
-                    finally { transaction action="rollback"; }
-                }
-            } );
-
             it( "prevents saves from being performed on new instances", function() {
                 var referral = getInstance( "Referral" );
                 referral.setType( "internal" );

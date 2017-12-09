@@ -2,14 +2,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function run() {
         describe( "Update Spec", function() {
-            aroundEach( function( spec ) {
-                transaction action="begin" {
-                    try { arguments.spec.body(); }
-                    catch ( any e ) { rethrow; }
-                    finally { transaction action="rollback"; }
-                }
-            } );
-
             it( "update a model directly (without calling save)", function() {
                 var user = getInstance( "User" ).find( 2 );
                 expect( user.getUsername() ).toBe( "johndoe" );

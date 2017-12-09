@@ -15,6 +15,7 @@ component accessors="true" {
     property name="mapping";
     property name="fullName";
     property name="table";
+    property name="readonly" default="false";
     property name="attributeCasing" default="none";
     property name="key" default="id";
     property name="attributes" default="*";
@@ -229,6 +230,7 @@ component accessors="true" {
     ===========================================*/
 
     function save() {
+        guardReadOnly();
         if ( getLoaded() ) {
             newQuery()
                 .where( getKey(), getKeyValue() )
@@ -247,6 +249,7 @@ component accessors="true" {
     }
 
     function delete() {
+        guardReadOnly();
         newQuery().delete( getKeyValue(), getKey() );
         return this;
     }
@@ -261,11 +264,13 @@ component accessors="true" {
     }
 
     function updateAll( attributes = {} ) {
+        guardReadOnly();
         getQuery().update( attributes );
         return this;
     }
 
     function deleteAll( ids = [] ) {
+        guardReadOnly();
         if ( ! arrayIsEmpty( ids ) ) {
             newQuery().whereIn( getKey(), ids ).delete();
             return this;
@@ -604,6 +609,8 @@ component accessors="true" {
         setEntityName( md.entityName );
         param md.table = str.plural( str.snake( getEntityName() ) );
         setTable( md.table );
+        param md.readonly = false;
+        setReadOnly( md.readonly );
         param md.attributecasing = settings.defaultAttributeCasing;
         setAttributeCasing( md.attributecasing );
         param md.properties = [];
@@ -761,6 +768,19 @@ component accessors="true" {
         }
 
         return false;
+    }
+
+    private function guardReadOnly() {
+        if ( isReadOnly() ) {
+            throw(
+                type = "QuickReadOnlyException",
+                message = "[#getEntityName()#] is marked as a read-only entity."
+            );
+        }
+    }
+
+    private function isReadOnly() {
+        return getReadOnly();
     }
 
 }

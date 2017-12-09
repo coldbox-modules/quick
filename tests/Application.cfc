@@ -161,5 +161,17 @@ component {
         queryExecute( "
             INSERT INTO `links` (`link_id`, `link_url`, `created_date`, `modified_date`) VALUES (1, 'http://example.com/some-link', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
         " );
+        queryExecute( "
+            CREATE TABLE `referrals` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `type` varchar(255 char) NOT NULL,
+              `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`)
+            )
+        " );
+        queryExecute( "
+            INSERT INTO `referrals` (`id`, `type`, `created_date`, `modified_date`) VALUES (1, 'external', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
+        " );
     }
 }

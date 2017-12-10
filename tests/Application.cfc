@@ -36,7 +36,7 @@ component {
     this.datasource = "quick";
 
     function onRequestStart() {
-        // applicationStop();
+        structDelete( application, "cbController" );
         setUpDatabase();
     }
 
@@ -172,6 +172,22 @@ component {
         " );
         queryExecute( "
             INSERT INTO `referrals` (`id`, `type`, `created_date`, `modified_date`) VALUES (1, 'external', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
+        " );
+        queryExecute( "
+            CREATE TABLE `songs` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `title` varchar(255 char) NOT NULL,
+              `download_url` varchar(255 char) NOT NULL,
+              `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`)
+            )
+        " );
+        queryExecute( "
+            INSERT INTO `songs` (`id`, `title`, `download_url`, `created_date`, `modified_date`) VALUES (1, 'Ode to Joy', 'https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
+        " );
+        queryExecute( "
+            INSERT INTO `songs` (`id`, `title`, `download_url`, `created_date`, `modified_date`) VALUES (2, 'Open Arms', 'https://open.spotify.com/track/1m2INxep6LfNa25OEg5jZl', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
         " );
     }
 }

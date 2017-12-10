@@ -1,5 +1,5 @@
 component {
-    
+
     this.name = "quick";
     this.author = "";
     this.webUrl = "https://github.com/elpete/quick";
@@ -9,6 +9,21 @@ component {
     function configure() {
         settings = {
             defaultAttributeCasing = "none"
+        };
+
+        interceptorSettings = {
+            customInterceptionPoints = [
+                "quickPreLoad",
+                "quickPostLoad",
+                "quickPreSave",
+                "quickPostSave",
+                "quickPreInsert",
+                "quickPostInsert",
+                "quickPreUpdate",
+                "quickPostUpdate",
+                "quickPreDelete",
+                "quickPostDelete"
+            ]
         };
     }
 

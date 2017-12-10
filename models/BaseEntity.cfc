@@ -7,6 +7,7 @@ component accessors="true" {
     property name="wirebox" inject="wirebox" getter="false" setter="false";
     property name="str" inject="Str@str" getter="false" setter="false";
     property name="settings" inject="coldbox:modulesettings:quick" getter="false" setter="false";
+    property name="interceptorService" inject="coldbox:interceptorService" getter="false" setter="false";
 
     /*===========================================
     =            Metadata Properties            =
@@ -179,6 +180,7 @@ component accessors="true" {
     }
 
     function find( id ) {
+        fireEvent( "preLoad", { id = id, metadata = getMetadata() } );
         var data = getQuery()
             .when( ! isSimpleValue( getAttributes() ), function( q ) {
                 q.select( arrayMap( structKeyArray( getAttributes() ), function( key ) {
@@ -191,6 +193,12 @@ component accessors="true" {
         if ( structIsEmpty( data ) ) {
             return;
         }
+        return tap( loadEntity( data ), function( entity ) {
+            fireEvent( "postLoad", { entity = entity } );
+        } );
+    }
+
+    private function loadEntity( data ) {
         return newEntity()
             .setAttributesData( data )
             .setOriginalAttributes( data )
@@ -242,26 +250,38 @@ component accessors="true" {
 
     function save() {
         guardReadOnly();
+        fireEvent( "preSave", { entity = this } );
         if ( getLoaded() ) {
+            fireEvent( "preUpdate", { entity = this } );
             newQuery()
                 .where( getKey(), getKeyValue() )
                 .update( getAttributesData().map( function( key, value, attributes ) {
                     return isNull( value ) ? { value = "", null = true } : value;
                 } ) );
+            setOriginalAttributes( getAttributesData() );
+            setLoaded( true );
+            fireEvent( "postUpdate", { entity = this } );
         }
         else {
+            fireEvent( "preInsert", { entity = this } );
             var result = newQuery().insert( getAttributesData() );
             var generatedKey = result.keyExists( "generated_key" ) ? result[ "generated_key" ] : result[ "generatedKey" ];
             setAttribute( getKey(), generatedKey );
+            setOriginalAttributes( getAttributesData() );
+            setLoaded( true );
+            fireEvent( "postInsert", { entity = this } );
         }
-        setOriginalAttributes( getAttributesData() );
-        setLoaded( true );
+        fireEvent( "postSave", { entity = this } );
+
         return this;
     }
 
     function delete() {
         guardReadOnly();
+        fireEvent( "preDelete", { entity = this } );
         newQuery().delete( getKeyValue(), getKey() );
+        setLoaded( false );
+        fireEvent( "postDelete", { entity = this } );
         return this;
     }
 
@@ -277,20 +297,19 @@ component accessors="true" {
     function updateAll( attributes = {} ) {
         guardReadOnly();
         guardAgainstReadOnlyAttributes( attributes );
-        getQuery().update(
-            transformAttributeAliases( attributes )
-        );
-        return this;
+        return get().each( function( entity ) {
+            entity.update( attributes );
+        } );
     }
 
     function deleteAll( ids = [] ) {
         guardReadOnly();
         if ( ! arrayIsEmpty( ids ) ) {
-            newQuery().whereIn( getKey(), ids ).delete();
-            return this;
+            getQuery().whereIn( getKey(), ids );
         }
-
-        getQuery().delete();
+        get().each( function( entity ) {
+            entity.delete();
+        } );
         return this;
     }
 
@@ -613,6 +632,11 @@ component accessors="true" {
     =            Other Utilities            =
     =======================================*/
 
+    private function tap( value, callback ) {
+        callback( value );
+        return value;
+    }
+
     private function metadataInspection() {
         var md = getMetadata( this );
         setMetadata( md );
@@ -784,6 +808,10 @@ component accessors="true" {
         return false;
     }
 
+    /*=================================
+    =            Read Only            =
+    =================================*/
+
     private function guardReadOnly() {
         if ( isReadOnly() ) {
             throw(
@@ -824,6 +852,21 @@ component accessors="true" {
             return false;
         }
         return foundProperties[ 1 ].keyExists( "readonly" ) && foundProperties[ 1 ].readonly;
+    }
+
+    /*==============================
+    =            Events            =
+    ==============================*/
+
+    function fireEvent( eventName, eventData ) {
+        if ( eventMethodExists( eventName ) ) {
+            invoke( this, eventName, { eventData = eventData } );
+        }
+        interceptorService.processState( "quick" & eventName, eventData );
+    }
+
+    private function eventMethodExists( eventName ) {
+        return variables.keyExists( eventName );
     }
 
 }

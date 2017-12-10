@@ -5,7 +5,7 @@ component extends="cfcollection.models.Collection" {
     }
 
     function load( relationName ) {
-        return empty() ? this : eagerLoadRelation( relationName );
+        return this.empty() ? this : eagerLoadRelation( relationName );
     }
 
     private function eagerLoadRelation( relationName ) {
@@ -22,7 +22,7 @@ component extends="cfcollection.models.Collection" {
     private function matchRelations( relations, relationName ) {
         var relationship = invoke( get( 1 ), relationName );
         var groupedRelations = relations.groupBy( key = relationship.getOwningKey(), forceLookup = true );
-        return each( function( entity ) {
+        return this.each( function( entity ) {
             var relationship = invoke( entity, relationName );
             if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
                 entity.setRelationship( relationName, groupedRelations[ relationship.getForeignKeyValue() ] );

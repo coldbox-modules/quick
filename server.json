@@ -1,6 +1,0 @@
-{
-    "app":{
-        "serverHomeDirectory":".engine",
-        "cfengine":"adobe@11.0.12+302575"
-    }
-}

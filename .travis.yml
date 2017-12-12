@@ -1,5 +1,7 @@
 language: java
 sudo: required
+services:
+  - mysql
 jdk:
   - oraclejdk8
 cache:
@@ -14,13 +16,14 @@ env:
 before_install:
   - sudo apt-key adv --keyserver keys.gnupg.net --recv 6DA70622
   - sudo echo "deb http://downloads.ortussolutions.com/debs/noarch /" | sudo tee -a /etc/apt/sources.list.d/commandbox.list
+  - mysql -e 'CREATE DATABASE quick;'
 install:
   - sudo apt-get update && sudo apt-get --assume-yes install commandbox
+  - box install commandbox-cfconfig
   - box install
 before_script:
-  - box server start cfengine=$ENGINE port=8500
-  - box tests/index.cfm
+  - box server start cfengine=$ENGINE port=8500 debug=true
 script:
-  - box testbox run runner='http://127.0.0.1:8500/tests/runner.cfm' verbose=true
+  - box testbox run runner='http://127.0.0.1:8500/tests/runner.cfm' verbose=true reporter=text
 notifications:
   email: false

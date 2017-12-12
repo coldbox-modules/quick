@@ -27,23 +27,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can eager load a has many relationship", function() {
-                var users = getInstance( "User" ).with( "posts" ).get();
+                var users = getInstance( "User" ).with( "posts" ).latest().get();
                 expect( users.toArray() ).toBeArray();
                 expect( users.toArray() ).toHaveLength( 2, "Two users should be returned" );
 
-                var elpete = users.toArray()[ 1 ];
-                expect( elpete.getUsername() ).toBe( "elpete" );
-                expect( elpete.getPosts().toArray() ).toBeArray();
-                expect( elpete.getPosts().toArray() ).toHaveLength( 2, "Two posts should belong to elpete" );
-
-                var johndoe = users.toArray()[ 2 ];
+                var johndoe = users.toArray()[ 1 ];
                 expect( johndoe.getUsername() ).toBe( "johndoe" );
                 expect( johndoe.getPosts().toArray() ).toBeArray();
                 expect( johndoe.getPosts().toArray() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-                if ( arrayLen( variables.queries ) != 2 ) {
-                    expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
-                }
+                var elpete = users.toArray()[ 2 ];
+                expect( elpete.getUsername() ).toBe( "elpete" );
+                expect( elpete.getPosts().toArray() ).toBeArray();
+                expect( elpete.getPosts().toArray() ).toHaveLength( 2, "Two posts should belong to elpete" );
+
+                expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
             } );
         } );
     }

@@ -46,7 +46,7 @@
 		};
 
 		moduleSettings = {
-			qb = {
+			quick = {
 				defaultGrammar = "MySQLGrammar"
 			}
 		};

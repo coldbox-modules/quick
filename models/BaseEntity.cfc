@@ -503,7 +503,7 @@ component accessors="true" {
         } ).unique();
         var relatedEntity = invoke( entities.get( 1 ), relationName ).getRelated();
         var owningKey = invoke( entities.get( 1 ), relationName ).getOwningKey();
-        var relations = relatedEntity.whereIn( owningKey, keys.get() ).get();
+        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys.get() ).get();
 
         return matchRelations( entities, relations, relationName );
     }
@@ -526,12 +526,17 @@ component accessors="true" {
     =            QB Utilities            =
     =======================================*/
 
-    private function newQuery() {
+    public function resetQuery() {
+        newQuery();
+        return this;
+    }
+
+    public function newQuery() {
         variables.query = builder.get().from( getTable() );
         return variables.query;
     }
 
-    private function getQuery() {
+    public function getQuery() {
         param variables.query = builder.get().from( getTable() );
         return variables.query;
     }

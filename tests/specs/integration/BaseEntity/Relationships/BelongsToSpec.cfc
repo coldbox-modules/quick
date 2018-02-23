@@ -6,14 +6,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 variables.queries = [];
             } );
 
-            aroundEach( function( spec ) {
-                transaction action="begin" {
-                    try { arguments.spec.body(); }
-                    catch ( any e ) { rethrow; }
-                    finally { transaction action="rollback"; }
-                }
-            } );
-
             it( "can get the owning entity", function() {
                 var post = getInstance( "Post" ).find( 1 );
                 var user = post.getAuthor();

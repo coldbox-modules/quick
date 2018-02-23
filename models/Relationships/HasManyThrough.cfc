@@ -3,13 +3,15 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
     property name="intermediate";
     property name="intermediateKey";
 
-    variables.defaultValue = [];
-
     function init( related, relationName, relationMethodName, owning, intermediate, foreignKey, foreignKeyValue, intermediateKey ) {
         setIntermediate( intermediate );
         setIntermediateKey( intermediateKey );
         super.init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey );
         return this;
+    }
+
+    function onDIComplete() {
+        setDefaultValue( collect() );
     }
 
     function apply() {

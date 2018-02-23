@@ -5,8 +5,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can get the owned entities", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var posts = user.getPosts();
-                expect( posts.toArray() ).toBeArray();
-                expect( posts.toArray() ).toHaveLength( 2 );
+                expect( posts.get() ).toBeArray();
+                expect( posts.get() ).toHaveLength( 2 );
             } );
 
             it( "can save and associate new entities", function() {

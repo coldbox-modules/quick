@@ -25,6 +25,15 @@ component accessors="true" {
         return this;
     }
 
+    private function collect( items = [] ) {
+        return wirebox.getInstance(
+            name = "QuickCollection@quick",
+            initArguments = {
+                collection = items
+            }
+        );
+    }
+
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
         var result = invoke( variables.related, missingMethodName, missingMethodArguments );
         if ( isSimpleValue( result ) ) {

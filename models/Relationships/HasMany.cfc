@@ -1,6 +1,8 @@
 component extends="quick.models.Relationships.BaseRelationship" {
 
-    variables.defaultValue = [];
+    function onDIComplete() {
+        setDefaultValue( collect() );
+    }
 
     function apply() {
         getRelated().where( getForeignKey(), getForeignKeyValue() );
@@ -8,6 +10,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
 
     function retrieve() {
         return getRelated().get();
+    }
+
+    function fromGroup( items ) {
+        return collect( items );
     }
 
     function save( entity ) {

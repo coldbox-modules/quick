@@ -514,7 +514,9 @@ component accessors="true" {
         return entities.each( function( entity ) {
             var relationship = invoke( entity, relationName );
             if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
-                entity.setRelationship( relationName, groupedRelations[ relationship.getForeignKeyValue() ] );
+                entity.setRelationship( relationName, relationship.fromGroup(
+                    groupedRelations[ relationship.getForeignKeyValue() ]
+                ) );
             }
             else {
                 entity.setRelationship( relationName, relationship.getDefaultValue() );

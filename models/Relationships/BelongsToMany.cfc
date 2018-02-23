@@ -11,6 +11,10 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
         return this;
     }
 
+    function onDIComplete() {
+        setDefaultValue( collect() );
+    }
+
     function apply() {
         getRelated().join( getTable(), function( j ) {
             j.on(

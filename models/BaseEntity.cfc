@@ -256,7 +256,7 @@ component accessors="true" {
             newQuery()
                 .where( getKey(), getKeyValue() )
                 .update( getAttributesData().map( function( key, value, attributes ) {
-                    return isNull( value ) ? { value = "", nulls = true } : value;
+                    return isNull( value ) ? { value = "", nulls = true, null = true } : value;
                 } ) );
             setOriginalAttributes( getAttributesData() );
             setLoaded( true );

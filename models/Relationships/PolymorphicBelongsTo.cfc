@@ -8,6 +8,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
         getRelated().where( getForeignKey(), getForeignKeyValue() );
     }
 
+    function fromGroup( items ) {
+        return items[ 1 ];
+    }
+
     function retrieve() {
         return getRelated().first();
     }

@@ -65,7 +65,7 @@ component {
         queryExecute( "
             CREATE TABLE `my_posts` (
               `post_pk` int(11) NOT NULL AUTO_INCREMENT,
-              `user_id` int(11) NOT NULL,
+              `user_id` int(11),
               `body` text NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,

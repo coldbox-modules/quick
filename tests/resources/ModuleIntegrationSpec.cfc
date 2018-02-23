@@ -20,7 +20,12 @@ component extends="coldbox.system.testing.BaseTestCase" {
     function useDatabaseTransactions( spec ) {
         transaction action="begin" {
             try { arguments.spec.body(); }
-            catch ( any e ) { rethrow; }
+            catch ( any e ) {
+                if ( e.type == "database" ) {
+                    throw( message = e.detail );
+                }
+                rethrow;
+            }
             finally { transaction action="rollback"; }
         }
     }

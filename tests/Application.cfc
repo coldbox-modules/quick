@@ -16,23 +16,6 @@ component {
     this.mappings[ "/coldbox" ] = testsPath & "resources/app/coldbox";
     this.mappings[ "/testbox" ] = rootPath & "/testbox";
 
-    if ( server.keyExists( "lucee" ) ) {
-        this.datasources[ "quick" ] = {
-            driver = "other",
-            class = "org.h2.Driver",
-            connectionString = "jdbc:h2:mem:;MODE=MySQL",
-            username = "sa"
-        };
-    }
-    else {
-        this.datasources[ "quick" ] = {
-            driver = "other",
-            class = "org.h2.Driver",
-            url = "jdbc:h2:mem:;MODE=MySQL",
-            username = "sa"
-        };
-    }
-
     this.datasource = "quick";
 
     function onRequestStart() {
@@ -41,7 +24,10 @@ component {
     }
 
     private function setUpDatabase() {
-        queryExecute( "DROP ALL OBJECTS" );
+        queryExecute( "DROP DATABASE IF EXISTS quick" );
+        queryExecute( "CREATE DATABASE quick" );
+        queryExecute( "USE quick" );
+
         queryExecute( "
             CREATE TABLE `countries` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -64,7 +50,7 @@ component {
               `first_name` varchar(50) NOT NULL,
               `last_name` varchar(50) NOT NULL,
               `password` varchar(100) NOT NULL,
-              `country_id` int(11) NOT NULL,
+              `country_id` int(11),
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (`id`)
@@ -79,7 +65,7 @@ component {
         queryExecute( "
             CREATE TABLE `my_posts` (
               `post_pk` int(11) NOT NULL AUTO_INCREMENT,
-              `user_id` int(11) NOT NULL,
+              `user_id` int(11),
               `body` text NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -152,7 +138,7 @@ component {
         queryExecute( "
             CREATE TABLE `links` (
               `link_id` int(11) NOT NULL AUTO_INCREMENT,
-              `link_url` varchar(255 char) NOT NULL,
+              `link_url` varchar(255) NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (`link_id`)
@@ -164,7 +150,7 @@ component {
         queryExecute( "
             CREATE TABLE `referrals` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
-              `type` varchar(255 char) NOT NULL,
+              `type` varchar(255) NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (`id`)
@@ -176,8 +162,8 @@ component {
         queryExecute( "
             CREATE TABLE `songs` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
-              `title` varchar(255 char) NOT NULL,
-              `download_url` varchar(255 char) NOT NULL,
+              `title` varchar(255) NOT NULL,
+              `download_url` varchar(255) NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (`id`)

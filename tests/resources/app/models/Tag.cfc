@@ -1,4 +1,4 @@
-component extends="quick.models.BaseEntity" {
+component attributecasing="snake" extends="quick.models.BaseEntity" {
 
     function posts() {
         return belongsToMany(

@@ -1,5 +1,5 @@
 component entityname="MyPost" table="my_posts" extends="quick.models.BaseEntity" {
-    
+
     variables.key = "post_pk";
 
     function author() {

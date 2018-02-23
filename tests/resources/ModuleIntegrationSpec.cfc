@@ -22,7 +22,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
             try { arguments.spec.body(); }
             catch ( any e ) {
                 if ( e.type == "database" ) {
-                    throw( message = e.detail );
+                    throw( message = e.detail, detail = e.sql );
                 }
                 rethrow;
             }

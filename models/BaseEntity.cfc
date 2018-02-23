@@ -344,7 +344,10 @@ component accessors="true" {
         var related = wirebox.getInstance( relationName );
 
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = lcase( "#related.getEntityName()#_#related.getKey()#" );
+            arguments.foreignKey = applyCasingTransformation(
+                [ related.getEntityName(), related.getKey() ],
+                related.getAttributeCasing()
+            );
         }
         if ( isNull( arguments.owningKey ) ) {
             arguments.owningKey = related.getKey();
@@ -366,7 +369,10 @@ component accessors="true" {
             arguments.foreignKey = getKey();
         }
         if ( isNull( arguments.owningKey ) ) {
-            arguments.owningKey = lcase( "#getEntityName()#_#getKey()#" );
+            arguments.owningKey = applyCasingTransformation(
+                [ getEntityName(), getKey() ],
+                getAttributeCasing()
+            );
         }
         return wirebox.getInstance( name = "HasOne@quick", initArguments = {
             related = related,
@@ -382,10 +388,17 @@ component accessors="true" {
     private function hasMany( relationName, foreignKey ) {
         var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = lcase( "#getEntityName()#_#getKey()#" );
+            arguments.foreignKey = applyCasingTransformation(
+                [ getEntityName(), getKey() ],
+                getAttributeCasing()
+            );
         }
         if ( isNull( arguments.owningKey ) ) {
             arguments.owningKey = "#getEntityName()#_#getKey()#";
+            arguments.owningKey = applyCasingTransformation(
+                [ getEntityName(), getKey() ],
+                getAttributeCasing()
+            );
         }
         return wirebox.getInstance( name = "HasMany@quick", initArguments = {
             related = related,
@@ -409,10 +422,16 @@ component accessors="true" {
             }
         }
         if ( isNull( arguments.relatedKey ) ) {
-            arguments.relatedKey = lcase( "#related.getEntityName()#_#related.getKey()#" );
+            arguments.relatedKey = applyCasingTransformation(
+                [ related.getEntityName(), related.getKey() ],
+                related.getAttributeCasing()
+            );
         }
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = "#getEntityName()#_#getKey()#";
+            arguments.foreignKey = applyCasingTransformation(
+                [ getEntityName(), getKey() ],
+                getAttributeCasing()
+            );
 
         }
         return wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
@@ -431,10 +450,16 @@ component accessors="true" {
         var related = wirebox.getInstance( relationName );
         var intermediate = wirebox.getInstance( intermediateName );
         if ( isNull( arguments.intermediateKey ) ) {
-            arguments.intermediateKey = lcase( "#intermediate.getEntityName()#_#intermediate.getKey()#" );
+            arguments.intermediateKey = applyCasingTransformation(
+                [ intermediate.getEntityName(), intermediate.getKey() ],
+                intermediate.getAttributeCasing()
+            );
         }
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = lcase( "#getEntityName()#_#getKey()#" );
+            arguments.foreignKey = applyCasingTransformation(
+                [ getEntityName(), getKey() ],
+                intermediate.getAttributeCasing()
+            );
         }
         if ( isNull( arguments.owningKey ) ) {
             arguments.owningKey = getKey();
@@ -467,7 +492,9 @@ component accessors="true" {
     }
 
     private function polymorphicBelongsTo( prefix ) {
-        var relationName = getAttribute( "#prefix#_type" );
+        var relationName = getAttribute(
+            "#prefix#_type"
+        );
         var related = wirebox.getInstance( relationName );
         return wirebox.getInstance( name = "PolymorphicBelongsTo@quick", initArguments = {
             related = related,
@@ -683,10 +710,14 @@ component accessors="true" {
 
     private function applyCasingTransformation( word, casing = "none" ) {
         if ( casing == "none" ) {
-            return word;
+            return isArray( word ) ? arrayToList( word, "" ) : word;
         }
 
-        return invoke( str, casing, { 1 = word } );
+        return invoke(
+            str,
+            casing,
+            { 1 = isArray( word ) ? arrayToList( word, " " ) : word }
+        );
     }
 
     private function deepEqual( required expected, required actual ) {

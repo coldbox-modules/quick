@@ -66,7 +66,7 @@ component accessors="true" {
 
     function clearAttribute( name, setToNull = false ) {
         if ( setToNull ) {
-            variables.attributesData[ applyCasingTransformation( name ) ] = javacast( "null", "" );
+            variables.attributesData[ applyCasingTransformation( name, getAttributeCasing() ) ] = javacast( "null", "" );
         }
         else {
             variables.attributesData.delete( name );
@@ -140,7 +140,7 @@ component accessors="true" {
         if ( isColumnAlias( name ) ) {
             name = getColumnForAlias( name );
         }
-        variables.attributesData[ applyCasingTransformation( name ) ] = value;
+        variables.attributesData[ applyCasingTransformation( name, getAttributeCasing() ) ] = value;
         return this;
     }
 
@@ -342,6 +342,7 @@ component accessors="true" {
 
     private function belongsTo( relationName, foreignKey ) {
         var related = wirebox.getInstance( relationName );
+
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = lcase( "#related.getEntityName()#_#related.getKey()#" );
         }
@@ -574,7 +575,8 @@ component accessors="true" {
         }
 
         var columnName = applyCasingTransformation(
-            str.slice( missingMethodName, 4 )
+            str.slice( missingMethodName, 4 ),
+            getAttributeCasing()
         );
 
         if ( isColumnAlias( columnName ) ) {
@@ -594,7 +596,8 @@ component accessors="true" {
         }
 
         var columnName = applyCasingTransformation(
-            str.slice( missingMethodName, 4 )
+            str.slice( missingMethodName, 4 ),
+            getAttributeCasing()
         );
         setAttribute( columnName, missingMethodArguments[ 1 ] );
         return missingMethodArguments[ 1 ];
@@ -678,12 +681,12 @@ component accessors="true" {
         );
     }
 
-    private function applyCasingTransformation( word ) {
-        if ( getAttributeCasing() == "none" ) {
+    private function applyCasingTransformation( word, casing = "none" ) {
+        if ( casing == "none" ) {
             return word;
         }
 
-        return invoke( str, getAttributeCasing(), { 1 = word } );
+        return invoke( str, casing, { 1 = word } );
     }
 
     private function deepEqual( required expected, required actual ) {

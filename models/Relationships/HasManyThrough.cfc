@@ -29,6 +29,10 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
             .where( "#getOwning().getTable()#.#getOwningKey()#", getOwning().getKeyValue() );
     }
 
+    function fromGroup( items ) {
+        return collect( items );
+    }
+
     function retrieve() {
         return getRelated().get();
     }

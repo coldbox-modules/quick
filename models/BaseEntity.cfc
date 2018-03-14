@@ -518,6 +518,9 @@ component accessors="true" {
     }
 
     function with( relationName ) {
+        if ( isSimpleValue( relationName ) && relationName == "" ) {
+            return this;
+        }
         relationName = isArray( relationName ) ? relationName : [ relationName ];
         arrayAppend( variables.eagerLoad, relationName, true );
         return this;

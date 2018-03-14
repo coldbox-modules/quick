@@ -20,6 +20,12 @@ component extends="cfcollection.models.Collection" {
         return this;
     }
 
+    function $renderData() {
+        return this.map( function( entity ) {
+            return entity.$renderData();
+        } ).get();
+    }
+
     private function eagerLoadRelation( relationName ) {
         var keys = map( function( entity ) {
             return invoke( entity, relationName ).getForeignKeyValue();

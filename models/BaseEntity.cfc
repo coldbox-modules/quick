@@ -3,11 +3,11 @@ component accessors="true" {
     /*====================================
     =            Dependencies            =
     ====================================*/
-    property name="builder" inject="provider:QueryBuilder@qb" getter="false" setter="false";
-    property name="wirebox" inject="wirebox" getter="false" setter="false";
-    property name="str" inject="Str@str" getter="false" setter="false";
-    property name="settings" inject="coldbox:modulesettings:quick" getter="false" setter="false";
-    property name="interceptorService" inject="coldbox:interceptorService" getter="false" setter="false";
+    property name="builder"            inject="QueryBuilder@qb";
+    property name="wirebox"            inject="wirebox";
+    property name="str"                inject="Str@str";
+    property name="settings"           inject="coldbox:modulesettings:quick";
+    property name="interceptorService" inject="coldbox:interceptorService";
 
     /*===========================================
     =            Metadata Properties            =
@@ -16,10 +16,10 @@ component accessors="true" {
     property name="mapping";
     property name="fullName";
     property name="table";
-    property name="readonly" default="false";
+    property name="readonly"        default="false";
     property name="attributeCasing" default="none";
-    property name="key" default="id";
-    property name="attributes" default="*";
+    property name="key"             default="id";
+    property name="attributes"      default="*";
     property name="metadata";
 
     /*=====================================
@@ -570,12 +570,12 @@ component accessors="true" {
     }
 
     public function newQuery() {
-        variables.query = builder.get().from( getTable() );
+        variables.query = builder.newQuery().from( getTable() );
         return variables.query;
     }
 
     public function getQuery() {
-        param variables.query = builder.get().from( getTable() );
+        param variables.query = builder.newQuery().from( getTable() );
         return variables.query;
     }
 

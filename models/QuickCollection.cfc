@@ -5,7 +5,19 @@ component extends="cfcollection.models.Collection" {
     }
 
     function load( relationName ) {
-        return this.empty() ? this : eagerLoadRelation( relationName );
+        if ( this.empty() ) {
+            return this;
+        }
+
+        if ( ! isArray( relationName ) ) {
+            relationName = [ relationName ];
+        }
+
+        for ( var relation in relationName ) {
+            eagerLoadRelation( relation );
+        }
+
+        return this;
     }
 
     private function eagerLoadRelation( relationName ) {

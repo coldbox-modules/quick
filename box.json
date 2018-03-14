@@ -15,9 +15,9 @@
     "description":"A ColdBox ORM Engine",
     "type":"modules",
     "dependencies":{
-        "qb":"^5.0.0",
+        "qb":"^5.2.1",
         "str":"^1.0.0",
-        "cfcollection":"^2.10.0"
+        "cfcollection":"^3.6.1"
     },
     "devDependencies":{
         "coldbox":"^4.3.0+188",

@@ -209,7 +209,7 @@ component accessors="true" {
         var entity = variables.find( id );
         if ( isNull( entity ) ) {
             throw(
-                type = "ModelNotFound",
+                type = "EntityNotFound",
                 message = "No [#getEntityName()#] found with id [#id#]"
             );
         }
@@ -220,7 +220,7 @@ component accessors="true" {
         var attributes = getQuery().first();
         if ( structIsEmpty( attributes ) ) {
             throw(
-                type = "ModelNotFound",
+                type = "EntityNotFound",
                 message = "No [#getEntityName()#] found with constraints [#serializeJSON( getQuery().getBindings() )#]"
             );
         }

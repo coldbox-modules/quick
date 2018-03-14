@@ -9,7 +9,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( getInstance( "User" ).count() ).toBe( 1 );
                 expect( function() {
                     getInstance( "User" ).findOrFail( 2 );
-                } ).toThrow( type = "ModelNotFound" );
+                } ).toThrow( type = "EntityNotFound" );
             } );
 
             it( "can delete multiple entities at once", function() {
@@ -22,7 +22,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( getInstance( "User" ).count() ).toBe( 1 );
                 expect( function() {
                     getInstance( "User" ).whereUsername( "johndoe" ).firstOrFail();
-                } ).toThrow( type = "ModelNotFound" );
+                } ).toThrow( type = "EntityNotFound" );
             } );
 
             it( "can delete multiple ids at once", function() {
@@ -30,7 +30,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( getInstance( "User" ).count() ).toBe( 1 );
                 expect( function() {
                     getInstance( "User" ).findOrFail( 2 );
-                } ).toThrow( type = "ModelNotFound" );
+                } ).toThrow( type = "EntityNotFound" );
             } );
         } );
     }

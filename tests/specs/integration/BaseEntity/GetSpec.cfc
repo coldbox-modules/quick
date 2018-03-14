@@ -48,7 +48,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 expect( function() {
                     getInstance( "User" ).findOrFail( 999 );
-                } ).toThrow( type = "ModelNotFound" );
+                } ).toThrow( type = "EntityNotFound" );
             } );
 
             it( "throws an exception if no entity is found using first or fail", function() {
@@ -58,7 +58,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 expect( function() {
                     getInstance( "User" ).whereUsername( "doesnt-exist" ).firstOrFail();
-                } ).toThrow( type = "ModelNotFound" );
+                } ).toThrow( type = "EntityNotFound" );
             } );
         } );
     }

@@ -326,7 +326,9 @@ component accessors="true" {
     }
 
     function setRelationship( name, value ) {
-        variables.relationships[ name ] = value;
+        if ( ! isNull( value ) ) {
+            variables.relationships[ name ] = value;
+        }
         return this;
     }
 

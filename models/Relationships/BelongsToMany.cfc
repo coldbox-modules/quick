@@ -5,9 +5,9 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
 
     variables.defaultValue = [];
 
-    function init( related, relationName, relationMethodName, owning, table, foreignKey, foreignKeyValue, relatedKey ) {
+    function init( wirebox, related, relationName, relationMethodName, owning, table, foreignKey, foreignKeyValue, relatedKey ) {
         setTable( arguments.table );
-        super.init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, relatedKey );
+        super.init( wirebox, related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, relatedKey );
         return this;
     }
 

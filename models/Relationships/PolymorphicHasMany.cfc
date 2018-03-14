@@ -2,9 +2,9 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
 
     property name="prefix";
 
-    function init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey, prefix ) {
+    function init( wirebox, related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey, prefix ) {
         setPrefix( arguments.prefix );
-        super.init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey );
+        super.init( wirebox, related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey );
         return this;
     }
 

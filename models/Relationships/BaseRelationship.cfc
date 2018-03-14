@@ -1,6 +1,6 @@
 component accessors="true" {
 
-    property name="wirebox" inject="wirebox" getter="false" setter="false";
+    property name="wirebox";
 
     property name="related";
     property name="relationName";
@@ -11,7 +11,8 @@ component accessors="true" {
     property name="owningKey";
     property name="defaultValue";
 
-    function init( related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey ) {
+    function init( wirebox, related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey ) {
+        setWireBox( wirebox );
         setRelated( arguments.related );
         setRelationName( arguments.relationName );
         setRelationMethodName( arguments.relationMethodName );

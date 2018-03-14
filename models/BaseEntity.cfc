@@ -353,6 +353,7 @@ component accessors="true" {
             arguments.owningKey = related.getKey();
         }
         return wirebox.getInstance( name = "BelongsTo@quick", initArguments = {
+            wirebox = wirebox,
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
@@ -375,6 +376,7 @@ component accessors="true" {
             );
         }
         return wirebox.getInstance( name = "HasOne@quick", initArguments = {
+            wirebox = wirebox,
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
@@ -401,6 +403,7 @@ component accessors="true" {
             );
         }
         return wirebox.getInstance( name = "HasMany@quick", initArguments = {
+            wirebox = wirebox,
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
@@ -435,6 +438,7 @@ component accessors="true" {
 
         }
         return wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
+            wirebox = wirebox,
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
@@ -465,6 +469,7 @@ component accessors="true" {
             arguments.owningKey = getKey();
         }
         return wirebox.getInstance( name = "HasManyThrough@quick", initArguments = {
+            wirebox = wirebox,
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
@@ -480,6 +485,7 @@ component accessors="true" {
     private function polymorphicHasMany( relationName, prefix ) {
         var related = wirebox.getInstance( relationName );
         return wirebox.getInstance( name = "PolymorphicHasMany@quick", initArguments = {
+            wirebox = wirebox,
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
@@ -497,6 +503,7 @@ component accessors="true" {
         );
         var related = wirebox.getInstance( relationName );
         return wirebox.getInstance( name = "PolymorphicBelongsTo@quick", initArguments = {
+            wirebox = wirebox,
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),

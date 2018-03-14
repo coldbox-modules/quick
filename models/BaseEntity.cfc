@@ -694,6 +694,7 @@ component accessors="true" {
         setTable( md.table );
         param md.readonly = false;
         setReadOnly( md.readonly );
+        param settings.defaultAttributeCasing = "none";
         param md.attributecasing = settings.defaultAttributeCasing;
         setAttributeCasing( md.attributecasing );
         param md.properties = [];

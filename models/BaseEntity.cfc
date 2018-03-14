@@ -516,7 +516,8 @@ component accessors="true" {
     }
 
     function with( relationName ) {
-        arrayAppend( variables.eagerLoad, relationName );
+        relationName = isArray( relationName ) ? relationName : [ relationName ];
+        arrayAppend( variables.eagerLoad, relationName, true );
         return this;
     }
 

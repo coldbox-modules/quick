@@ -669,8 +669,12 @@ component accessors="true" {
         return this;
     }
 
-    function $renderdata() {
+    function getMemento() {
         return getAttributesData();
+    }
+
+    function $renderdata() {
+        return getMemento();
     }
 
     /*=======================================

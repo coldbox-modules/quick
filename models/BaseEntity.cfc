@@ -94,7 +94,7 @@ component accessors="true" {
 
     function fill( attributes ) {
         for ( var key in attributes ) {
-            setAttribute( key, attributes[ key ] );
+            invoke( this, "set#key#", { value = attributes[ key ] } );
         }
         return this;
     }

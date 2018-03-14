@@ -916,7 +916,9 @@ component accessors="true" {
         if ( eventMethodExists( eventName ) ) {
             invoke( this, eventName, { eventData = eventData } );
         }
-        interceptorService.processState( "quick" & eventName, eventData );
+        if ( ! isNull( interceptorService ) ) {
+            interceptorService.processState( "quick" & eventName, eventData );
+        }
     }
 
     private function eventMethodExists( eventName ) {

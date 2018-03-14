@@ -654,7 +654,7 @@ component accessors="true" {
     private function tryScopes( missingMethodName, missingMethodArguments ) {
         if ( structKeyExists( variables, "scope#missingMethodName#" ) ) {
             return invoke( this, "scope#missingMethodName#", {
-                builder = getQuery(),
+                query = getQuery(),
                 args = missingMethodArguments
             } );
         }

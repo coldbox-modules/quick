@@ -1,7 +1,7 @@
 component extends="quick.models.BaseEntity" attributecasing="snake" {
 
-    function scopeLatest( builder ) {
-        return builder.orderBy( "created_date", "desc" );
+    function scopeLatest( query ) {
+        return query.orderBy( "created_date", "desc" );
     }
 
     function posts() {

@@ -17,8 +17,8 @@ component entityname="MyPost" table="my_posts" extends="quick.models.BaseEntity"
         return polymorphicHasMany( "Comment", "commentable" );
     }
 
-    function scopeLatest( builder ) {
-        return builder.orderBy( "created_date", "desc" );
+    function scopeLatest( query ) {
+        return query.orderBy( "created_date", "desc" );
     }
 
 }

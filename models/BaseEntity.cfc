@@ -918,6 +918,7 @@ component accessors="true" {
     ==============================*/
 
     function fireEvent( eventName, eventData ) {
+        eventData.entityName = getEntityName();
         if ( eventMethodExists( eventName ) ) {
             invoke( this, eventName, { eventData = eventData } );
         }

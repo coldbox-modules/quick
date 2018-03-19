@@ -7,6 +7,7 @@ component accessors="true" {
     property name="wirebox"            inject="wirebox";
     property name="str"                inject="Str@str";
     property name="settings"           inject="coldbox:modulesettings:quick";
+    property name="validationManager"  inject="ValidationManager@cbvalidation";
     property name="interceptorService" inject="coldbox:interceptorService";
 
     /*===========================================
@@ -253,6 +254,7 @@ component accessors="true" {
         fireEvent( "preSave", { entity = this } );
         if ( getLoaded() ) {
             fireEvent( "preUpdate", { entity = this } );
+            guardValid();
             newQuery()
                 .where( getKey(), getKeyValue() )
                 .update( getAttributesData().map( function( key, value, attributes ) {
@@ -264,6 +266,7 @@ component accessors="true" {
         }
         else {
             fireEvent( "preInsert", { entity = this } );
+            guardValid();
             var result = newQuery().insert( getAttributesData() );
             var generatedKey = result.keyExists( "generated_key" ) ? result[ "generated_key" ] : result[ "generatedKey" ];
             setAttribute( getKey(), generatedKey );
@@ -318,6 +321,12 @@ component accessors="true" {
     =====================================*/
 
     function hasRelationship( name ) {
+        return ! arrayIsEmpty( arrayFilter( getMetadata().functions, function( func ) {
+            return func.name == name;
+        } ) );
+    }
+
+    function isRelationshipLoaded( name ) {
         return structKeyExists( variables.relationships, name );
     }
 
@@ -598,6 +607,12 @@ component accessors="true" {
         }
         var r = tryRelationships( missingMethodName );
         if ( ! isNull( r ) ) { return r; }
+        // if this is a getter and we have a wildcard for attributes, assume it is currently missing
+        if ( str.startsWith( missingMethodName, "get" ) ) {
+            if ( isSimpleValue( getAttributes() ) && getAttributes() == "*" ) {
+                return javacast( "null", "" );
+            }
+        }
         return forwardToQB( missingMethodName, missingMethodArguments );
     }
 
@@ -615,7 +630,7 @@ component accessors="true" {
         }
 
         var columnName = applyCasingTransformation(
-            str.slice( missingMethodName, 4 ),
+            str.capitalize( str.slice( missingMethodName, 4 ), true ),
             getAttributeCasing()
         );
 
@@ -636,7 +651,7 @@ component accessors="true" {
         }
 
         var columnName = applyCasingTransformation(
-            str.slice( missingMethodName, 4 ),
+            str.capitalize( str.slice( missingMethodName, 4 ), true ),
             getAttributeCasing()
         );
         setAttribute( columnName, missingMethodArguments[ 1 ] );
@@ -649,7 +664,12 @@ component accessors="true" {
         }
 
         var relationshipName = str.slice( missingMethodName, 4 );
+
         if ( ! hasRelationship( relationshipName ) ) {
+            return;
+        }
+
+        if ( ! isRelationshipLoaded( relationshipName ) ) {
             setRelationship( relationshipName, invoke( this, relationshipName ).retrieve() );
         }
 
@@ -865,6 +885,22 @@ component accessors="true" {
         }
 
         return false;
+    }
+
+    /*=================================
+    =           Validation            =
+    =================================*/
+
+    private function guardValid() {
+        var validationResult = validationManager.validate( this );
+        if ( ! validationResult.hasErrors() ) {
+            return;
+        }
+        throw(
+            type = "InvalidEntity",
+            message = "The #getEntityName()# entity failed to pass validation",
+            detail = validationResult.getAllErrorsAsJson()
+        );
     }
 
     /*=================================

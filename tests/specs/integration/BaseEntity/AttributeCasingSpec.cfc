@@ -8,13 +8,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( post.getAttributesData() ).toHaveKey( "post_pk" );
                 expect( post.getAttributesData() ).notToHaveKey( "PostPk" );
 
-                expect( function() {
-                    post.getPostPk();
-                }).toThrow();
-
-                expect( function() {
-                    post.getPost_Pk();
-                }).notToThrow();
+                expect( post.getPostPk() ).toBeNull();
+                expect( post.getPost_Pk() ).notToBeNull();
 
                 post.setCreatedDate( now() );
 

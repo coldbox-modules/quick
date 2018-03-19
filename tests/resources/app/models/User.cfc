@@ -1,5 +1,11 @@
 component extends="quick.models.BaseEntity" attributecasing="snake" {
 
+    this.constraints = {
+        "lastName" = {
+            "required" = true
+        }
+    };
+
     function scopeLatest( query ) {
         return query.orderBy( "created_date", "desc" );
     }

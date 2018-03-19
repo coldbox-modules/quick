@@ -17,7 +17,8 @@
     "dependencies":{
         "qb":"^5.2.1",
         "str":"^1.0.0",
-        "cfcollection":"^3.6.1"
+        "cfcollection":"^3.6.1",
+        "cbvalidation":"^1.3.1+51"
     },
     "devDependencies":{
         "coldbox":"^4.3.0+188",
@@ -28,7 +29,8 @@
         "coldbox":"tests/resources/app/coldbox",
         "qb":"modules/qb/",
         "str":"modules/str",
-        "cfcollection":"modules/cfcollection/"
+        "cfcollection":"modules/cfcollection/",
+        "cbvalidation":"modules/cbvalidation"
     },
     "scripts":{
         "postVersion":"package set location='coldbox-modules/quick#v`package version`'",

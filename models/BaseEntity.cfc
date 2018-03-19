@@ -321,8 +321,8 @@ component accessors="true" {
     =====================================*/
 
     function hasRelationship( name ) {
-        return ! arrayIsEmpty( arrayFilter( getMetadata().functions, function( func ) {
-            return func.name == name;
+        return ! arrayIsEmpty( arrayFilter( this.getMetadata().functions, function( func ) {
+            return compareNoCase( func.name, name ) == 0;
         } ) );
     }
 

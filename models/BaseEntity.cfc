@@ -892,9 +892,12 @@ component accessors="true" {
     =================================*/
 
     private function guardValid() {
+        if ( isNull( validationManager ) ) {
+            return this;
+        }
         var validationResult = validationManager.validate( this );
         if ( ! validationResult.hasErrors() ) {
-            return;
+            return this;
         }
         throw(
             type = "InvalidEntity",

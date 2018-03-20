@@ -895,10 +895,17 @@ component accessors="true" {
         if ( isNull( validationManager ) ) {
             return this;
         }
+
+        param settings.automaticValidation = false;
+        if ( ! settings.automaticValidation ) {
+            return this;
+        }
+
         var validationResult = validationManager.validate( this );
         if ( ! validationResult.hasErrors() ) {
             return this;
         }
+
         throw(
             type = "InvalidEntity",
             message = "The #getEntityName()# entity failed to pass validation",

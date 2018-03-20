@@ -9,7 +9,8 @@ component {
     function configure() {
         settings = {
             defaultGrammar = "BaseGrammar",
-            defaultAttributeCasing = "none"
+            defaultAttributeCasing = "none",
+            automaticValidation = true
         };
 
         interceptorSettings = {

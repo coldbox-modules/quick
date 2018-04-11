@@ -30,6 +30,7 @@ component {
     }
 
     function onLoad() {
+        // remap to force the return format to be QuickCollection
         binder.map( alias = "QueryBuilder@qb", force = true )
             .to( "qb.models.Query.QueryBuilder" )
             .initArg( name = "grammar", dsl = "#settings.defaultGrammar#@qb" )

@@ -21,9 +21,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
         transaction action="begin" {
             try { arguments.spec.body(); }
             catch ( any e ) {
-                if ( e.type == "database" ) {
-                    throw( message = e.detail, detail = e.sql );
-                }
                 rethrow;
             }
             finally { transaction action="rollback"; }

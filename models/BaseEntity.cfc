@@ -9,6 +9,7 @@ component accessors="true" {
     property name="settings"           inject="coldbox:modulesettings:quick";
     property name="validationManager"  inject="ValidationManager@cbvalidation";
     property name="interceptorService" inject="coldbox:interceptorService";
+    property name="keyType"            inject="AutoIncrementing@quick";
 
     /*===========================================
     =            Metadata Properties            =
@@ -265,11 +266,11 @@ component accessors="true" {
             fireEvent( "postUpdate", { entity = this } );
         }
         else {
+            getKeyType().preInsert( this );
             fireEvent( "preInsert", { entity = this } );
             guardValid();
             var result = newQuery().insert( getAttributesData() );
-            var generatedKey = result.keyExists( "generated_key" ) ? result[ "generated_key" ] : result[ "generatedKey" ];
-            setAttribute( getKey(), generatedKey );
+            getKeyType().postInsert( this, result );
             setOriginalAttributes( getAttributesData() );
             setLoaded( true );
             fireEvent( "postInsert", { entity = this } );

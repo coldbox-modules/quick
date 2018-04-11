@@ -321,7 +321,9 @@ component accessors="true" {
     =====================================*/
 
     function hasRelationship( name ) {
-        return ! arrayIsEmpty( arrayFilter( this.getMetadata().functions, function( func ) {
+        var md = this.getMetadata();
+        param md.functions = [];
+        return ! arrayIsEmpty( arrayFilter( md.functions, function( func ) {
             return compareNoCase( func.name, name ) == 0;
         } ) );
     }
@@ -584,12 +586,19 @@ component accessors="true" {
     }
 
     public function newQuery() {
-        variables.query = builder.newQuery().from( getTable() );
+        variables.query = builder.newQuery()
+            .setReturnFormat( function( q ) {
+                return wirebox.getInstance(
+                    name = "QuickCollection@quick",
+                    initArguments = { collection = q }
+                );
+            } )
+            .from( getTable() );
         return variables.query;
     }
 
     public function getQuery() {
-        param variables.query = builder.newQuery().from( getTable() );
+        param variables.query = newQuery();
         return variables.query;
     }
 

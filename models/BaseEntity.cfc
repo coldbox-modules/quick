@@ -598,7 +598,9 @@ component accessors="true" {
     }
 
     public function getQuery() {
-        param variables.query = newQuery();
+        if ( ! structKeyExists( variables, "query" ) ) {
+            variables.query = newQuery();
+        }
         return variables.query;
     }
 

@@ -29,9 +29,11 @@ component accessors="true" {
     =====================================*/
     property name="attributesData";
     property name="originalAttributes";
-    property name="relationships";
+    property name="relationshipsData";
     property name="eagerLoad";
     property name="loaded";
+
+    variables.relationships = {};
 
     function init() {
         setDefaultProperties();
@@ -41,7 +43,7 @@ component accessors="true" {
     function setDefaultProperties() {
         setAttributesData( {} );
         setOriginalAttributes( {} );
-        setRelationships( {} );
+        setRelationshipsData( {} );
         setEagerLoad( [] );
         setLoaded( false );
     }
@@ -241,7 +243,7 @@ component accessors="true" {
     }
 
     function refresh() {
-        setRelationships( {} );
+        setRelationshipsData( {} );
         setAttributesData( newQuery().from( getTable() ).find( getKeyValue(), getKey() ) );
         return this;
     }
@@ -326,31 +328,31 @@ component accessors="true" {
         param md.functions = [];
         return ! arrayIsEmpty( arrayFilter( md.functions, function( func ) {
             return compareNoCase( func.name, name ) == 0;
-        } ) );
+        } ) ) || variables.relationships.keyExists( name );
     }
 
     function isRelationshipLoaded( name ) {
-        return structKeyExists( variables.relationships, name );
+        return structKeyExists( variables.relationshipsData, name );
     }
 
     function getRelationship( name ) {
-        return variables.relationships[ name ];
+        return variables.relationshipsData[ name ];
     }
 
     function setRelationship( name, value ) {
         if ( ! isNull( value ) ) {
-            variables.relationships[ name ] = value;
+            variables.relationshipsData[ name ] = value;
         }
         return this;
     }
 
     function clearRelationships() {
-        variables.relationships = {};
+        variables.relationshipsData = {};
         return this;
     }
 
     function clearRelationship( name ) {
-        variables.relationships.delete( name );
+        variables.relationshipsData.delete( name );
         return this;
     }
 
@@ -482,6 +484,7 @@ component accessors="true" {
         if ( isNull( arguments.owningKey ) ) {
             arguments.owningKey = getKey();
         }
+
         return wirebox.getInstance( name = "HasManyThrough@quick", initArguments = {
             wirebox = wirebox,
             related = related,
@@ -671,6 +674,12 @@ component accessors="true" {
     }
 
     private function tryRelationships( missingMethodName ) {
+        var relationship = tryRelationshipGetter( missingMethodName );
+        if ( ! isNull( relationship ) ) { return relationship; }
+        return tryRelationshipDefinition( missingMethodName );
+    }
+
+    private function tryRelationshipGetter( missingMethodName ) {
         if ( ! str.startsWith( missingMethodName, "get" ) ) {
             return;
         }
@@ -682,10 +691,28 @@ component accessors="true" {
         }
 
         if ( ! isRelationshipLoaded( relationshipName ) ) {
-            setRelationship( relationshipName, invoke( this, relationshipName ).retrieve() );
+            var relationship = "";
+            if ( variables.relationships.keyExists( relationshipName ) ) {
+                var method = variables.relationships[ relationshipName ];
+                relationship = method();
+            }
+            else {
+                relationship = invoke( this, relationshipName );
+            }
+            relationship.setRelationMethodName( relationshipName );
+            setRelationship( relationshipName, relationship.retrieve() );
         }
 
         return getRelationship( relationshipName );
+    }
+
+    private function tryRelationshipDefinition( relationshipName ) {
+        if ( variables.relationships.keyExists( relationshipName ) ) {
+            var method = variables.relationships[ relationshipName ];
+            var relationship = method();
+            relationship.setRelationMethodName( relationshipName );
+            return relationship;
+        }
     }
 
     private function tryScopes( missingMethodName, missingMethodArguments ) {

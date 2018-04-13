@@ -91,12 +91,15 @@ component accessors="true" {
             acc[ key ] = value;
             return acc;
         }, {} );
+        for ( var key in attributesData ) {
+            variables[ getAliasForColumn( key ) ] = attributesData[ key ];
+        }
         return this;
     }
 
     function fill( attributes ) {
         for ( var key in attributes ) {
-            invoke( this, "set#key#", { value = attributes[ key ] } );
+            invoke( this, "set#key#", { 1 = attributes[ key ] } );
         }
         return this;
     }
@@ -112,6 +115,19 @@ component accessors="true" {
 
     function getColumnForAlias( name ) {
         return getAttributes()[ name ];
+    }
+
+    function getAliasForColumn( name ) {
+        if ( isSimpleValue( getAttributes() ) ) {
+            return name;
+        }
+
+        return getAttributes().reduce( function( acc, alias, column ) {
+            if ( column == name ) {
+                return alias;
+            }
+            return acc;
+        }, name );
     }
 
     function transformAttributeAliases( attributes ) {
@@ -142,6 +158,7 @@ component accessors="true" {
         if ( isColumnAlias( name ) ) {
             name = getColumnForAlias( name );
         }
+        variables[ name ] = value;
         variables.attributesData[ applyCasingTransformation( name, getAttributeCasing() ) ] = value;
         return this;
     }

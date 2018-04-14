@@ -33,6 +33,8 @@ component accessors="true" {
     property name="eagerLoad";
     property name="loaded";
 
+    this.constraints = {};
+
     function init() {
         setDefaultProperties();
         return this;
@@ -58,8 +60,11 @@ component accessors="true" {
         return variables.attributesData[ getKey() ];
     }
 
-    function getAttributesData() {
-        return duplicate( variables.attributesData );
+    function getAttributesData( aliased = false ) {
+        return variables.attributesData.reduce( function( acc, key, value ) {
+            acc[ aliased ? getAliasForColumn( key ) : key ] = isNull( value ) ? javacast( "null", "" ) : value;
+            return acc;
+        }, {} );
     }
 
     function getAttributeNames() {
@@ -112,6 +117,12 @@ component accessors="true" {
 
     function getColumnForAlias( name ) {
         return getAttributes()[ name ];
+    }
+
+    function getAliasForColumn( name ) {
+        return getAttributes().reduce( function( acc, alias, column ) {
+            return name == column ? alias : acc;
+        }, name );
     }
 
     function transformAttributeAliases( attributes ) {
@@ -913,7 +924,11 @@ component accessors="true" {
             return this;
         }
 
-        var validationResult = validationManager.validate( this );
+        var validationResult = validationManager.validate(
+            target = getAttributesData( aliased = true ),
+            constraints = this.constraints
+        );
+
         if ( ! validationResult.hasErrors() ) {
             return this;
         }

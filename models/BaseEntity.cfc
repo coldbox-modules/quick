@@ -21,7 +21,7 @@ component accessors="true" {
     property name="readonly"        default="false";
     property name="attributeCasing" default="none";
     property name="key"             default="id";
-    property name="attributes"      default="*";
+    property name="attributes";
     property name="metadata";
 
     /*=====================================
@@ -32,6 +32,8 @@ component accessors="true" {
     property name="relationshipsData";
     property name="eagerLoad";
     property name="loaded";
+
+    this.constraints = {};
 
     variables.relationships = {};
 
@@ -60,8 +62,16 @@ component accessors="true" {
         return variables.attributesData[ getKey() ];
     }
 
-    function getAttributesData() {
-        return duplicate( variables.attributesData );
+    function getAttributesData( aliased = false ) {
+        getAttributes().keyArray().each( function( key ) {
+            if ( variables.keyExists( key ) && ! isReadOnlyAttribute( key ) ) {
+                setAttribute( key, variables[ key ] );
+            }
+        } );
+        return variables.attributesData.reduce( function( acc, key, value ) {
+            acc[ aliased ? getAliasForColumn( key ) : key ] = isNull( value ) ? javacast( "null", "" ) : value;
+            return acc;
+        }, {} );
     }
 
     function getAttributeNames() {
@@ -70,10 +80,12 @@ component accessors="true" {
 
     function clearAttribute( name, setToNull = false ) {
         if ( setToNull ) {
-            variables.attributesData[ applyCasingTransformation( name, getAttributeCasing() ) ] = javacast( "null", "" );
+            variables.attributesData[ name ] = javacast( "null", "" );
+            variables[ getAliasForColumn( name ) ] = javacast( "null", "" );
         }
         else {
             variables.attributesData.delete( name );
+            variables.delete( getAliasForColumn( name ) );
         }
         return this;
     }
@@ -93,12 +105,15 @@ component accessors="true" {
             acc[ key ] = value;
             return acc;
         }, {} );
+        for ( var key in attributesData ) {
+            variables[ getAliasForColumn( key ) ] = attributesData[ key ];
+        }
         return this;
     }
 
     function fill( attributes ) {
         for ( var key in attributes ) {
-            invoke( this, "set#key#", { value = attributes[ key ] } );
+            invoke( this, "set#getAliasForColumn( key )#", { 1 = attributes[ key ] } );
         }
         return this;
     }
@@ -108,12 +123,17 @@ component accessors="true" {
     }
 
     function isColumnAlias( name ) {
-        return ! isSimpleValue( getAttributes() ) &&
-            structKeyExists( getAttributes(), name );
+        return structKeyExists( getAttributes(), name );
     }
 
     function getColumnForAlias( name ) {
         return getAttributes()[ name ];
+    }
+
+    function getAliasForColumn( name ) {
+        return getAttributes().reduce( function( acc, alias, column ) {
+            return name == column ? alias : acc;
+        }, name );
     }
 
     function transformAttributeAliases( attributes ) {
@@ -144,7 +164,7 @@ component accessors="true" {
         if ( isColumnAlias( name ) ) {
             name = getColumnForAlias( name );
         }
-        variables.attributesData[ applyCasingTransformation( name, getAttributeCasing() ) ] = value;
+        variables.attributesData[ name ] = value;
         return this;
     }
 
@@ -186,12 +206,10 @@ component accessors="true" {
     function find( id ) {
         fireEvent( "preLoad", { id = id, metadata = getMetadata() } );
         var data = getQuery()
-            .when( ! isSimpleValue( getAttributes() ), function( q ) {
-                q.select( arrayMap( structKeyArray( getAttributes() ), function( key ) {
-                    return getColumnForAlias( key );
-                } ) );
-                q.addSelect( getKey() );
-            } )
+            .select( arrayMap( structKeyArray( getAttributes() ), function( key ) {
+                return getColumnForAlias( key );
+            } ) )
+            .addSelect( getKey() )
             .from( getTable() )
             .find( id, getKey() );
         if ( structIsEmpty( data ) ) {
@@ -303,9 +321,7 @@ component accessors="true" {
     function updateAll( attributes = {} ) {
         guardReadOnly();
         guardAgainstReadOnlyAttributes( attributes );
-        return get().each( function( entity ) {
-            entity.update( attributes );
-        } );
+        return getQuery().update( attributes );
     }
 
     function deleteAll( ids = [] ) {
@@ -313,10 +329,7 @@ component accessors="true" {
         if ( ! arrayIsEmpty( ids ) ) {
             getQuery().whereIn( getKey(), ids );
         }
-        get().each( function( entity ) {
-            entity.delete();
-        } );
-        return this;
+        return getQuery().delete();
     }
 
     /*=====================================
@@ -360,10 +373,7 @@ component accessors="true" {
         var related = wirebox.getInstance( relationName );
 
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = applyCasingTransformation(
-                [ related.getEntityName(), related.getKey() ],
-                related.getAttributeCasing()
-            );
+            arguments.foreignKey = related.getEntityName() & related.getKey();
         }
         if ( isNull( arguments.owningKey ) ) {
             arguments.owningKey = related.getKey();
@@ -380,16 +390,13 @@ component accessors="true" {
         } );
     }
 
-    private function hasOne( relationName, foreignKey ) {
+    private function hasOne( relationName, foreignKey, owningKey ) {
         var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = getKey();
         }
         if ( isNull( arguments.owningKey ) ) {
-            arguments.owningKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                getAttributeCasing()
-            );
+            arguments.owningKey = getEntityName() & getKey();
         }
         return wirebox.getInstance( name = "HasOne@quick", initArguments = {
             wirebox = wirebox,
@@ -403,20 +410,13 @@ component accessors="true" {
         } );
     }
 
-    private function hasMany( relationName, foreignKey ) {
+    private function hasMany( relationName, foreignKey, owningKey ) {
         var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                getAttributeCasing()
-            );
+            arguments.foreignKey = getEntityName() & getKey();
         }
         if ( isNull( arguments.owningKey ) ) {
-            arguments.owningKey = "#getEntityName()#_#getKey()#";
-            arguments.owningKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                getAttributeCasing()
-            );
+            arguments.owningKey = getEntityName() & getKey();
         }
         return wirebox.getInstance( name = "HasMany@quick", initArguments = {
             wirebox = wirebox,
@@ -441,17 +441,10 @@ component accessors="true" {
             }
         }
         if ( isNull( arguments.relatedKey ) ) {
-            arguments.relatedKey = applyCasingTransformation(
-                [ related.getEntityName(), related.getKey() ],
-                related.getAttributeCasing()
-            );
+            arguments.relatedKey = related.getEntityName() & related.getKey();
         }
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                getAttributeCasing()
-            );
-
+            arguments.foreignKey = getEntityName() & getKey();
         }
         return wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
             wirebox = wirebox,
@@ -470,16 +463,10 @@ component accessors="true" {
         var related = wirebox.getInstance( relationName );
         var intermediate = wirebox.getInstance( intermediateName );
         if ( isNull( arguments.intermediateKey ) ) {
-            arguments.intermediateKey = applyCasingTransformation(
-                [ intermediate.getEntityName(), intermediate.getKey() ],
-                intermediate.getAttributeCasing()
-            );
+            arguments.intermediateKey = intermediate.getEntityName() & intermediate.getKey();
         }
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                intermediate.getAttributeCasing()
-            );
+            arguments.foreignKey = getEntityName() & getKey();
         }
         if ( isNull( arguments.owningKey ) ) {
             arguments.owningKey = getKey();
@@ -622,12 +609,6 @@ component accessors="true" {
         }
         var r = tryRelationships( missingMethodName );
         if ( ! isNull( r ) ) { return r; }
-        // if this is a getter and we have a wildcard for attributes, assume it is currently missing
-        if ( str.startsWith( missingMethodName, "get" ) ) {
-            if ( isSimpleValue( getAttributes() ) && getAttributes() == "*" ) {
-                return javacast( "null", "" );
-            }
-        }
         return forwardToQB( missingMethodName, missingMethodArguments );
     }
 
@@ -644,10 +625,7 @@ component accessors="true" {
             return;
         }
 
-        var columnName = applyCasingTransformation(
-            str.capitalize( str.slice( missingMethodName, 4 ), true ),
-            getAttributeCasing()
-        );
+        var columnName = str.slice( missingMethodName, 4 );
 
         if ( isColumnAlias( columnName ) ) {
             return getAttribute( getColumnForAlias( columnName ) );
@@ -665,10 +643,7 @@ component accessors="true" {
             return;
         }
 
-        var columnName = applyCasingTransformation(
-            str.capitalize( str.slice( missingMethodName, 4 ), true ),
-            getAttributeCasing()
-        );
+        var columnName = str.slice( missingMethodName, 4 );
         setAttribute( columnName, missingMethodArguments[ 1 ] );
         return missingMethodArguments[ 1 ];
     }
@@ -762,17 +737,11 @@ component accessors="true" {
         setTable( md.table );
         param md.readonly = false;
         setReadOnly( md.readonly );
-        param settings.defaultAttributeCasing = "none";
-        param md.attributecasing = settings.defaultAttributeCasing;
-        setAttributeCasing( md.attributecasing );
         param md.properties = [];
         setAttributesFromProperties( md.properties );
     }
 
     private function setAttributesFromProperties( properties ) {
-        if ( properties.isEmpty() ) {
-            return setAttributes( "*" );
-        }
         return setAttributes(
             properties.reduce( function( acc, prop ) {
                 param prop.column = prop.name;
@@ -782,18 +751,6 @@ component accessors="true" {
                 }
                 return acc;
             }, {} )
-        );
-    }
-
-    private function applyCasingTransformation( word, casing = "none" ) {
-        if ( casing == "none" ) {
-            return isArray( word ) ? arrayToList( word, "" ) : word;
-        }
-
-        return invoke(
-            str,
-            casing,
-            { 1 = isArray( word ) ? arrayToList( word, " " ) : word }
         );
     }
 
@@ -940,7 +897,11 @@ component accessors="true" {
             return this;
         }
 
-        var validationResult = validationManager.validate( this );
+        var validationResult = validationManager.validate(
+            target = getAttributesData( aliased = true ),
+            constraints = this.constraints
+        );
+
         if ( ! validationResult.hasErrors() ) {
             return this;
         }

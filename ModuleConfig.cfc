@@ -9,7 +9,6 @@ component {
     function configure() {
         settings = {
             defaultGrammar = "BaseGrammar",
-            defaultAttributeCasing = "none",
             automaticValidation = true
         };
 

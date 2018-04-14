@@ -39,48 +39,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request.preUpdateCalled[ 1 ].entity.getDownloadUrl() ).toBe( "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" );
                 structDelete( request, "preUpdateCalled" );
             } );
-
-            it( "fires the quickPreUpdate interceptor for every record updated in a bulk update", function() {
-                structDelete( request, "quickPreUpdateCalled" );
-
-                getInstance( "Song" ).updateAll( {
-                    "modifiedDate" = now()
-                } );
-
-                expect( request ).toHaveKey( "quickPreUpdateCalled" );
-                expect( request.quickPreUpdateCalled ).toBeArray();
-                expect( request.quickPreUpdateCalled ).toHaveLength( 2 );
-                var onlyTitles = arrayMap( request.quickPreUpdateCalled, function( eventData ) {
-                    return eventData.entity.getTitle();
-                } );
-                arraySort( onlyTitles, "textnocase" );
-                expect( onlyTitles ).toBe( [
-                    "Ode to Joy",
-                    "Open Arms"
-                ] );
-                structDelete( request, "quickPreUpdateCalled" );
-            } );
-
-            it( "fires the preUpdate method on the component for every record updated in a bulk update", function() {
-                structDelete( request, "preUpdateCalled" );
-
-                getInstance( "Song" ).updateAll( {
-                    "modifiedDate" = now()
-                } );
-
-                expect( request ).toHaveKey( "preUpdateCalled" );
-                expect( request.preUpdateCalled ).toBeArray();
-                expect( request.preUpdateCalled ).toHaveLength( 2 );
-                var onlyTitles = arrayMap( request.preUpdateCalled, function( eventData ) {
-                    return eventData.entity.getTitle();
-                } );
-                arraySort( onlyTitles, "textnocase" );
-                expect( onlyTitles ).toBe( [
-                    "Ode to Joy",
-                    "Open Arms"
-                ] );
-                structDelete( request, "preUpdateCalled" );
-            } );
         } );
     }
 

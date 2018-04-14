@@ -37,44 +37,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request.postDeleteCalled[ 1 ].entity.getId() ).toBe( 1 );
                 structDelete( request, "postDeleteCalled" );
             } );
-
-            it( "fires the quickPostDelete interceptor for every record updated in a bulk update", function() {
-                structDelete( request, "quickPostDeleteCalled" );
-
-                getInstance( "Song" ).deleteAll();
-
-                expect( request ).toHaveKey( "quickPostDeleteCalled" );
-                expect( request.quickPostDeleteCalled ).toBeArray();
-                expect( request.quickPostDeleteCalled ).toHaveLength( 2 );
-                var onlyTitles = arrayMap( request.quickPostDeleteCalled, function( eventData ) {
-                    return eventData.entity.getTitle();
-                } );
-                arraySort( onlyTitles, "textnocase" );
-                expect( onlyTitles ).toBe( [
-                    "Ode to Joy",
-                    "Open Arms"
-                ] );
-                structDelete( request, "quickPostDeleteCalled" );
-            } );
-
-            it( "fires the postDelete method on the component for every record updated in a bulk update", function() {
-                structDelete( request, "postDeleteCalled" );
-
-                getInstance( "Song" ).deleteAll();
-
-                expect( request ).toHaveKey( "postDeleteCalled" );
-                expect( request.postDeleteCalled ).toBeArray();
-                expect( request.postDeleteCalled ).toHaveLength( 2 );
-                var onlyTitles = arrayMap( request.postDeleteCalled, function( eventData ) {
-                    return eventData.entity.getTitle();
-                } );
-                arraySort( onlyTitles, "textnocase" );
-                expect( onlyTitles ).toBe( [
-                    "Ode to Joy",
-                    "Open Arms"
-                ] );
-                structDelete( request, "postDeleteCalled" );
-            } );
         } );
     }
 

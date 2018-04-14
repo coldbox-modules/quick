@@ -14,6 +14,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     newUser.save();
                     var userRowsPostSave = queryExecute( "SELECT * FROM users" );
                     expect( userRowsPostSave ).toHaveLength( 3 );
+                    var newUserAgain = getInstance( "User" ).whereUsername( "new_user" ).firstOrFail();
+                    expect( newUserAgain.getFirstName() ).toBe( "New" );
+                    expect( newUserAgain.getLastName() ).toBe( "User" );
                 } );
 
                 it( "retrieves the generated key when saving a new record", function() {

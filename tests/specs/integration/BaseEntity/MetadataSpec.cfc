@@ -64,18 +64,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     expect( user.getKey() ).toBe( "id" );
                 } );
             } );
-
-            describe( "attributecasing", function() {
-                it( "defaults to the module setting `defaultAttributeCasing`", function() {
-                    var post = getInstance( "Post" );
-                    expect( post.getAttributeCasing() ).toBe( "none" );
-                } );
-
-                it( "determines the attribute casing from the metadata if an `attributecasing` attribute is present", function() {
-                    var user = getInstance( "User" );
-                    expect( user.getAttributeCasing() ).toBe( "snake" );
-                } );
-            } );
         } );
     }
 

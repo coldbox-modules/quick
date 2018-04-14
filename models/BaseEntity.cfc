@@ -73,7 +73,7 @@ component accessors="true" {
 
     function clearAttribute( name, setToNull = false ) {
         if ( setToNull ) {
-            variables.attributesData[ applyCasingTransformation( name, getAttributeCasing() ) ] = javacast( "null", "" );
+            variables.attributesData[ name ] = javacast( "null", "" );
         }
         else {
             variables.attributesData.delete( name );
@@ -152,7 +152,7 @@ component accessors="true" {
         if ( isColumnAlias( name ) ) {
             name = getColumnForAlias( name );
         }
-        variables.attributesData[ applyCasingTransformation( name, getAttributeCasing() ) ] = value;
+        variables.attributesData[ name ] = value;
         return this;
     }
 
@@ -366,10 +366,7 @@ component accessors="true" {
         var related = wirebox.getInstance( relationName );
 
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = applyCasingTransformation(
-                [ related.getEntityName(), related.getKey() ],
-                related.getAttributeCasing()
-            );
+            arguments.foreignKey = related.getEntityName() & related.getKey();
         }
         if ( isNull( arguments.owningKey ) ) {
             arguments.owningKey = related.getKey();
@@ -392,10 +389,7 @@ component accessors="true" {
             arguments.foreignKey = getKey();
         }
         if ( isNull( arguments.owningKey ) ) {
-            arguments.owningKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                getAttributeCasing()
-            );
+            arguments.owningKey = getEntityName() & getKey();
         }
         return wirebox.getInstance( name = "HasOne@quick", initArguments = {
             wirebox = wirebox,
@@ -412,17 +406,10 @@ component accessors="true" {
     private function hasMany( relationName, foreignKey, owningKey ) {
         var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                getAttributeCasing()
-            );
+            arguments.foreignKey = getEntityName() & getKey();
         }
         if ( isNull( arguments.owningKey ) ) {
-            arguments.owningKey = "#getEntityName()#_#getKey()#";
-            arguments.owningKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                getAttributeCasing()
-            );
+            arguments.owningKey = getEntityName() & getKey();
         }
         return wirebox.getInstance( name = "HasMany@quick", initArguments = {
             wirebox = wirebox,
@@ -447,16 +434,10 @@ component accessors="true" {
             }
         }
         if ( isNull( arguments.relatedKey ) ) {
-            arguments.relatedKey = applyCasingTransformation(
-                [ related.getEntityName(), related.getKey() ],
-                related.getAttributeCasing()
-            );
+            arguments.relatedKey = related.getEntityName() & related.getKey();
         }
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                getAttributeCasing()
-            );
+            arguments.foreignKey = getEntityName() & getKey();
         }
         return wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
             wirebox = wirebox,
@@ -475,16 +456,10 @@ component accessors="true" {
         var related = wirebox.getInstance( relationName );
         var intermediate = wirebox.getInstance( intermediateName );
         if ( isNull( arguments.intermediateKey ) ) {
-            arguments.intermediateKey = applyCasingTransformation(
-                [ intermediate.getEntityName(), intermediate.getKey() ],
-                intermediate.getAttributeCasing()
-            );
+            arguments.intermediateKey = intermediate.getEntityName() & intermediate.getKey();
         }
         if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = applyCasingTransformation(
-                [ getEntityName(), getKey() ],
-                intermediate.getAttributeCasing()
-            );
+            arguments.foreignKey = getEntityName() & getKey();
         }
         if ( isNull( arguments.owningKey ) ) {
             arguments.owningKey = getKey();
@@ -642,10 +617,7 @@ component accessors="true" {
             return;
         }
 
-        var columnName = applyCasingTransformation(
-            str.capitalize( str.slice( missingMethodName, 4 ), true ),
-            getAttributeCasing()
-        );
+        var columnName = str.slice( missingMethodName, 4 );
 
         if ( isColumnAlias( columnName ) ) {
             return getAttribute( getColumnForAlias( columnName ) );
@@ -663,10 +635,7 @@ component accessors="true" {
             return;
         }
 
-        var columnName = applyCasingTransformation(
-            str.capitalize( str.slice( missingMethodName, 4 ), true ),
-            getAttributeCasing()
-        );
+        var columnName = str.slice( missingMethodName, 4 );
         setAttribute( columnName, missingMethodArguments[ 1 ] );
         return missingMethodArguments[ 1 ];
     }
@@ -750,18 +719,6 @@ component accessors="true" {
                 }
                 return acc;
             }, {} )
-        );
-    }
-
-    private function applyCasingTransformation( word, casing = "none" ) {
-        if ( casing == "none" ) {
-            return isArray( word ) ? arrayToList( word, "" ) : word;
-        }
-
-        return invoke(
-            str,
-            casing,
-            { 1 = isArray( word ) ? arrayToList( word, " " ) : word }
         );
     }
 

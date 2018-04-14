@@ -9,7 +9,7 @@ component extends="quick.models.BaseEntity" {
 
     variables.relationships = {
         "posts" = function() {
-            return hasManyThrough( "Post", "User" );
+            return hasManyThrough( "Post", "User", "country_id", "user_id" );
         }
     };
 

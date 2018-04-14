@@ -1,4 +1,4 @@
-component extends="quick.models.BaseEntity" attributecasing="snake" {
+component extends="quick.models.BaseEntity" {
 
     property name="id";
     property name="username";
@@ -20,11 +20,11 @@ component extends="quick.models.BaseEntity" attributecasing="snake" {
     }
 
     function posts() {
-        return hasMany( "Post" );
+        return hasMany( "Post", "post_pk", "user_id" );
     }
 
     function latestPost() {
-        return hasOne( "Post", "post_pk" ).latest();
+        return hasOne( "Post", "post_pk", "user_id" ).latest();
     }
 
 }

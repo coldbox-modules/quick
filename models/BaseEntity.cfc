@@ -386,7 +386,7 @@ component accessors="true" {
         } );
     }
 
-    private function hasOne( relationName, foreignKey ) {
+    private function hasOne( relationName, foreignKey, owningKey ) {
         var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = getKey();
@@ -409,7 +409,7 @@ component accessors="true" {
         } );
     }
 
-    private function hasMany( relationName, foreignKey ) {
+    private function hasMany( relationName, foreignKey, owningKey ) {
         var related = wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = applyCasingTransformation(
@@ -457,7 +457,6 @@ component accessors="true" {
                 [ getEntityName(), getKey() ],
                 getAttributeCasing()
             );
-
         }
         return wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
             wirebox = wirebox,
@@ -737,9 +736,6 @@ component accessors="true" {
         setTable( md.table );
         param md.readonly = false;
         setReadOnly( md.readonly );
-        param settings.defaultAttributeCasing = "none";
-        param md.attributecasing = settings.defaultAttributeCasing;
-        setAttributeCasing( md.attributecasing );
         param md.properties = [];
         setAttributesFromProperties( md.properties );
     }

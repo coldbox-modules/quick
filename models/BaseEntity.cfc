@@ -21,7 +21,7 @@ component accessors="true" {
     property name="readonly"        default="false";
     property name="attributeCasing" default="none";
     property name="key"             default="id";
-    property name="attributes"      default="*";
+    property name="attributes";
     property name="metadata";
 
     /*=====================================
@@ -111,8 +111,7 @@ component accessors="true" {
     }
 
     function isColumnAlias( name ) {
-        return ! isSimpleValue( getAttributes() ) &&
-            structKeyExists( getAttributes(), name );
+        return structKeyExists( getAttributes(), name );
     }
 
     function getColumnForAlias( name ) {
@@ -195,12 +194,10 @@ component accessors="true" {
     function find( id ) {
         fireEvent( "preLoad", { id = id, metadata = getMetadata() } );
         var data = getQuery()
-            .when( ! isSimpleValue( getAttributes() ), function( q ) {
-                q.select( arrayMap( structKeyArray( getAttributes() ), function( key ) {
-                    return getColumnForAlias( key );
-                } ) );
-                q.addSelect( getKey() );
-            } )
+            .select( arrayMap( structKeyArray( getAttributes() ), function( key ) {
+                return getColumnForAlias( key );
+            } ) )
+            .addSelect( getKey() )
             .from( getTable() )
             .find( id, getKey() );
         if ( structIsEmpty( data ) ) {
@@ -630,12 +627,6 @@ component accessors="true" {
         }
         var r = tryRelationships( missingMethodName );
         if ( ! isNull( r ) ) { return r; }
-        // if this is a getter and we have a wildcard for attributes, assume it is currently missing
-        if ( str.startsWith( missingMethodName, "get" ) ) {
-            if ( isSimpleValue( getAttributes() ) && getAttributes() == "*" ) {
-                return javacast( "null", "" );
-            }
-        }
         return forwardToQB( missingMethodName, missingMethodArguments );
     }
 
@@ -754,9 +745,6 @@ component accessors="true" {
     }
 
     private function setAttributesFromProperties( properties ) {
-        if ( properties.isEmpty() ) {
-            return setAttributes( "*" );
-        }
         return setAttributes(
             properties.reduce( function( acc, prop ) {
                 param prop.column = prop.name;

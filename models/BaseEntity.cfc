@@ -61,6 +61,11 @@ component accessors="true" {
     }
 
     function getAttributesData( aliased = false ) {
+        getAttributes().keyArray().each( function( key ) {
+            if ( variables.keyExists( key ) && ! isReadOnlyAttribute( key ) ) {
+                setAttribute( key, variables[ key ] );
+            }
+        } );
         return variables.attributesData.reduce( function( acc, key, value ) {
             acc[ aliased ? getAliasForColumn( key ) : key ] = isNull( value ) ? javacast( "null", "" ) : value;
             return acc;
@@ -74,9 +79,11 @@ component accessors="true" {
     function clearAttribute( name, setToNull = false ) {
         if ( setToNull ) {
             variables.attributesData[ name ] = javacast( "null", "" );
+            variables[ getAliasForColumn( name ) ] = javacast( "null", "" );
         }
         else {
             variables.attributesData.delete( name );
+            variables.delete( getAliasForColumn( name ) );
         }
         return this;
     }
@@ -104,7 +111,7 @@ component accessors="true" {
 
     function fill( attributes ) {
         for ( var key in attributes ) {
-            invoke( this, "set#key#", { 1 = attributes[ key ] } );
+            invoke( this, "set#getAliasForColumn( key )#", { 1 = attributes[ key ] } );
         }
         return this;
     }
@@ -312,9 +319,7 @@ component accessors="true" {
     function updateAll( attributes = {} ) {
         guardReadOnly();
         guardAgainstReadOnlyAttributes( attributes );
-        return get().each( function( entity ) {
-            entity.update( attributes );
-        } );
+        return getQuery().update( attributes );
     }
 
     function deleteAll( ids = [] ) {
@@ -322,10 +327,7 @@ component accessors="true" {
         if ( ! arrayIsEmpty( ids ) ) {
             getQuery().whereIn( getKey(), ids );
         }
-        get().each( function( entity ) {
-            entity.delete();
-        } );
-        return this;
+        return getQuery().delete();
     }
 
     /*=====================================

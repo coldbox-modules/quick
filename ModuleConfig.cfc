@@ -35,7 +35,7 @@ component {
             .initArg( name = "grammar", dsl = "#settings.defaultGrammar#@qb" )
             .initArg( name = "utils", dsl = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = function( q ) {
-                return application.wirebox.getInstance(
+                return wirebox.getInstance(
                     name = "QuickCollection@quick",
                     initArguments = { collection = q }
                 );

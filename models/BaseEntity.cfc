@@ -22,12 +22,12 @@ component accessors="true" {
     property name="attributeCasing" default="none";
     property name="key"             default="id";
     property name="attributes";
-    property name="metadata";
+    property name="meta";
 
     /*=====================================
     =            Instance Data            =
     =====================================*/
-    property name="attributesData";
+    property name="data";
     property name="originalAttributes";
     property name="relationshipsData";
     property name="eagerLoad";
@@ -59,7 +59,7 @@ component accessors="true" {
     ==================================*/
 
     function getKeyValue() {
-        return variables.attributesData[ getKey() ];
+        return variables.data[ getKey() ];
     }
 
     function getAttributesData( aliased = false ) {
@@ -68,36 +68,37 @@ component accessors="true" {
                 setAttribute( key, variables[ key ] );
             }
         } );
-        return variables.attributesData.reduce( function( acc, key, value ) {
+        return variables.data.reduce( function( acc, key, value ) {
             acc[ aliased ? getAliasForColumn( key ) : key ] = isNull( value ) ? javacast( "null", "" ) : value;
             return acc;
         }, {} );
     }
 
     function getAttributeNames() {
-        return structKeyArray( variables.attributesData );
+        return structKeyArray( variables.data );
     }
 
     function clearAttribute( name, setToNull = false ) {
         if ( setToNull ) {
-            variables.attributesData[ name ] = javacast( "null", "" );
+            variables.data[ name ] = javacast( "null", "" );
             variables[ getAliasForColumn( name ) ] = javacast( "null", "" );
         }
         else {
-            variables.attributesData.delete( name );
+            variables.data.delete( name );
             variables.delete( getAliasForColumn( name ) );
         }
         return this;
     }
 
-    function setAttributesData( attributes ) {
-        guardAgainstReadOnlyAttributes( attributes );
-        if ( isNull( arguments.attributes ) ) {
+    function setAttributesData( attrs ) {
+        guardAgainstReadOnlyAttributes( attrs );
+        if ( isNull( attrs ) ) {
             setLoaded( false );
-            variables.attributesData = {};
+            variables.data = {};
             return this;
         }
-        variables.attributesData = attributes.reduce( function( acc, name, value ) {
+
+        variables.data = attrs.reduce( function( acc, name, value ) {
             var key = name;
             if ( isColumnAlias( name ) ) {
                 key = getColumnForAlias( name );
@@ -105,9 +106,11 @@ component accessors="true" {
             acc[ key ] = value;
             return acc;
         }, {} );
-        for ( var key in attributesData ) {
-            variables[ getAliasForColumn( key ) ] = attributesData[ key ];
+
+        for ( var key in variables.data ) {
+            variables[ getAliasForColumn( key ) ] = variables.data[ key ];
         }
+
         return this;
     }
 
@@ -119,7 +122,7 @@ component accessors="true" {
     }
 
     function hasAttribute( name ) {
-        return structKeyExists( variables.attributesData, name );
+        return structKeyExists( variables.data, name );
     }
 
     function isColumnAlias( name ) {
@@ -156,7 +159,7 @@ component accessors="true" {
     }
 
     function getAttribute( name ) {
-        return variables.attributesData[ name ];
+        return variables.data[ name ];
     }
 
     function setAttribute( name, value ) {
@@ -164,7 +167,7 @@ component accessors="true" {
         if ( isColumnAlias( name ) ) {
             name = getColumnForAlias( name );
         }
-        variables.attributesData[ name ] = value;
+        variables.data[ name ] = value;
         return this;
     }
 
@@ -204,7 +207,7 @@ component accessors="true" {
     }
 
     function find( id ) {
-        fireEvent( "preLoad", { id = id, metadata = getMetadata() } );
+        fireEvent( "preLoad", { id = id, metadata = getMeta() } );
         var data = getQuery()
             .select( arrayMap( structKeyArray( getAttributes() ), function( key ) {
                 return getColumnForAlias( key );
@@ -337,7 +340,7 @@ component accessors="true" {
     =====================================*/
 
     function hasRelationship( name ) {
-        var md = this.getMetadata();
+        var md = getMeta();
         param md.functions = [];
         return ! arrayIsEmpty( arrayFilter( md.functions, function( func ) {
             return compareNoCase( func.name, name ) == 0;
@@ -727,7 +730,7 @@ component accessors="true" {
 
     private function metadataInspection() {
         var md = getMetadata( this );
-        setMetadata( md );
+        setMeta( md );
         setFullName( md.fullname );
         param md.mapping = listLast( md.fullname, "." );
         setMapping( md.mapping );
@@ -946,7 +949,7 @@ component accessors="true" {
     }
 
     private function isReadOnlyAttribute( name ) {
-        var md = getMetadata();
+        var md = getMeta();
         if ( ! md.keyExists( "properties" ) || arrayIsEmpty( md.properties ) ) {
             return false;
         }

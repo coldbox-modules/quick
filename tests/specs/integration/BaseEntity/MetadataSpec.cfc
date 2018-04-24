@@ -3,7 +3,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
     function run() {
         describe( "Base Entity Metadata Spec", function() {
             it( "extends from the Base Entity", function() {
-                var user = getInstance( "User" );
+                var user = getInstance( "Post" );
                 var md = getMetadata( user );
                 expect( md ).toHaveKey( "extends" );
                 expect( md.extends ).toHaveKey( "name" );
@@ -48,8 +48,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 it( "uses the snake case plural version of the component name", function() {
-                    var post = getInstance( "PhoneNumber" );
-                    expect( post.getTable() ).toBe( "phone_numbers" );
+                    var phoneNumber = getInstance( "PhoneNumber" );
+                    expect( phoneNumber.getTable() ).toBe( "phone_numbers" );
                 } );
             } );
 

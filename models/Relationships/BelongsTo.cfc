@@ -17,7 +17,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
     }
 
     function associate( entity ) {
-        if ( isInstanceOf( entity, "quick.models.BaseEntity" ) ) {
+        if ( isQuickEntity( entity ) ) {
             arguments.entity = entity.getKeyValue();
         }
 

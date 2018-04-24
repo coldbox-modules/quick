@@ -43,4 +43,9 @@ component accessors="true" {
         return this;
     }
 
+    private function isQuickEntity( entity ) {
+        return getMetadata( entity ).keyExists( "quick" ) ||
+            isInstanceOf( entity, "quick.models.BaseEntity" );
+    }
+
 }

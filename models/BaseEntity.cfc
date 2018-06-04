@@ -610,7 +610,7 @@ component accessors="true" {
             variables.query = q;
             return this;
         }
-        var r = tryRelationships( missingMethodName );
+        var r = tryRelationships( missingMethodName, missingMethodArguments );
         if ( ! isNull( r ) ) { return r; }
         return forwardToQB( missingMethodName, missingMethodArguments );
     }
@@ -651,13 +651,13 @@ component accessors="true" {
         return missingMethodArguments[ 1 ];
     }
 
-    private function tryRelationships( missingMethodName ) {
-        var relationship = tryRelationshipGetter( missingMethodName );
+    private function tryRelationships( missingMethodName, missingMethodArguments ) {
+        var relationship = tryRelationshipGetter( missingMethodName, missingMethodArguments );
         if ( ! isNull( relationship ) ) { return relationship; }
         return tryRelationshipDefinition( missingMethodName );
     }
 
-    private function tryRelationshipGetter( missingMethodName ) {
+    private function tryRelationshipGetter( missingMethodName, missingMethodArguments ) {
         if ( ! str.startsWith( missingMethodName, "get" ) ) {
             return;
         }
@@ -672,10 +672,10 @@ component accessors="true" {
             var relationship = "";
             if ( variables.relationships.keyExists( relationshipName ) ) {
                 var method = variables.relationships[ relationshipName ];
-                relationship = method();
+                relationship = method( missingMethodArguments );
             }
             else {
-                relationship = invoke( this, relationshipName );
+                relationship = invoke( this, relationshipName, missingMethodArguments );
             }
             relationship.setRelationMethodName( relationshipName );
             setRelationship( relationshipName, relationship.retrieve() );

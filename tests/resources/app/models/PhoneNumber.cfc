@@ -1,3 +1,5 @@
 component extends="quick.models.BaseEntity" {
-    // this component intentionally left blank
+
+    property name="number" sqltype="cf_sql_varchar";
+
 }

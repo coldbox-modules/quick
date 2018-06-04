@@ -175,5 +175,12 @@ component {
         queryExecute( "
             INSERT INTO `songs` (`id`, `title`, `download_url`, `created_date`, `modified_date`) VALUES (2, 'Open Arms', 'https://open.spotify.com/track/1m2INxep6LfNa25OEg5jZl', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
         " );
+        queryExecute( "
+            CREATE TABLE `phone_numbers` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `number` varchar(50) NOT NULL,
+              PRIMARY KEY (`id`)
+            )
+        " );
     }
 }

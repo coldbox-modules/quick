@@ -133,7 +133,7 @@ component accessors="true" {
     }
 
     function getColumnForAlias( name ) {
-        return getAttributes()[ name ];
+        return getAttributes().keyExists( name ) ? getAttributes()[ name ] : name;
     }
 
     function getAliasForColumn( name ) {
@@ -162,15 +162,13 @@ component accessors="true" {
     }
 
     function getAttribute( name ) {
-        return variables.data[ name ];
+        return variables.data[ getColumnForAlias( name ) ];
     }
 
     function setAttribute( name, value ) {
         guardAgainstReadOnlyAttribute( name );
-        if ( isColumnAlias( name ) ) {
-            name = getColumnForAlias( name );
-        }
-        variables.data[ name ] = value;
+        variables.data[ getColumnForAlias( name ) ] = value;
+        variables[ getAliasForColumn( name ) ] = value;
         return this;
     }
 
@@ -285,7 +283,13 @@ component accessors="true" {
             newQuery()
                 .where( getKey(), getKeyValue() )
                 .update( getAttributesData( withoutKey = true ).map( function( key, value, attributes ) {
-                    return isNull( value ) ? { value = "", nulls = true, null = true } : value;
+                    if ( isNull( value ) ) {
+                        return { value = "", nulls = true, null = true };
+                    }
+                    if ( attributeHasSqlType( key ) ) {
+                        return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
+                    }
+                    return value;
                 } ) );
             setOriginalAttributes( getAttributesData() );
             setLoaded( true );
@@ -295,7 +299,15 @@ component accessors="true" {
             getKeyType().preInsert( this );
             fireEvent( "preInsert", { entity = this } );
             guardValid();
-            var result = newQuery().insert( getAttributesData() );
+            var result = newQuery().insert( getAttributesData().map( function( key, value, attributes ) {
+                if ( isNull( value ) ) {
+                    return { value = "", nulls = true, null = true };
+                }
+                if ( attributeHasSqlType( key ) ) {
+                    return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
+                }
+                return value;
+            } ) );
             getKeyType().postInsert( this, result );
             setOriginalAttributes( getAttributesData() );
             setLoaded( true );
@@ -981,6 +993,18 @@ component accessors="true" {
 
     private function eventMethodExists( eventName ) {
         return variables.keyExists( eventName );
+    }
+
+    private function attributeHasSqlType( name ) {
+        return ! getMeta().properties.filter( function( property ) {
+            return property.name == getAliasForColumn( name ) && property.keyExists( "sqltype" );
+        } ).isEmpty();
+    }
+
+    private function getSqlTypeForAttribute( name ) {
+        return getMeta().properties.filter( function( property ) {
+            return property.name == getAliasForColumn( name );
+        } )[ 1 ].sqltype;
     }
 
 }

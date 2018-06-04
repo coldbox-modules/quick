@@ -1,5 +1,11 @@
 component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
+    function beforeAll() {
+        super.beforeAll();
+        var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
+        interceptorService.registerInterceptor( interceptorObject = this );
+    }
+
     function run() {
         describe( "Save Spec", function() {
             describe( "normal saving", function() {
@@ -47,6 +53,25 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     existingUser.save();
                     var userRowsPostSave = queryExecute( "SELECT * FROM users" );
                     expect( userRowsPostSave ).toHaveLength( 2 );
+                } );
+
+                it( "uses the type attribute if present for each column", function() {
+                    structDelete( request, "saveSpecPreQBExecute" );
+
+                    var newPhoneNumber = getInstance( "PhoneNumber" );
+                    newPhoneNumber.setNumber( "+18018644200" );
+                    newPhoneNumber.save();
+
+                    expect( request ).toHaveKey( "saveSpecPreQBExecute" );
+                    expect( request.saveSpecPreQBExecute ).toBeArray();
+                    expect( request.saveSpecPreQBExecute ).toHaveLength( 1 );
+                    expect( request.saveSpecPreQBExecute[ 1 ] ).toHaveKey( "bindings" );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toBeArray();
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toHaveLength( 1 );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "value" );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].value ).toBe( "+18018644200" );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "cfsqltype" );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
                 } );
             } );
 
@@ -180,6 +205,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
             } );
         } );
+    }
+
+    function preQBExecute( event, interceptData, buffer, rc, prc ) {
+        param request.saveSpecPreQBExecute = [];
+        arrayAppend( request.saveSpecPreQBExecute, duplicate( arguments.interceptData ) );
     }
 
 }

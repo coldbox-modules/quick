@@ -1,3 +1,3 @@
-component quick {
+component extends="quick.models.BaseEntity" {
     // this component intentionally left blank
 }

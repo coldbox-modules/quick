@@ -62,13 +62,16 @@ component accessors="true" {
         return variables.data[ getKey() ];
     }
 
-    function getAttributesData( aliased = false ) {
+    function getAttributesData( aliased = false, withoutKey = false ) {
         getAttributes().keyArray().each( function( key ) {
             if ( variables.keyExists( key ) && ! isReadOnlyAttribute( key ) ) {
                 setAttribute( key, variables[ key ] );
             }
         } );
         return variables.data.reduce( function( acc, key, value ) {
+            if ( withoutKey && key == getKey() ) {
+                return acc;
+            }
             acc[ aliased ? getAliasForColumn( key ) : key ] = isNull( value ) ? javacast( "null", "" ) : value;
             return acc;
         }, {} );
@@ -281,7 +284,7 @@ component accessors="true" {
             guardValid();
             newQuery()
                 .where( getKey(), getKeyValue() )
-                .update( getAttributesData().map( function( key, value, attributes ) {
+                .update( getAttributesData( withoutKey = true ).map( function( key, value, attributes ) {
                     return isNull( value ) ? { value = "", nulls = true, null = true } : value;
                 } ) );
             setOriginalAttributes( getAttributesData() );

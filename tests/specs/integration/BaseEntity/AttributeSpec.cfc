@@ -29,23 +29,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( originalAttributes ).toBe( user.getOriginalAttributes() );
             } );
 
-            it( "can fill some attributes while leaving the others alone", function() {
+            it( "returns a default value if the attribute is not yet set", function() {
                 var user = getInstance( "User" );
-                user.setUsername( "janedoe" );
-                user.setFirstName( "Jane" );
+                expect( user.getAttribute( "username" ) ).toBe( "" );
+                expect( user.getAttribute( "username", "default-value" ) ).toBe( "default-value" );
+            } );
 
-                expect( user.getUsername() ).toBe( "janedoe" );
-                expect( user.getFirstName() ).toBe( "Jane" );
-                expect( user.hasAttribute( "last_name" ) ).toBeFalse();
-
-                user.fill( {
-                    "first_name" = "Janice",
-                    "last_name" = "Doe"
-                } );
-
-                expect( user.getUsername() ).toBe( "janedoe" );
-                expect( user.getFirstName() ).toBe( "Janice" );
-                expect( user.getLastName() ).toBe( "Doe" );
+            it( "throws an exception when trying to set an attribute that does not exist", function() {
+                var user = getInstance( "User" );
+                expect( function() {
+                    user.setAttribute( "does-not-exist", "any-value" );
+                } ).toThrow( type = "AttributeNotFound" );
             } );
 
             describe( "dirty", function() {

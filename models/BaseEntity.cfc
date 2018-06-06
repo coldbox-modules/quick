@@ -119,13 +119,15 @@ component accessors="true" {
 
     function fill( attributes ) {
         for ( var key in attributes ) {
+            guardAgainstNonExistentAttribute( key );
+            variables.data[ getColumnForAlias( key ) ] = attributes[ key ];
             invoke( this, "set#getAliasForColumn( key )#", { 1 = attributes[ key ] } );
         }
         return this;
     }
 
     function hasAttribute( name ) {
-        return structKeyExists( variables.data, name );
+        return structKeyExists( variables.attributes, getAliasForColumn( name ) ) || getKey() == name;
     }
 
     function isColumnAlias( name ) {
@@ -161,11 +163,14 @@ component accessors="true" {
         return ! deepEqual( getOriginalAttributes(), getAttributesData() );
     }
 
-    function getAttribute( name ) {
-        return variables.data[ getColumnForAlias( name ) ];
+    function getAttribute( name, defaultValue = "" ) {
+        return variables.data.keyExists( getColumnForAlias( name ) ) ?
+            variables.data[ getColumnForAlias( name ) ] :
+            defaultValue;
     }
 
     function setAttribute( name, value ) {
+        guardAgainstNonExistentAttribute( name );
         guardAgainstReadOnlyAttribute( name );
         variables.data[ getColumnForAlias( name ) ] = value;
         variables[ getAliasForColumn( name ) ] = value;
@@ -403,7 +408,7 @@ component accessors="true" {
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
             owning = this,
             foreignKey = foreignKey,
-            foreignKeyValue = hasAttribute( arguments.foreignKey ) ? getAttribute( arguments.foreignKey ) : "",
+            foreignKeyValue = getAttribute( arguments.foreignKey ),
             owningKey = owningKey
         } );
     }
@@ -951,6 +956,15 @@ component accessors="true" {
     private function guardAgainstReadOnlyAttributes( attributes ) {
         for ( var name in attributes ) {
             guardAgainstReadOnlyAttribute( name );
+        }
+    }
+
+    private function guardAgainstNonExistentAttribute( name ) {
+        if ( ! hasAttribute( name ) ) {
+            throw(
+                type = "AttributeNotFound",
+                message = "The [#name#] attribute was not found on the [#getEntityName()#] entity"
+            );
         }
     }
 

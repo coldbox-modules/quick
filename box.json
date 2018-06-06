@@ -32,11 +32,6 @@
         "cfcollection":"modules/cfcollection/",
         "cbvalidation":"modules/cbvalidation/"
     },
-    "scripts":{
-        "postVersion":"package set location='coldbox-modules/quick#v`package version`'",
-        "onRelease":"publish",
-        "postPublish":"!git push && !git push --tags"
-    },
     "testbox":{
         "reporter":"json",
         "runner":"http://127.0.0.1:52482/tests/runner.cfm",

@@ -209,7 +209,7 @@ component accessors="true" {
         return newEntity()
             .setAttributesData( attributes )
             .setOriginalAttributes( attributes )
-            .setLoaded( true );
+            .setLoaded( ! structIsEmpty( attributes ) );
     }
 
     function find( id ) {

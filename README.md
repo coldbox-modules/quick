@@ -1,6 +1,6 @@
 
 <p align="center">
-    Quick<br />
+    <img src="/quick300.png" /><br />
     <a href="https://travis-ci.org/coldbox-modules/quick"><img src="https://travis-ci.org/coldbox-modules/quick.svg?branch=master" alt="Build Status"></a>
 </p>
 

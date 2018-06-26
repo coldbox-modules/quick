@@ -1,4 +1,8 @@
-# Quick
+
+<p align="center">
+    Quick<br />
+    <a href="https://travis-ci.org/coldbox-modules/quick"><img src="https://travis-ci.org/coldbox-modules/quick.svg?branch=master" alt="Build Status"></a>
+</p>
 
 ## A CFML ORM Engine
 

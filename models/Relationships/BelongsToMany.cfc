@@ -57,7 +57,7 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
         return this;
     }
 
-    function detatch( ids ) {
+    function detach( ids ) {
         if ( ! isArray( arguments.ids ) ) {
             arguments.ids = [ arguments.ids ];
         }

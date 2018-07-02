@@ -131,7 +131,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 describe( "detach", function() {
-                    it( "can detatch an id from a relationship", function() {
+                    it( "can detach an id from a relationship", function() {
                         var post = getInstance( "Post" ).find( 1 );
 
                         expect( post.getTags().toArray() ).toBeArray();
@@ -139,7 +139,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                         var tag = post.getTags().toArray()[ 1 ];
 
-                        post.tags().detatch( tag.getId() );
+                        post.tags().detach( tag.getId() );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 1 );
@@ -153,7 +153,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                         var tag = post.getTags().toArray()[ 1 ];
 
-                        post.tags().detatch( tag );
+                        post.tags().detach( tag );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 1 );
@@ -166,7 +166,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         expect( tags ).toBeArray();
                         expect( tags ).toHaveLength( 2 );
 
-                        post.tags().detatch( [ tags[ 1 ].getId(), tags[ 2 ] ] );
+                        post.tags().detach( [ tags[ 1 ].getId(), tags[ 2 ] ] );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toBeEmpty();

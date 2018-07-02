@@ -1,3 +1,15 @@
+# v1.1.2
+## 02 Jul 2018 — 17:22:46 UTC
+
+### chore
+
++ __build:__ Set location automatically on version update ([183b05a](https://github.com/coldbox-modules/quick/commit/183b05a839e71105ffd1aae2a271dce85c808bbc))
+
+### fix
+
++ __BaseEntity:__ Only set loaded for attributes successfully retrieved from the database ([665a78a](https://github.com/coldbox-modules/quick/commit/665a78a4cb44e61282f5017d895a41ae0768bcf9))
+
+
 # v1.1.1
 ## 02 Jul 2018 — 16:54:21 UTC
 

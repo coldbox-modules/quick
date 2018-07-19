@@ -627,7 +627,7 @@ component accessors="true" {
         if ( ! isNull( columnValue ) ) { return columnValue; }
         var q = tryScopes( missingMethodName, missingMethodArguments );
         if ( ! isNull( q ) ) {
-            variables.query = q;
+            variables.query = q.getQuery();
             return this;
         }
         var r = tryRelationships( missingMethodName, missingMethodArguments );
@@ -716,7 +716,7 @@ component accessors="true" {
     private function tryScopes( missingMethodName, missingMethodArguments ) {
         if ( structKeyExists( variables, "scope#missingMethodName#" ) ) {
             return invoke( this, "scope#missingMethodName#", {
-                query = getQuery(),
+                query = this,
                 args = missingMethodArguments
             } );
         }

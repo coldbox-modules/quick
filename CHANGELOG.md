@@ -1,3 +1,16 @@
+# v1.2.0
+## 19 Jul 2018 — 22:43:54 UTC
+
+### chore
+
++ __build:__ Fix spotty gpg key ([c3c5a18](https://github.com/coldbox-modules/quick/commit/c3c5a18b132ee73bc3f5dabb2dee6014f0855b59))
++ __build:__ Test adobe@2018 on CI ([299d5b0](https://github.com/coldbox-modules/quick/commit/299d5b0be6972bc7dc966e1b19acb5c24fac6723))
+
+### feat
+
++ __Scopes:__ Allow scopes to call other scopes ([07bbde1](https://github.com/coldbox-modules/quick/commit/07bbde1f447b85a3ee4f0d80e4c24ca233102a65))
+
+
 # v1.1.2
 ## 02 Jul 2018 — 17:22:46 UTC
 

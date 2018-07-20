@@ -603,7 +603,7 @@ component accessors="true" {
     public function newQuery() {
         var md = getMeta();
         if ( md.keyExists( "grammar" ) ) {
-            builder.setGrammar( wirebox.getInstance( md.grammar & "@qb" ) )
+            builder.setGrammar( wirebox.getInstance( md.grammar & "@qb" ) );
         }
         variables.query = builder.newQuery()
             .setReturnFormat( function( q ) {

@@ -763,7 +763,7 @@ component accessors="true" {
         setEntityName( md.entityName );
         param md.table = str.plural( str.snake( getEntityName() ) );
         setTable( md.table );
-        md.queryoptions = ( IsNull(md.datasource) ? {} : { datasource = md.datasource} );
+        md.queryoptions = ( ! structKeyExists(md, "datasource") ? {} : { datasource = md.datasource} );
         setQueryOptions( md.queryoptions);
         param md.readonly = false;
         setReadOnly( md.readonly );

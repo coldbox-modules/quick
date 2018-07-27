@@ -5,7 +5,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
     }
 
     function apply() {
-        getRelated().where( getOwningKey(), getForeignKeyValue() );
+        getRelated().where( getForeignKey(), getForeignKeyValue() );
     }
 
     function retrieve() {

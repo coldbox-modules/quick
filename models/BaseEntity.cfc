@@ -3,35 +3,49 @@ component accessors="true" {
     /*====================================
     =            Dependencies            =
     ====================================*/
-    property name="builder"            inject="QueryBuilder@qb";
-    property name="wirebox"            inject="wirebox";
-    property name="str"                inject="Str@str";
-    property name="settings"           inject="coldbox:modulesettings:quick";
-    property name="validationManager"  inject="ValidationManager@cbvalidation";
-    property name="interceptorService" inject="coldbox:interceptorService";
-    property name="keyType"            inject="AutoIncrementing@quick";
+    property name="builder"
+                inject="QueryBuilder@qb" 
+                persistent="false";
+    property name="wirebox"
+                inject="wirebox" 
+                persistent="false";
+    property name="str"
+                inject="Str@str" 
+                persistent="false";
+    property name="settings"
+                inject="coldbox:modulesettings:quick" 
+                persistent="false";
+    property name="validationManager"
+                inject="ValidationManager@cbvalidation" 
+                persistent="false";
+    property name="interceptorService"
+                inject="coldbox:interceptorService"
+                persistent="false";
+    property name="keyType"
+                inject="AutoIncrementing@quick" 
+                persistent="false";
 
     /*===========================================
     =            Metadata Properties            =
     ===========================================*/
-    property name="entityName";
-    property name="mapping";
-    property name="fullName";
-    property name="table";
-    property name="readonly"        default="false";
-    property name="attributeCasing" default="none";
-    property name="key"             default="id";
-    property name="attributes";
-    property name="meta";
+    property name="entityName"      persistent="false";
+    property name="mapping"         persistent="false";
+    property name="fullName"        persistent="false";
+    property name="table"           persistent="false";
+    property name="readonly"        default="false" persistent="false";
+    property name="attributeCasing" default="none"  persistent="false";
+    property name="key"             default="id"    persistent="false";
+    property name="attributes"      persistent="false";
+    property name="meta"            persistent="false";
 
     /*=====================================
     =            Instance Data            =
     =====================================*/
-    property name="data";
-    property name="originalAttributes";
-    property name="relationshipsData";
-    property name="eagerLoad";
-    property name="loaded";
+    property name="data" persistent="false";
+    property name="originalAttributes" persistent="false";
+    property name="relationshipsData" persistent="false";
+    property name="eagerLoad" persistent="false";
+    property name="loaded" persistent="false";
 
     this.constraints = {};
 
@@ -63,11 +77,13 @@ component accessors="true" {
     }
 
     function getAttributesData( aliased = false, withoutKey = false ) {
+
         getAttributes().keyArray().each( function( key ) {
-            if ( variables.keyExists( key ) && ! isReadOnlyAttribute( key ) ) {
-                setAttribute( key, variables[ key ] );
+            if ( ! isReadOnlyAttribute( key ) ) {
+              setAttribute( key, !isNull( variables[ key ] ) ? variables[ key ] : ''  );
             }
         } );
+
         return variables.data.reduce( function( acc, key, value ) {
             if ( withoutKey && key == getKey() ) {
                 return acc;
@@ -762,15 +778,19 @@ component accessors="true" {
         param md.readonly = false;
         setReadOnly( md.readonly );
         param md.properties = [];
+
+
         setAttributesFromProperties( md.properties );
     }
 
+
     private function setAttributesFromProperties( properties ) {
-        return setAttributes(
+
+        setAttributes(
             properties.reduce( function( acc, prop ) {
                 param prop.column = prop.name;
                 param prop.persistent = true;
-                if ( prop.persistent ) {
+                if ( javacast( "boolean", prop.persistent ) ) {
                     acc[ prop.name ] = prop.column;
                 }
                 return acc;

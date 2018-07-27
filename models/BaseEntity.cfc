@@ -749,7 +749,8 @@ component accessors="true" {
     }
 
     private function metadataInspection() {
-        var md = getMetadata( this );
+        var util = createObject("component","coldbox.system.core.util.Util");
+        var md = util.getInheritedMetadata( this );
         setMeta( md );
         setFullName( md.fullname );
         param md.mapping = listLast( md.fullname, "." );

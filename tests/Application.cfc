@@ -63,6 +63,9 @@ component {
             INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`) VALUES (2, 'johndoe', 'John', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:07:16', '2017-07-28 02:07:16');
         " );
         queryExecute( "
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`) VALUES (3, 'janedoe', 'Jane', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', NULL, '2017-07-28 02:08:16', '2017-07-28 02:08:16');
+        " );
+        queryExecute( "
             CREATE TABLE `my_posts` (
               `post_pk` int(11) NOT NULL AUTO_INCREMENT,
               `user_id` int(11),
@@ -162,7 +165,7 @@ component {
         queryExecute( "
             CREATE TABLE `songs` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
-              `title` varchar(255) NOT NULL,
+              `title` varchar(255),
               `download_url` varchar(255) NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -178,7 +181,7 @@ component {
         queryExecute( "
             CREATE TABLE `phone_numbers` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
-              `number` varchar(50) NOT NULL,
+              `number` varchar(50),
               PRIMARY KEY (`id`)
             )
         " );

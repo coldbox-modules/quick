@@ -24,7 +24,8 @@ component accessors="true" {
     property name="key"             default="id";
     property name="attributes";
     property name="meta";
-    
+    property name="nullValues";
+
     /*=====================================
     =            Instance Data            =
     =====================================*/
@@ -48,6 +49,7 @@ component accessors="true" {
         setOriginalAttributes( {} );
         setRelationshipsData( {} );
         setEagerLoad( [] );
+        setNullValues( {} );
         setLoaded( false );
     }
 
@@ -289,7 +291,7 @@ component accessors="true" {
             newQuery()
                 .where( getKey(), getKeyValue() )
                 .update( getAttributesData( withoutKey = true ).map( function( key, value, attributes ) {
-                    if ( isNull( value ) ) {
+                    if ( isNull( value ) || isNullValue( key, value ) ) {
                         return { value = "", nulls = true, null = true };
                     }
                     if ( attributeHasSqlType( key ) ) {
@@ -306,7 +308,7 @@ component accessors="true" {
             fireEvent( "preInsert", { entity = this } );
             guardValid();
             var result = newQuery().insert( getAttributesData().map( function( key, value, attributes ) {
-                if ( isNull( value ) ) {
+                if ( isNull( value ) || isNullValue( key, value ) ) {
                     return { value = "", nulls = true, null = true };
                 }
                 if ( attributeHasSqlType( key ) ) {
@@ -783,6 +785,11 @@ component accessors="true" {
             properties.reduce( function( acc, prop ) {
                 param prop.column = prop.name;
                 param prop.persistent = true;
+                param prop.nullValue = "";
+                param prop.convertToNull = true;
+                if ( prop.convertToNull ) {
+                    variables.nullValues[ prop.name ] = prop.nullValue;
+                }
                 if ( prop.persistent ) {
                     acc[ prop.name ] = prop.column;
                 }
@@ -1033,6 +1040,11 @@ component accessors="true" {
         return getMeta().properties.filter( function( property ) {
             return property.name == getAliasForColumn( name );
         } )[ 1 ].sqltype;
+    }
+
+    private function isNullValue( key, value ) {
+        return variables.nullValues.keyExists( getAliasForColumn( key ) ) &&
+            compare( variables.nullValues[ getAliasForColumn( key ) ], value ) == 0;
     }
 
 }

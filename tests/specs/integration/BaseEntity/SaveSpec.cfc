@@ -16,10 +16,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     newUser.setLastName( "User" );
                     newUser.setPassword( hash( "password" ) );
                     var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                    expect( userRowsPreSave ).toHaveLength( 2 );
+                    expect( userRowsPreSave ).toHaveLength( 3 );
                     newUser.save();
                     var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                    expect( userRowsPostSave ).toHaveLength( 3 );
+                    expect( userRowsPostSave ).toHaveLength( 4 );
                     var newUserAgain = getInstance( "User" ).whereUsername( "new_user" ).firstOrFail();
                     expect( newUserAgain.getFirstName() ).toBe( "New" );
                     expect( newUserAgain.getLastName() ).toBe( "User" );
@@ -49,10 +49,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     var existingUser = getInstance( "User" ).find( 1 );
                     existingUser.setUsername( "new_elpete_username" );
                     var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                    expect( userRowsPreSave ).toHaveLength( 2 );
+                    expect( userRowsPreSave ).toHaveLength( 3 );
                     existingUser.save();
                     var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                    expect( userRowsPostSave ).toHaveLength( 2 );
+                    expect( userRowsPostSave ).toHaveLength( 3 );
                 } );
 
                 it( "uses the type attribute if present for each column", function() {

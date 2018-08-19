@@ -33,14 +33,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can eager load a has many relationship", function() {
                 var users = getInstance( "User" ).with( "posts" ).latest().get();
                 expect( users.get() ).toBeArray();
-                expect( users.get() ).toHaveLength( 2, "Two users should be returned" );
+                expect( users.get() ).toHaveLength( 3, "Three users should be returned" );
 
-                var johndoe = users.get()[ 1 ];
+                var janedoe = users.get()[ 1 ];
+                expect( janedoe.getUsername() ).toBe( "janedoe" );
+                expect( janedoe.getPosts().get() ).toBeArray();
+                expect( janedoe.getPosts().get() ).toHaveLength( 0, "No posts should belong to janedoe" );
+
+                var johndoe = users.get()[ 2 ];
                 expect( johndoe.getUsername() ).toBe( "johndoe" );
                 expect( johndoe.getPosts().get() ).toBeArray();
                 expect( johndoe.getPosts().get() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-                var elpete = users.get()[ 2 ];
+                var elpete = users.get()[ 3 ];
                 expect( elpete.getUsername() ).toBe( "elpete" );
                 expect( elpete.getPosts().get() ).toBeArray();
                 expect( elpete.getPosts().get() ).toHaveLength( 2, "Two posts should belong to elpete" );

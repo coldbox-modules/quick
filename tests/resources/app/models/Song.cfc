@@ -1,7 +1,7 @@
 component extends="quick.models.BaseEntity" accessors="true" {
 
     property name="id";
-    property name="title";
+    property name="title" nullValue="REALLY_NULL";
     property name="downloadUrl" column="download_url";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";

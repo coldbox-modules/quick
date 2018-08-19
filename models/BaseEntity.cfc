@@ -737,7 +737,10 @@ component accessors="true" {
     }
 
     function getMemento() {
-        return getAttributesData();
+        return getAttributes().keyArray().reduce( function( acc, key ) {
+            acc[ key ] = getAttribute( key );
+            return acc;
+        }, {} );
     }
 
     function $renderdata() {

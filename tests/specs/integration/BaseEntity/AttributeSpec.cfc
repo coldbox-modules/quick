@@ -69,6 +69,32 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     expect( user.isDirty() ).toBeFalse();
                 } );
             } );
+
+            it( "shows all the attributes in the memento of a newly created object", function() {
+                expect( getInstance( "User" ).getMemento() ).toBe( {
+                    "id" = "",
+                    "username" = "",
+                    "firstName" = "",
+                    "lastName" = "",
+                    "password" = "",
+                    "countryId" = "",
+                    "createdDate" = "",
+                    "modifiedDate" = ""
+                } );
+            } );
+
+            it( "shows all the attributes in the component casing", function() {
+                expect( getInstance( "User" ).findOrFail( 1 ).getMemento() ).toBe( {
+                    "id" = 1,
+                    "username" = "elpete",
+                    "firstName" = "Eric",
+                    "lastName" = "Peterson",
+                    "password" = "5F4DCC3B5AA765D61D8327DEB882CF99",
+                    "countryId" = "02B84D66-0AA0-F7FB-1F71AFC954843861",
+                    "createdDate" = "2017-07-28 02:06:36",
+                    "modifiedDate" = "2017-07-28 02:06:36"
+                } );
+            } );
         } );
     }
 

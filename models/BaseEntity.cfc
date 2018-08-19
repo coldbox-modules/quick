@@ -644,7 +644,7 @@ component accessors="true" {
         var getColumnValue = tryColumnGetters( missingMethodName );
         if ( ! isNull( getColumnValue ) ) { return getColumnValue; }
         var setColumnValue = tryColumnSetters( missingMethodName, missingMethodArguments );
-        if ( ! isNull( setColumnValue ) ) { return setColumnValue; }
+        if ( ! isNull( setColumnValue ) ) { return this; }
         return;
     }
 

@@ -55,7 +55,7 @@ component {
             table.string( "password" );
             table.timestamp( "createdDate" );
             table.timestamp( "updatedDate" );
-        } );    
+        } );
     }
 
 }
@@ -95,6 +95,19 @@ component {
 
 Now that you've seen an example, [dig in to what you can do](https://github.com/ortus-docs/quick-docs/blob/master/getting-started/defining-an-entity.md) with Quick!
 
+### Tests and Contributing
+
+To run the tests, first clone this repo and run a `box install`.
+
+Quick's test suite runs specifically on MySQL, so you will need a MySQL database to run the tests.
+If you do not have one, Docker provides an easy way to start one.
+
+```sh
+docker run -d --name quick -p 3306:3306 -e MYSQL_DATABASE=quick -e MYSQL_USER=quick -e MYSQL_PASSWORD=quick mysql:5
+```
+
+Finally, copy the `.env.example` file to `.env` and fill in the values for your database.
+
 ### Prior Art, Acknowledgements, and Thanks
 
 Quick is backed by [qb](https://www.forgebox.io/view/qb). Without qb, there is no Quick.
@@ -102,4 +115,3 @@ Quick is backed by [qb](https://www.forgebox.io/view/qb). Without qb, there is n
 Quick is inspired heavily by [Eloquent in Laravel](https://laravel.com/docs/5.6/eloquent). Thank you Taylor Otwell and the Laravel community for a great library.
 
 Development of Quick is sponsored by Ortus Solutions. Thank you Ortus Solutions for investing in the future of CFML.
-

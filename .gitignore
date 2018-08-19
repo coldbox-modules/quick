@@ -11,3 +11,5 @@
 !.engine/WEB-INF/lib
 .engine/WEB-INF/lib/*
 !.engine/WEB-INF/lib/h2-1.4.196.jar
+
+.env

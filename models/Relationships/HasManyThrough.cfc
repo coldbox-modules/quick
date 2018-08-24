@@ -17,16 +17,16 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
     function apply() {
         getRelated()
             .join(
-                getIntermediate().getTable(),
-                "#getIntermediate().getTable()#.#getIntermediate().getKey()#",
-                "#getRelated().getTable()#.#getIntermediateKey()#"
+                getIntermediate().get_Table(),
+                "#getIntermediate().get_Table()#.#getIntermediate().get_Key()#",
+                "#getRelated().get_Table()#.#getIntermediateKey()#"
             )
             .join(
-                getOwning().getTable(),
-                "#getOwning().getTable()#.#getOwningKey()#",
-                "#getIntermediate().getTable()#.#getForeignKey()#"
+                getOwning().get_Table(),
+                "#getOwning().get_Table()#.#getOwningKey()#",
+                "#getIntermediate().get_Table()#.#getForeignKey()#"
             )
-            .where( "#getOwning().getTable()#.#getOwningKey()#", getOwning().getKeyValue() );
+            .where( "#getOwning().get_Table()#.#getOwningKey()#", getOwning().keyValue() );
     }
 
     function fromGroup( items ) {

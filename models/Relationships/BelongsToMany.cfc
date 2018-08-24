@@ -16,12 +16,12 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
     }
 
     function apply() {
-        getRelated().join( getTable(), function( j ) {
+        getRelated().join( variables.table, function( j ) {
             j.on(
-                "#getRelated().getTable()#.#getRelated().getKey()#",
-                "#getTable()#.#getOwningKey()#"
+                "#getRelated().get_Table()#.#getRelated().get_Key()#",
+                "#variables.table#.#getOwningKey()#"
             );
-            j.where( "#getTable()#.#getForeignKey()#", getForeignKeyValue() );
+            j.where( "#variables.table#.#getForeignKey()#", getForeignKeyValue() );
         } );
     }
 
@@ -42,10 +42,10 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
             if ( isSimpleValue( id ) ) {
                 return id;
             }
-            return id.getKeyValue();
+            return id.keyValue();
         } );
 
-        builder.get().from( getTable() ).insert( arrayMap( arguments.ids, function( id ) {
+        builder.get().from( variables.table ).insert( arrayMap( arguments.ids, function( id ) {
             return {
                 "#getForeignKey()#" = getForeignKeyValue(),
                 "#getOwningKey()#" = id
@@ -66,11 +66,11 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
             if ( isSimpleValue( id ) ) {
                 return id;
             }
-            return id.getKeyValue();
+            return id.keyValue();
         } );
 
         builder.get()
-            .from( getTable() )
+            .from( variables.table )
             .where( getForeignKey(), getForeignKeyValue() )
             .whereIn( getOwningKey(), arguments.ids )
             .delete();
@@ -89,11 +89,11 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
             if ( isSimpleValue( id ) ) {
                 return id;
             }
-            return id.getKeyValue();
+            return id.keyValue();
         } );
 
         builder.get()
-            .from( getTable() )
+            .from( variables.table )
             .where( getForeignKey(), getForeignKeyValue() )
             .delete();
 

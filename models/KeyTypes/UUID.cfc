@@ -5,7 +5,7 @@ component implements="KeyType" {
      * Recieves the entity as the only argument.
      */
     public void function preInsert( required entity ) {
-        entity.setAttribute( entity.getKey(), createUUID() );
+        entity.assignAttribute( entity.get_Key(), createUUID() );
     }
 
     /**

@@ -14,8 +14,8 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
 
     function apply() {
         getRelated()
-            .where( "#getPrefix()#_type", getOwning().getMapping() )
-            .where( "#getPrefix()#_id", getOwning().getKeyValue() );
+            .where( "#getPrefix()#_type", getOwning().get_Mapping() )
+            .where( "#getPrefix()#_id", getOwning().keyValue() );
     }
 
     function fromGroup( items ) {

@@ -18,14 +18,14 @@ component extends="quick.models.Relationships.BaseRelationship" {
 
     function save( entity ) {
         getOwning().clearRelationship( getRelationMethodName() );
-        return entity.setAttribute( getOwningKey(), getForeignKeyValue() ).save();
+        return entity.assignAttribute( getOwningKey(), getForeignKeyValue() ).save();
     }
 
     function create( attributes ) {
         getOwning().clearRelationship( getRelationMethodName() );
         return wirebox.getInstance( getRelationName() )
-            .setAttributesData( attributes )
-            .setAttribute( getOwningKey(), getForeignKeyValue() )
+            .assignAttributesData( attributes )
+            .assignAttribute( getOwningKey(), getForeignKeyValue() )
             .save();
     }
 

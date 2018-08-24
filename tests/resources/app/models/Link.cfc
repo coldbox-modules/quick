@@ -6,6 +6,6 @@ component extends="quick.models.BaseEntity" {
     property name="url" column="link_url";
     property name="createdDate" column="created_date" readonly="true";
 
-    variables.key = "link_id";
+    variables._key = "link_id";
 
 }

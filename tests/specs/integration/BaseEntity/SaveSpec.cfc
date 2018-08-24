@@ -32,7 +32,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     newUser.setLastName( "User" );
                     newUser.setPassword( hash( "password" ) );
                     newUser.save();
-                    expect( newUser.getAttributesData() ).toHaveKey( "id" );
+                    expect( newUser.retrieveAttributesData() ).toHaveKey( "id" );
                 } );
 
                 it( "a saved entity is not dirty", function() {
@@ -191,16 +191,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                         var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
                         var tagIds = [
-                            existingTags[ 1 ].getKeyValue(),
-                            newTagA.getKeyValue(),
-                            newTagB.getKeyValue()
+                            existingTags[ 1 ].keyValue(),
+                            newTagA.keyValue(),
+                            newTagB.keyValue()
                         ];
 
                         post.tags().sync( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 3 );
-                        expect( post.getTags().pluck( "keyValue" ).toArray() ).toBe( tagIds );
+                        expect( post.getTags().map( function( tag ) { return tag.keyValue(); } ).toArray() ).toBe( tagIds );
                     } );
                 } );
             } );

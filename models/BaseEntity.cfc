@@ -585,7 +585,7 @@ component accessors="true" {
         } ).unique();
         var relatedEntity = invoke( entities.get( 1 ), relationName ).getRelated();
         var owningKey = invoke( entities.get( 1 ), relationName ).getOwningKey();
-        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys.get() ).get( options = getQueryOptions()  );
+        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys.get() ).get( options = variables._queryOptions );
 
         return matchRelations( entities, relations, relationName );
     }

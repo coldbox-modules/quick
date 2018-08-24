@@ -20,10 +20,14 @@ component extends="cfcollection.models.Collection" {
         return this;
     }
 
-    function $renderData() {
+    function getMemento() {
         return this.map( function( entity ) {
             return entity.$renderData();
         } ).get();
+    }
+
+    function $renderData() {
+        return getMemento();
     }
 
     private function eagerLoadRelation( relationName ) {

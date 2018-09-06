@@ -1,3 +1,17 @@
+# v1.3.0
+## 22 Aug 2018 — 19:58:30 UTC
+
+### chore
+
++ __ci:__ Test on adobe@2018
+ ([d42cf61](https://github.com/coldbox-modules/quick/commit/d42cf61e63d4bdeacfb04ab04e4a1c0b3c4f6a4a))
+
+### feat
+
++ __BaseEntity:__ Enable per entity datasources and grammars ([561f368](https://github.com/coldbox-modules/quick/commit/561f36841bdba0eb238d07167d35754faf32976c))
++ __KeyType:__ Add AssignedKey Type ([897277d](https://github.com/coldbox-modules/quick/commit/897277d0ffeffafb515341ed3f9ed4e71fc50bda))
+
+
 # v1.2.0
 ## 19 Jul 2018 — 22:43:54 UTC
 

@@ -36,16 +36,10 @@ component {
     }
 
     function onLoad() {
-        // remap to force the return format to be QuickCollection
-        binder.map( alias = "QueryBuilder@qb", force = true )
+        binder.map( "QuickQB@quick" )
             .to( "qb.models.Query.QueryBuilder" )
             .initArg( name = "grammar", dsl = "#settings.defaultGrammar#@qb" )
             .initArg( name = "utils", dsl = "QueryUtils@qb" )
-            .initArg( name = "returnFormat", value = function( q ) {
-                return wirebox.getInstance(
-                    name = "QuickCollection@quick",
-                    initArguments = { collection = q }
-                );
-            } );
+            .initArg( name = "returnFormat", value = "array" );
     }
 }

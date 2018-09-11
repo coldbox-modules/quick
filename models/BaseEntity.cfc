@@ -3,7 +3,7 @@ component accessors="true" {
     /*====================================
     =            Dependencies            =
     ====================================*/
-    property name="builder"            inject="QueryBuilder@qb";
+    property name="builder"            inject="QuickQB@quick";
     property name="wirebox"            inject="wirebox";
     property name="str"                inject="Str@str";
     property name="settings"           inject="coldbox:modulesettings:quick";
@@ -555,7 +555,7 @@ component accessors="true" {
     }
 
     private function eagerLoadRelations( entities ) {
-        if ( entities.empty() || arrayIsEmpty( variables.eagerLoad ) ) {
+        if ( arrayIsEmpty( entities ) || arrayIsEmpty( variables.eagerLoad ) ) {
             return entities;
         }
 
@@ -569,17 +569,18 @@ component accessors="true" {
     private function eagerLoadRelation( relationName, entities ) {
         var keys = entities.map( function( entity ) {
             return invoke( entity, relationName ).getForeignKeyValue();
-        } ).unique();
-        var relatedEntity = invoke( entities.get( 1 ), relationName ).getRelated();
-        var owningKey = invoke( entities.get( 1 ), relationName ).getOwningKey();
-        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys.get() ).get( options = getQueryOptions()  );
+        } );
+        keys = arraySlice( createObject( "java", "java.util.HashSet" ).init( keys ).toArray(), 1 );
+        var relatedEntity = invoke( entities[ 1 ], relationName ).getRelated();
+        var owningKey = invoke( entities[ 1 ], relationName ).getOwningKey();
+        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys ).get( options = getQueryOptions()  );
 
         return matchRelations( entities, relations, relationName );
     }
 
     private function matchRelations( entities, relations, relationName ) {
-        var relationship = invoke( entities.get( 1 ), relationName );
-        var groupedRelations = relations.groupBy( key = relationship.getOwningKey(), forceLookup = true );
+        var relationship = invoke( entities[ 1 ], relationName );
+        var groupedRelations = groupBy( items = relations, key = relationship.getOwningKey(), forceLookup = true );
         return entities.each( function( entity ) {
             var relationship = invoke( entity, relationName );
             if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
@@ -608,12 +609,7 @@ component accessors="true" {
             builder.setGrammar( wirebox.getInstance( md.grammar & "@qb" ) );
         }
         variables.query = builder.newQuery()
-            .setReturnFormat( function( q ) {
-                return wirebox.getInstance(
-                    name = "QuickCollection@quick",
-                    initArguments = { collection = q }
-                );
-            } )
+            .setReturnFormat( "array" )
             .from( getTable() );
         return variables.query;
     }
@@ -925,6 +921,22 @@ component accessors="true" {
         }
 
         return false;
+    }
+
+    public struct function groupBy( required array items, required string key, boolean forceLookup = false ) {
+        return items.reduce( function( acc, item ) {
+            if ( ( isObject( item ) && structKeyExists( item, "get#key#" ) ) || forceLookup ) {
+                var value = invoke( item, "get#key#" );
+            }
+            else {
+                var value = item[ key ];
+            }
+            if ( ! structKeyExists( acc, value ) ) {
+                acc[ value ] = [];
+            }
+            arrayAppend( acc[ value ], item );
+            return acc;
+        }, {} );
     }
 
     /*=================================

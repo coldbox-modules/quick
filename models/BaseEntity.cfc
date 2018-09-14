@@ -581,7 +581,7 @@ component accessors="true" {
     private function matchRelations( entities, relations, relationName ) {
         var relationship = invoke( entities[ 1 ], relationName );
         var groupedRelations = groupBy( items = relations, key = relationship.getOwningKey(), forceLookup = true );
-        return entities.each( function( entity ) {
+        entities.each( function( entity ) {
             var relationship = invoke( entity, relationName );
             if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
                 entity.setRelationship( relationName, relationship.fromGroup(
@@ -592,6 +592,7 @@ component accessors="true" {
                 entity.setRelationship( relationName, relationship.getDefaultValue() );
             }
         } );
+        return entities;
     }
 
     /*=======================================

@@ -43,7 +43,7 @@ component extends="cfcollection.models.Collection" {
 
     private function matchRelations( relations, relationName ) {
         var relationship = invoke( get( 1 ), relationName );
-        var groupedRelations = relations.groupBy( key = relationship.getOwningKey(), forceLookup = true );
+        var groupedRelations = collect( relations ).groupBy( key = relationship.getOwningKey(), forceLookup = true );
         return this.each( function( entity ) {
             var relationship = invoke( entity, relationName );
             if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {

@@ -3,7 +3,7 @@ component accessors="true" {
     /*====================================
     =            Dependencies            =
     ====================================*/
-    property name="_builder"            inject="QueryBuilder@qb";
+    property name="_builder"            inject="QuickQB@quick";
     property name="_wirebox"            inject="wirebox";
     property name="_str"                inject="Str@str";
     property name="_settings"           inject="coldbox:modulesettings:quick";
@@ -568,7 +568,7 @@ component accessors="true" {
     }
 
     private function eagerLoadRelations( entities ) {
-        if ( entities.empty() || arrayIsEmpty( variables._eagerLoad ) ) {
+        if ( arrayIsEmpty( entities ) || arrayIsEmpty( variables._eagerLoad ) ) {
             return entities;
         }
 
@@ -582,18 +582,19 @@ component accessors="true" {
     private function eagerLoadRelation( relationName, entities ) {
         var keys = entities.map( function( entity ) {
             return invoke( entity, relationName ).getForeignKeyValue();
-        } ).unique();
-        var relatedEntity = invoke( entities.get( 1 ), relationName ).getRelated();
-        var owningKey = invoke( entities.get( 1 ), relationName ).getOwningKey();
-        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys.get() ).get( options = variables._queryOptions );
+        } );
+        keys = arraySlice( createObject( "java", "java.util.HashSet" ).init( keys ).toArray(), 1 );
+        var relatedEntity = invoke( entities[ 1 ], relationName ).getRelated();
+        var owningKey = invoke( entities[ 1 ], relationName ).getOwningKey();
+        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys ).get( options = variables._queryOptions  );
 
         return matchRelations( entities, relations, relationName );
     }
 
     private function matchRelations( entities, relations, relationName ) {
-        var relationship = invoke( entities.get( 1 ), relationName );
-        var groupedRelations = relations.groupBy( key = relationship.getOwningKey(), forceLookup = true );
-        return entities.each( function( entity ) {
+        var relationship = invoke( entities[ 1 ], relationName );
+        var groupedRelations = groupBy( items = relations, key = relationship.getOwningKey(), forceLookup = true );
+        entities.each( function( entity ) {
             var relationship = invoke( entity, relationName );
             if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
                 entity.assignRelationship( relationName, relationship.fromGroup(
@@ -604,6 +605,7 @@ component accessors="true" {
                 entity.assignRelationship( relationName, relationship.getDefaultValue() );
             }
         } );
+        return entities;
     }
 
     /*=======================================
@@ -622,12 +624,7 @@ component accessors="true" {
             );
         }
         variables.query = variables._builder.newQuery()
-            .setReturnFormat( function( q ) {
-                return variables._wirebox.getInstance(
-                    name = "QuickCollection@quick",
-                    initArguments = { collection = q }
-                );
-            } )
+            .setReturnFormat( "array" )
             .from( variables._table );
         return variables.query;
     }
@@ -937,6 +934,22 @@ component accessors="true" {
         }
 
         return false;
+    }
+
+    public struct function groupBy( required array items, required string key, boolean forceLookup = false ) {
+        return items.reduce( function( acc, item ) {
+            if ( ( isObject( item ) && structKeyExists( item, "get#key#" ) ) || forceLookup ) {
+                var value = invoke( item, "get#key#" );
+            }
+            else {
+                var value = item[ key ];
+            }
+            if ( ! structKeyExists( acc, value ) ) {
+                acc[ value ] = [];
+            }
+            arrayAppend( acc[ value ], item );
+            return acc;
+        }, {} );
     }
 
     /*=================================

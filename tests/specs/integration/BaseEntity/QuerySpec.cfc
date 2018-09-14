@@ -2,8 +2,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function run() {
         describe( "Query Spec", function() {
-            it( "returns all records as entities", function() {
-                var users = getInstance( "User" ).all().get();
+            it( "returns all records as array", function() {
+                var users = getInstance( "User" ).all();
                 expect( users ).toHaveLength( 3, "Three users should exist in the database and be returned." );
                 expect( users[ 1 ].getId() ).toBe( 1 );
                 expect( users[ 1 ].getUsername() ).toBe( "elpete" );
@@ -14,7 +14,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can execute an arbitrary get query", function() {
-                var users = getInstance( "User" ).where( "username", "elpete" ).get().get();
+                var users = getInstance( "User" ).where( "username", "elpete" ).get();
                 expect( users ).toHaveLength( 1, "One user should be returned." );
                 expect( users[ 1 ].getId() ).toBe( 1 );
                 expect( users[ 1 ].getUsername() ).toBe( "elpete" );

@@ -47,10 +47,10 @@ component extends="cfcollection.models.Collection" {
         return this.each( function( entity ) {
             var relationship = invoke( entity, relationName );
             if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
-                entity.setRelationship( relationName, groupedRelations[ relationship.getForeignKeyValue() ] );
+                entity.assignRelationship( relationName, groupedRelations[ relationship.getForeignKeyValue() ] );
             }
             else {
-                entity.setRelationship( relationName, relationship.getDefaultValue() );
+                entity.assignRelationship( relationName, relationship.getDefaultValue() );
             }
         } );
     }

@@ -1,6 +1,6 @@
 component extends="quick.models.BaseEntity" {
 
-    property name="keyType" inject="UUID@quick" persistent="false";
+    property name="_keyType" inject="UUID@quick" persistent="false";
 
     property name="id";
     property name="name";

@@ -28,17 +28,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newPost.setBody( "A new post by me!" );
                 var user = getInstance( "User" ).find( 1 );
                 newPost.author().associate( user ).save();
-                expect( newPost.getAttribute( "user_id" ) ).toBe( user.getId() );
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
                 expect( user.posts().count() ).toBe( 3 );
             } );
 
             it( "can disassociate the existing entity", function() {
                 var post = getInstance( "Post" ).find( 1 );
-                expect( post.getAttribute( "user_id" ) ).notToBe( "" );
-                var userId = post.getAttribute( "user_id" );
+                expect( post.retrieveAttribute( "user_id" ) ).notToBe( "" );
+                var userId = post.retrieveAttribute( "user_id" );
                 expect( getInstance( "User" ).find( userId ).posts().count() ).toBe( 2 );
                 post.author().disassociate().save();
-                expect( post.getAttribute( "user_id" ) ).toBe( "" );
+                expect( post.retrieveAttribute( "user_id" ) ).toBe( "" );
                 expect( getInstance( "User" ).find( userId ).posts().count() ).toBe( 1 );
             } );
         } );

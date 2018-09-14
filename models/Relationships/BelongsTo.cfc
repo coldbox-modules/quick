@@ -18,10 +18,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
 
     function associate( entity ) {
         if ( isQuickEntity( entity ) ) {
-            arguments.entity = entity.getKeyValue();
+            arguments.entity = entity.keyValue();
         }
 
-        return getOwning().setAttribute( getForeignKey(), entity );
+        return getOwning().assignAttribute( getForeignKey(), entity );
     }
 
     function disassociate() {

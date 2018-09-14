@@ -6,7 +6,7 @@ component entityname="MyPost" table="my_posts" extends="quick.models.BaseEntity"
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
 
-    variables.key = "post_pk";
+    variables._key = "post_pk";
 
     function author() {
         return belongsTo( "User", "user_id" );

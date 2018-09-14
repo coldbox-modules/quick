@@ -14,7 +14,7 @@ component implements="KeyType" {
      */
     public void function postInsert( required entity, required struct result ) {
         var generatedKey = result.keyExists( "generated_key" ) ? result[ "generated_key" ] : result[ "generatedKey" ];
-        entity.setAttribute( entity.getKey(), generatedKey );
+        entity.assignAttribute( entity.get_Key(), generatedKey );
     }
 
 }

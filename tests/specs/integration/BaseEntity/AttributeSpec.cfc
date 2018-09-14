@@ -23,22 +23,22 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "can retrieve the original attributes of a loaded entity", function() {
                 var user = getInstance( "User" ).find( 1 );
-                var originalAttributes = user.getAttributesData();
+                var originalAttributes = user.retrieveAttributesData();
                 user.setUsername( "new_username" );
-                expect( originalAttributes ).notToBe( user.getAttributesData() );
-                expect( originalAttributes ).toBe( user.getOriginalAttributes() );
+                expect( originalAttributes ).notToBe( user.retrieveAttributesData() );
+                expect( originalAttributes ).toBe( user.get_OriginalAttributes() );
             } );
 
             it( "returns a default value if the attribute is not yet set", function() {
                 var user = getInstance( "User" );
-                expect( user.getAttribute( "username" ) ).toBe( "" );
-                expect( user.getAttribute( "username", "default-value" ) ).toBe( "default-value" );
+                expect( user.retrieveAttribute( "username" ) ).toBe( "" );
+                expect( user.retrieveAttribute( "username", "default-value" ) ).toBe( "default-value" );
             } );
 
             it( "throws an exception when trying to set an attribute that does not exist", function() {
                 var user = getInstance( "User" );
                 expect( function() {
-                    user.setAttribute( "does-not-exist", "any-value" );
+                    user.assignAttribute( "does-not-exist", "any-value" );
                 } ).toThrow( type = "AttributeNotFound" );
             } );
 

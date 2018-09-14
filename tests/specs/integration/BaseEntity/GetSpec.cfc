@@ -4,7 +4,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         describe( "Get Spec", function() {
             it( "finds an entity by the primary key", function() {
                 var user = getInstance( "User" ).find( 1 );
-                expect( user.getLoaded() ).toBeTrue( "The user instance should be found and loaded, but was not." );
+                expect( user.isLoaded() ).toBeTrue( "The user instance should be found and loaded, but was not." );
+                debug( user.get_Key() );
             } );
 
             it( "it returns null if the record cannot be found", function() {
@@ -33,11 +34,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             describe( "loaded", function() {
                 it( "a new entity returns false when asked if it loaded", function() {
-                    expect( getInstance( "User" ).getLoaded() ).toBeFalse();
+                    expect( getInstance( "User" ).isLoaded() ).toBeFalse();
                 } );
 
                 it( "an entity loaded from the database returns true when asked if it loaded", function() {
-                    expect( getInstance( "User" ).find( 1 ).getLoaded() ).toBeTrue();
+                    expect( getInstance( "User" ).find( 1 ).isLoaded() ).toBeTrue();
                 } );
             } );
 

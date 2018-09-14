@@ -20,17 +20,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 
-            it( "prevents setAttribute from being called on a read-only property", function() {
+            it( "prevents assignAttribute from being called on a read-only property", function() {
                 var link = getInstance( "Link" ).findOrFail( 1 );
                 expect( function() {
-                    link.setAttribute( "createdDate", now() );
+                    link.assignAttribute( "createdDate", now() );
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 
-            it( "prevents setAttributesData from being called containing a read-only property", function() {
+            it( "prevents assignAttributesData from being called containing a read-only property", function() {
                 var link = getInstance( "Link" ).findOrFail( 1 );
                 expect( function() {
-                    link.setAttributesData( { createdDate = now() } );
+                    link.assignAttributesData( { createdDate = now() } );
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 

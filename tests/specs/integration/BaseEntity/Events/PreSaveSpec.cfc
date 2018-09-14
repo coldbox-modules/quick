@@ -18,7 +18,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( variables.quickPreSaveCalled ).toBeStruct();
                 expect( variables.quickPreSaveCalled ).toHaveKey( "entity" );
                 expect( variables.quickPreSaveCalled.entity.getDownloadUrl() ).toBe( "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG" );
-                expect( variables.quickPreSaveCalled.entity.getLoaded() ).toBeFalse();
+                expect( variables.quickPreSaveCalled.entity.isLoaded() ).toBeFalse();
                 structDelete( variables, "quickPreSaveCalled" );
             } );
 
@@ -45,7 +45,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request.preSaveCalled ).toBeStruct();
                 expect( request.preSaveCalled ).toHaveKey( "entity" );
                 expect( request.preSaveCalled.entity.getDownloadUrl() ).toBe( "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG" );
-                expect( request.preSaveCalled.entity.getLoaded() ).toBeFalse();
+                expect( request.preSaveCalled.entity.isLoaded() ).toBeFalse();
                 structDelete( request, "preSaveCalled" );
             } );
 

@@ -21,7 +21,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( variables.quickPostInsertCalled ).toBeStruct();
                 expect( variables.quickPostInsertCalled ).toHaveKey( "entity" );
                 expect( variables.quickPostInsertCalled.entity.getTitle() ).toBe( "Rainbow Connection" );
-                expect( variables.quickPostInsertCalled.entity.getLoaded() ).toBeTrue();
+                expect( variables.quickPostInsertCalled.entity.isLoaded() ).toBeTrue();
                 structDelete( variables, "quickPostInsertCalled" );
             } );
 
@@ -34,7 +34,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request.postInsertCalled ).toBeStruct();
                 expect( request.postInsertCalled ).toHaveKey( "entity" );
                 expect( request.postInsertCalled.entity.getTitle() ).toBe( "Rainbow Connection" );
-                expect( request.postInsertCalled.entity.getLoaded() ).toBeTrue();
+                expect( request.postInsertCalled.entity.isLoaded() ).toBeTrue();
                 structDelete( request, "postInsertCalled" );
             } );
         } );

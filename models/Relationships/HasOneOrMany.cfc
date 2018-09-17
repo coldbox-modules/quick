@@ -37,7 +37,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
                 entity.assignRelationship(
                     relation,
                     getRelationValue( dictionary, key, type )
-                )
+                );
             }
         } );
         return entities;

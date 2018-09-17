@@ -13,6 +13,11 @@ component {
         return this;
     }
 
+    function setRelationMethodName( name ) {
+        variables.relationMethodName = arguments.name;
+        return this;
+    }
+
     function getEager() {
         return variables.related.get();
     }

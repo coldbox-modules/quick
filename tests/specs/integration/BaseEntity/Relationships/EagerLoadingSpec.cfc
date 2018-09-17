@@ -141,6 +141,40 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
             } );
+
+            it( "can eager load a large relationship quickly", function() {
+                queryExecute( "
+                    CREATE TABLE `a` (
+                        `id` int(11) NOT NULL AUTO_INCREMENT,
+                        `name` varchar(50) NOT NULL,
+                        PRIMARY KEY (`id`)
+                    )
+                " );
+                queryExecute( "
+                    CREATE TABLE `b` (
+                        `id` int(11) NOT NULL AUTO_INCREMENT,
+                        `a_id` int(11),
+                        `name` varchar(50) NOT NULL,
+                        PRIMARY KEY (`id`)
+                    )
+                " );
+                for ( var i = 1; i < 20; i++ ) {
+                    // create A
+                    var a = getInstance( "A" ).create( {
+                        "name" = "Instance #i#"
+                    } );
+                    for ( var j = 1; j < 5; j++ ) {
+                        getInstance( "B" ).create( {
+                            "name" = "Instance #j#",
+                            "a_id" = a.getId()
+                        } );
+                    }
+                }
+
+                var startTick = getTickCount();
+                var a = getInstance( "B" ).with( "a" ).get();
+                debug( getTickCount() - startTick );
+            } );
         } );
     }
 

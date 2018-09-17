@@ -172,7 +172,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 var startTick = getTickCount();
                 var a = getInstance( "B" ).with( "a" ).get();
-                expect( getTickCount() - startTick ).toBeLT( 1000, "Query is taking too long" );
+                expect( getTickCount() - startTick ).toBeLT( 5000, "Query is taking too long" );
             } );
         } );
     }

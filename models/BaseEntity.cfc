@@ -3,36 +3,36 @@ component accessors="true" {
     /*====================================
     =            Dependencies            =
     ====================================*/
-    property name="_builder"            inject="QuickQB@quick";
-    property name="_wirebox"            inject="wirebox";
-    property name="_str"                inject="Str@str";
-    property name="_settings"           inject="coldbox:modulesettings:quick";
-    property name="_validationManager"  inject="ValidationManager@cbvalidation";
-    property name="_interceptorService" inject="coldbox:interceptorService";
-    property name="_keyType"            inject="AutoIncrementing@quick";
+    property name="_builder" inject="QuickQB@quick" persistent="false";
+    property name="_wirebox" inject="wirebox" persistent="false";
+    property name="_str" inject="Str@str" persistent="false";
+    property name="_settings" inject="coldbox:modulesettings:quick" persistent="false";
+    property name="_validationManager" inject="ValidationManager@cbvalidation" persistent="false";
+    property name="_interceptorService" inject="coldbox:interceptorService" persistent="false";
+    property name="_keyType" inject="AutoIncrementing@quick" persistent="false";
 
     /*===========================================
     =            Metadata Properties            =
     ===========================================*/
-    property name="_entityName";
-    property name="_mapping";
-    property name="_fullName";
-    property name="_table";
-    property name="_queryOptions";
-    property name="_readonly"        default="false";
-    property name="_key"             default="id";
-    property name="_attributes";
-    property name="_meta";
-    property name="_nullValues";
+    property name="_entityName" persistent="false";
+    property name="_mapping" persistent="false";
+    property name="_fullName" persistent="false";
+    property name="_table" persistent="false";
+    property name="_queryOptions" persistent="false";
+    property name="_readonly" default="false" persistent="false";
+    property name="_key" default="id" persistent="false";
+    property name="_attributes" persistent="false";
+    property name="_meta" persistent="false";
+    property name="_nullValues" persistent="false";
 
     /*=====================================
     =            Instance Data            =
     =====================================*/
-    property name="_data";
-    property name="_originalAttributes";
-    property name="_relationshipsData";
-    property name="_eagerLoad";
-    property name="_loaded";
+    property name="_data" persistent="false";
+    property name="_originalAttributes" persistent="false";
+    property name="_relationshipsData" persistent="false";
+    property name="_eagerLoad" persistent="false";
+    property name="_loaded" persistent="false";
 
     this.constraints = {};
 
@@ -808,7 +808,8 @@ component accessors="true" {
     }
 
     private function metadataInspection() {
-        var md = getMetadata( this );
+        var util = createObject( "component", "coldbox.system.core.util.Util" );
+        var md = util.getInheritedMetadata( this );
         variables._meta = md;
         param variables._key = "id";
         variables._fullName = md.fullname;
@@ -837,7 +838,7 @@ component accessors="true" {
             if ( prop.convertToNull ) {
                 variables._nullValues[ prop.name ] = prop.nullValue;
             }
-            if ( prop.persistent ) {
+            if ( javacast( "boolean", prop.persistent ) ) {
                 acc[ prop.name ] = prop.column;
             }
             return acc;

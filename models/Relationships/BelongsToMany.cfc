@@ -109,7 +109,7 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
 
     function sync( id ) {
         var foreignPivotKeyValue = variables.parent.retrieveAttribute( variables.parentKey );
-        newPivotStatement().where( variables.parentKey, "=", foreignPivotKeyValue ).delete()
+        newPivotStatement().where( variables.parentKey, "=", foreignPivotKeyValue ).delete();
         attach( id );
     }
 

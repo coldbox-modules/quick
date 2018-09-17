@@ -82,7 +82,8 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
     }
 
     function getForeignKeyName() {
-        return arrayLast( listToArray( getQualifiedForeignKeyName(), "." ) );
+        var parts = listToArray( getQualifiedForeignKeyName(), "." );
+        return parts[ arrayLen( parts ) ];
     }
 
     function getQualifiedForeignKeyName() {

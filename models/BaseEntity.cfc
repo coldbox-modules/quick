@@ -205,7 +205,7 @@ component accessors="true" {
                     .assignAttributesData( attributes )
                     .assignOriginalAttributes( attributes )
                     .set_Loaded( true );
-            } )
+            } );
     }
 
     function all() {

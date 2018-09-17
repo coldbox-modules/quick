@@ -25,7 +25,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( authors[ 2 ] ).notToBeArray();
                 expect( authors[ 2 ] ).toBeInstanceOf( "app.models.User" );
                 if ( arrayLen( variables.queries ) != 2 ) {
-                    debug( variables.queries );
                     expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
                 }
             } );
@@ -113,15 +112,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( comments ).toHaveLength( 3 );
 
                 expect( comments[ 1 ].getId() ).toBe( 1 );
-                expect( comments[ 1 ].getCommentable() ).toBeInstanceOf( "Post" );
+                expect( comments[ 1 ].getCommentable().get_entityName() ).toBe( "Post" );
                 expect( comments[ 1 ].getCommentable().getPost_Pk() ).toBe( 1245 );
 
                 expect( comments[ 2 ].getId() ).toBe( 2 );
-                expect( comments[ 2 ].getCommentable() ).toBeInstanceOf( "Post" );
+                expect( comments[ 2 ].getCommentable().get_entityName() ).toBe( "Post" );
                 expect( comments[ 2 ].getCommentable().getPost_Pk() ).toBe( 1245 );
 
                 expect( comments[ 3 ].getId() ).toBe( 3 );
-                expect( comments[ 3 ].getCommentable() ).toBeInstanceOf( "Video" );
+                expect( comments[ 3 ].getCommentable().get_entityName() ).toBe( "Video" );
                 expect( comments[ 3 ].getCommentable().getId() ).toBe( 2 );
 
                 expect( variables.queries ).toHaveLength( 3, "Only three queries should have been executed." );
@@ -173,7 +172,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 var startTick = getTickCount();
                 var a = getInstance( "B" ).with( "a" ).get();
-                debug( getTickCount() - startTick );
+                expect( getTickCount() - startTick ).toBeLT( 1000, "Query is taking too long" );
             } );
         } );
     }

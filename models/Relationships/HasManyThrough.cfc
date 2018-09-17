@@ -59,7 +59,7 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
     }
 
     function getResults() {
-        return this.get()
+        return this.get();
     }
 
     function get() {

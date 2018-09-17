@@ -51,7 +51,7 @@ component extends="quick.models.Relationships.BelongsTo" {
 
     function gatherKeysByType( type ) {
         return unique( structReduce( variables.dictionary[ type ], function( acc, key, values ) {
-            arrayAppend( acc, arrayFirst( values ).retrieveAttribute( variables.foreignKey ) );
+            arrayAppend( acc, values[ 1 ].retrieveAttribute( variables.foreignKey ) );
             return acc;
         }, [] ) );
     }

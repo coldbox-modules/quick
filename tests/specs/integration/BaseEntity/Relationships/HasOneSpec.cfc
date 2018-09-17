@@ -5,7 +5,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can get the owning entity", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var post = user.getLatestPost();
-                expect( post.getPost_Pk() ).toBe( 2 );
+                expect( post.getPost_Pk() ).toBe( 523526 );
             } );
         } );
     }

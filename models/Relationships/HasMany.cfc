@@ -1,32 +1,18 @@
-component extends="quick.models.Relationships.BaseRelationship" {
+component extends="quick.models.Relationships.HasOneOrMany" {
 
-    function onDIComplete() {
-        setDefaultValue( collect() );
+    function getResults() {
+        return variables.related.get();
     }
 
-    function apply() {
-        getRelated().where( getOwningKey(), getForeignKeyValue() );
+    function initRelation( entities, relation ) {
+        entities.each( function( entity ) {
+            entity.assignRelationship( relation, [] );
+        } );
+        return entities;
     }
 
-    function retrieve() {
-        return getRelated().get();
-    }
-
-    function fromGroup( items ) {
-        return collect( items );
-    }
-
-    function save( entity ) {
-        getOwning().clearRelationship( getRelationMethodName() );
-        return entity.assignAttribute( getOwningKey(), getForeignKeyValue() ).save();
-    }
-
-    function create( attributes ) {
-        getOwning().clearRelationship( getRelationMethodName() );
-        return wirebox.getInstance( getRelationName() )
-            .assignAttributesData( attributes )
-            .assignAttribute( getOwningKey(), getForeignKeyValue() )
-            .save();
+    function match( entities, results, relation ) {
+        return matchMany( argumentCollection = arguments );
     }
 
 }

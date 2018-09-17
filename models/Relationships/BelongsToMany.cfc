@@ -1,105 +1,148 @@
 component accessors="true" extends="quick.models.Relationships.BaseRelationship" {
 
-    property name="builder" inject="provider:QueryBuilder@qb" getter="false" setter="false";
-    property name="table";
+    function init(
+        related,
+        relationName,
+        relationMethodName,
+        parent,
+        table,
+        foreignPivotKey,
+        relatedPivotKey,
+        parentKey,
+        relatedKey
+    ) {
+        variables.table = arguments.table;
+        variables.parentKey = arguments.parentKey;
+        variables.relatedKey = arguments.relatedKey;
+        variables.relatedPivotKey = arguments.relatedPivotKey;
+        variables.foreignPivotKey = arguments.foreignPivotKey;
 
-    variables.defaultValue = [];
-
-    function init( wirebox, related, relationName, relationMethodName, owning, table, foreignKey, foreignKeyValue, relatedKey ) {
-        setTable( arguments.table );
-        super.init( wirebox, related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, relatedKey );
-        return this;
+        super.init( related, relationName, relationMethodName, parent );
     }
 
-    function onDIComplete() {
-        setDefaultValue( collect() );
+    function getResults() {
+        return variables.related.get();
     }
 
-    function apply() {
-        getRelated().join( variables.table, function( j ) {
-            j.on(
-                "#getRelated().get_Table()#.#getRelated().get_Key()#",
-                "#variables.table#.#getOwningKey()#"
+    function addConstraints() {
+        performJoin();
+        addWhereConstraints();
+    }
+
+    function addEagerConstraints( entities ) {
+        variables.related
+            .from( variables.table )
+            .whereIn(
+                getQualifiedForeignPivotKeyName(),
+                getKeys( entities, variables.parentKey )
             );
-            j.where( "#variables.table#.#getForeignKey()#", getForeignKeyValue() );
+    }
+
+    function initRelation( entities, relation ) {
+        entities.each( function( entity ) {
+            entity.assignRelationship( relation, [] );
         } );
+        return entities;
     }
 
-    function fromGroup( items ) {
-        return collect( items );
-    }
-
-    function retrieve() {
-        return getRelated().get();
-    }
-
-    function attach( ids ) {
-        if ( ! isArray( arguments.ids ) ) {
-            arguments.ids = [ arguments.ids ];
-        }
-
-        arguments.ids = arrayMap( arguments.ids, function( id ) {
-            if ( isSimpleValue( id ) ) {
-                return id;
+    function match( entities, results, relation ) {
+        var dictionary = buildDictionary( results );
+        entities.each( function( entity ) {
+            if ( structKeyExists( dictionary, entity.retrieveAttribute( variables.parentKey ) ) ) {
+                entity.assignRelationship(
+                    relation,
+                    dictionary[ entity.retrieveAttribute( variables.parentKey ) ]
+                );
             }
-            return id.keyValue();
         } );
+        return entities;
+    }
 
-        builder.get().from( variables.table ).insert( arrayMap( arguments.ids, function( id ) {
-            return {
-                "#getForeignKey()#" = getForeignKeyValue(),
-                "#getOwningKey()#" = id
-            };
-        } ) );
+    function buildDictionary( results ) {
+        return results.reduce( function( dict, result ) {
+            var key = result.retrieveAttribute( variables.foreignPivotKey );
+            if ( ! structKeyExists( dict, key ) ) {
+                dict[ key ] = [];
+            }
+            arrayAppend( dict[ key ], result );
+            return dict;
+        }, {} );
+    }
 
-        getOwning().clearRelationship( getRelationMethodName() );
-
+    function performJoin() {
+        var baseTable = variables.related.get_table();
+        var key = baseTable & "." & variables.relatedKey;
+        variables.related.join( variables.table, key, "=", getQualifiedRelatedPivotKeyName() );
         return this;
     }
 
-    function detach( ids ) {
-        if ( ! isArray( arguments.ids ) ) {
-            arguments.ids = [ arguments.ids ];
-        }
-
-        arguments.ids = arrayMap( arguments.ids, function( id ) {
-            if ( isSimpleValue( id ) ) {
-                return id;
-            }
-            return id.keyValue();
-        } );
-
-        builder.get()
-            .from( variables.table )
-            .where( getForeignKey(), getForeignKeyValue() )
-            .whereIn( getOwningKey(), arguments.ids )
-            .delete();
-
-        getOwning().clearRelationship( getRelationMethodName() );
-
+    function addWhereConstraints() {
+        variables.related.where(
+            getQualifiedForeignPivotKeyName(),
+            "=",
+            variables.parent.retrieveAttribute( variables.parentKey )
+        );
         return this;
     }
 
-    function sync( ids ) {
-        if ( ! isArray( arguments.ids ) ) {
-            arguments.ids = [ arguments.ids ];
-        }
+    function getQualifiedRelatedPivotKeyName() {
+        return variables.table & "." & variables.relatedPivotKey;
+    }
 
-        arguments.ids = arrayMap( arguments.ids, function( id ) {
-            if ( isSimpleValue( id ) ) {
-                return id;
+    function getQualifiedForeignPivotKeyName() {
+        return variables.table & "." & variables.foreignPivotKey;
+    }
+
+    function attach( id ) {
+        newPivotStatement().insert( parseIdsForInsert( id ) );
+    }
+
+    function detach( id ) {
+        var foreignPivotKeyValue = variables.parent.retrieveAttribute( variables.parentKey );
+        newPivotStatement()
+            .where( variables.parentKey, "=", foreignPivotKeyValue )
+            .whereIn(
+                variables.relatedPivotKey,
+                parseIds( id )
+            ).delete();
+    }
+
+    function sync( id ) {
+        var foreignPivotKeyValue = variables.parent.retrieveAttribute( variables.parentKey );
+        newPivotStatement().where( variables.parentKey, "=", foreignPivotKeyValue ).delete()
+        attach( id );
+    }
+
+    function newPivotStatement() {
+        return variables.related.newQuery().from( variables.table );
+    }
+
+    function parseIds( value ) {
+        arguments.value = isArray( value ) ? value : [ value ];
+        return arguments.value.map( function( val ) {
+            // If the value is not a simple value, we will assume
+            // it is an entity and return its key value.
+            if ( ! isSimpleValue( val ) ) {
+                return val.keyValue();
             }
-            return id.keyValue();
+            return val;
         } );
+    }
 
-        builder.get()
-            .from( variables.table )
-            .where( getForeignKey(), getForeignKeyValue() )
-            .delete();
-
-        attach( arguments.ids );
-
-        return this;
+    function parseIdsForInsert( value ) {
+        var foreignPivotKeyValue = variables.parent.retrieveAttribute( variables.parentKey );
+        arguments.value = isArray( value ) ? value : [ value ];
+        return arguments.value.map( function( val ) {
+            // If the value is not a simple value, we will assume
+            // it is an entity and return its key value.
+            if ( ! isSimpleValue( val ) ) {
+                arguments.val = val.keyValue();
+            }
+            var insertRecord = {};
+            insertRecord[ variables.parentKey ] = foreignPivotKeyValue;
+            insertRecord[ variables.relatedPivotKey ] = arguments.val;
+            return insertRecord;
+        } );
     }
 
 }

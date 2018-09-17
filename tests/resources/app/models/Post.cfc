@@ -1,4 +1,4 @@
-component entityname="MyPost" table="my_posts" extends="quick.models.BaseEntity" {
+component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
 
     property name="post_pk";
     property name="userId" column="user_id";
@@ -13,11 +13,7 @@ component entityname="MyPost" table="my_posts" extends="quick.models.BaseEntity"
     }
 
     function tags() {
-        return belongsToMany(
-            relationName = "Tag",
-            relatedKey = "tag_id",
-            foreignKey = "post_pk"
-        );
+        return belongsToMany( "Tag", "my_posts_tags", "post_pk", "tag_id" );
     }
 
     function comments() {

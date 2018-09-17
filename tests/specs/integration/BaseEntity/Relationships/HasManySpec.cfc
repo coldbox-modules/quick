@@ -28,7 +28,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( newPost.isLoaded() ).toBeTrue();
                 expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
                 expect( newPost.getBody() ).toBe( "A new post created directly here!" );
-                expect( user.getPosts() ).toHaveLength( 3 );
+                expect( user.fresh().getPosts() ).toHaveLength( 3 );
             } );
         } );
     }

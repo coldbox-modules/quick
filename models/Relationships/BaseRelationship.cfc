@@ -1,6 +1,6 @@
 component accessors="true" {
 
-    property name="wirebox";
+    property name="wirebox" inject="wirebox";
 
     property name="related";
     property name="relationName";
@@ -11,19 +11,25 @@ component accessors="true" {
     property name="owningKey";
     property name="defaultValue";
 
-    function init( wirebox, related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey ) {
-        setWireBox( wirebox );
-        setRelated( arguments.related );
-        setRelationName( arguments.relationName );
-        setRelationMethodName( arguments.relationMethodName );
-        setOwning( arguments.owning );
-        setForeignKey( arguments.foreignKey );
-        setForeignKeyValue( arguments.foreignKeyValue );
-        setOwningKey( arguments.owningKey );
+    function init( related, relationName, relationMethodName, parent ) {
+        variables.related = arguments.related.resetQuery();
+        variables.relationName = arguments.relationName;
+        variables.relationMethodName = arguments.relationMethodName;
+        variables.parent = arguments.parent;
 
-        apply();
+        addConstraints();
 
         return this;
+    }
+
+    function getEager() {
+        return variables.related.get();
+    }
+
+    function getKeys( entities, key ) {
+        return unique( entities.map( function( entity ) {
+            return entity.retrieveAttribute( key );
+        } ) );
     }
 
     private function collect( items = [] ) {
@@ -41,6 +47,10 @@ component accessors="true" {
     private function isQuickEntity( entity ) {
         return getMetadata( entity ).keyExists( "quick" ) ||
             isInstanceOf( entity, "quick.models.BaseEntity" );
+    }
+
+    function unique( items ) {
+        return arraySlice( createObject( "java", "java.util.HashSet" ).init( items ).toArray(), 1 );
     }
 
 }

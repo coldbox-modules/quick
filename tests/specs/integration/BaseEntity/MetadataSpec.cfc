@@ -18,11 +18,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             describe( "entity name", function() {
-                it( "determines the entity name from the metadata if an `entityname` attribute is present", function() {
-                    var post = getInstance( "Post" );
-                    expect( post.get_EntityName() ).toBe( "MyPost" );
-                } );
-
                 it( "calculates the entity name from the file name if no `entityname` attribute is present", function() {
                     var post = getInstance( "User" );
                     expect( post.get_EntityName() ).toBe( "User" );

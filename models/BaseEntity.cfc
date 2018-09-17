@@ -646,23 +646,6 @@ component accessors="true" {
         );
     }
 
-    private function matchRelations( entities, relations, relationName ) {
-        var relationship = invoke( entities[ 1 ], relationName );
-        var groupedRelations = groupBy( items = relations, key = relationship.getOwningKey(), forceLookup = true );
-        entities.each( function( entity ) {
-            var relationship = invoke( entity, relationName );
-            if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
-                entity.assignRelationship( relationName, relationship.fromGroup(
-                    groupedRelations[ relationship.getForeignKeyValue() ]
-                ) );
-            }
-            else {
-                entity.assignRelationship( relationName, relationship.getDefaultValue() );
-            }
-        } );
-        return entities;
-    }
-
     /*=======================================
     =            QB Utilities            =
     =======================================*/

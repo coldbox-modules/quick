@@ -1,15 +1,6 @@
-component accessors="true" {
+component {
 
     property name="wirebox" inject="wirebox";
-
-    property name="related";
-    property name="relationName";
-    property name="relationMethodName";
-    property name="owning";
-    property name="foreignKey";
-    property name="foreignKeyValue";
-    property name="owningKey";
-    property name="defaultValue";
 
     function init( related, relationName, relationMethodName, parent ) {
         variables.related = arguments.related.resetQuery();
@@ -32,21 +23,12 @@ component accessors="true" {
         } ) );
     }
 
-    private function collect( items = [] ) {
-        return isArray( items ) ? items : listToArray( items, "," );
-    }
-
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
         var result = invoke( variables.related, missingMethodName, missingMethodArguments );
         if ( isSimpleValue( result ) ) {
             return result;
         }
         return this;
-    }
-
-    private function isQuickEntity( entity ) {
-        return getMetadata( entity ).keyExists( "quick" ) ||
-            isInstanceOf( entity, "quick.models.BaseEntity" );
     }
 
     function unique( items ) {

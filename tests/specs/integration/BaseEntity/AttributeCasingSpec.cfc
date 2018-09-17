@@ -3,7 +3,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
     function run() {
         describe( "Attributes Casing Spec", function() {
             it( "defaults to no transformation", function() {
-                var post = getInstance( "Post" ).find( 1 );
+                var post = getInstance( "Post" ).find( 1245 );
 
                 expect( post.retrieveAttributesData() ).toHaveKey( "post_pk" );
                 expect( post.retrieveAttributesData() ).notToHaveKey( "PostPk" );

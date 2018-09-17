@@ -20,11 +20,11 @@ component extends="quick.models.BaseEntity" accessors="true" {
     }
 
     function posts() {
-        return hasMany( "Post", "post_pk", "user_id" );
+        return hasMany( "Post", "user_id" );
     }
 
     function latestPost() {
-        return hasOne( "Post", "post_pk", "user_id" ).latest();
+        return hasOne( "Post", "user_id" ).latest();
     }
 
 }

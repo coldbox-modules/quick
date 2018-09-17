@@ -5,7 +5,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "finds an entity by the primary key", function() {
                 var user = getInstance( "User" ).find( 1 );
                 expect( user.isLoaded() ).toBeTrue( "The user instance should be found and loaded, but was not." );
-                debug( user.get_Key() );
             } );
 
             it( "it returns null if the record cannot be found", function() {

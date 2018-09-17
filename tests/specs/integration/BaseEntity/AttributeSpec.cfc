@@ -9,8 +9,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can get foreign keys just like any other column", function() {
-                var post = getInstance( "Post" ).find( 1 );
-                expect( post.getPost_Pk() ).toBe( 1 );
+                var post = getInstance( "Post" ).find( 1245 );
+                expect( post.getPost_Pk() ).toBe( 1245 );
                 expect( post.getUser_Id() ).toBe( 1 );
             } );
 

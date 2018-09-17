@@ -7,7 +7,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can get the related entities", function() {
-                var post = getInstance( "Post" ).find( 1 );
+                var post = getInstance( "Post" ).find( 1245 );
                 var tags = post.getTags();
                 expect( tags ).toBeArray();
                 expect( tags ).toHaveLength( 2 );

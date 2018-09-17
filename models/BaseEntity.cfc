@@ -186,9 +186,27 @@ component accessors="true" {
         return this;
     }
 
+    function qualifyColumn( column ) {
+        if ( findNoCase( ".", arguments.column ) != 0 ) {
+            return arguments.column;
+        }
+        return variables._table & "." & arguments.column;
+    }
+
     /*=====================================
     =            Query Methods            =
     =====================================*/
+
+    function getEntities() {
+        return retrieveQuery()
+            .get( options = variables._queryOptions )
+            .map( function( attributes ) {
+                return newEntity()
+                    .assignAttributesData( attributes )
+                    .assignOriginalAttributes( attributes )
+                    .set_Loaded( true );
+            } );
+    }
 
     function all() {
         return eagerLoadRelations(
@@ -204,16 +222,7 @@ component accessors="true" {
     }
 
     function get() {
-        return eagerLoadRelations(
-            retrieveQuery()
-                .get( options = variables._queryOptions )
-                .map( function( attributes ) {
-                    return newEntity()
-                        .assignAttributesData( attributes )
-                        .assignOriginalAttributes( attributes )
-                        .set_Loaded( true );
-                } )
-        );
+        return eagerLoadRelations( getEntities() );
     }
 
     function first() {
@@ -282,7 +291,7 @@ component accessors="true" {
     }
 
     function refresh() {
-        variables._relationshipData = {};
+        variables._relationshipsData = {};
         assignAttributesData(
             newQuery()
                 .from( variables._table )
@@ -408,68 +417,73 @@ component accessors="true" {
         return this;
     }
 
-    private function belongsTo( relationName, foreignKey ) {
+    private function belongsTo( relationName, foreignKey, ownerKey, relationMethodName ) {
         var related = variables._wirebox.getInstance( relationName );
 
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = related.get_EntityName() & related.get_Key();
         }
-        if ( isNull( arguments.owningKey ) ) {
-            arguments.owningKey = related.get_Key();
+        if ( isNull( arguments.ownerKey ) ) {
+            arguments.ownerKey = related.get_Key();
+        }
+        if ( isNull( arguments.relationMethodName ) ) {
+            arguments.relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] );
         }
         return variables._wirebox.getInstance( name = "BelongsTo@quick", initArguments = {
-            wirebox = variables._wirebox,
             related = related,
             relationName = relationName,
-            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
-            owning = this,
+            relationMethodName = relationMethodName,
+            parent = this,
             foreignKey = foreignKey,
-            foreignKeyValue = retrieveAttribute( arguments.foreignKey ),
-            owningKey = owningKey
+            ownerKey = ownerKey
         } );
     }
 
-    private function hasOne( relationName, foreignKey, owningKey ) {
-        var related = variables._wirebox.getInstance( relationName );
-        if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = variables._key;
-        }
-        if ( isNull( arguments.owningKey ) ) {
-            arguments.owningKey = variables._entityName & variables._key;
-        }
-        return variables._wirebox.getInstance( name = "HasOne@quick", initArguments = {
-            wirebox = variables._wirebox,
-            related = related,
-            relationName = relationName,
-            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
-            owning = this,
-            foreignKey = foreignKey,
-            foreignKeyValue = keyValue(),
-            owningKey = owningKey
-        } );
-    }
-
-    private function hasMany( relationName, foreignKey, owningKey ) {
+    private function hasOne( relationName, foreignKey, localKey ) {
         var related = variables._wirebox.getInstance( relationName );
         if ( isNull( arguments.foreignKey ) ) {
             arguments.foreignKey = variables._entityName & variables._key;
         }
-        if ( isNull( arguments.owningKey ) ) {
-            arguments.owningKey = variables._entityName & variables._key;
+        if ( isNull( arguments.localKey ) ) {
+            arguments.localKey = variables._key;
         }
-        return variables._wirebox.getInstance( name = "HasMany@quick", initArguments = {
-            wirebox = variables._wirebox,
+        return variables._wirebox.getInstance( name = "HasOne@quick", initArguments = {
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
-            owning = this,
+            parent = this,
             foreignKey = foreignKey,
-            foreignKeyValue = keyValue(),
-            owningKey = owningKey
+            localKey = localKey
         } );
     }
 
-    private function belongsToMany( relationName, table, foreignKey, relatedKey ) {
+    private function hasMany( relationName, foreignKey, localKey ) {
+        var related = variables._wirebox.getInstance( relationName );
+        if ( isNull( arguments.foreignKey ) ) {
+            arguments.foreignKey = variables._entityName & variables._key;
+        }
+        if ( isNull( arguments.localKey ) ) {
+            arguments.localKey = variables._key;
+        }
+        return variables._wirebox.getInstance( name = "HasMany@quick", initArguments = {
+            related = related,
+            relationName = relationName,
+            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
+            parent = this,
+            foreignKey = foreignKey,
+            localKey = localKey
+        } );
+    }
+
+    private function belongsToMany(
+        relationName,
+        table,
+        foreignPivotKey,
+        relatedPivotKey,
+        parentKey,
+        relatedKey,
+        relationMethodName
+    ) {
         var related = variables._wirebox.getInstance( relationName );
         if ( isNull( arguments.table ) ) {
             if ( compareNoCase( related.get_Table(), variables._table ) < 0 ) {
@@ -479,82 +493,125 @@ component accessors="true" {
                 arguments.table = lcase( "#variables._table#_#related.get_Table()#" );
             }
         }
-        if ( isNull( arguments.relatedKey ) ) {
-            arguments.relatedKey = related.get_EntityName() & related.get_Key();
+        if ( isNull( arguments.foreignPivotKey ) ) {
+            arguments.foreignPivotKey = variables._entityName & variables._key;
         }
-        if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = variables._entityName & variables._key;
+        if ( isNull( arguments.relatedPivotKey ) ) {
+            arguments.relatedPivotKey = related.get_entityName() & related.get_key();
+        }
+        if ( isNull( arguments.relationMethodName ) ) {
+            arguments.relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] );
+        }
+        if ( isNull( arguments.parentKey ) ) {
+            arguments.parentKey = variables._key;
+        }
+        if ( isNull( arguments.relatedKey ) ) {
+            arguments.relatedKey = related.get_key();
         }
         return variables._wirebox.getInstance( name = "BelongsToMany@quick", initArguments = {
-            wirebox = variables._wirebox,
             related = related,
             relationName = relationName,
-            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
-            owning = this,
+            relationMethodName = relationMethodName,
+            parent = this,
             table = arguments.table,
-            foreignKey = foreignKey,
-            foreignKeyValue = keyValue(),
+            foreignPivotKey = foreignPivotKey,
+            relatedPivotKey = relatedPivotKey,
+            parentKey = parentKey,
             relatedKey = relatedKey
         } );
     }
 
-    private function hasManyThrough( relationName, intermediateName, foreignKey, intermediateKey, owningKey ) {
+    private function hasManyThrough( relationName, intermediateName, firstKey, secondKey, localKey, secondLocalKey ) {
         var related = variables._wirebox.getInstance( relationName );
         var intermediate = variables._wirebox.getInstance( intermediateName );
-        if ( isNull( arguments.intermediateKey ) ) {
-            arguments.intermediateKey = intermediate.get_EntityName() & intermediate.get_Key();
+        if ( isNull( arguments.firstKey ) ) {
+            arguments.firstKey = intermediate.get_EntityName() & intermediate.get_Key();
         }
-        if ( isNull( arguments.foreignKey ) ) {
-            arguments.foreignKey = variables._entityName & variables._key;
+        if ( isNull( arguments.firstKey ) ) {
+            arguments.firstKey = variables._entityName & variables._key;
         }
-        if ( isNull( arguments.owningKey ) ) {
-            arguments.owningKey = variables._key;
+        if ( isNull( arguments.secondKey ) ) {
+            arguments.secondKey = intermediate.get_entityName() & intermediate.get_key();
+        }
+        if ( isNull( arguments.localKey ) ) {
+            arguments.localKey = variables._key;
+        }
+        if ( isNull( arguments.secondLocalKey ) ) {
+            arguments.secondLocalKey = intermediate.get_key();
         }
 
         return variables._wirebox.getInstance( name = "HasManyThrough@quick", initArguments = {
-            wirebox = variables._wirebox,
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
-            owning = this,
+            parent = this,
             intermediate = intermediate,
-            foreignKey = foreignKey,
-            foreignKeyValue = keyValue(),
-            intermediateKey = intermediateKey,
-            owningKey = owningKey
+            firstKey = firstKey,
+            secondKey = secondKey,
+            localKey = localKey,
+            secondLocalKey = secondLocalKey
         } );
     }
 
-    private function polymorphicHasMany( relationName, prefix ) {
+    private function polymorphicHasMany( required relationName, required name, type, id, localKey ) {
         var related = variables._wirebox.getInstance( relationName );
+
+        if ( isNull( arguments.type ) ) {
+            arguments.type = arguments.name & "_type";
+        }
+        if ( isNull( arguments.id ) ) {
+            arguments.id = arguments.name & "_id";
+        }
+        var table = related.get_table();
+        if ( isNull( arguments.localKey ) ) {
+            arguments.localKey = variables._key;
+        }
+
         return variables._wirebox.getInstance( name = "PolymorphicHasMany@quick", initArguments = {
-            wirebox = variables._wirebox,
             related = related,
             relationName = relationName,
             relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
-            owning = this,
-            foreignKey = "",
-            foreignKeyValue = "",
-            owningKey = "",
-            prefix = prefix
+            parent = this,
+            type = type,
+            id = id,
+            localKey = localKey
         } );
     }
 
-    private function polymorphicBelongsTo( prefix ) {
-        var relationName = retrieveAttribute(
-            "#prefix#_type"
-        );
+    private function polymorphicBelongsTo( name, type, id, ownerKey ) {
+        if ( isNull( arguments.name ) ) {
+            arguments.name = lcase( callStackGet()[ 2 ][ "Function" ] );
+        }
+        if ( isNull( arguments.type ) ) {
+            arguments.type = arguments.name & "_type";
+        }
+        if ( isNull( arguments.id ) ) {
+            arguments.id = arguments.name & "_id";
+        }
+        var relationName = retrieveAttribute( arguments.type, "" );
+        if ( relationName == "" ) {
+            return variables._wirebox.getInstance( name = "PolymorphicBelongsTo@quick", initArguments = {
+                related = this.set_EagerLoad( [] ).resetQuery(),
+                relationName = relationName,
+                relationMethodName = name,
+                parent = this,
+                foreignKey = arguments.id,
+                ownerKey = "",
+                type = type
+            } );
+        }
         var related = variables._wirebox.getInstance( relationName );
+        if ( isNull( ownerKey ) ) {
+            arguments.ownerKey = related.get_key();
+        }
         return variables._wirebox.getInstance( name = "PolymorphicBelongsTo@quick", initArguments = {
-            wirebox = variables._wirebox,
             related = related,
             relationName = relationName,
-            relationMethodName = lcase( callStackGet()[ 2 ][ "Function" ] ),
-            owning = this,
-            foreignKey = related.get_Key(),
-            foreignKeyValue = retrieveAttribute( "#prefix#_id" ),
-            owningKey = "",
-            prefix = prefix
+            relationMethodName = name,
+            parent = this,
+            foreignKey = arguments.id,
+            ownerKey = ownerKey,
+            type = type
         } );
     }
 
@@ -567,7 +624,7 @@ component accessors="true" {
         return this;
     }
 
-    private function eagerLoadRelations( entities ) {
+    function eagerLoadRelations( entities ) {
         if ( arrayIsEmpty( entities ) || arrayIsEmpty( variables._eagerLoad ) ) {
             return entities;
         }
@@ -580,32 +637,13 @@ component accessors="true" {
     }
 
     private function eagerLoadRelation( relationName, entities ) {
-        var keys = entities.map( function( entity ) {
-            return invoke( entity, relationName ).getForeignKeyValue();
-        } );
-        keys = arraySlice( createObject( "java", "java.util.HashSet" ).init( keys ).toArray(), 1 );
-        var relatedEntity = invoke( entities[ 1 ], relationName ).getRelated();
-        var owningKey = invoke( entities[ 1 ], relationName ).getOwningKey();
-        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys ).get( options = variables._queryOptions  );
-
-        return matchRelations( entities, relations, relationName );
-    }
-
-    private function matchRelations( entities, relations, relationName ) {
-        var relationship = invoke( entities[ 1 ], relationName );
-        var groupedRelations = groupBy( items = relations, key = relationship.getOwningKey(), forceLookup = true );
-        entities.each( function( entity ) {
-            var relationship = invoke( entity, relationName );
-            if ( structKeyExists( groupedRelations, relationship.getForeignKeyValue() ) ) {
-                entity.assignRelationship( relationName, relationship.fromGroup(
-                    groupedRelations[ relationship.getForeignKeyValue() ]
-                ) );
-            }
-            else {
-                entity.assignRelationship( relationName, relationship.getDefaultValue() );
-            }
-        } );
-        return entities;
+        var relation = invoke( this, relationName ).resetQuery();
+        relation.addEagerConstraints( entities );
+        return relation.match(
+            relation.initRelation( entities, relationName ),
+            relation.getEager(),
+            relationName
+        );
     }
 
     /*=======================================
@@ -716,7 +754,7 @@ component accessors="true" {
                 relationship = invoke( this, relationshipName, missingMethodArguments );
             }
             relationship.setRelationMethodName( relationshipName );
-            assignRelationship( relationshipName, relationship.retrieve() );
+            assignRelationship( relationshipName, relationship.getResults() );
         }
 
         return retrieveRelationship( relationshipName );

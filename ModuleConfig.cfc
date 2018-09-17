@@ -3,7 +3,7 @@ component {
     this.name = "quick";
     this.author = "Eric Peterson";
     this.webUrl = "https://github.com/coldbox-modules/quick";
-    this.dependencies = [ "qb", "str", "cfcollection" ];
+    this.dependencies = [ "qb", "str" ];
     this.cfmapping = "quick";
 
     function configure() {

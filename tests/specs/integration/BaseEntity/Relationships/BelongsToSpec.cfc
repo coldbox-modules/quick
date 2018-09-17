@@ -7,7 +7,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can get the owning entity", function() {
-                var post = getInstance( "Post" ).find( 1 );
+                var post = getInstance( "Post" ).find( 1245 );
                 var user = post.getAuthor();
                 expect( user.getId() ).toBe( 1 );
                 expect( user.getUsername() ).toBe( "elpete" );
@@ -15,7 +15,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "caches the result of fetching the owning entity", function() {
                 controller.getInterceptorService().registerInterceptor( interceptorObject = this );
-                var post = getInstance( "Post" ).find( 1 );
+                var post = getInstance( "Post" ).find( 1245 );
                 post.getAuthor();
                 post.getAuthor();
                 post.getAuthor();
@@ -33,11 +33,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can disassociate the existing entity", function() {
-                var post = getInstance( "Post" ).find( 1 );
+                var post = getInstance( "Post" ).find( 1245 );
                 expect( post.retrieveAttribute( "user_id" ) ).notToBe( "" );
                 var userId = post.retrieveAttribute( "user_id" );
                 expect( getInstance( "User" ).find( userId ).posts().count() ).toBe( 2 );
-                post.author().disassociate().save();
+                post.author().dissociate().save();
                 expect( post.retrieveAttribute( "user_id" ) ).toBe( "" );
                 expect( getInstance( "User" ).find( userId ).posts().count() ).toBe( 1 );
             } );

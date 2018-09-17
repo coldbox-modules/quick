@@ -82,15 +82,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         tag.setName( "miscellaneous" );
                         tag.save();
 
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
 
                         post.tags().attach( tag.getId() );
 
-                        expect( post.getTags().toArray() ).toBeArray();
-                        expect( post.getTags().toArray() ).toHaveLength( 3 );
+                        post.refresh();
+
+                        expect( post.getTags() ).toBeArray();
+                        expect( post.getTags() ).toHaveLength( 3 );
                     } );
 
                     it( "attaches using the id if the entity is passed", function() {
@@ -98,12 +100,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         tag.setName( "miscellaneous" );
                         tag.save();
 
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
 
                         post.tags().attach( tag );
+
+                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 3 );
@@ -118,12 +122,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         tagB.setName( "other" );
                         tagB.save();
 
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
 
                         post.tags().attach( [ tagA.getId(), tagB ] );
+
+                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 4 );
@@ -132,7 +138,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 describe( "detach", function() {
                     it( "can detach an id from a relationship", function() {
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
@@ -141,12 +147,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                         post.tags().detach( tag.getId() );
 
+                        post.refresh();
+
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 1 );
                     } );
 
                     it( "detaches using the id if the entity is passed", function() {
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
@@ -155,18 +163,22 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                         post.tags().detach( tag );
 
+                        post.refresh();
+
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 1 );
                     } );
 
                     it( "can detach multiple ids or entities at once", function() {
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         var tags = post.getTags().toArray();
                         expect( tags ).toBeArray();
                         expect( tags ).toHaveLength( 2 );
 
                         post.tags().detach( [ tags[ 1 ].getId(), tags[ 2 ] ] );
+
+                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toBeEmpty();
@@ -183,7 +195,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         newTagB.setName( "other" );
                         newTagB.save();
 
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
@@ -197,6 +209,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         ];
 
                         post.tags().sync( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
+
+                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 3 );

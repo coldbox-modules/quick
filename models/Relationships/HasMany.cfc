@@ -5,7 +5,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
     }
 
     function apply() {
-        getRelated().where( getOwningKey(), getForeignKeyValue() );
+        getRelated().where( getForeignKey(), getForeignKeyValue() );
     }
 
     function retrieve() {
@@ -18,14 +18,14 @@ component extends="quick.models.Relationships.BaseRelationship" {
 
     function save( entity ) {
         getOwning().clearRelationship( getRelationMethodName() );
-        return entity.setAttribute( getOwningKey(), getForeignKeyValue() ).save();
+        return entity.setAttribute( getForeignKey(), getForeignKeyValue() ).save();
     }
 
     function create( attributes ) {
         getOwning().clearRelationship( getRelationMethodName() );
         return wirebox.getInstance( getRelationName() )
             .setAttributesData( attributes )
-            .setAttribute( getOwningKey(), getForeignKeyValue() )
+            .setAttribute( getForeignKey(), getForeignKeyValue() )
             .save();
     }
 

@@ -32,8 +32,7 @@ component accessors="true" {
     property name="mapping"         persistent="false";
     property name="fullName"        persistent="false";
     property name="table"           persistent="false";
-    property name="queryoptions"
-persistent="false";
+    property name="queryoptions"    persistent="false";
     property name="readonly"        default="false" persistent="false";
     property name="attributeCasing" default="none"  persistent="false";
     property name="key"             default="id"    persistent="false";

@@ -32,6 +32,8 @@ component accessors="true" {
     property name="mapping"         persistent="false";
     property name="fullName"        persistent="false";
     property name="table"           persistent="false";
+    property name="queryoptions"
+persistent="false";
     property name="readonly"        default="false" persistent="false";
     property name="attributeCasing" default="none"  persistent="false";
     property name="key"             default="id"    persistent="false";
@@ -199,7 +201,7 @@ component accessors="true" {
 
     function all() {
         return eagerLoadRelations(
-            newQuery().from( getTable() ).get()
+            newQuery().from( getTable() ).get( options = getQueryOptions() )
                 .map( function( attributes ) {
                     return newEntity()
                         .setAttributesData( attributes )
@@ -211,7 +213,7 @@ component accessors="true" {
 
     function get() {
         return eagerLoadRelations(
-            getQuery().get().map( function( attributes ) {
+            getQuery().get( options = getQueryOptions() ).map( function( attributes ) {
                 return newEntity()
                     .setAttributesData( attributes )
                     .setOriginalAttributes( attributes )
@@ -221,7 +223,7 @@ component accessors="true" {
     }
 
     function first() {
-        var attributes = getQuery().first();
+        var attributes = getQuery().first( getQueryOptions() );
         return newEntity()
             .setAttributesData( attributes )
             .setOriginalAttributes( attributes )
@@ -236,7 +238,7 @@ component accessors="true" {
             } ) )
             .addSelect( getKey() )
             .from( getTable() )
-            .find( id, getKey() );
+            .find( id, getKey() , getQueryOptions() );
         if ( structIsEmpty( data ) ) {
             return;
         }
@@ -264,7 +266,7 @@ component accessors="true" {
     }
 
     function firstOrFail() {
-        var attributes = getQuery().first();
+        var attributes = getQuery().first( getQueryOptions() );
         if ( structIsEmpty( attributes ) ) {
             throw(
                 type = "EntityNotFound",
@@ -287,7 +289,7 @@ component accessors="true" {
 
     function refresh() {
         setRelationshipsData( {} );
-        setAttributesData( newQuery().from( getTable() ).find( getKeyValue(), getKey() ) );
+        setAttributesData( newQuery().from( getTable() ).find( getKeyValue(), getKey(), getQueryOptions()  ) );
         return this;
     }
 
@@ -311,7 +313,7 @@ component accessors="true" {
                         return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
                     }
                     return value;
-                } ) );
+                } ), getQueryOptions() );
             setOriginalAttributes( getAttributesData() );
             setLoaded( true );
             fireEvent( "postUpdate", { entity = this } );
@@ -328,7 +330,7 @@ component accessors="true" {
                     return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
                 }
                 return value;
-            } ) );
+            } ), getQueryOptions() );
             getKeyType().postInsert( this, result );
             setOriginalAttributes( getAttributesData() );
             setLoaded( true );
@@ -342,7 +344,7 @@ component accessors="true" {
     function delete() {
         guardReadOnly();
         fireEvent( "preDelete", { entity = this } );
-        newQuery().delete( getKeyValue(), getKey() );
+        newQuery().delete( getKeyValue(), getKey(), getQueryOptions() );
         setLoaded( false );
         fireEvent( "postDelete", { entity = this } );
         return this;
@@ -360,7 +362,7 @@ component accessors="true" {
     function updateAll( attributes = {} ) {
         guardReadOnly();
         guardAgainstReadOnlyAttributes( attributes );
-        return getQuery().update( attributes );
+        return getQuery().update( attributes, getQueryOptions() );
     }
 
     function deleteAll( ids = [] ) {
@@ -368,7 +370,7 @@ component accessors="true" {
         if ( ! arrayIsEmpty( ids ) ) {
             getQuery().whereIn( getKey(), ids );
         }
-        return getQuery().delete();
+        return getQuery().delete( options = getQueryOptions() );
     }
 
     /*=====================================
@@ -585,7 +587,7 @@ component accessors="true" {
         } ).unique();
         var relatedEntity = invoke( entities.get( 1 ), relationName ).getRelated();
         var owningKey = invoke( entities.get( 1 ), relationName ).getOwningKey();
-        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys.get() ).get();
+        var relations = relatedEntity.resetQuery().whereIn( owningKey, keys.get() ).get( options = getQueryOptions()  );
 
         return matchRelations( entities, relations, relationName );
     }
@@ -616,6 +618,10 @@ component accessors="true" {
     }
 
     public function newQuery() {
+        var md = getMeta();
+        if ( md.keyExists( "grammar" ) ) {
+            builder.setGrammar( wirebox.getInstance( md.grammar & "@qb" ) );
+        }
         variables.query = builder.newQuery()
             .setReturnFormat( function( q ) {
                 return wirebox.getInstance(
@@ -775,6 +781,12 @@ component accessors="true" {
         setEntityName( md.entityName );
         param md.table = str.plural( str.snake( getEntityName() ) );
         setTable( md.table );
+        if (structKeyExists(md,"datasource")) {
+            md.queryoptions = { datasource=md.datasource };
+        } else {
+            md.queryoptions = {};
+        }
+        setQueryOptions( md.queryoptions);
         param md.readonly = false;
         setReadOnly( md.readonly );
         param md.properties = [];

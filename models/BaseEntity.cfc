@@ -3,9 +3,9 @@ component accessors="true" {
     /*====================================
     =            Dependencies            =
     ====================================*/
-    property name="_builder" inject="QuickQB@quick" persistent="false";
+    property name="_builder" inject="provider:QuickQB@quick" persistent="false";
     property name="_wirebox" inject="wirebox" persistent="false";
-    property name="_str" inject="Str@str" persistent="false";
+    property name="_str" inject="provider:Str@str" persistent="false";
     property name="_settings" inject="coldbox:modulesettings:quick" persistent="false";
     property name="_validationManager" inject="ValidationManager@cbvalidation" persistent="false";
     property name="_interceptorService" inject="coldbox:interceptorService" persistent="false";
@@ -38,14 +38,16 @@ component accessors="true" {
 
     variables.relationships = {};
 
-    function init() {
+    function init( struct meta = {} ) {
         assignDefaultProperties();
+        variables._meta = arguments.meta;
         return this;
     }
 
     function assignDefaultProperties() {
         assignAttributesData( {} );
         assignOriginalAttributes( {} );
+        variables._meta = {};
         variables._relationshipsData = {};
         variables._eagerLoad = [];
         variables._nullValues = {};
@@ -283,7 +285,10 @@ component accessors="true" {
     }
 
     function newEntity() {
-        return variables._wirebox.getInstance( variables._fullName );
+        return variables._wirebox.getInstance(
+            name = variables._fullName,
+            initArguments = { meta = variables._meta }
+        );
     }
 
     function fresh() {
@@ -808,25 +813,26 @@ component accessors="true" {
     }
 
     private function metadataInspection() {
-        var util = createObject( "component", "coldbox.system.core.util.Util" );
-        var md = util.getInheritedMetadata( this );
-        variables._meta = md;
-        param variables._key = "id";
-        variables._fullName = md.fullname;
-        param md.mapping = listLast( md.fullname, "." );
-        variables._mapping = md.mapping;
-        param md.entityName = listLast( md.name, "." );
-        variables._entityName = md.entityName;
-        param md.table = variables._str.plural( variables._str.snake( variables._entityName ) );
-        variables._table = md.table;
-        param variables._queryOptions = {};
-        if ( md.keyExists( "datasource" ) ) {
-            variables._queryOptions = { datasource = md.datasource };
+        if ( ! isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
+            var util = createObject( "component", "coldbox.system.core.util.Util" );
+            variables._meta = util.getInheritedMetadata( this );
         }
-        param md.readonly = false;
-        variables._readonly = md.readonly;
-        param md.properties = [];
-        assignAttributesFromProperties( md.properties );
+        param variables._key = "id";
+        variables._fullName = variables._meta.fullname;
+        param variables._meta.mapping = listLast( variables._meta.fullname, "." );
+        variables._mapping = variables._meta.mapping;
+        param variables._meta.entityName = listLast( variables._meta.name, "." );
+        variables._entityName = variables._meta.entityName;
+        param variables._meta.table = variables._str.plural( variables._str.snake( variables._entityName ) );
+        variables._table = variables._meta.table;
+        param variables._queryOptions = {};
+        if ( variables._meta.keyExists( "datasource" ) ) {
+            variables._queryOptions = { datasource = variables._meta.datasource };
+        }
+        param variables._meta.readonly = false;
+        variables._readonly = variables._meta.readonly;
+        param variables._meta.properties = [];
+        assignAttributesFromProperties( variables._meta.properties );
     }
 
     private function assignAttributesFromProperties( properties ) {
@@ -1109,6 +1115,13 @@ component accessors="true" {
     private function isNullValue( key, value ) {
         return variables._nullValues.keyExists( retrieveAliasForColumn( key ) ) &&
             compare( variables._nullValues[ retrieveAliasForColumn( key ) ], value ) == 0;
+    }
+
+    function timeIt( callback, label ) {
+        var start = getTickCount();
+        var result = callback();
+        writeDump( var = getTickCount() - start, label = label );
+        return isNull( result ) ? javacast( "null", "" ) : result;
     }
 
 }

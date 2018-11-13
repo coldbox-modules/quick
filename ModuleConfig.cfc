@@ -5,7 +5,6 @@ component {
     this.webUrl = "https://github.com/coldbox-modules/quick";
     this.dependencies = [ "qb", "str" ];
     this.cfmapping = "quick";
-    this.autoMapModels = false;
 
     function configure() {
         settings = {

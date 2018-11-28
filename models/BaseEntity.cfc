@@ -58,6 +58,17 @@ component accessors="true" {
         metadataInspection();
     }
 
+    function keyType() {
+        return variables._wirebox.getInstance( "AutoIncrementing@quick" );
+    }
+
+    function retrieveKeyType() {
+        if ( isNull( variables.__keyType__ ) ) {
+            variables.__keyType__ = keyType();
+        }
+        return variables.__keyType__;
+    }
+
     /*==================================
     =            Attributes            =
     ==================================*/
@@ -331,10 +342,11 @@ component accessors="true" {
             fireEvent( "postUpdate", { entity = this } );
         }
         else {
-            variables._keyType.preInsert( this );
+            resetQuery();
+            retrieveKeyType().preInsert( this );
             fireEvent( "preInsert", { entity = this } );
             guardValid();
-            var result = newQuery().insert( retrieveAttributesData().map( function( key, value, attributes ) {
+            var result = retrieveQuery().insert( retrieveAttributesData().map( function( key, value, attributes ) {
                 if ( isNull( value ) || isNullValue( key, value ) ) {
                     return { value = "", nulls = true, null = true };
                 }
@@ -343,7 +355,7 @@ component accessors="true" {
                 }
                 return value;
             } ), variables._queryOptions );
-            variables._keyType.postInsert( this, result );
+            retrieveKeyType().postInsert( this, result );
             assignOriginalAttributes( retrieveAttributesData() );
             variables._loaded = true;
             fireEvent( "postInsert", { entity = this } );

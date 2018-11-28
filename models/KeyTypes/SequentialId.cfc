@@ -5,7 +5,7 @@ component implements="KeyType" {
      * Receives the entity as the only argument.
      */
     public void function preInsert( required entity ) {
-        entity.assignAttribute( entity.get_Key(), createUUID() );
+        entity.getQuery().returning( entity.get_Key() );
     }
 
     /**
@@ -13,7 +13,7 @@ component implements="KeyType" {
      * Receives the entity and the queryExecute result as arguments.
      */
     public void function postInsert( required entity, required struct result ) {
-        return;
+        entity.assignAttribute( entity.get_Key(), result.id );
     }
 
 }

@@ -1,7 +1,5 @@
 component extends="quick.models.BaseEntity" {
 
-    property name="_keyType" inject="UUID@quick" persistent="false";
-
     property name="id";
     property name="name";
     property name="createdDate" column="created_date";
@@ -12,5 +10,9 @@ component extends="quick.models.BaseEntity" {
             return hasManyThrough( "Post", "User", "country_id", "user_id" );
         }
     };
+
+    function keyType() {
+        return variables._wirebox.getInstance( "UUID@quick" );
+    }
 
 }

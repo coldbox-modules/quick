@@ -79,7 +79,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "password" = "",
                     "countryId" = "",
                     "createdDate" = "",
-                    "modifiedDate" = ""
+                    "modifiedDate" = "",
+                    "type" = ""
                 } );
             } );
 
@@ -92,7 +93,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "password" = "5F4DCC3B5AA765D61D8327DEB882CF99",
                     "countryId" = "02B84D66-0AA0-F7FB-1F71AFC954843861",
                     "createdDate" = "2017-07-28 02:06:36",
-                    "modifiedDate" = "2017-07-28 02:06:36"
+                    "modifiedDate" = "2017-07-28 02:06:36",
+                    "type" = "admin"
                 } );
             } );
         } );

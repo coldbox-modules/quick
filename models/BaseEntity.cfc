@@ -776,10 +776,14 @@ component accessors="true" {
 
     private function tryScopes( missingMethodName, missingMethodArguments ) {
         if ( structKeyExists( variables, "scope#missingMethodName#" ) ) {
-            return invoke( this, "scope#missingMethodName#", {
-                query = this,
-                args = missingMethodArguments
-            } );
+            var scopeArgs = { "1" = this };
+            // this is to allow default arguments to be set for scopes
+            if ( ! structIsEmpty( missingMethodArguments ) ) {
+                for ( var i = 1; i <= structCount( missingMethodArguments ); i++ ) {
+                    scopeArgs[ i + 1 ] = missingMethodArguments[ i ];
+                }
+            }
+            return invoke( this, "scope#missingMethodName#", scopeArgs );
         }
         return;
     }

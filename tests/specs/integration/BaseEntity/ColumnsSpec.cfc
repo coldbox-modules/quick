@@ -8,7 +8,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 arraySort( attributeNames, "textnocase" );
 
                 expect( attributeNames ).toBeArray();
-                expect( attributeNames ).toHaveLength( 8 );
+                expect( attributeNames ).toHaveLength( 9 );
                 expect( attributeNames ).toBe( [
                     "COUNTRY_ID",
                     "CREATED_DATE",
@@ -17,6 +17,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "LAST_NAME",
                     "MODIFIED_DATE",
                     "PASSWORD",
+                    "TYPE",
                     "USERNAME"
                 ] );
             } );

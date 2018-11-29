@@ -139,7 +139,7 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
                 arguments.val = val.keyValue();
             }
             var insertRecord = {};
-            insertRecord[ variables.parentKey ] = foreignPivotKeyValue;
+            insertRecord[ variables.foreignPivotKey ] = foreignPivotKeyValue;
             insertRecord[ variables.relatedPivotKey ] = arguments.val;
             return insertRecord;
         } );

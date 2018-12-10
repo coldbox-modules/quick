@@ -314,7 +314,7 @@ component accessors="true" {
                 }
                 return value;
             } ), getQueryOptions() );
-            getKeyType().postInsert( this, result );
+            getKeyType().postInsert( this, ! isNull( result.result ) ? result.result : result );
             setOriginalAttributes( getAttributesData() );
             setLoaded( true );
             fireEvent( "postInsert", { entity = this } );

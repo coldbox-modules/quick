@@ -9,7 +9,6 @@ component accessors="true" {
     property name="_settings" inject="coldbox:modulesettings:quick" persistent="false";
     property name="_validationManager" inject="ValidationManager@cbvalidation" persistent="false";
     property name="_interceptorService" inject="coldbox:interceptorService" persistent="false";
-    property name="_keyType" inject="AutoIncrementing@quick" persistent="false";
 
     /*===========================================
     =            Metadata Properties            =

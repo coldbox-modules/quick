@@ -35,7 +35,8 @@ component accessors="true" {
 
     this.constraints = {};
 
-    variables.relationships = {};
+    // This is for an alternative syntax for defining relationships.
+    variables._relationships = {};
 
     function init( struct meta = {} ) {
         assignDefaultProperties();
@@ -405,7 +406,7 @@ component accessors="true" {
         param md.functions = [];
         return ! arrayIsEmpty( arrayFilter( md.functions, function( func ) {
             return compareNoCase( func.name, name ) == 0;
-        } ) ) || variables.relationships.keyExists( name );
+        } ) ) || variables._relationships.keyExists( name );
     }
 
     function isRelationshipLoaded( name ) {
@@ -762,8 +763,8 @@ component accessors="true" {
 
         if ( ! isRelationshipLoaded( relationshipName ) ) {
             var relationship = "";
-            if ( variables.relationships.keyExists( relationshipName ) ) {
-                var method = variables.relationships[ relationshipName ];
+            if ( variables._relationships.keyExists( relationshipName ) ) {
+                var method = variables._relationships[ relationshipName ];
                 relationship = method( missingMethodArguments );
             }
             else {
@@ -777,8 +778,8 @@ component accessors="true" {
     }
 
     private function tryRelationshipDefinition( relationshipName ) {
-        if ( variables.relationships.keyExists( relationshipName ) ) {
-            var method = variables.relationships[ relationshipName ];
+        if ( variables._relationships.keyExists( relationshipName ) ) {
+            var method = variables._relationships[ relationshipName ];
             var relationship = method();
             relationship.setRelationMethodName( relationshipName );
             return relationship;

@@ -33,6 +33,9 @@ component {
 
         binder.map( "quick.models.BaseEntity" )
             .to( "#moduleMapping#.models.BaseEntity" );
+
+        binder.getInjector().registerDSL( "quickService", "#moduleMapping#.dsl.QuickServiceDSL" );
+
         var creatorType = server.keyExists( "lucee" ) ? "LuceeEntityCreator" : "ACFEntityCreator";
         binder.map( "EntityCreator@quick" )
             .to( "#moduleMapping#.extras.#creatorType#" );

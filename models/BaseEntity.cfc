@@ -6,9 +6,11 @@ component accessors="true" {
     property name="_builder" inject="provider:QuickQB@quick" persistent="false";
     property name="_wirebox" inject="wirebox" persistent="false";
     property name="_str" inject="provider:Str@str" persistent="false";
+    // TOOD: retrieve and store settings in guardValid
     property name="_settings" inject="coldbox:modulesettings:quick" persistent="false";
-    property name="_validationManager" inject="ValidationManager@cbvalidation" persistent="false";
-    property name="_interceptorService" inject="coldbox:interceptorService" persistent="false";
+    property name="_validationManager" inject="provider:ValidationManager@cbvalidation" persistent="false";
+    property name="_interceptorService" inject="provider:coldbox:interceptorService" persistent="false";
+    property name="_entityCreator" inject="provider:EntityCreator@quick" persistent="false";
 
     /*===========================================
     =            Metadata Properties            =
@@ -48,6 +50,7 @@ component accessors="true" {
         assignAttributesData( {} );
         assignOriginalAttributes( {} );
         variables._meta = {};
+        variables._data = {};
         variables._relationshipsData = {};
         variables._eagerLoad = [];
         variables._nullValues = {};
@@ -119,18 +122,10 @@ component accessors="true" {
             return this;
         }
 
-        variables._data = attrs.reduce( function( acc, name, value ) {
-            var key = name;
-            if ( isColumnAlias( name ) ) {
-                key = retrieveColumnForAlias( name );
-            }
-            acc[ key ] = value;
-            return acc;
-        }, {} );
-
-        for ( var key in variables._data ) {
-            variables[ retrieveAliasForColumn( key ) ] = variables._data[ key ];
-        }
+        attrs.each( function( key, value ) {
+            variables._data[ retrieveColumnForAlias( key ) ] = value;
+            variables[ retrieveAliasForColumn( key ) ] = value;
+        } );
 
         return this;
     }
@@ -182,6 +177,8 @@ component accessors="true" {
     }
 
     function isDirty() {
+        // TODO: could store hash of incoming attrs and compare hashes.
+        // that could get rid of `duplicate` in `assignOriginalAttributes`
         return ! deepEqual( get_OriginalAttributes(), retrieveAttributesData() );
     }
 
@@ -213,10 +210,10 @@ component accessors="true" {
     function getEntities() {
         return retrieveQuery()
             .get( options = variables._queryOptions )
-            .map( function( attributes ) {
+            .map( function( attrs ) {
                 return newEntity()
-                    .assignAttributesData( attributes )
-                    .assignOriginalAttributes( attributes )
+                    .assignAttributesData( attrs )
+                    .assignOriginalAttributes( attrs )
                     .set_Loaded( true );
             } );
     }
@@ -225,10 +222,10 @@ component accessors="true" {
         return eagerLoadRelations(
             newQuery().from( variables._table )
                 .get( options = variables._queryOptions )
-                .map( function( attributes ) {
+                .map( function( attrs ) {
                     return newEntity()
-                        .assignAttributesData( attributes )
-                        .assignOriginalAttributes( attributes )
+                        .assignAttributesData( attrs )
+                        .assignOriginalAttributes( attrs )
                         .set_Loaded( true );
                 } )
         );
@@ -239,11 +236,11 @@ component accessors="true" {
     }
 
     function first() {
-        var attributes = retrieveQuery().first( options = variables._queryOptions );
+        var attrs = retrieveQuery().first( options = variables._queryOptions );
         return newEntity()
-            .assignAttributesData( attributes )
-            .assignOriginalAttributes( attributes )
-            .set_Loaded( ! structIsEmpty( attributes ) );
+            .assignAttributesData( attrs )
+            .assignOriginalAttributes( attrs )
+            .set_Loaded( ! structIsEmpty( attrs ) );
     }
 
     function find( id ) {
@@ -282,24 +279,21 @@ component accessors="true" {
     }
 
     function firstOrFail() {
-        var attributes = retrieveQuery().first( options = variables._queryOptions );
-        if ( structIsEmpty( attributes ) ) {
+        var attrs = retrieveQuery().first( options = variables._queryOptions );
+        if ( structIsEmpty( attrs ) ) {
             throw(
                 type = "EntityNotFound",
                 message = "No [#variables._entityName#] found with constraints [#serializeJSON( retrieveQuery().getBindings() )#]"
             );
         }
         return newEntity()
-            .assignAttributesData( attributes )
-            .assignOriginalAttributes( attributes )
+            .assignAttributesData( attrs )
+            .assignOriginalAttributes( attrs )
             .set_Loaded( true );
     }
 
     function newEntity() {
-        return variables._wirebox.getInstance(
-            name = variables._fullName,
-            initArguments = { meta = variables._meta }
-        );
+        return variables._entityCreator.new( this );
     }
 
     function fresh() {
@@ -1022,6 +1016,7 @@ component accessors="true" {
             return this;
         }
 
+        // TOOD: retrieve and store settings here
         param variables._settings.automaticValidation = false;
         if ( ! variables._settings.automaticValidation ) {
             return this;
@@ -1089,6 +1084,7 @@ component accessors="true" {
         if ( ! md.keyExists( "properties" ) || arrayIsEmpty( md.properties ) ) {
             return false;
         }
+        // TODO: use stored metadata and store as struct of struct
         var foundProperties = arrayFilter( md.properties, function( prop ) {
             return prop.name == name;
         } );

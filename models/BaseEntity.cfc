@@ -24,7 +24,7 @@ component accessors="true" {
     property name="key"             default="id";
     property name="attributes";
     property name="meta";
-    
+
     /*=====================================
     =            Instance Data            =
     =====================================*/
@@ -793,7 +793,7 @@ component accessors="true" {
         if (
             isNumeric( arguments.actual ) &&
             isNumeric( arguments.expected ) &&
-            toString( arguments.actual ) == toString( arguments.expected )
+            compare( toString( arguments.actual ), toString( arguments.expected ) ) == 0
         ) {
             return true;
         }
@@ -802,7 +802,7 @@ component accessors="true" {
         if (
             isSimpleValue( arguments.actual ) &&
             isSimpleValue( arguments.expected ) &&
-            arguments.actual == arguments.expected
+            compare( arguments.actual, arguments.expected ) == 0
         ) {
             return true;
         }
@@ -838,7 +838,7 @@ component accessors="true" {
         if (
             isCustomFunction( arguments.actual ) &&
             isCustomFunction( arguments.expected ) &&
-            arguments.actual.toString() == arguments.expected.toString()
+            compare( arguments.actual.toString(), arguments.expected.toString() ) == 0
         ) {
             return true;
         }
@@ -847,7 +847,7 @@ component accessors="true" {
         if (
             IsXmlDoc( arguments.actual ) &&
             IsXmlDoc( arguments.expected ) &&
-            toString( arguments.actual ) == toString( arguments.expected )
+            compare( toString( arguments.actual ), toString( arguments.expected ) ) == 0
         ) {
             return true;
         }

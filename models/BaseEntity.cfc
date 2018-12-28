@@ -49,12 +49,12 @@ component accessors="true" {
     function assignDefaultProperties() {
         assignAttributesData( {} );
         assignOriginalAttributes( {} );
-        variables._meta = {};
-        variables._data = {};
-        variables._relationshipsData = {};
-        variables._eagerLoad = [];
-        variables._nullValues = {};
-        variables._loaded = false;
+        param variables._meta = {};
+        param variables._data = {};
+        param variables._relationshipsData = {};
+        param variables._eagerLoad = [];
+        param variables._nullValues = {};
+        param variables._loaded = false;
     }
 
     function onDIComplete() {
@@ -296,8 +296,18 @@ component accessors="true" {
         return variables._entityCreator.new( this );
     }
 
+    function reset() {
+        assignAttributesData( {} );
+        assignOriginalAttributes( {} );
+        variables._data = {};
+        variables._relationshipsData = {};
+        variables._eagerLoad = [];
+        variables._loaded = false;
+        return this;
+    }
+
     function fresh() {
-        return variables.find( keyValue() );
+        return variables.resetQuery().find( keyValue() );
     }
 
     function refresh() {

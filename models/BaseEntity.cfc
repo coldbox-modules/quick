@@ -59,7 +59,7 @@ component accessors="true" {
     }
 
     function keyType() {
-        return variables._wirebox.getInstance( "AutoIncrementing@quick" );
+        return variables._wirebox.getInstance( "AutoIncrementingKeyType@quick" );
     }
 
     function retrieveKeyType() {

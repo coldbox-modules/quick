@@ -1,8 +1,8 @@
 {
     "name":"quick",
-    "version":"2.0.0-beta.5",
+    "version":"2.0.0-beta.6",
     "author":"",
-    "location":"coldbox-modules/quick#v2.0.0-beta.5",
+    "location":"coldbox-modules/quick#v2.0.0-beta.6",
     "homepage":"https://github.com/coldbox-modules/quick",
     "documentation":"https://github.com/coldbox-modules/quick",
     "repository":{

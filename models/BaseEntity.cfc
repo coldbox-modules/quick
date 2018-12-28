@@ -37,9 +37,6 @@ component accessors="true" {
 
     this.constraints = {};
 
-    // This is for an alternative syntax for defining relationships.
-    variables._relationships = {};
-
     function init( struct meta = {} ) {
         assignDefaultProperties();
         variables._meta = arguments.meta;
@@ -410,7 +407,7 @@ component accessors="true" {
         param md.functions = [];
         return ! arrayIsEmpty( arrayFilter( md.functions, function( func ) {
             return compareNoCase( func.name, name ) == 0;
-        } ) ) || variables._relationships.keyExists( name );
+        } ) );
     }
 
     function isRelationshipLoaded( name ) {
@@ -707,7 +704,7 @@ component accessors="true" {
             variables.query = q.retrieveQuery();
             return this;
         }
-        var r = tryRelationships( missingMethodName, missingMethodArguments );
+        var r = tryRelationshipGetter( missingMethodName, missingMethodArguments );
         if ( ! isNull( r ) ) { return r; }
         return forwardToQB( missingMethodName, missingMethodArguments );
     }
@@ -748,12 +745,6 @@ component accessors="true" {
         return missingMethodArguments[ 1 ];
     }
 
-    private function tryRelationships( missingMethodName, missingMethodArguments ) {
-        var relationship = tryRelationshipGetter( missingMethodName, missingMethodArguments );
-        if ( ! isNull( relationship ) ) { return relationship; }
-        return tryRelationshipDefinition( missingMethodName );
-    }
-
     private function tryRelationshipGetter( missingMethodName, missingMethodArguments ) {
         if ( ! variables._str.startsWith( missingMethodName, "get" ) ) {
             return;
@@ -766,28 +757,12 @@ component accessors="true" {
         }
 
         if ( ! isRelationshipLoaded( relationshipName ) ) {
-            var relationship = "";
-            if ( variables._relationships.keyExists( relationshipName ) ) {
-                var method = variables._relationships[ relationshipName ];
-                relationship = method( missingMethodArguments );
-            }
-            else {
-                relationship = invoke( this, relationshipName, missingMethodArguments );
-            }
+            var relationship = invoke( this, relationshipName, missingMethodArguments );
             relationship.setRelationMethodName( relationshipName );
             assignRelationship( relationshipName, relationship.getResults() );
         }
 
         return retrieveRelationship( relationshipName );
-    }
-
-    private function tryRelationshipDefinition( relationshipName ) {
-        if ( variables._relationships.keyExists( relationshipName ) ) {
-            var method = variables._relationships[ relationshipName ];
-            var relationship = method();
-            relationship.setRelationMethodName( relationshipName );
-            return relationship;
-        }
     }
 
     private function tryScopes( missingMethodName, missingMethodArguments ) {

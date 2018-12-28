@@ -849,6 +849,9 @@ component accessors="true" {
         variables._attributes = properties.reduce( function( acc, prop ) {
             param prop.column = prop.name;
             param prop.persistent = true;
+            if ( ! prop.persistent ) {
+                return acc;
+            }
             param prop.nullValue = "";
             param prop.convertToNull = true;
             if ( prop.convertToNull ) {

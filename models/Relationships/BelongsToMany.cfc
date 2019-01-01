@@ -100,7 +100,7 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
     function detach( id ) {
         var foreignPivotKeyValue = variables.parent.retrieveAttribute( variables.parentKey );
         newPivotStatement()
-            .where( variables.parentKey, "=", foreignPivotKeyValue )
+            .where( variables.foreignPivotKey, "=", foreignPivotKeyValue )
             .whereIn(
                 variables.relatedPivotKey,
                 parseIds( id )

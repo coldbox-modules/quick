@@ -32,6 +32,7 @@ component accessors="true" {
     property name="_data" persistent="false";
     property name="_originalAttributes" persistent="false";
     property name="_relationshipsData" persistent="false";
+    property name="_relationshipsLoaded" persistent="false";
     property name="_eagerLoad" persistent="false";
     property name="_loaded" persistent="false";
 
@@ -49,6 +50,7 @@ component accessors="true" {
         param variables._meta = {};
         param variables._data = {};
         param variables._relationshipsData = {};
+        param variables._relationshipsLoaded = {};
         param variables._eagerLoad = [];
         param variables._nullValues = {};
         param variables._loaded = false;
@@ -234,10 +236,12 @@ component accessors="true" {
 
     function first() {
         var attrs = retrieveQuery().first( options = variables._queryOptions );
-        return newEntity()
-            .assignAttributesData( attrs )
-            .assignOriginalAttributes( attrs )
-            .set_Loaded( ! structIsEmpty( attrs ) );
+        return structIsEmpty( attrs ) ?
+            javacast( "null", "" ) :
+            newEntity()
+                .assignAttributesData( attrs )
+                .assignOriginalAttributes( attrs )
+                .set_Loaded( true );
     }
 
     function find( id ) {
@@ -298,6 +302,7 @@ component accessors="true" {
         assignOriginalAttributes( {} );
         variables._data = {};
         variables._relationshipsData = {};
+        variables._relationshipsLoaded = {};
         variables._eagerLoad = [];
         variables._loaded = false;
         return this;
@@ -309,6 +314,7 @@ component accessors="true" {
 
     function refresh() {
         variables._relationshipsData = {};
+        variables._relationshipsLoaded = {};
         assignAttributesData(
             newQuery()
                 .from( variables._table )
@@ -411,17 +417,20 @@ component accessors="true" {
     }
 
     function isRelationshipLoaded( name ) {
-        return structKeyExists( variables._relationshipsData, name );
+        return structKeyExists( variables._relationshipsLoaded, name );
     }
 
     function retrieveRelationship( name ) {
-        return variables._relationshipsData[ name ];
+        return variables._relationshipsData.keyExists( name ) ?
+            variables._relationshipsData[ name ] :
+            javacast( "null", "" );
     }
 
     function assignRelationship( name, value ) {
         if ( ! isNull( value ) ) {
             variables._relationshipsData[ name ] = value;
         }
+        variables._relationshipsLoaded[ name ] = true;
         return this;
     }
 
@@ -706,6 +715,9 @@ component accessors="true" {
         }
         var r = tryRelationshipGetter( missingMethodName, missingMethodArguments );
         if ( ! isNull( r ) ) { return r; }
+        if ( relationshipIsNull( missingMethodName ) ) {
+            return javacast( "null", "" );
+        }
         return forwardToQB( missingMethodName, missingMethodArguments );
     }
 
@@ -763,6 +775,13 @@ component accessors="true" {
         }
 
         return retrieveRelationship( relationshipName );
+    }
+
+    private function relationshipIsNull( name ) {
+        if ( ! variables._str.startsWith( name, "get" ) ) {
+            return false;
+        }
+        return variables._relationshipsLoaded.keyExists( variables._str.slice( name, 4 ) );
     }
 
     private function tryScopes( missingMethodName, missingMethodArguments ) {

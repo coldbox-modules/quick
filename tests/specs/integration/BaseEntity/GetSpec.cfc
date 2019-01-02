@@ -7,9 +7,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.isLoaded() ).toBeTrue( "The user instance should be found and loaded, but was not." );
             } );
 
-            it( "it returns null if the record cannot be found", function() {
+            it( "returns null if the record cannot be found", function() {
                 expect( getInstance( "User" ).find( 999 ) )
                     .toBeNull( "The user instance should be null because it could not be found, but was not." );
+            } );
+
+            it( "returns null if the first record cannot be found", function() {
+                expect( getInstance( "Empty" ).first() )
+                    .toBeNull( "The instance should be null because there are none in the database." );
             } );
 
             it( "can refresh itself from the database", function() {

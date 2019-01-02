@@ -83,6 +83,9 @@ component {
             INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (523526, 1, 'My second awesome post body', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
         " );
         queryExecute( "
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (7777, NULL, 'My post with no author', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
+        " );
+        queryExecute( "
             CREATE TABLE `videos` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `url` varchar(50) NOT NULL,
@@ -183,6 +186,12 @@ component {
             CREATE TABLE `phone_numbers` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `number` varchar(50),
+              PRIMARY KEY (`id`)
+            )
+        " );
+        queryExecute( "
+            CREATE TABLE `empty` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
               PRIMARY KEY (`id`)
             )
         " );

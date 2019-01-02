@@ -14,18 +14,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can eager load a belongs to relationship", function() {
                 var posts = getInstance( "Post" ).with( "author" ).get();
                 expect( posts ).toBeArray();
-                expect( posts ).toHaveLength( 2 );
-                var authors = posts.map( function( post ) {
-                    return post.getAuthor();
-                } );
-                expect( authors ).toBeArray();
-                expect( authors ).toHaveLength( 2 );
-                expect( authors[ 1 ] ).notToBeArray();
-                expect( authors[ 1 ] ).toBeInstanceOf( "app.models.User" );
-                expect( authors[ 2 ] ).notToBeArray();
-                expect( authors[ 2 ] ).toBeInstanceOf( "app.models.User" );
+                expect( posts ).toHaveLength( 3, "3 posts should have been loaded" );
+                expect( posts[ 1 ].getAuthor() ).toBeInstanceOf( "app.models.User" );
+                expect( posts[ 2 ].getAuthor() ).toBeNull();
+                expect( posts[ 3 ].getAuthor() ).toBeInstanceOf( "app.models.User" );
                 if ( arrayLen( variables.queries ) != 2 ) {
-                    expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+                    expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed. #arrayLen( variables.queries )# were instead." );
                 }
             } );
 
@@ -78,13 +72,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can eager load a belongs to many relationship", function() {
                 var posts = getInstance( "Post" ).with( "tags" ).get();
                 expect( posts ).toBeArray();
-                expect( posts ).toHaveLength( 2 );
+                expect( posts ).toHaveLength( 3 );
 
                 expect( posts[ 1 ].getTags() ).toBeArray();
                 expect( posts[ 1 ].getTags() ).toHaveLength( 2 );
 
                 expect( posts[ 2 ].getTags() ).toBeArray();
-                expect( posts[ 2 ].getTags() ).toHaveLength( 2 );
+                expect( posts[ 2 ].getTags() ).toHaveLength( 0 );
+
+                expect( posts[ 3 ].getTags() ).toBeArray();
+                expect( posts[ 3 ].getTags() ).toHaveLength( 2 );
 
                 expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
             } );
@@ -130,13 +127,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var posts = getInstance( "Post" ).with( "comments" ).get();
 
                 expect( posts ).toBeArray();
-                expect( posts ).toHaveLength( 2 );
+                expect( posts ).toHaveLength( 3 );
 
                 expect( posts[ 1 ].getComments() ).toBeArray();
                 expect( posts[ 1 ].getComments() ).toHaveLength( 2 );
 
                 expect( posts[ 2 ].getComments() ).toBeArray();
                 expect( posts[ 2 ].getComments() ).toBeEmpty();
+
+                expect( posts[ 3 ].getComments() ).toBeArray();
+                expect( posts[ 3 ].getComments() ).toBeEmpty();
 
                 expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
             } );

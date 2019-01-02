@@ -23,6 +23,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
             } );
 
+            it( "returns null if there is no owning entity", function() {
+                var post = getInstance( "Post" ).find( 7777 );
+                expect( post.getAuthor() ).toBeNull();
+            } );
+
             it( "can associate a new entity", function() {
                 var newPost = getInstance( "Post" );
                 newPost.setBody( "A new post by me!" );

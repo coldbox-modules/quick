@@ -38,7 +38,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 
     function initRelation( entities, relation ) {
         entities.each( function( entity ) {
-            entity.assignRelationship( relation, {} );
+            entity.assignRelationship( relation, javacast( "null", "" ) );
         } );
         return entities;
     }

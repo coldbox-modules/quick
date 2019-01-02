@@ -130,15 +130,15 @@ component {
         queryExecute( "INSERT INTO `tags` (`id`, `name`) VALUES (2, 'music')" );
         queryExecute( "
             CREATE TABLE `my_posts_tags` (
-              `post_pk` int(11) NOT NULL,
+              `custom_post_pk` int(11) NOT NULL,
               `tag_id` int(11) NOT NULL,
-              PRIMARY KEY (`post_pk`, `tag_id`)
+              PRIMARY KEY (`custom_post_pk`, `tag_id`)
             )
         " );
-        queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (1245, 1)" );
-        queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (1245, 2)" );
-        queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (523526, 1)" );
-        queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (523526, 2)" );
+        queryExecute( "INSERT INTO `my_posts_tags` (`custom_post_pk`, `tag_id`) VALUES (1245, 1)" );
+        queryExecute( "INSERT INTO `my_posts_tags` (`custom_post_pk`, `tag_id`) VALUES (1245, 2)" );
+        queryExecute( "INSERT INTO `my_posts_tags` (`custom_post_pk`, `tag_id`) VALUES (523526, 1)" );
+        queryExecute( "INSERT INTO `my_posts_tags` (`custom_post_pk`, `tag_id`) VALUES (523526, 2)" );
         queryExecute( "
             CREATE TABLE `links` (
               `link_id` int(11) NOT NULL AUTO_INCREMENT,

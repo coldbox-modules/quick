@@ -13,7 +13,7 @@ component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
     }
 
     function tags() {
-        return belongsToMany( "Tag", "my_posts_tags", "post_pk", "tag_id" );
+        return belongsToMany( "Tag", "my_posts_tags", "custom_post_pk", "tag_id" );
     }
 
     function comments() {

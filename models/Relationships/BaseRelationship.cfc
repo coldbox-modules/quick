@@ -1,38 +1,31 @@
-component accessors="true" {
+component {
 
-    property name="wirebox";
+    property name="wirebox" inject="wirebox";
 
-    property name="related";
-    property name="relationName";
-    property name="relationMethodName";
-    property name="owning";
-    property name="foreignKey";
-    property name="foreignKeyValue";
-    property name="owningKey";
-    property name="defaultValue";
+    function init( related, relationName, relationMethodName, parent ) {
+        variables.related = arguments.related.resetQuery();
+        variables.relationName = arguments.relationName;
+        variables.relationMethodName = arguments.relationMethodName;
+        variables.parent = arguments.parent;
 
-    function init( wirebox, related, relationName, relationMethodName, owning, foreignKey, foreignKeyValue, owningKey ) {
-        setWireBox( wirebox );
-        setRelated( arguments.related );
-        setRelationName( arguments.relationName );
-        setRelationMethodName( arguments.relationMethodName );
-        setOwning( arguments.owning );
-        setForeignKey( arguments.foreignKey );
-        setForeignKeyValue( arguments.foreignKeyValue );
-        setOwningKey( arguments.owningKey );
-
-        apply();
+        addConstraints();
 
         return this;
     }
 
-    private function collect( items = [] ) {
-        return wirebox.getInstance(
-            name = "QuickCollection@quick",
-            initArguments = {
-                collection = items
-            }
-        );
+    function setRelationMethodName( name ) {
+        variables.relationMethodName = arguments.name;
+        return this;
+    }
+
+    function getEager() {
+        return variables.related.get();
+    }
+
+    function getKeys( entities, key ) {
+        return unique( entities.map( function( entity ) {
+            return entity.retrieveAttribute( key );
+        } ) );
     }
 
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
@@ -43,9 +36,8 @@ component accessors="true" {
         return this;
     }
 
-    private function isQuickEntity( entity ) {
-        return getMetadata( entity ).keyExists( "quick" ) ||
-            isInstanceOf( entity, "quick.models.BaseEntity" );
+    function unique( items ) {
+        return arraySlice( createObject( "java", "java.util.HashSet" ).init( items ).toArray(), 1 );
     }
 
 }

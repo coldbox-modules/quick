@@ -3,23 +3,23 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
     function run() {
         describe( "Attributes Casing Spec", function() {
             it( "defaults to no transformation", function() {
-                var post = getInstance( "Post" ).find( 1 );
+                var post = getInstance( "Post" ).find( 1245 );
 
-                expect( post.getAttributesData() ).toHaveKey( "post_pk" );
-                expect( post.getAttributesData() ).notToHaveKey( "PostPk" );
+                expect( post.retrieveAttributesData() ).toHaveKey( "post_pk" );
+                expect( post.retrieveAttributesData() ).notToHaveKey( "PostPk" );
 
                 expect( post.getPost_Pk() ).notToBeNull();
 
                 post.setCreatedDate( now() );
 
-                expect( post.getAttributesData() ).toHaveKey( "created_date" );
+                expect( post.retrieveAttributesData() ).toHaveKey( "created_date" );
             } );
 
             it( "converts stores all attributes internally as snake case when the `attributecasing` metadata property is set to `snake`", function() {
                 var user = getInstance( "User" ).find( 1 );
 
-                expect( user.getAttributesData() ).toHaveKey( "first_name" );
-                expect( user.getAttributesData() ).notToHaveKey( "firstName" );
+                expect( user.retrieveAttributesData() ).toHaveKey( "first_name" );
+                expect( user.retrieveAttributesData() ).notToHaveKey( "firstName" );
 
                 expect( function() {
                     user.getFirstName();
@@ -31,8 +31,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 user.setCreatedDate( now() );
 
-                expect( user.getAttributesData() ).notToHaveKey( "createdDate" );
-                expect( user.getAttributesData() ).toHaveKey( "created_date" );
+                expect( user.retrieveAttributesData() ).notToHaveKey( "createdDate" );
+                expect( user.retrieveAttributesData() ).toHaveKey( "created_date" );
             } );
         } );
     }

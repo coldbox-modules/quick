@@ -17,19 +17,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 // missing last name
                 newUser.setPassword( hash( "password" ) );
                 var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPreSave ).toHaveLength( 2 );
+                expect( userRowsPreSave ).toHaveLength( 3 );
                 // expect( function() {
                 //     newUser.save();
                 // } ).toThrow( "InvalidEntity" );
                 var userRowsPostFirstSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostFirstSave ).toHaveLength( 2 );
+                expect( userRowsPostFirstSave ).toHaveLength( 3 );
                 // set last name
                 newUser.setLastName( "User" );
                 expect( function() {
                     newUser.save();
                 } ).notToThrow( "InvalidEntity" );
                 var userRowsPostSecondSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostSecondSave ).toHaveLength( 3 );
+                expect( userRowsPostSecondSave ).toHaveLength( 4 );
             } );
         } );
     }

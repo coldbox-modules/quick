@@ -4,12 +4,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         describe( "Get Spec", function() {
             it( "finds an entity by the primary key", function() {
                 var user = getInstance( "User" ).find( 1 );
-                expect( user.getLoaded() ).toBeTrue( "The user instance should be found and loaded, but was not." );
+                expect( user.isLoaded() ).toBeTrue( "The user instance should be found and loaded, but was not." );
             } );
 
-            it( "it returns null if the record cannot be found", function() {
+            it( "returns null if the record cannot be found", function() {
                 expect( getInstance( "User" ).find( 999 ) )
                     .toBeNull( "The user instance should be null because it could not be found, but was not." );
+            } );
+
+            it( "returns null if the first record cannot be found", function() {
+                expect( getInstance( "Empty" ).first() )
+                    .toBeNull( "The instance should be null because there are none in the database." );
             } );
 
             it( "can refresh itself from the database", function() {
@@ -33,11 +38,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             describe( "loaded", function() {
                 it( "a new entity returns false when asked if it loaded", function() {
-                    expect( getInstance( "User" ).getLoaded() ).toBeFalse();
+                    expect( getInstance( "User" ).isLoaded() ).toBeFalse();
                 } );
 
                 it( "an entity loaded from the database returns true when asked if it loaded", function() {
-                    expect( getInstance( "User" ).find( 1 ).getLoaded() ).toBeTrue();
+                    expect( getInstance( "User" ).find( 1 ).isLoaded() ).toBeTrue();
                 } );
             } );
 

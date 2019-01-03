@@ -4,11 +4,7 @@ component extends="quick.models.BaseEntity" {
     property name="name";
 
     function posts() {
-        return belongsToMany(
-            relationName = "Post",
-            relatedKey = "post_pk",
-            foreignKey = "tag_id"
-        );
+        return belongsToMany( "Post", "my_posts_tags", "tag_id", "custom_post_pk" );
     }
 
 }

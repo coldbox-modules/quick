@@ -3,12 +3,12 @@ component {
     this.name = "quick";
     this.author = "Eric Peterson";
     this.webUrl = "https://github.com/coldbox-modules/quick";
-    this.dependencies = [ "qb", "str", "cfcollection" ];
+    this.dependencies = [ "qb", "str" ];
     this.cfmapping = "quick";
 
     function configure() {
         settings = {
-            defaultGrammar = "BaseGrammar",
+            defaultGrammar = "AutoDiscover",
             automaticValidation = true
         };
 
@@ -33,19 +33,19 @@ component {
 
         binder.map( "quick.models.BaseEntity" )
             .to( "#moduleMapping#.models.BaseEntity" );
+
+        binder.getInjector().registerDSL( "quickService", "#moduleMapping#.dsl.QuickServiceDSL" );
+
+        var creatorType = server.keyExists( "lucee" ) ? "LuceeEntityCreator" : "ACFEntityCreator";
+        binder.map( "EntityCreator@quick" )
+            .to( "#moduleMapping#.extras.#creatorType#" );
     }
 
     function onLoad() {
-        // remap to force the return format to be QuickCollection
-        binder.map( alias = "QueryBuilder@qb", force = true )
+        binder.map( "QuickQB@quick" )
             .to( "qb.models.Query.QueryBuilder" )
             .initArg( name = "grammar", dsl = "#settings.defaultGrammar#@qb" )
             .initArg( name = "utils", dsl = "QueryUtils@qb" )
-            .initArg( name = "returnFormat", value = function( q ) {
-                return wirebox.getInstance(
-                    name = "QuickCollection@quick",
-                    initArguments = { collection = q }
-                );
-            } );
+            .initArg( name = "returnFormat", value = "array" );
     }
 }

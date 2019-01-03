@@ -5,7 +5,7 @@ component implements="KeyType" {
      * Receives the entity as the only argument.
      */
     public void function preInsert( required entity ) {
-        entity.getQuery().returning( entity.get_Key() );
+        entity.retrieveQuery().returning( entity.get_Key() );
     }
 
     /**

@@ -16,6 +16,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
         return variables.related.first();
     }
 
+    function get() hint="Wrapper for getResults() for consistency" {
+        return getResults();
+    }
+
     function addConstraints() {
         var table = variables.related.get_Table();
         variables.related.where(

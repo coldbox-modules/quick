@@ -61,6 +61,10 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
     function getResults() {
         return this.get();
     }
+    
+    function get() hint="Wrapper for getResults() for consistency" {
+        return getResults();
+    }
 
     function get() {
         var entities = variables.related.getEntities();

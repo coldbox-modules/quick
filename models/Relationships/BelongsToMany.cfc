@@ -24,6 +24,10 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
         return variables.related.get();
     }
 
+    function get() hint="Wrapper for getResults() for consistency" {
+        return getResults();
+    }
+
     function addConstraints() {
         performJoin();
         addWhereConstraints();

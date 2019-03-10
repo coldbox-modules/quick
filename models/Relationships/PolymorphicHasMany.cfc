@@ -4,6 +4,10 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" {
         return variables.related.get();
     }
 
+    function get() hint="Wrapper for getResults() for consistency" {
+        return getResults();
+    }
+    
     function initRelation( entities, relation ) {
         entities.each( function( entity ) {
             entity.assignRelationship( relation, [] );

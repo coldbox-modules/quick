@@ -771,7 +771,7 @@ component accessors="true" {
         if ( ! isRelationshipLoaded( relationshipName ) ) {
             var relationship = invoke( this, relationshipName, missingMethodArguments );
             relationship.setRelationMethodName( relationshipName );
-            assignRelationship( relationshipName, relationship.getResults() );
+            assignRelationship( relationshipName, relationship.get() );
         }
 
         return retrieveRelationship( relationshipName );

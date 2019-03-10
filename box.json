@@ -33,7 +33,7 @@
         "qb":"modules/qb/",
         "str":"modules/str/",
         "cbvalidation":"modules/cbvalidation/",
-        "cfcollection":"modules/cfcollection"
+        "cfcollection":"modules/cfcollection/"
     },
     "testbox":{
         "reporter":"json",

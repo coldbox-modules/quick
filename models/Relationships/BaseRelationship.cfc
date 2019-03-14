@@ -22,6 +22,15 @@ component {
         return variables.related.get();
     }
 
+    /**
+    * get()
+    * @hint wrapper for getResults() on relationship types that have them, which is most of them. get() implemented for consistency with QB and Quick
+    */ 
+    
+    function get() {
+        return getResults();
+    }
+
     function getKeys( entities, key ) {
         return unique( entities.map( function( entity ) {
             return entity.retrieveAttribute( key );

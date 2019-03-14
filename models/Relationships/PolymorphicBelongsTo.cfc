@@ -30,10 +30,6 @@ component extends="quick.models.Relationships.BelongsTo" {
         return variables.ownerKey != "" ? super.getResults() : {};
     }
 
-    function get() hint="Wrapper for getResults() for consistency" {
-        return getResults();
-    }
-    
     function getEager() {
         structKeyArray( variables.dictionary ).each( function( type ) {
             matchToMorphParents( type, getResultsByType( type ) );

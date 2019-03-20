@@ -291,8 +291,27 @@ component accessors="true" {
             newQuery()
                 .where( getKey(), getKeyValue() )
                 .update( getAttributesData( withoutKey = true ).filter(function( item ) {
-                return attributeHasUpdate( item );
-            }).map( function( key, value, attributes ) {
+                    return attributeHasUpdate( item );
+                }).map( function( key, value, attributes ) {
+                        if ( isNull( value ) || isNullValue( key, value ) ) {
+                            return { value = "", nulls = true, null = true };
+                        }
+                        if ( attributeHasSqlType( key ) ) {
+                            return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
+                        }
+                        return value;
+                    } ), getQueryOptions() );
+                setOriginalAttributes( getAttributesData() );
+                setLoaded( true );
+                fireEvent( "postUpdate", { entity = this } );
+        }
+        else {
+            getKeyType().preInsert( this );
+            fireEvent( "preInsert", { entity = this } );
+            guardValid();
+            var result = newQuery().insert( getAttributesData().filter(function( item ) {
+                    return attributeHasInsert( item );
+                }).map( function( key, value, attributes ) {
                     if ( isNull( value ) || isNullValue( key, value ) ) {
                         return { value = "", nulls = true, null = true };
                     }
@@ -301,31 +320,12 @@ component accessors="true" {
                     }
                     return value;
                 } ), getQueryOptions() );
-            setOriginalAttributes( getAttributesData() );
-            setLoaded( true );
-            fireEvent( "postUpdate", { entity = this } );
-        }
-        else {
-            getKeyType().preInsert( this );
-            fireEvent( "preInsert", { entity = this } );
-            guardValid();
-            var result = newQuery().insert( getAttributesData().filter(function( item ) {
-                return attributeHasInsert( item );
-            }).map( function( key, value, attributes ) {
-                if ( isNull( value ) || isNullValue( key, value ) ) {
-                    return { value = "", nulls = true, null = true };
-                }
-                if ( attributeHasSqlType( key ) ) {
-                    return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
-                }
-                return value;
-            } ), getQueryOptions() );
-            getKeyType().postInsert( this, result );
-            setOriginalAttributes( getAttributesData() );
-            setLoaded( true );
-            fireEvent( "postInsert", { entity = this } );
-        }
-        fireEvent( "postSave", { entity = this } );
+                getKeyType().postInsert( this, result );
+                setOriginalAttributes( getAttributesData() );
+                setLoaded( true );
+                fireEvent( "postInsert", { entity = this } );
+            }
+            fireEvent( "postSave", { entity = this } );
 
         return this;
     }

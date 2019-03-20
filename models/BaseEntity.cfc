@@ -1065,14 +1065,14 @@ component accessors="true" {
     }
 
     private function attributeHasUpdate( name ) {
-        return ! variables._meta.properties.filter( function( property ) {
-            return property.name == retrieveAliasForColumn( name ) && ( !property.keyExists( "update" ) ||  ( property.keyExists( "update" ) && property.update) );
+        return ! getMeta().properties.filter( function( property ) {
+            return property.name == getAliasForColumn( name ) && ( ! property.keyExists( "update" ) ||  ( property.keyExists( "update" ) && property.update) );
         } ).isEmpty();
     }
 
     private function attributeHasInsert( name ) {
-        return ! variables._meta.properties.filter( function( property ) {
-            return property.name == retrieveAliasForColumn( name ) && ( !property.keyExists( "insert" ) ||  ( property.keyExists( "insert" ) && property.insert) );
+        return ! getMeta().properties.filter( function( property ) {
+            return property.name == getAliasForColumn( name ) && ( ! property.keyExists( "insert" ) ||  ( property.keyExists( "insert" ) && property.insert) );
         } ).isEmpty();
     }
 

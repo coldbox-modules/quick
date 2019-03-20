@@ -290,7 +290,9 @@ component accessors="true" {
             guardValid();
             newQuery()
                 .where( getKey(), getKeyValue() )
-                .update( getAttributesData( withoutKey = true ).map( function( key, value, attributes ) {
+                .update( getAttributesData( withoutKey = true ).filter(function( item ) {
+                return attributeHasUpdate( item );
+            }).map( function( key, value, attributes ) {
                     if ( isNull( value ) || isNullValue( key, value ) ) {
                         return { value = "", nulls = true, null = true };
                     }
@@ -307,7 +309,9 @@ component accessors="true" {
             getKeyType().preInsert( this );
             fireEvent( "preInsert", { entity = this } );
             guardValid();
-            var result = newQuery().insert( getAttributesData().map( function( key, value, attributes ) {
+            var result = newQuery().insert( getAttributesData().filter(function( item ) {
+                return attributeHasInsert( item );
+            }).map( function( key, value, attributes ) {
                 if ( isNull( value ) || isNullValue( key, value ) ) {
                     return { value = "", nulls = true, null = true };
                 }
@@ -1058,6 +1062,18 @@ component accessors="true" {
     private function isNullValue( key, value ) {
         return variables.nullValues.keyExists( getAliasForColumn( key ) ) &&
             compare( variables.nullValues[ getAliasForColumn( key ) ], value ) == 0;
+    }
+
+    private function attributeHasUpdate( name ) {
+        return ! variables._meta.properties.filter( function( property ) {
+            return property.name == retrieveAliasForColumn( name ) && ( !property.keyExists( "update" ) ||  ( property.keyExists( "update" ) && property.update) );
+        } ).isEmpty();
+    }
+
+    private function attributeHasInsert( name ) {
+        return ! variables._meta.properties.filter( function( property ) {
+            return property.name == retrieveAliasForColumn( name ) && ( !property.keyExists( "insert" ) ||  ( property.keyExists( "insert" ) && property.insert) );
+        } ).isEmpty();
     }
 
 }

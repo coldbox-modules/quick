@@ -288,7 +288,9 @@ component accessors="true" {
             guardValid();
             newQuery()
                 .where( getKey(), getKeyValue() )
-                .update( getAttributesData( withoutKey = true ).map( function( key, value, attributes ) {
+                .update( getAttributesData( withoutKey = true ).filter(function( item ) {
+                return attributeHasUpdate(item);
+            }).map( function( key, value, attributes ) {
                     if ( isNull( value ) ) {
                         return { value = "", nulls = true, null = true };
                     }
@@ -305,7 +307,9 @@ component accessors="true" {
             getKeyType().preInsert( this );
             fireEvent( "preInsert", { entity = this } );
             guardValid();
-            var result = newQuery().insert( getAttributesData().map( function( key, value, attributes ) {
+            var result = newQuery().insert( getAttributesData().filter(function( item ) {
+                return attributeHasInsert(item);
+            }).map( function( key, value, attributes ) {
                 if ( isNull( value ) ) {
                     return { value = "", nulls = true, null = true };
                 }
@@ -1020,6 +1024,18 @@ component accessors="true" {
         return variables.keyExists( eventName );
     }
 
+    private function attributeHasUpdate( name ) {
+        return ! variables._meta.properties.filter( function( property ) {
+            return property.name == retrieveAliasForColumn( name ) && ( !property.keyExists( "update" ) ||  ( property.keyExists( "update" ) && property.update) );
+        } ).isEmpty();
+    }
+
+    private function attributeHasInsert( name ) {
+        return ! variables._meta.properties.filter( function( property ) {
+            return property.name == retrieveAliasForColumn( name ) && ( !property.keyExists( "insert" ) ||  ( property.keyExists( "insert" ) && property.insert) );
+        } ).isEmpty();
+    }
+    
     private function attributeHasSqlType( name ) {
         return ! getMeta().properties.filter( function( property ) {
             return property.name == getAliasForColumn( name ) && property.keyExists( "sqltype" );

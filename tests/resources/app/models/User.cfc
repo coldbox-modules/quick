@@ -8,6 +8,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
     property name="countryId" column="country_id";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
+    property name="email" column="email" update=false insert=true;
     property name="type";
 
     this.constraints = {

@@ -335,17 +335,20 @@ component accessors="true" {
             guardValid();
             newQuery()
                 .where( variables._key, keyValue() )
-                .update( retrieveAttributesData( withoutKey = true ).filter(function( item ) {
-                    return attributeHasUpdate( item );
-                }).map( function( key, value, attributes ) {
-                    if ( isNull( value ) || isNullValue( key, value ) ) {
-                        return { value = "", nulls = true, null = true };
-                    }
-                    if ( attributeHasSqlType( key ) ) {
-                        return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
-                    }
-                    return value;
-                } ), variables._queryOptions );
+                .update(
+                    retrieveAttributesData( withoutKey = true )
+                        .filter( canUpdateAttribute )
+                        .map( function( key, value, attributes ) {
+                            if ( isNull( value ) || isNullValue( key, value ) ) {
+                                return { value = "", nulls = true, null = true };
+                            }
+                            if ( attributeHasSqlType( key ) ) {
+                                return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
+                            }
+                            return value;
+                        } ),
+                    variables._queryOptions
+                );
             assignOriginalAttributes( retrieveAttributesData() );
             variables._loaded = true;
             fireEvent( "postUpdate", { entity = this } );
@@ -355,17 +358,20 @@ component accessors="true" {
             retrieveKeyType().preInsert( this );
             fireEvent( "preInsert", { entity = this } );
             guardValid();
-            var result = retrieveQuery().insert( retrieveAttributesData().filter(function( item ) {
-                    return attributeHasInsert( item );
-                }).map( function( key, value, attributes ) {
-                if ( isNull( value ) || isNullValue( key, value ) ) {
-                    return { value = "", nulls = true, null = true };
-                }
-                if ( attributeHasSqlType( key ) ) {
-                    return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
-                }
-                return value;
-            } ), variables._queryOptions );
+            var result = retrieveQuery().insert(
+                retrieveAttributesData()
+                    .filter( canInsertAttribute )
+                    .map( function( key, value, attributes ) {
+                        if ( isNull( value ) || isNullValue( key, value ) ) {
+                            return { value = "", nulls = true, null = true };
+                        }
+                        if ( attributeHasSqlType( key ) ) {
+                            return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
+                        }
+                        return value;
+                    } ),
+                variables._queryOptions
+            );
             retrieveKeyType().postInsert( this, result );
             assignOriginalAttributes( retrieveAttributesData() );
             variables._loaded = true;
@@ -1140,15 +1146,29 @@ component accessors="true" {
             compare( variables._nullValues[ retrieveAliasForColumn( key ) ], value ) == 0;
     }
 
-    private function attributeHasUpdate( name ) {
+    private function canUpdateAttribute( name ) {
         return ! variables._meta.properties.filter( function( property ) {
-            return property.name == retrieveAliasForColumn( name ) && ( ! property.keyExists( "update" ) ||  ( property.keyExists( "update" ) && property.update) );
+            return property.name == retrieveAliasForColumn( name ) &&
+                (
+                    ! property.keyExists( "update" ) ||
+                    (
+                        property.keyExists( "update" ) &&
+                        property.update
+                    )
+                );
         } ).isEmpty();
     }
 
-    private function attributeHasInsert( name ) {
+    private function canInsertAttribute( name ) {
         return ! variables._meta.properties.filter( function( property ) {
-            return property.name == retrieveAliasForColumn( name ) && ( ! property.keyExists( "insert" ) ||  ( property.keyExists( "insert" ) && property.insert) );
+            return property.name == retrieveAliasForColumn( name ) &&
+                (
+                    ! property.keyExists( "insert" ) ||
+                    (
+                        property.keyExists( "insert" ) &&
+                        property.insert
+                    )
+                );
         } ).isEmpty();
     }
 

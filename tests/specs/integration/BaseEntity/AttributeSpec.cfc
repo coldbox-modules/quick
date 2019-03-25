@@ -80,7 +80,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "countryId" = "",
                     "createdDate" = "",
                     "modifiedDate" = "",
-                    "type" = ""
+                    "type" = "",
+                    "email" = ""
                 } );
             } );
 
@@ -94,7 +95,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "countryId" = "02B84D66-0AA0-F7FB-1F71AFC954843861",
                     "createdDate" = "2017-07-28 02:06:36",
                     "modifiedDate" = "2017-07-28 02:06:36",
-                    "type" = "admin"
+                    "type" = "admin",
+                    "email" = ""
                 } );
             } );
         } );

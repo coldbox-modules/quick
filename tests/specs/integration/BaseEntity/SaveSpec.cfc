@@ -24,6 +24,24 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     expect( newUserAgain.getFirstName() ).toBe( "New" );
                     expect( newUserAgain.getLastName() ).toBe( "User" );
                 } );
+                it( "allow inserting of column where update=false in property", function() {
+                    var newUser = getInstance( "User" );
+                    newUser.setUsername( "new_user2" );
+                    newUser.setFirstName( "New2" );
+                    newUser.setLastName( "User2" );
+                    newUser.setEmail( "test2@test.com" );
+                    newUser.setPassword( hash( "password" ) );
+                    var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPreSave ).toHaveLength( 3 );
+                    newUser.save();
+                    var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPostSave ).toHaveLength( 4 );
+                    var newUserAgain = getInstance( "User" ).whereUsername( "new_user2" ).firstOrFail();
+                    expect( newUserAgain.getFirstName() ).toBe( "New2" );
+                    expect( newUserAgain.getLastName() ).toBe( "User2" );
+                    expect( newUserAgain.getEmail() ).toBe( "test2@test.com" );
+                } );
+                
 
                 it( "retrieves the generated key when saving a new record", function() {
                     var newUser = getInstance( "User" );
@@ -53,6 +71,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     existingUser.save();
                     var userRowsPostSave = queryExecute( "SELECT * FROM users" );
                     expect( userRowsPostSave ).toHaveLength( 3 );
+                } );
+
+                it( "does not allow updating of column where update=false in property", function() {
+                    var existingUser = getInstance( "User" ).find( 1 );
+                    existingUser.setEmail( "test2@test.com" );
+                    var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPreSave ).toHaveLength( 3 );
+                    existingUser.save();
+                    var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPostSave ).toHaveLength( 3 );
+                    expect( userRowsPostSave.email ).toBe( "" );
                 } );
 
                 it( "uses the type attribute if present for each column", function() {

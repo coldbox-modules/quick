@@ -6,9 +6,7 @@ component accessors="true" {
     property name="_builder" inject="provider:QuickQB@quick" persistent="false";
     property name="_wirebox" inject="wirebox" persistent="false";
     property name="_str" inject="provider:Str@str" persistent="false";
-    // TOOD: retrieve and store settings in guardValid
     property name="_settings" inject="coldbox:modulesettings:quick" persistent="false";
-    property name="_validationManager" inject="provider:ValidationManager@cbvalidation" persistent="false";
     property name="_interceptorService" inject="provider:coldbox:interceptorService" persistent="false";
     property name="_entityCreator" inject="provider:EntityCreator@quick" persistent="false";
 
@@ -332,7 +330,6 @@ component accessors="true" {
         fireEvent( "preSave", { entity = this } );
         if ( variables._loaded ) {
             fireEvent( "preUpdate", { entity = this } );
-            guardValid();
             newQuery()
                 .where( variables._key, keyValue() )
                 .update(
@@ -357,7 +354,6 @@ component accessors="true" {
             resetQuery();
             retrieveKeyType().preInsert( this );
             fireEvent( "preInsert", { entity = this } );
-            guardValid();
             var result = retrieveQuery().insert(
                 retrieveAttributesData()
                     .filter( canInsertAttribute )
@@ -1022,37 +1018,6 @@ component accessors="true" {
             arrayAppend( acc[ value ], item );
             return acc;
         }, {} );
-    }
-
-    /*=================================
-    =           Validation            =
-    =================================*/
-
-    private function guardValid() {
-        if ( isNull( variables._validationManager ) ) {
-            return this;
-        }
-
-        // TOOD: retrieve and store settings here
-        param variables._settings.automaticValidation = false;
-        if ( ! variables._settings.automaticValidation ) {
-            return this;
-        }
-
-        var validationResult = variables._validationManager.validate(
-            target = retrieveAttributesData( aliased = true ),
-            constraints = this.constraints
-        );
-
-        if ( ! validationResult.hasErrors() ) {
-            return this;
-        }
-
-        throw(
-            type = "InvalidEntity",
-            message = "The #variables._entityName# entity failed to pass validation",
-            detail = validationResult.getAllErrorsAsJson()
-        );
     }
 
     /*=================================

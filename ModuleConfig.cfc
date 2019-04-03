@@ -13,6 +13,7 @@ component {
 
         interceptorSettings = {
             customInterceptionPoints = [
+                "quickInstanceReady",
                 "quickPreLoad",
                 "quickPostLoad",
                 "quickPreSave",

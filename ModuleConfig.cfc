@@ -8,8 +8,7 @@ component {
 
     function configure() {
         settings = {
-            defaultGrammar = "AutoDiscover",
-            automaticValidation = true
+            defaultGrammar = "AutoDiscover"
         };
 
         interceptorSettings = {

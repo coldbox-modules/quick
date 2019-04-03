@@ -397,7 +397,7 @@ component accessors="true" {
     }
 
     function create( attributes = {} ) {
-        return newEntity().assignAttributesData( attributes ).save();
+        return newEntity().fill( attributes ).save();
     }
 
     function updateAll( attributes = {} ) {

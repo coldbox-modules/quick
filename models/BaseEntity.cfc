@@ -56,6 +56,7 @@ component accessors="true" {
 
     function onDIComplete() {
         metadataInspection();
+        fireEvent( "instanceReady", { entity = this } );
     }
 
     function keyType() {

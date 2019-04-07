@@ -53,18 +53,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 var janedoe = users[ 1 ];
                 expect( janedoe.getUsername() ).toBe( "janedoe" );
-                expect( janedoe.getLatestPost() ).toBeStruct();
-                expect( janedoe.getLatestPost() ).toBeEmpty();
+                expect( janedoe.getLatestPost() ).toBeNull();
 
                 var johndoe = users[ 2 ];
                 expect( johndoe.getUsername() ).toBe( "johndoe" );
-                expect( johndoe.getLatestPost() ).toBeStruct();
-                expect( johndoe.getLatestPost() ).toBeEmpty();
+                expect( johndoe.getLatestPost() ).toBeNull();
 
                 var elpete = users[ 3 ];
                 expect( elpete.getUsername() ).toBe( "elpete" );
-                expect( elpete.getLatestPost() ).toBeStruct();
-                expect( elpete.getLatestPost() ).notToBeEmpty();
+                expect( elpete.getLatestPost() ).notToBeNull();
 
                 expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
             } );

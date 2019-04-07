@@ -256,10 +256,6 @@ component accessors="true" {
     function find( id ) {
         fireEvent( "preLoad", { id = id, metadata = variables._meta } );
         var data = retrieveQuery()
-            .select( arrayMap( structKeyArray( variables._attributes ), function( key ) {
-                return retrieveColumnForAlias( key );
-            } ) )
-            .addSelect( variables._key )
             .from( variables._table )
             .find( id, variables._key, variables._queryOptions );
         if ( structIsEmpty( data ) ) {

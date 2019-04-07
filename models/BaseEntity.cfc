@@ -355,19 +355,21 @@ component accessors="true" {
         else {
             resetQuery();
             retrieveKeyType().preInsert( this );
-            fireEvent( "preInsert", { entity = this } );
+            var attrs = retrieveAttributesData()
+                .filter( canInsertAttribute )
+                .map( function( key, value, attributes ) {
+                    if ( isNull( value ) || isNullValue( key, value ) ) {
+                        return { value = "", nulls = true, null = true };
+                    }
+                    if ( attributeHasSqlType( key ) ) {
+                        return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
+                    }
+                    return value;
+                } );
+            fireEvent( "preInsert", { entity = this, attributes = attrs } );
+            guardEmptyAttributeData( attrs );
             var result = retrieveQuery().insert(
-                retrieveAttributesData()
-                    .filter( canInsertAttribute )
-                    .map( function( key, value, attributes ) {
-                        if ( isNull( value ) || isNullValue( key, value ) ) {
-                            return { value = "", nulls = true, null = true };
-                        }
-                        if ( attributeHasSqlType( key ) ) {
-                            return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
-                        }
-                        return value;
-                    } ),
+                attrs,
                 variables._queryOptions
             );
             retrieveKeyType().postInsert( this, result );
@@ -1086,8 +1088,18 @@ component accessors="true" {
             );
         }
     }
+
+    private function guardEmptyAttributeData( required struct attrs ) {
+        if ( attrs.isEmpty() ) {
+            throw(
+                type = "QuickNoAttributesDataException",
+                message = "[#variables._entityName#] does not have any attributes data for insert."
+            );
+        }
+    }
+
     /*==============================
-    =            Events            =
+    =            Events          =
     ==============================*/
 
     function fireEvent( eventName, eventData ) {

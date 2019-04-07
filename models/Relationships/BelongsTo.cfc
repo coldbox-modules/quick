@@ -30,10 +30,13 @@ component extends="quick.models.Relationships.BaseRelationship" {
     function getEagerEntityKeys( entities ) {
         return entities.reduce( function( keys, entity ) {
             if ( ! isNull( entity.retrieveAttribute( variables.foreignKey ) ) ) {
-                arrayAppend( keys, entity.retrieveAttribute( variables.foreignKey ) );
+                var key = entity.retrieveAttribute( variables.foreignKey );
+                if ( key != "" ) {
+                    keys[ key ] = {};
+                }
             }
             return keys;
-        }, [] );
+        }, {} ).keyArray();
     }
 
     function initRelation( entities, relation ) {

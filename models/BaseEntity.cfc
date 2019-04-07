@@ -327,6 +327,7 @@ component accessors="true" {
     ===========================================*/
 
     function save() {
+        guardNoAttributes();
         guardReadOnly();
         fireEvent( "preSave", { entity = this } );
         if ( variables._loaded ) {
@@ -1077,6 +1078,14 @@ component accessors="true" {
         return foundProperties[ 1 ].keyExists( "readonly" ) && foundProperties[ 1 ].readonly;
     }
 
+    private function guardNoAttributes() {
+        if ( retrieveAttributeNames().isEmpty() ) {
+            throw(
+                type = "QuickNoAttributesException",
+                message = "[#variables._entityName#] does not have any attributes specified."
+            );
+        }
+    }
     /*==============================
     =            Events            =
     ==============================*/

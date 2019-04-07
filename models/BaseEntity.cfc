@@ -189,6 +189,16 @@ component accessors="true" {
     function assignAttribute( name, value ) {
         guardAgainstNonExistentAttribute( name );
         guardAgainstReadOnlyAttribute( name );
+        if ( ! isSimpleValue( arguments.value ) ) {
+            if ( ! structKeyExists( arguments.value, "keyValue" ) ) {
+                throw(
+                    type = "QuickNotEntityException",
+                    message = "The value assigned to [#name#] is not a Quick entity.  Perhaps you forgot to add `persistent=""false""` to a new property?",
+                    detail = isSimpleValue( value ) ? value : getMetadata( value ).fullname
+                );
+            }
+            arguments.value = arguments.value.keyValue();
+        }
         variables._data[ retrieveColumnForAlias( name ) ] = value;
         variables[ retrieveAliasForColumn( name ) ] = value;
         return this;

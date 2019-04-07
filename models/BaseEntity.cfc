@@ -809,7 +809,8 @@ component accessors="true" {
                     scopeArgs[ i + 1 ] = missingMethodArguments[ i ];
                 }
             }
-            return invoke( this, "scope#missingMethodName#", scopeArgs );
+            invoke( this, "scope#missingMethodName#", scopeArgs );
+            return this;
         }
         return;
     }

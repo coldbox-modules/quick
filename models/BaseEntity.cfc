@@ -88,7 +88,7 @@ component accessors="true" {
             if ( withoutKey && key == variables._key ) {
                 return acc;
             }
-            acc[ aliased ? retrieveAliasForColumn( key ) : key ] = isNull( value ) ? javacast( "null", "" ) : value;
+            acc[ aliased ? retrieveAliasForColumn( key ) : key ] = isNullValue( key, value ) ? javacast( "null", "" ) : value;
             return acc;
         }, {} );
     }

@@ -18,7 +18,7 @@
     },
     "type":"modules",
     "dependencies":{
-        "qb":"^6.0.0",
+        "qb":"^6.1.0",
         "str":"^1.0.0"
     },
     "devDependencies":{

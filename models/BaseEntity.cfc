@@ -710,6 +710,9 @@ component accessors="true" {
         }
         variables.query = variables._builder.newQuery()
             .setReturnFormat( "array" )
+            .setColumnFormatter( function( column ) {
+                return retrieveColumnForAlias( column );
+            } )
             .from( variables._table );
         return variables.query;
     }

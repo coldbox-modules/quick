@@ -257,16 +257,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 it( "isNull", function() {
-                    var actual = user.newCriteria().isNull( "countryId" ).getSQL();
+                    var actual = user.newCriteria().isNull( "country_id" ).getSQL();
                     expect( actual ).toBe(
-                        "SELECT * FROM `users` WHERE `countryId` IS NULL"
+                        "SELECT * FROM `users` WHERE `country_id` IS NULL"
                     );
                 } );
 
                 it( "isNotNull", function() {
-                    var actual = user.newCriteria().isNotNull( "countryId" ).getSQL();
+                    var actual = user.newCriteria().isNotNull( "country_id" ).getSQL();
                     expect( actual ).toBe(
-                        "SELECT * FROM `users` WHERE `countryId` IS NOT NULL"
+                        "SELECT * FROM `users` WHERE `country_id` IS NOT NULL"
                     );
                 } );
 

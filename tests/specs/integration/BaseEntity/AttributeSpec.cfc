@@ -26,7 +26,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var originalAttributes = user.retrieveAttributesData();
                 user.setUsername( "new_username" );
                 expect( originalAttributes ).notToBe( user.retrieveAttributesData() );
-                expect( originalAttributes ).toBe( user.get_OriginalAttributes() );
+                expect( originalAttributes.map( function( key, value ) {
+                    return isNull( value ) ? "" : value;
+                } ) ).toBe( user.get_OriginalAttributes() );
             } );
 
             it( "returns a default value if the attribute is not yet set", function() {

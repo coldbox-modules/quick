@@ -78,7 +78,7 @@ component accessors="true" {
         return variables._data[ variables._key ];
     }
 
-    function retrieveAttributesData( aliased = false, withoutKey = false ) {
+    function retrieveAttributesData( aliased = false, withoutKey = false, withNulls = false ) {
         variables._attributes.keyArray().each( function( key ) {
             if ( variables.keyExists( key ) && ! isReadOnlyAttribute( key ) ) {
                 assignAttribute( key, variables[ key ] );
@@ -88,7 +88,11 @@ component accessors="true" {
             if ( withoutKey && key == variables._key ) {
                 return acc;
             }
-            acc[ aliased ? retrieveAliasForColumn( key ) : key ] = isNullValue( key, value ) ? javacast( "null", "" ) : value;
+            if ( isNull( value ) || ( isNullValue( key, value ) && withNulls ) ) {
+                acc[ aliased ? retrieveAliasForColumn( key ) : key ] = javacast( "null" , "" );
+            } else {
+                acc[ aliased ? retrieveAliasForColumn( key ) : key ] = value;
+            }
             return acc;
         }, {} );
     }

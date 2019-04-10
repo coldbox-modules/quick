@@ -10,7 +10,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
     }
 
     function getResults() {
-        if ( isNull( variables.child.retrieveAttribute( variables.foreignKey ) ) ) {
+        if ( variables.child.isNullAttribute( variables.foreignKey ) ) {
             return javacast( "null", "" );
         }
         return variables.related.first();

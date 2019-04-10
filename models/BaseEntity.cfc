@@ -1139,6 +1139,10 @@ component accessors="true" {
         } )[ 1 ].sqltype;
     }
 
+    function isNullAttribute( key ) {
+        return isNullValue( key, retrieveAttribute( key ) );
+    }
+
     private function isNullValue( key, value ) {
         return variables._nullValues.keyExists( retrieveAliasForColumn( key ) ) &&
             compare( variables._nullValues[ retrieveAliasForColumn( key ) ], value ) == 0;

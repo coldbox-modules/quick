@@ -684,12 +684,14 @@ component accessors="true" {
     }
 
     private function eagerLoadRelation( relationName, entities ) {
-        var relation = invoke( this, relationName ).resetQuery();
+        var currentRelationship = listFirst( relationName, "." );
+        var relation = invoke( this, currentRelationship ).resetQuery();
         relation.addEagerConstraints( entities );
+        relation.with( listRest( relationName, "." ) );
         return relation.match(
-            relation.initRelation( entities, relationName ),
+            relation.initRelation( entities, currentRelationship ),
             relation.getEager(),
-            relationName
+            currentRelationship
         );
     }
 

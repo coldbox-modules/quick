@@ -171,6 +171,43 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var a = getInstance( "B" ).with( "a" ).get();
                 expect( getTickCount() - startTick ).toBeLT( 5000, "Query is taking too long" );
             } );
+
+            it( "can eager load a nested relationship", function() {
+                var users = getInstance( "User" ).with( "posts.comments" ).latest().get();
+                expect( users ).toBeArray();
+                expect( users ).toHaveLength( 3, "Three users should be returned" );
+
+                var janedoe = users[ 1 ];
+                expect( janedoe.getUsername() ).toBe( "janedoe" );
+                expect( janedoe.getPosts() ).toBeArray();
+                expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
+
+                var johndoe = users[ 2 ];
+                expect( johndoe.getUsername() ).toBe( "johndoe" );
+                expect( johndoe.getPosts() ).toBeArray();
+                expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
+
+                var elpete = users[ 3 ];
+                expect( elpete.getUsername() ).toBe( "elpete" );
+
+                var posts = elpete.getPosts();
+                expect( posts ).toBeArray();
+                expect( posts ).toHaveLength( 2, "Two posts should belong to elpete" );
+
+                expect( posts[ 1 ].getPost_Pk() ).toBe( 1245 );
+                expect( posts[ 1 ].getComments() ).toBeArray();
+                expect( posts[ 1 ].getComments() ).toHaveLength( 2 );
+                expect( posts[ 1 ].getComments()[ 1 ].getId() ).toBe( 1 );
+                expect( posts[ 1 ].getComments()[ 1 ].getBody() ).toBe( "I thought this post was great" );
+                expect( posts[ 1 ].getComments()[ 2 ].getId() ).toBe( 2 );
+                expect( posts[ 1 ].getComments()[ 2 ].getBody() ).toBe( "I thought this post was not so good" );
+
+                expect( posts[ 2 ].getPost_Pk() ).toBe( 523526 );
+                expect( posts[ 2 ].getComments() ).toBeArray();
+                expect( posts[ 2 ].getComments() ).toHaveLength( 0 );
+
+                expect( variables.queries ).toHaveLength( 3, "Only three queries should have been executed." );
+            } );
         } );
     }
 

@@ -689,8 +689,23 @@ component accessors="true" {
     }
 
     private function eagerLoadRelation( relationName, entities ) {
+        var callback = function() {};
+        if ( ! isSimpleValue( relationName ) ) {
+            if ( ! isStruct( relationName ) ) {
+                throw(
+                    type = "QuickInvalidEagerLoadParameter",
+                    message = "Only strings or structs are supported eager load parameters.  You passed [#serializeJSON( relationName )#"
+                );
+            }
+            for ( var key in relationName ) {
+                callback = relationName[ key ];
+                arguments.relationName = key;
+                break;
+            }
+        }
         var currentRelationship = listFirst( relationName, "." );
         var relation = invoke( this, currentRelationship ).resetQuery();
+        callback( relation );
         relation.addEagerConstraints( entities );
         relation.with( listRest( relationName, "." ) );
         return relation.match(

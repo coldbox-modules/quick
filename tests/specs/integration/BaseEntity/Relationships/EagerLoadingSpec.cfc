@@ -208,6 +208,71 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 expect( variables.queries ).toHaveLength( 3, "Only three queries should have been executed." );
             } );
+
+            it( "can constrain eager loading on a belongs to relationship", function() {
+                var users = getInstance( "User" ).with( { "posts" = function( query ) {
+                    return query.where( "post_pk", "<", 7777 );
+                } } ).latest().get();
+
+                expect( users ).toBeArray();
+                expect( users ).toHaveLength( 3, "Three users should be returned" );
+
+                var janedoe = users[ 1 ];
+                expect( janedoe.getUsername() ).toBe( "janedoe" );
+                expect( janedoe.getPosts() ).toBeArray();
+                expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
+
+                var johndoe = users[ 2 ];
+                expect( johndoe.getUsername() ).toBe( "johndoe" );
+                expect( johndoe.getPosts() ).toBeArray();
+                expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
+
+                var elpete = users[ 3 ];
+                expect( elpete.getUsername() ).toBe( "elpete" );
+                expect( elpete.getPosts() ).toBeArray();
+                expect( elpete.getPosts() ).toHaveLength( 1, "One post should belong to elpete" );
+
+                expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+            } );
+
+            it( "can constrain an eager load on a nested relationship", function() {
+                var users = getInstance( "User" ).with( { "posts" = function( q1 ) {
+                    return q1.with( { "comments" = function( q2 ) {
+                        return q2.where( "body", "like", "%not%" );
+                    } } );
+                } } ).latest().get();
+                expect( users ).toBeArray();
+                expect( users ).toHaveLength( 3, "Three users should be returned" );
+
+                var janedoe = users[ 1 ];
+                expect( janedoe.getUsername() ).toBe( "janedoe" );
+                expect( janedoe.getPosts() ).toBeArray();
+                expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
+
+                var johndoe = users[ 2 ];
+                expect( johndoe.getUsername() ).toBe( "johndoe" );
+                expect( johndoe.getPosts() ).toBeArray();
+                expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
+
+                var elpete = users[ 3 ];
+                expect( elpete.getUsername() ).toBe( "elpete" );
+
+                var posts = elpete.getPosts();
+                expect( posts ).toBeArray();
+                expect( posts ).toHaveLength( 2, "Two posts should belong to elpete" );
+
+                expect( posts[ 1 ].getPost_Pk() ).toBe( 1245 );
+                expect( posts[ 1 ].getComments() ).toBeArray();
+                expect( posts[ 1 ].getComments() ).toHaveLength( 1, "One comment should belong to Post 1245" );
+                expect( posts[ 1 ].getComments()[ 1 ].getId() ).toBe( 2 );
+                expect( posts[ 1 ].getComments()[ 1 ].getBody() ).toBe( "I thought this post was not so good" );
+
+                expect( posts[ 2 ].getPost_Pk() ).toBe( 523526 );
+                expect( posts[ 2 ].getComments() ).toBeArray();
+                expect( posts[ 2 ].getComments() ).toHaveLength( 0 );
+
+                expect( variables.queries ).toHaveLength( 3, "Only three queries should have been executed." );
+            } );
         } );
     }
 

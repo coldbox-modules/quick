@@ -23,6 +23,7 @@ component accessors="true" {
     property name="_attributes" persistent="false";
     property name="_meta" persistent="false";
     property name="_nullValues" persistent="false";
+    property name="_casts" persistent="false";
 
     /*=====================================
     =            Instance Data            =
@@ -51,6 +52,7 @@ component accessors="true" {
         param variables._relationshipsLoaded = {};
         param variables._eagerLoad = [];
         param variables._nullValues = {};
+        param variables._casts = {};
         param variables._loaded = false;
     }
 
@@ -185,9 +187,12 @@ component accessors="true" {
     }
 
     function retrieveAttribute( name, defaultValue = "" ) {
-        return variables._data.keyExists( retrieveColumnForAlias( name ) ) ?
-            variables._data[ retrieveColumnForAlias( name ) ] :
-            defaultValue;
+        return castValueForGetter(
+            name,
+            variables._data.keyExists( retrieveColumnForAlias( name ) ) ?
+                variables._data[ retrieveColumnForAlias( name ) ] :
+                defaultValue
+        );
     }
 
     function assignAttribute( name, value ) {
@@ -201,10 +206,10 @@ component accessors="true" {
                     detail = isSimpleValue( value ) ? value : getMetadata( value ).fullname
                 );
             }
-            arguments.value = arguments.value.keyValue();
+            arguments.value = castValueForSetter( name, arguments.value.keyValue() );
         }
-        variables._data[ retrieveColumnForAlias( name ) ] = value;
-        variables[ retrieveAliasForColumn( name ) ] = value;
+        variables._data[ retrieveColumnForAlias( name ) ] = castValueForSetter( name, value );
+        variables[ retrieveAliasForColumn( name ) ] = castValueForSetter( name, value );
         return this;
     }
 
@@ -887,6 +892,10 @@ component accessors="true" {
             if ( prop.convertToNull ) {
                 variables._nullValues[ prop.name ] = prop.nullValue;
             }
+            param prop.casts = "";
+            if ( prop.casts != "" ) {
+                variables._casts[ prop.name ] = prop.casts;
+            }
             if ( javacast( "boolean", prop.persistent ) ) {
                 acc[ prop.name ] = prop.column;
             }
@@ -1151,6 +1160,32 @@ component accessors="true" {
     private function isNullValue( key, value ) {
         return variables._nullValues.keyExists( retrieveAliasForColumn( key ) ) &&
             compare( variables._nullValues[ retrieveAliasForColumn( key ) ], value ) == 0;
+    }
+
+    private function castValueForGetter( key, value ) {
+        arguments.key = retrieveAliasForColumn( arguments.key );
+        if ( ! structKeyExists( variables._casts, key ) ) {
+            return value;
+        }
+        switch ( variables._casts[ key ] ) {
+            case "boolean":
+                return javacast( "boolean", value );
+            default:
+                return value;
+        }
+    }
+
+    private function castValueForSetter( key, value ) {
+        arguments.key = retrieveAliasForColumn( arguments.key );
+        if ( ! structKeyExists( variables._casts, key ) ) {
+            return value;
+        }
+        switch ( variables._casts[ key ] ) {
+            case "boolean":
+                return value ? 1 : 0;
+            default:
+                return value;
+        }
     }
 
     private function canUpdateAttribute( name ) {

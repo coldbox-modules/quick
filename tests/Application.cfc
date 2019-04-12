@@ -187,8 +187,15 @@ component {
             CREATE TABLE `phone_numbers` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `number` varchar(50),
+              `active` tinyint(1),
               PRIMARY KEY (`id`)
             )
+        " );
+        queryExecute( "
+            INSERT INTO `phone_numbers` (`id`, `number`, `active`) VALUES (1, '323-232-3232', 1)
+        " );
+        queryExecute( "
+            INSERT INTO `phone_numbers` (`id`, `number`, `active`) VALUES (2, '545-454-5454', 0)
         " );
         queryExecute( "
             CREATE TABLE `empty` (

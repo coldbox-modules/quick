@@ -127,8 +127,8 @@ component accessors="true" {
         }
 
         attrs.each( function( key, value ) {
-            variables._data[ retrieveColumnForAlias( key ) ] = value;
-            variables[ retrieveAliasForColumn( key ) ] = value;
+            variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
+            variables[ retrieveAliasForColumn( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
         } );
 
         return this;

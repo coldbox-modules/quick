@@ -1,3 +1,12 @@
+# v1.3.2
+## 30 Apr 2019 — 19:52:39 UTC
+
+### chore
+
++ __box.json:__ Add author
+ ([b38a7ed](https://github.com/coldbox-modules/quick/commit/b38a7edde6e810c71ff139cd295418a86779bb51))
+
+
 # v1.3.1
 ## 30 Apr 2019 — 19:43:23 UTC
 

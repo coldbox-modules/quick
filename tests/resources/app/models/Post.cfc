@@ -1,4 +1,4 @@
-component entityname="MyPost" table="my_posts" extends="quick.models.BaseEntity" {
+component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
 
     property name="post_pk";
     property name="userId" column="user_id";
@@ -6,18 +6,14 @@ component entityname="MyPost" table="my_posts" extends="quick.models.BaseEntity"
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
 
-    variables.key = "post_pk";
+    variables._key = "post_pk";
 
     function author() {
         return belongsTo( "User", "user_id" );
     }
 
     function tags() {
-        return belongsToMany(
-            relationName = "Tag",
-            relatedKey = "tag_id",
-            foreignKey = "post_pk"
-        );
+        return belongsToMany( "Tag", "my_posts_tags", "custom_post_pk", "tag_id" );
     }
 
     function comments() {

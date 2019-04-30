@@ -16,14 +16,32 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     newUser.setLastName( "User" );
                     newUser.setPassword( hash( "password" ) );
                     var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                    expect( userRowsPreSave ).toHaveLength( 2 );
+                    expect( userRowsPreSave ).toHaveLength( 3 );
                     newUser.save();
                     var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                    expect( userRowsPostSave ).toHaveLength( 3 );
+                    expect( userRowsPostSave ).toHaveLength( 4 );
                     var newUserAgain = getInstance( "User" ).whereUsername( "new_user" ).firstOrFail();
                     expect( newUserAgain.getFirstName() ).toBe( "New" );
                     expect( newUserAgain.getLastName() ).toBe( "User" );
                 } );
+                it( "allow inserting of column where update=false in property", function() {
+                    var newUser = getInstance( "User" );
+                    newUser.setUsername( "new_user2" );
+                    newUser.setFirstName( "New2" );
+                    newUser.setLastName( "User2" );
+                    newUser.setEmail( "test2@test.com" );
+                    newUser.setPassword( hash( "password" ) );
+                    var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPreSave ).toHaveLength( 3 );
+                    newUser.save();
+                    var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPostSave ).toHaveLength( 4 );
+                    var newUserAgain = getInstance( "User" ).whereUsername( "new_user2" ).firstOrFail();
+                    expect( newUserAgain.getFirstName() ).toBe( "New2" );
+                    expect( newUserAgain.getLastName() ).toBe( "User2" );
+                    expect( newUserAgain.getEmail() ).toBe( "test2@test.com" );
+                } );
+                
 
                 it( "retrieves the generated key when saving a new record", function() {
                     var newUser = getInstance( "User" );
@@ -32,7 +50,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     newUser.setLastName( "User" );
                     newUser.setPassword( hash( "password" ) );
                     newUser.save();
-                    expect( newUser.getAttributesData() ).toHaveKey( "id" );
+                    expect( newUser.retrieveAttributesData() ).toHaveKey( "id" );
                 } );
 
                 it( "a saved entity is not dirty", function() {
@@ -49,10 +67,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     var existingUser = getInstance( "User" ).find( 1 );
                     existingUser.setUsername( "new_elpete_username" );
                     var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                    expect( userRowsPreSave ).toHaveLength( 2 );
+                    expect( userRowsPreSave ).toHaveLength( 3 );
                     existingUser.save();
                     var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                    expect( userRowsPostSave ).toHaveLength( 2 );
+                    expect( userRowsPostSave ).toHaveLength( 3 );
+                } );
+
+                it( "does not allow updating of column where update=false in property", function() {
+                    var existingUser = getInstance( "User" ).find( 1 );
+                    existingUser.setEmail( "test2@test.com" );
+                    var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPreSave ).toHaveLength( 3 );
+                    existingUser.save();
+                    var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPostSave ).toHaveLength( 3 );
+                    expect( userRowsPostSave.email ).toBe( "" );
                 } );
 
                 it( "uses the type attribute if present for each column", function() {
@@ -82,15 +111,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         tag.setName( "miscellaneous" );
                         tag.save();
 
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
 
                         post.tags().attach( tag.getId() );
 
-                        expect( post.getTags().toArray() ).toBeArray();
-                        expect( post.getTags().toArray() ).toHaveLength( 3 );
+                        post.refresh();
+
+                        expect( post.getTags() ).toBeArray();
+                        expect( post.getTags() ).toHaveLength( 3 );
                     } );
 
                     it( "attaches using the id if the entity is passed", function() {
@@ -98,12 +129,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         tag.setName( "miscellaneous" );
                         tag.save();
 
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
 
                         post.tags().attach( tag );
+
+                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 3 );
@@ -118,12 +151,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         tagB.setName( "other" );
                         tagB.save();
 
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
 
                         post.tags().attach( [ tagA.getId(), tagB ] );
+
+                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 4 );
@@ -132,7 +167,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 describe( "detach", function() {
                     it( "can detach an id from a relationship", function() {
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
@@ -141,12 +176,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                         post.tags().detach( tag.getId() );
 
+                        post.refresh();
+
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 1 );
                     } );
 
                     it( "detaches using the id if the entity is passed", function() {
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
@@ -155,18 +192,22 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                         post.tags().detach( tag );
 
+                        post.refresh();
+
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 1 );
                     } );
 
                     it( "can detach multiple ids or entities at once", function() {
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         var tags = post.getTags().toArray();
                         expect( tags ).toBeArray();
                         expect( tags ).toHaveLength( 2 );
 
                         post.tags().detach( [ tags[ 1 ].getId(), tags[ 2 ] ] );
+
+                        post.refresh();
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toBeEmpty();
@@ -183,7 +224,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         newTagB.setName( "other" );
                         newTagB.save();
 
-                        var post = getInstance( "Post" ).find( 1 );
+                        var post = getInstance( "Post" ).find( 1245 );
 
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 2 );
@@ -191,16 +232,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                         var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
                         var tagIds = [
-                            existingTags[ 1 ].getKeyValue(),
-                            newTagA.getKeyValue(),
-                            newTagB.getKeyValue()
+                            existingTags[ 1 ].keyValue(),
+                            newTagA.keyValue(),
+                            newTagB.keyValue()
                         ];
 
                         post.tags().sync( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
 
+                        post.refresh();
+
                         expect( post.getTags().toArray() ).toBeArray();
                         expect( post.getTags().toArray() ).toHaveLength( 3 );
-                        expect( post.getTags().pluck( "keyValue" ).toArray() ).toBe( tagIds );
+                        expect( post.getTags().map( function( tag ) { return tag.keyValue(); } ).toArray() ).toBe( tagIds );
                     } );
                 } );
             } );

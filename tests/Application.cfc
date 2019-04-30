@@ -49,18 +49,23 @@ component {
               `username` varchar(50) NOT NULL,
               `first_name` varchar(50) NOT NULL,
               `last_name` varchar(50) NOT NULL,
+              `email` varchar(50),
               `password` varchar(100) NOT NULL,
               `country_id` char(35),
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `type` varchar(50) NOT NULL DEFAULT 'limited',
               PRIMARY KEY (`id`)
             )
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`) VALUES (1, 'elpete', 'Eric', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:06:36', '2017-07-28 02:06:36')
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `type`) VALUES (1, 'elpete', 'Eric', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:06:36', '2017-07-28 02:06:36', 'admin')
         " );
         queryExecute( "
             INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`) VALUES (2, 'johndoe', 'John', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:07:16', '2017-07-28 02:07:16');
+        " );
+        queryExecute( "
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`) VALUES (3, 'janedoe', 'Jane', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', NULL, '2017-07-28 02:08:16', '2017-07-28 02:08:16');
         " );
         queryExecute( "
             CREATE TABLE `my_posts` (
@@ -73,10 +78,13 @@ component {
             )
         " );
         queryExecute( "
-            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (1, 1, 'My awesome post body', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (1245, 1, 'My awesome post body', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
         " );
         queryExecute( "
-            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (2, 1, 'My second awesome post body', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (523526, 1, 'My second awesome post body', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
+        " );
+        queryExecute( "
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (7777, NULL, 'My post with no author', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
         " );
         queryExecute( "
             CREATE TABLE `videos` (
@@ -107,10 +115,10 @@ component {
             )
         " );
         queryExecute( "
-            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (1, 'I thought this post was great', 1, 'Post', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (1, 'I thought this post was great', 1245, 'Post', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
         " );
         queryExecute( "
-            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (2, 'I thought this post was not so good', 1, 'Post', '2017-07-04 04:14:22', '2017-07-04 04:14:22')
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (2, 'I thought this post was not so good', 1245, 'Post', '2017-07-04 04:14:22', '2017-07-04 04:14:22')
         " );
         queryExecute( "
             INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (3, 'What a great video! So fun!', 2, 'Video', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
@@ -126,15 +134,15 @@ component {
         queryExecute( "INSERT INTO `tags` (`id`, `name`) VALUES (2, 'music')" );
         queryExecute( "
             CREATE TABLE `my_posts_tags` (
-              `post_pk` int(11) NOT NULL,
+              `custom_post_pk` int(11) NOT NULL,
               `tag_id` int(11) NOT NULL,
-              PRIMARY KEY (`post_pk`, `tag_id`)
+              PRIMARY KEY (`custom_post_pk`, `tag_id`)
             )
         " );
-        queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (1, 1)" );
-        queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (1, 2)" );
-        queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (2, 1)" );
-        queryExecute( "INSERT INTO `my_posts_tags` (`post_pk`, `tag_id`) VALUES (2, 2)" );
+        queryExecute( "INSERT INTO `my_posts_tags` (`custom_post_pk`, `tag_id`) VALUES (1245, 1)" );
+        queryExecute( "INSERT INTO `my_posts_tags` (`custom_post_pk`, `tag_id`) VALUES (1245, 2)" );
+        queryExecute( "INSERT INTO `my_posts_tags` (`custom_post_pk`, `tag_id`) VALUES (523526, 1)" );
+        queryExecute( "INSERT INTO `my_posts_tags` (`custom_post_pk`, `tag_id`) VALUES (523526, 2)" );
         queryExecute( "
             CREATE TABLE `links` (
               `link_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -162,7 +170,7 @@ component {
         queryExecute( "
             CREATE TABLE `songs` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
-              `title` varchar(255) NOT NULL,
+              `title` varchar(255),
               `download_url` varchar(255) NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -178,7 +186,20 @@ component {
         queryExecute( "
             CREATE TABLE `phone_numbers` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
-              `number` varchar(50) NOT NULL,
+              `number` varchar(50),
+              `active` tinyint(1),
+              PRIMARY KEY (`id`)
+            )
+        " );
+        queryExecute( "
+            INSERT INTO `phone_numbers` (`id`, `number`, `active`) VALUES (1, '323-232-3232', 1)
+        " );
+        queryExecute( "
+            INSERT INTO `phone_numbers` (`id`, `number`, `active`) VALUES (2, '545-454-5454', 0)
+        " );
+        queryExecute( "
+            CREATE TABLE `empty` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
               PRIMARY KEY (`id`)
             )
         " );

@@ -9,7 +9,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "last_name" = "Doe",
                     "password" = hash( "password" )
                 } );
-                expect( user.getLoaded() ).toBeTrue();
+                expect( user.isLoaded() ).toBeTrue();
                 expect( user.newEntity().where( "username", "JaneDoe" ).first() ).notToBeNull();
             } );
         } );

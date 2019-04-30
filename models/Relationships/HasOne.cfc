@@ -1,19 +1,18 @@
-component extends="quick.models.Relationships.BaseRelationship" {
+component extends="quick.models.Relationships.HasOneOrMany" {
 
-    function onDIComplete() {
-        setDefaultValue( javacast( "null", "" ) );
+    function getResults() {
+        return variables.related.first();
     }
 
-    function apply() {
-        getRelated().where( getOwningKey(), getForeignKeyValue() );
+    function initRelation( entities, relation ) {
+        entities.each( function( entity ) {
+            entity.assignRelationship( relation, javacast( "null", "" ) );
+        } );
+        return entities;
     }
 
-    function fromGroup( items ) {
-        return items[ 1 ];
-    }
-
-    function retrieve() {
-        return getRelated().first();
+    function match( entities, results, relation ) {
+        return matchOne( argumentCollection = arguments );
     }
 
 }

@@ -5,30 +5,30 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can get the owned entities", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var posts = user.getPosts();
-                expect( posts.get() ).toBeArray();
-                expect( posts.get() ).toHaveLength( 2 );
+                expect( posts ).toBeArray();
+                expect( posts ).toHaveLength( 2 );
             } );
 
             it( "can save and associate new entities", function() {
                 var newPost = getInstance( "Post" );
                 newPost.setBody( "A new post by me!" );
-                expect( newPost.getLoaded() ).toBeFalse();
+                expect( newPost.isLoaded() ).toBeFalse();
                 var user = getInstance( "User" ).find( 1 );
                 newPost = user.posts().save( newPost );
-                expect( newPost.getLoaded() ).toBeTrue();
-                expect( newPost.getAttribute( "user_id" ) ).toBe( user.getId() );
+                expect( newPost.isLoaded() ).toBeTrue();
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
             } );
 
             it( "can create new related entities directly", function() {
                 var user = getInstance( "User" ).find( 1 );
-                expect( user.getPosts().get() ).toHaveLength( 2 );
+                expect( user.getPosts() ).toHaveLength( 2 );
                 var newPost = user.posts().create( {
                     "body" = "A new post created directly here!"
                 } );
-                expect( newPost.getLoaded() ).toBeTrue();
-                expect( newPost.getAttribute( "user_id" ) ).toBe( user.getId() );
+                expect( newPost.isLoaded() ).toBeTrue();
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
                 expect( newPost.getBody() ).toBe( "A new post created directly here!" );
-                expect( user.getPosts().get() ).toHaveLength( 3 );
+                expect( user.fresh().getPosts() ).toHaveLength( 3 );
             } );
         } );
     }

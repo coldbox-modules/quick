@@ -1048,22 +1048,6 @@ component accessors="true" {
         return false;
     }
 
-    public struct function groupBy( required array items, required string key, boolean forceLookup = false ) {
-        return items.reduce( function( acc, item ) {
-            if ( ( isObject( item ) && structKeyExists( item, "get#key#" ) ) || forceLookup ) {
-                var value = invoke( item, "get#key#" );
-            }
-            else {
-                var value = item[ key ];
-            }
-            if ( ! structKeyExists( acc, value ) ) {
-                acc[ value ] = [];
-            }
-            arrayAppend( acc[ value ], item );
-            return acc;
-        }, {} );
-    }
-
     /*=================================
     =            Read Only            =
     =================================*/

@@ -1,3 +1,15 @@
+# v1.3.1
+## 30 Apr 2019 — 19:43:23 UTC
+
+### chore
+
++ __Release:__ v2.0.0 ([425d474](https://github.com/coldbox-modules/quick/commit/425d474898058000c4f0b4defa270a75f3e73b64))
+
+### docs
+
++ __README:__ Document that all fields need to be mapped ([ecece5c](https://github.com/coldbox-modules/quick/commit/ecece5c6a19d21eb0aa5718ad607995375467bef))
+
+
 # v1.3.0
 ## 22 Aug 2018 — 19:58:30 UTC
 

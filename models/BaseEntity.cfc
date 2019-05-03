@@ -307,8 +307,11 @@ component accessors="true" {
             .set_Loaded( true );
     }
 
-    function newEntity() {
-        return variables._entityCreator.new( this );
+    function newEntity( name ) {
+        if ( isNull( name ) ) {
+            return variables._entityCreator.new( this );
+        }
+        return variables._wirebox.getInstance( name );
     }
 
     function reset() {
@@ -746,6 +749,27 @@ component accessors="true" {
         return variables.query;
     }
 
+    public function addSubselect( name, subselect ) {
+        if ( ! variables._attributes.keyExists( retrieveAliasForColumn( name ) ) ) {
+            variables._attributes[ name ] = name;
+            variables._meta.properties.append( { "name" = name, "update" = false, "insert" = false } );
+        }
+
+        if ( retrieveQuery().getColumns().isEmpty() ||
+        ( retrieveQuery().getColumns().len() == 1 && isSimpleValue( retrieveQuery().getColumns()[ 1 ] ) && retrieveQuery().getColumns()[ 1 ] == "*" ) ) {
+            retrieveQuery().select( retrieveQuery().getFrom() & ".*" );
+        }
+
+        var subselectQuery = subselect;
+        if ( isClosure( subselectQuery ) ) {
+            subselectQuery = retrieveQuery().newQuery();
+            subselectQuery = subselect( subselectQuery );
+        }
+
+        retrieveQuery().subselect( name, subselectQuery.retrieveQuery().limit( 1 ) );
+        return retrieveQuery();
+    }
+
     /*=====================================
     =            Magic Methods            =
     =====================================*/
@@ -781,12 +805,8 @@ component accessors="true" {
 
         var columnName = variables._str.slice( missingMethodName, 4 );
 
-        if ( isColumnAlias( columnName ) ) {
-            return retrieveAttribute( retrieveColumnForAlias( columnName ) );
-        }
-
         if ( hasAttribute( columnName ) ) {
-            return retrieveAttribute( columnName );
+            return retrieveAttribute( retrieveColumnForAlias( columnName ) );
         }
 
         return;

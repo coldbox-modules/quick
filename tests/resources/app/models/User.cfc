@@ -19,6 +19,26 @@ component extends="quick.models.BaseEntity" accessors="true" {
         return query.where( "type", type );
     }
 
+    function scopeWithLatestPostId( query ) {
+        addSubselect( "latestPostId", newEntity( "Post" )
+            .select( "post_pk" )
+            .whereColumn( "users.id", "user_id" )
+            .latest() );
+
+        /*
+        // can also use closures
+        addSubselect( "latestPostId", function( q ) {
+            // you don't have to use an entity.
+            // it just helps with scopes, column names, tables, etc.
+            // there is also a query passed to you.
+            return newEntity( "Post" )
+                .select( "post_pk" )
+                .whereColumn( "users.id", "userId" )
+                .latest();
+        } );
+        */
+    }
+
     function posts() {
         return hasMany( "Post", "user_id" );
     }

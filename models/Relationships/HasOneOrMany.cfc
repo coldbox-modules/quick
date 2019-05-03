@@ -71,6 +71,15 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
     }
 
     function save( entity ) {
+        if ( isSimpleValue( entity ) ) {
+            entity = variables.related
+                .newEntity()
+                .set_loaded( true )
+                .forceAssignAttribute(
+                    variables.related.get_key(),
+                    entity
+                );
+        }
         setForeignAttributesForCreate( entity );
         return entity.save();
     }

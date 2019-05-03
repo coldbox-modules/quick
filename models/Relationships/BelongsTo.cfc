@@ -66,7 +66,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 
     function associate( entity ) {
         var ownerKeyValue = isSimpleValue( entity ) ? entity : entity.retrieveAttribute( variables.ownerKey );
-        variables.child.assignAttribute( variables.foreignKey, ownerKeyValue );
+        variables.child.forceAssignAttribute( variables.foreignKey, ownerKeyValue );
         if ( ! isSimpleValue( entity ) ) {
             variables.child.assignRelationship( variables.relationMethodName, entity );
         }
@@ -74,7 +74,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
     }
 
     function dissociate() {
-        variables.child.clearAttribute( variables.foreignKey, true );
+        variables.child.forceClearAttribute(
+            name = variables.foreignKey,
+            setToNull = true
+        );
         return variables.child.clearRelationship( variables.relationMethodName );
     }
 

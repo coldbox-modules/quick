@@ -45,7 +45,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 
     function buildDictionary( results ) {
         return results.reduce( function( dict, result ) {
-            var key = invoke( result, "get#variables.foreignKey#" );
+            var key = result.retrieveAttribute( variables.foreignKey );
             if ( ! structKeyExists( dict, key ) ) {
                 dict[ key ] = [];
             }
@@ -75,7 +75,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
     }
 
     function setForeignAttributesForCreate( entity ) {
-        entity.assignAttribute(
+        entity.forceAssignAttribute(
             getForeignKeyName(),
             getParentKey()
         );

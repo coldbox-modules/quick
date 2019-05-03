@@ -108,7 +108,18 @@ component accessors="true" {
         }, [] );
     }
 
-    function clearAttribute( name, setToNull = false ) {
+    function forceClearAttribute( name, setToNull = false ) {
+        arguments.force = true;
+        return clearAttribute( argumentCollection = arguments );
+    }
+
+    function clearAttribute( name, setToNull = false, force = false ) {
+        if ( force ) {
+            if ( ! variables._attributes.keyExists( retrieveAliasForColumn( name ) ) ) {
+                variables._attributes[ name ] = name;
+                variables._meta.properties.append( { "name" = name } );
+            }
+        }
         if ( setToNull ) {
             variables._data[ name ] = javacast( "null", "" );
             variables[ retrieveAliasForColumn( name ) ] = javacast( "null", "" );
@@ -197,9 +208,21 @@ component accessors="true" {
         );
     }
 
-    function assignAttribute( name, value ) {
-        guardAgainstNonExistentAttribute( name );
-        guardAgainstReadOnlyAttribute( name );
+    function forceAssignAttribute( name, value ) {
+        arguments.force = true;
+        return assignAttribute( argumentCollection = arguments );
+    }
+
+    function assignAttribute( name, value, force = false ) {
+        if ( force ) {
+            if ( ! variables._attributes.keyExists( retrieveAliasForColumn( name ) ) ) {
+                variables._attributes[ name ] = name;
+                variables._meta.properties.append( { "name" = name } );
+            }
+        } else {
+            guardAgainstNonExistentAttribute( name );
+            guardAgainstReadOnlyAttribute( name );
+        }
         if ( ! isSimpleValue( arguments.value ) ) {
             if ( ! structKeyExists( arguments.value, "keyValue" ) ) {
                 throw(

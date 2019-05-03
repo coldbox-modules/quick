@@ -16,7 +16,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var user = getInstance( "User" ).find( 1 );
                 newPost = user.posts().save( newPost );
                 expect( newPost.isLoaded() ).toBeTrue();
-                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
+                expect( newPost.getAuthor().getId() ).toBe( user.getId() );
+            } );
             } );
 
             it( "can create new related entities directly", function() {

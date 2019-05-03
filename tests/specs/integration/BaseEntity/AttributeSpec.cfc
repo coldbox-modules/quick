@@ -8,12 +8,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getUsername() ).toBe( "elpete" );
             } );
 
-            it( "can get foreign keys just like any other column", function() {
-                var post = getInstance( "Post" ).find( 1245 );
-                expect( post.getPost_Pk() ).toBe( 1245 );
-                expect( post.getUser_Id() ).toBe( 1 );
-            } );
-
             it( "can set the value of an attribute using the `setColumnName` magic methods", function() {
                 var user = getInstance( "User" ).find( 1 );
                 expect( user.getUsername() ).toBe( "elpete" );

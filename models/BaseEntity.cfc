@@ -802,7 +802,7 @@ component accessors="true" {
         }
 
         retrieveQuery().subselect( name, subselectQuery.retrieveQuery().limit( 1 ) );
-        return retrieveQuery();
+        return this;
     }
 
     /*=====================================

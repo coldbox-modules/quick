@@ -149,9 +149,12 @@ component accessors="true" {
 
     function fill( attributes ) {
         for ( var key in arguments.attributes ) {
+            var value = arguments.attributes[ key ];
+            var rs = tryRelationshipSetter( "set#key#", { "1" = value } );
+            if ( ! isNull( rs ) ) { continue; }
             guardAgainstNonExistentAttribute( key );
-            variables._data[ retrieveColumnForAlias( key ) ] = arguments.attributes[ key ];
-            invoke( this, "set#retrieveAliasForColumn( key )#", { 1 = arguments.attributes[ key ] } );
+            variables._data[ retrieveColumnForAlias( key ) ] = value;
+            invoke( this, "set#retrieveAliasForColumn( key )#", { 1 = value } );
         }
         return this;
     }
@@ -340,10 +343,10 @@ component accessors="true" {
     }
 
     function newEntity( name ) {
-        if ( isNull( name ) ) {
+        if ( isNull( arguments.name ) ) {
             return variables._entityCreator.new( this );
         }
-        return variables._wirebox.getInstance( name );
+        return variables._wirebox.getInstance( arguments.name );
     }
 
     function reset() {
@@ -814,8 +817,10 @@ component accessors="true" {
             variables.query = q.retrieveQuery();
             return this;
         }
-        var r = tryRelationshipGetter( missingMethodName, missingMethodArguments );
-        if ( ! isNull( r ) ) { return r; }
+        var rg = tryRelationshipGetter( missingMethodName, missingMethodArguments );
+        if ( ! isNull( rg ) ) { return rg; }
+        var rs = tryRelationshipSetter( missingMethodName, missingMethodArguments );
+        if ( ! isNull( rs ) ) { return rs; }
         if ( relationshipIsNull( missingMethodName ) ) {
             return javacast( "null", "" );
         }
@@ -850,6 +855,9 @@ component accessors="true" {
         }
 
         var columnName = variables._str.slice( missingMethodName, 4 );
+        if ( ! hasAttribute( columnName ) ) {
+            return;
+        }
         assignAttribute( columnName, missingMethodArguments[ 1 ] );
         return missingMethodArguments[ 1 ];
     }
@@ -872,6 +880,22 @@ component accessors="true" {
         }
 
         return retrieveRelationship( relationshipName );
+    }
+
+    private function tryRelationshipSetter( missingMethodName, missingMethodArguments ) {
+        if ( ! variables._str.startsWith( missingMethodName, "set" ) ) {
+            return;
+        }
+
+        var relationshipName = variables._str.slice( missingMethodName, 4 );
+
+        if ( ! hasRelationship( relationshipName ) ) {
+            return;
+        }
+
+        var relationship = invoke( this, relationshipName );
+
+        return relationship.applySetter( argumentCollection = missingMethodArguments );
     }
 
     private function relationshipIsNull( name ) {

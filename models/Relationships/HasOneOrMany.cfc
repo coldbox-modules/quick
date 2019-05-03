@@ -63,6 +63,13 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
         return variables.parent.retrieveAttribute( variables.localKey );
     }
 
+    function applySetter() {
+        variables.related.updateAll( {
+            "#variables.foreignKey#" = { "value" = "", "cfsqltype" = "varchar", "null" = true, "nulls" = true }
+        } );
+        return saveMany( argumentCollection = arguments );
+    }
+
     function saveMany( entities ) {
         arguments.entities = isArray( entities ) ? entities : [ entities ];
         return entities.map( function( entity ) {

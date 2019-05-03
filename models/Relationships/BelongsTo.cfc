@@ -64,6 +64,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
         return entities;
     }
 
+    function applySetter() {
+        return associate( argumentCollection = arguments );
+    }
+
     function associate( entity ) {
         var ownerKeyValue = isSimpleValue( entity ) ? entity : entity.retrieveAttribute( variables.ownerKey );
         variables.child.forceAssignAttribute( variables.foreignKey, ownerKeyValue );

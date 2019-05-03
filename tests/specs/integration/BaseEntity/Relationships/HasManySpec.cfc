@@ -71,6 +71,23 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( posts[ 2 ].getAuthor().getId() ).toBe( user.getId() );
             } );
 
+            it( "can sync the array of ids using a relationship setter", function() {
+                var newPost = getInstance( "Post" );
+                newPost.setBody( "A new post by me!" );
+                newPost.save();
+                expect( newPost.isLoaded() ).toBeTrue();
+
+                var user = getInstance( "User" ).find( 1 );
+                expect( user.getPosts() ).toBeArray();
+                expect( user.getPosts() ).toHaveLength( 2 );
+                var posts = user.setPosts( newPost );
+
+                var posts = user.fresh().getPosts();
+                expect( posts ).toBeArray();
+                expect( posts ).toHaveLength( 1 );
+                expect( posts[ 1 ].keyValue() ).toBe( newPost.keyValue() );
+            } );
+
             it( "can create new related entities directly", function() {
                 var user = getInstance( "User" ).find( 1 );
                 expect( user.getPosts() ).toHaveLength( 2 );

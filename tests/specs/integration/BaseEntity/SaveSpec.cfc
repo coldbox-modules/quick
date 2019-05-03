@@ -41,7 +41,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     expect( newUserAgain.getLastName() ).toBe( "User2" );
                     expect( newUserAgain.getEmail() ).toBe( "test2@test.com" );
                 } );
-                
+
 
                 it( "retrieves the generated key when saving a new record", function() {
                     var newUser = getInstance( "User" );
@@ -238,6 +238,37 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         ];
 
                         post.tags().sync( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
+
+                        post.refresh();
+
+                        expect( post.getTags().toArray() ).toBeArray();
+                        expect( post.getTags().toArray() ).toHaveLength( 3 );
+                        expect( post.getTags().map( function( tag ) { return tag.keyValue(); } ).toArray() ).toBe( tagIds );
+                    } );
+
+                    it( "sets the related ids equal to the list passed in using a relationship setter", function() {
+                        var newTagA = getInstance( "Tag" );
+                        newTagA.setName( "miscellaneous" );
+                        newTagA.save();
+
+                        var newTagB = getInstance( "Tag" );
+                        newTagB.setName( "other" );
+                        newTagB.save();
+
+                        var post = getInstance( "Post" ).find( 1245 );
+
+                        expect( post.getTags().toArray() ).toBeArray();
+                        expect( post.getTags().toArray() ).toHaveLength( 2 );
+                        var existingTags = post.getTags().toArray();
+
+                        var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
+                        var tagIds = [
+                            existingTags[ 1 ].keyValue(),
+                            newTagA.keyValue(),
+                            newTagB.keyValue()
+                        ];
+
+                        post.setTags( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
 
                         post.refresh();
 

@@ -1,3 +1,12 @@
+# v2.1.1
+## 03 May 2019 — 22:58:37 UTC
+
+### fix
+
++ __Subselect:__ Return the entity after executing a subselect
+ ([87e5a7a](https://github.com/coldbox-modules/quick/commit/87e5a7a7b2738500a7f1a84a09ca6e263d1df9f5))
+
+
 # v2.1.0
 ## 03 May 2019 — 22:25:30 UTC
 

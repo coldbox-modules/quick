@@ -34,6 +34,7 @@ component accessors="true" {
     property name="_relationshipsLoaded" persistent="false";
     property name="_eagerLoad" persistent="false";
     property name="_loaded" persistent="false";
+    property name="_globalScopeExclusions" persistent="false";
 
     this.constraints = {};
 
@@ -46,6 +47,7 @@ component accessors="true" {
     function assignDefaultProperties() {
         assignAttributesData( {} );
         assignOriginalAttributes( {} );
+        variables._globalScopeExclusions = [];
         param variables._meta = {};
         param variables._data = {};
         param variables._relationshipsData = {};
@@ -225,6 +227,7 @@ component accessors="true" {
     =====================================*/
 
     function getEntities() {
+        applyGlobalScopes();
         return retrieveQuery()
             .get( options = variables._queryOptions )
             .map( function( attrs ) {
@@ -236,8 +239,10 @@ component accessors="true" {
     }
 
     function all() {
+        resetQuery();
+        applyGlobalScopes();
         return eagerLoadRelations(
-            newQuery().from( variables._table )
+            retrieveQuery().from( variables._table )
                 .get( options = variables._queryOptions )
                 .map( function( attrs ) {
                     return newEntity()
@@ -249,10 +254,12 @@ component accessors="true" {
     }
 
     function get() {
+        applyGlobalScopes();
         return eagerLoadRelations( getEntities() );
     }
 
     function first() {
+        applyGlobalScopes();
         var attrs = retrieveQuery().first( options = variables._queryOptions );
         return structIsEmpty( attrs ) ?
             javacast( "null", "" ) :
@@ -264,6 +271,7 @@ component accessors="true" {
 
     function find( id ) {
         fireEvent( "preLoad", { id = id, metadata = variables._meta } );
+        applyGlobalScopes();
         var data = retrieveQuery()
             .from( variables._table )
             .find( id, variables._key, variables._queryOptions );
@@ -294,6 +302,7 @@ component accessors="true" {
     }
 
     function firstOrFail() {
+        applyGlobalScopes();
         var attrs = retrieveQuery().first( options = variables._queryOptions );
         if ( structIsEmpty( attrs ) ) {
             throw(
@@ -851,6 +860,9 @@ component accessors="true" {
 
     private function tryScopes( missingMethodName, missingMethodArguments ) {
         if ( structKeyExists( variables, "scope#missingMethodName#" ) ) {
+            if ( arrayContains( variables._globalScopeExclusions, lcase( missingMethodName ) ) ) {
+                return this;
+            }
             var scopeArgs = { "1" = this };
             // this is to allow default arguments to be set for scopes
             if ( ! structIsEmpty( missingMethodArguments ) ) {
@@ -862,6 +874,18 @@ component accessors="true" {
             return this;
         }
         return;
+    }
+
+    function applyGlobalScopes() {
+        return this;
+    }
+
+    function withoutGlobalScope( name ) {
+        variables.name = isArray( name ) ? name : [ name ];
+        variables.name.each( function( n ) {
+            variables._globalScopeExclusions.append( lcase( name ) );
+        } );
+        return this;
     }
 
     private function forwardToQB( missingMethodName, missingMethodArguments ) {

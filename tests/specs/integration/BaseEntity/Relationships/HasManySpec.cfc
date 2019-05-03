@@ -18,6 +18,24 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( newPost.isLoaded() ).toBeTrue();
                 expect( newPost.getAuthor().getId() ).toBe( user.getId() );
             } );
+
+            it( "can saveMany entities at a time", function() {
+                var newPostA = getInstance( "Post" );
+                newPostA.setBody( "A new post by me!" );
+                expect( newPostA.isLoaded() ).toBeFalse();
+
+                var newPostB = getInstance( "Post" );
+                newPostB.setBody( "Another new post by me!" );
+                expect( newPostB.isLoaded() ).toBeFalse();
+
+                var user = getInstance( "User" ).find( 1 );
+                var posts = user.posts().saveMany( [ newPostA, newPostB ] );
+
+                expect( posts[ 1 ].isLoaded() ).toBeTrue();
+                expect( posts[ 1 ].getAuthor().getId() ).toBe( user.getId() );
+
+                expect( posts[ 2 ].isLoaded() ).toBeTrue();
+                expect( posts[ 2 ].getAuthor().getId() ).toBe( user.getId() );
             } );
 
             it( "can create new related entities directly", function() {

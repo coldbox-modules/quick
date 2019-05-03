@@ -63,6 +63,13 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
         return variables.parent.retrieveAttribute( variables.localKey );
     }
 
+    function saveMany( entities ) {
+        arguments.entities = isArray( entities ) ? entities : [ entities ];
+        return entities.map( function( entity ) {
+            return save( entity );
+        } );
+    }
+
     function save( entity ) {
         setForeignAttributesForCreate( entity );
         return entity.save();

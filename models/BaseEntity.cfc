@@ -199,7 +199,7 @@ component accessors="true" {
     function isDirty() {
         // TODO: could store hash of incoming attrs and compare hashes.
         // that could get rid of `duplicate` in `assignOriginalAttributes`
-        return ! deepEqual( get_OriginalAttributes(), retrieveAttributesData() );
+        return ! deepEqual( variables._originalAttributes, retrieveAttributesData() );
     }
 
     function retrieveAttribute( name, defaultValue = "" ) {

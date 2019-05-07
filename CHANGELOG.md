@@ -1,3 +1,11 @@
+# v2.1.2
+## 07 May 2019 — 07:07:20 UTC
+
+### fix
+
++ __VirtualInheritance:__ Certify virtual inheritance support ([e105f18](https://github.com/coldbox-modules/quick/commit/e105f1899d26a072fd241e2337f060d32525898d))
+
+
 # v2.1.1
 ## 03 May 2019 — 22:58:37 UTC
 

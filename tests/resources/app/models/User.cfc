@@ -1,4 +1,4 @@
-component extends="quick.models.BaseEntity" accessors="true" {
+component quick {
 
     property name="id";
     property name="username";

@@ -46,6 +46,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.posts().count() ).toBe( 3 );
             } );
 
+            it( "sets an entity in the relationship cache when calling a relationship setter", function() {
+                var newPost = getInstance( "Post" );
+                newPost.setBody( "A new post by me!" );
+                var user = getInstance( "User" ).find( 1 );
+                newPost.setAuthor( user );
+                writeDump( var = newPost, top = 2, abort = true );
+                newPost.getAuthor();
+                newPost.getAuthor();
+                newPost.getAuthor();
+                newPost.getAuthor();
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
+                writeDump( var = variables.queries, top = 2 );
+                expect( variables.queries ).toHaveLength( 1, "Only one query should have been executed." );
+            } );
+
             it( "can set the associated relationship by calling a relationship setter with an id", function() {
                 var newPost = getInstance( "Post" );
                 newPost.setBody( "A new post by me!" );

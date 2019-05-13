@@ -102,7 +102,7 @@ Quick's test suite runs specifically on MySQL, so you will need a MySQL database
 If you do not have one, Docker provides an easy way to start one.
 
 ```sh
-docker run -d --name quick -p 3306:3306 -e MYSQL_DATABASE=quick -e MYSQL_USER=quick -e MYSQL_PASSWORD=quick mysql:5
+docker run -d --name quick -p 3306:3306 -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=quick -e MYSQL_USER=quick -e MYSQL_PASSWORD=quick mysql:5
 ```
 
 Finally, copy the `.env.example` file to `.env` and fill in the values for your database.

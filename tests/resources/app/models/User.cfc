@@ -1,4 +1,4 @@
-component extends="quick.models.BaseEntity" accessors="true" {
+component quick {
 
     property name="id";
     property name="username";
@@ -8,13 +8,8 @@ component extends="quick.models.BaseEntity" accessors="true" {
     property name="countryId" column="country_id";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
+    property name="email" column="email" update="false" insert="true";
     property name="type";
-
-    this.constraints = {
-        "lastName" = {
-            "required" = true
-        }
-    };
 
     function scopeLatest( query ) {
         return query.orderBy( "created_date", "desc" );
@@ -22,6 +17,26 @@ component extends="quick.models.BaseEntity" accessors="true" {
 
     function scopeOfType( query, type = "limited" ) {
         return query.where( "type", type );
+    }
+
+    function scopeWithLatestPostId( query ) {
+        addSubselect( "latestPostId", newEntity( "Post" )
+            .select( "post_pk" )
+            .whereColumn( "users.id", "user_id" )
+            .latest() );
+
+        /*
+        // can also use closures
+        addSubselect( "latestPostId", function( q ) {
+            // you don't have to use an entity.
+            // it just helps with scopes, column names, tables, etc.
+            // there is also a query passed to you.
+            return newEntity( "Post" )
+                .select( "post_pk" )
+                .whereColumn( "users.id", "userId" )
+                .latest();
+        } );
+        */
     }
 
     function posts() {

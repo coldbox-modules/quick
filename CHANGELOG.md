@@ -1,3 +1,58 @@
+# v2.1.2
+## 07 May 2019 — 07:07:20 UTC
+
+### fix
+
++ __VirtualInheritance:__ Certify virtual inheritance support ([e105f18](https://github.com/coldbox-modules/quick/commit/e105f1899d26a072fd241e2337f060d32525898d))
+
+
+# v2.1.1
+## 03 May 2019 — 22:58:37 UTC
+
+### fix
+
++ __Subselect:__ Return the entity after executing a subselect
+ ([87e5a7a](https://github.com/coldbox-modules/quick/commit/87e5a7a7b2738500a7f1a84a09ca6e263d1df9f5))
+
+
+# v2.1.0
+## 03 May 2019 — 22:25:30 UTC
+
+### feat
+
++ __Relationships:__ Relationships can be set using relationship setters ([e1e21a8](https://github.com/coldbox-modules/quick/commit/e1e21a83fc72232f8edc370665ed739eb6f33370))
++ __Relationships:__ Allow saving of ids as well as entities
+ ([3f30131](https://github.com/coldbox-modules/quick/commit/3f301314629f5f07d474b661dae8db90f1b19815))
++ __HasMany:__ Many entities can be saved to a hasMany relationship at once ([c9f8f47](https://github.com/coldbox-modules/quick/commit/c9f8f4773bea5c7bd7e1ae142c5aad0550614aa5))
++ __Scopes:__ Register global scopes for entities ([995706b](https://github.com/coldbox-modules/quick/commit/995706b1266bf57456cf5f8406d188d6b978e26c))
++ __Subselects:__ Add subselect helper ([cf13ddd](https://github.com/coldbox-modules/quick/commit/cf13dddd8a8e674e6ee98730912220d5eeb010bf))
+
+### fix
+
++ __Relationships:__ Make mapping foreign keys optional ([708506d](https://github.com/coldbox-modules/quick/commit/708506d8d4eee9fde0307d1fd6ed9bac57d94752))
+
+
+# v1.3.2
+## 30 Apr 2019 — 19:52:39 UTC
+
+### chore
+
++ __box.json:__ Add author
+ ([b38a7ed](https://github.com/coldbox-modules/quick/commit/b38a7edde6e810c71ff139cd295418a86779bb51))
+
+
+# v1.3.1
+## 30 Apr 2019 — 19:43:23 UTC
+
+### chore
+
++ __Release:__ v2.0.0 ([425d474](https://github.com/coldbox-modules/quick/commit/425d474898058000c4f0b4defa270a75f3e73b64))
+
+### docs
+
++ __README:__ Document that all fields need to be mapped ([ecece5c](https://github.com/coldbox-modules/quick/commit/ecece5c6a19d21eb0aa5718ad607995375467bef))
+
+
 # v1.3.0
 ## 22 Aug 2018 — 19:58:30 UTC
 

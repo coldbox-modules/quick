@@ -1,7 +1,7 @@
 component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
 
     property name="post_pk";
-    property name="userId" column="user_id";
+    // property name="userId" column="user_id";
     property name="body";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";

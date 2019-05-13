@@ -8,12 +8,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getUsername() ).toBe( "elpete" );
             } );
 
-            it( "can get foreign keys just like any other column", function() {
-                var post = getInstance( "Post" ).find( 1245 );
-                expect( post.getPost_Pk() ).toBe( 1245 );
-                expect( post.getUser_Id() ).toBe( 1 );
-            } );
-
             it( "can set the value of an attribute using the `setColumnName` magic methods", function() {
                 var user = getInstance( "User" ).find( 1 );
                 expect( user.getUsername() ).toBe( "elpete" );
@@ -26,7 +20,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var originalAttributes = user.retrieveAttributesData();
                 user.setUsername( "new_username" );
                 expect( originalAttributes ).notToBe( user.retrieveAttributesData() );
-                expect( originalAttributes ).toBe( user.get_OriginalAttributes() );
+                expect( originalAttributes.map( function( key, value ) {
+                    return isNull( value ) ? "" : value;
+                } ) ).toBe( user.get_OriginalAttributes() );
             } );
 
             it( "returns a default value if the attribute is not yet set", function() {
@@ -80,7 +76,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "countryId" = "",
                     "createdDate" = "",
                     "modifiedDate" = "",
-                    "type" = ""
+                    "type" = "",
+                    "email" = ""
                 } );
             } );
 
@@ -94,7 +91,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "countryId" = "02B84D66-0AA0-F7FB-1F71AFC954843861",
                     "createdDate" = "2017-07-28 02:06:36",
                     "modifiedDate" = "2017-07-28 02:06:36",
-                    "type" = "admin"
+                    "type" = "admin",
+                    "email" = ""
                 } );
             } );
         } );

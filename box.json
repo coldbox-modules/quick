@@ -1,8 +1,8 @@
 {
     "name":"quick",
-    "version":"2.0.0-beta.9",
-    "author":"",
-    "location":"coldbox-modules/quick#v2.0.0-beta.9",
+    "version":"2.1.2",
+    "author":"Ortus Solutions",
+    "location":"coldbox-modules/quick#v2.1.2",
     "homepage":"https://github.com/coldbox-modules/quick",
     "documentation":"https://github.com/coldbox-modules/quick",
     "repository":{
@@ -18,9 +18,8 @@
     },
     "type":"modules",
     "dependencies":{
-        "qb":"^6.0.0",
-        "str":"^1.0.0",
-        "cbvalidation":"^1.3.1+51"
+        "qb":"^6.1.0",
+        "str":"^1.0.0"
     },
     "devDependencies":{
         "coldbox":"be",
@@ -32,7 +31,6 @@
         "coldbox":"tests/resources/app/coldbox/",
         "qb":"modules/qb/",
         "str":"modules/str/",
-        "cbvalidation":"modules/cbvalidation/",
         "cfcollection":"modules/cfcollection/"
     },
     "testbox":{

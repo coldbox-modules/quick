@@ -107,10 +107,15 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
             ).delete();
     }
 
+    function applySetter() {
+        return sync( argumentCollection = arguments );
+    }
+
     function sync( id ) {
         var foreignPivotKeyValue = variables.parent.retrieveAttribute( variables.parentKey );
         newPivotStatement().where( variables.foreignPivotKey, "=", foreignPivotKeyValue ).delete();
         attach( id );
+        return variables.parent;
     }
 
     function newPivotStatement() {

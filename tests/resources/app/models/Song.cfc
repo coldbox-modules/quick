@@ -6,6 +6,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
 
+    function instanceReady( eventData ) {
+        request.instanceReadyCalled = eventData;
+    }
+
     function preLoad( eventData ) {
         request.preLoadCalled = eventData;
     }

@@ -37,6 +37,33 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.posts().count() ).toBe( 3 );
             } );
 
+            it( "can set the associated relationship by calling a relationship setter", function() {
+                var newPost = getInstance( "Post" );
+                newPost.setBody( "A new post by me!" );
+                var user = getInstance( "User" ).find( 1 );
+                newPost.setAuthor( user ).save();
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
+                expect( user.posts().count() ).toBe( 3 );
+            } );
+
+            it( "can set the associated relationship by calling a relationship setter with an id", function() {
+                var newPost = getInstance( "Post" );
+                newPost.setBody( "A new post by me!" );
+                var user = getInstance( "User" ).find( 1 );
+                newPost.setAuthor( user.keyValue() ).save();
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
+                expect( user.posts().count() ).toBe( 3 );
+            } );
+
+            it( "can set the associated relationship through fill with an id", function() {
+                var newPost = getInstance( "Post" ).create( {
+                    "body" = "A new post by me!",
+                    "author" = 1
+                } );
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( 1 );
+                expect( newPost.getAuthor().posts().count() ).toBe( 3 );
+            } );
+
             it( "can disassociate the existing entity", function() {
                 var post = getInstance( "Post" ).find( 1245 );
                 expect( post.retrieveAttribute( "user_id" ) ).notToBe( "" );

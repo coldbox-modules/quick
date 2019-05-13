@@ -49,6 +49,7 @@ component {
               `username` varchar(50) NOT NULL,
               `first_name` varchar(50) NOT NULL,
               `last_name` varchar(50) NOT NULL,
+              `email` varchar(50),
               `password` varchar(100) NOT NULL,
               `country_id` char(35),
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -186,8 +187,15 @@ component {
             CREATE TABLE `phone_numbers` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `number` varchar(50),
+              `active` tinyint(1),
               PRIMARY KEY (`id`)
             )
+        " );
+        queryExecute( "
+            INSERT INTO `phone_numbers` (`id`, `number`, `active`) VALUES (1, '323-232-3232', 1)
+        " );
+        queryExecute( "
+            INSERT INTO `phone_numbers` (`id`, `number`, `active`) VALUES (2, '545-454-5454', 0)
         " );
         queryExecute( "
             CREATE TABLE `empty` (

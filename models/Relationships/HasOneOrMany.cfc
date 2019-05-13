@@ -45,7 +45,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 
     function buildDictionary( results ) {
         return results.reduce( function( dict, result ) {
-            var key = invoke( result, "get#variables.foreignKey#" );
+            var key = result.retrieveAttribute( variables.foreignKey );
             if ( ! structKeyExists( dict, key ) ) {
                 dict[ key ] = [];
             }
@@ -63,7 +63,30 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
         return variables.parent.retrieveAttribute( variables.localKey );
     }
 
+    function applySetter() {
+        variables.related.updateAll( {
+            "#variables.foreignKey#" = { "value" = "", "cfsqltype" = "varchar", "null" = true, "nulls" = true }
+        } );
+        return saveMany( argumentCollection = arguments );
+    }
+
+    function saveMany( entities ) {
+        arguments.entities = isArray( entities ) ? entities : [ entities ];
+        return entities.map( function( entity ) {
+            return save( entity );
+        } );
+    }
+
     function save( entity ) {
+        if ( isSimpleValue( entity ) ) {
+            entity = variables.related
+                .newEntity()
+                .set_loaded( true )
+                .forceAssignAttribute(
+                    variables.related.get_key(),
+                    entity
+                );
+        }
         setForeignAttributesForCreate( entity );
         return entity.save();
     }
@@ -75,7 +98,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
     }
 
     function setForeignAttributesForCreate( entity ) {
-        entity.assignAttribute(
+        entity.forceAssignAttribute(
             getForeignKeyName(),
             getParentKey()
         );

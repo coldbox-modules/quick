@@ -6,9 +6,7 @@ component accessors="true" {
     property name="_builder" inject="provider:QuickQB@quick" persistent="false";
     property name="_wirebox" inject="wirebox" persistent="false";
     property name="_str" inject="provider:Str@str" persistent="false";
-    // TOOD: retrieve and store settings in guardValid
     property name="_settings" inject="coldbox:modulesettings:quick" persistent="false";
-    property name="_validationManager" inject="provider:ValidationManager@cbvalidation" persistent="false";
     property name="_interceptorService" inject="provider:coldbox:interceptorService" persistent="false";
     property name="_entityCreator" inject="provider:EntityCreator@quick" persistent="false";
 
@@ -25,6 +23,7 @@ component accessors="true" {
     property name="_attributes" persistent="false";
     property name="_meta" persistent="false";
     property name="_nullValues" persistent="false";
+    property name="_casts" persistent="false";
 
     /*=====================================
     =            Instance Data            =
@@ -35,6 +34,7 @@ component accessors="true" {
     property name="_relationshipsLoaded" persistent="false";
     property name="_eagerLoad" persistent="false";
     property name="_loaded" persistent="false";
+    property name="_globalScopeExclusions" persistent="false";
 
     this.constraints = {};
 
@@ -47,17 +47,20 @@ component accessors="true" {
     function assignDefaultProperties() {
         assignAttributesData( {} );
         assignOriginalAttributes( {} );
+        variables._globalScopeExclusions = [];
         param variables._meta = {};
         param variables._data = {};
         param variables._relationshipsData = {};
         param variables._relationshipsLoaded = {};
         param variables._eagerLoad = [];
         param variables._nullValues = {};
+        param variables._casts = {};
         param variables._loaded = false;
     }
 
     function onDIComplete() {
         metadataInspection();
+        fireEvent( "instanceReady", { entity = this } );
     }
 
     function keyType() {
@@ -79,7 +82,7 @@ component accessors="true" {
         return variables._data[ variables._key ];
     }
 
-    function retrieveAttributesData( aliased = false, withoutKey = false ) {
+    function retrieveAttributesData( aliased = false, withoutKey = false, withNulls = false ) {
         variables._attributes.keyArray().each( function( key ) {
             if ( variables.keyExists( key ) && ! isReadOnlyAttribute( key ) ) {
                 assignAttribute( key, variables[ key ] );
@@ -89,7 +92,11 @@ component accessors="true" {
             if ( withoutKey && key == variables._key ) {
                 return acc;
             }
-            acc[ aliased ? retrieveAliasForColumn( key ) : key ] = isNull( value ) ? javacast( "null", "" ) : value;
+            if ( isNull( value ) || ( isNullValue( key, value ) && withNulls ) ) {
+                acc[ aliased ? retrieveAliasForColumn( key ) : key ] = javacast( "null" , "" );
+            } else {
+                acc[ aliased ? retrieveAliasForColumn( key ) : key ] = value;
+            }
             return acc;
         }, {} );
     }
@@ -101,7 +108,18 @@ component accessors="true" {
         }, [] );
     }
 
-    function clearAttribute( name, setToNull = false ) {
+    function forceClearAttribute( name, setToNull = false ) {
+        arguments.force = true;
+        return clearAttribute( argumentCollection = arguments );
+    }
+
+    function clearAttribute( name, setToNull = false, force = false ) {
+        if ( force ) {
+            if ( ! variables._attributes.keyExists( retrieveAliasForColumn( name ) ) ) {
+                variables._attributes[ name ] = name;
+                variables._meta.properties.append( { "name" = name } );
+            }
+        }
         if ( setToNull ) {
             variables._data[ name ] = javacast( "null", "" );
             variables[ retrieveAliasForColumn( name ) ] = javacast( "null", "" );
@@ -122,8 +140,8 @@ component accessors="true" {
         }
 
         attrs.each( function( key, value ) {
-            variables._data[ retrieveColumnForAlias( key ) ] = value;
-            variables[ retrieveAliasForColumn( key ) ] = value;
+            variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
+            variables[ retrieveAliasForColumn( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
         } );
 
         return this;
@@ -131,9 +149,12 @@ component accessors="true" {
 
     function fill( attributes ) {
         for ( var key in arguments.attributes ) {
+            var value = arguments.attributes[ key ];
+            var rs = tryRelationshipSetter( "set#key#", { "1" = value } );
+            if ( ! isNull( rs ) ) { continue; }
             guardAgainstNonExistentAttribute( key );
-            variables._data[ retrieveColumnForAlias( key ) ] = arguments.attributes[ key ];
-            invoke( this, "set#retrieveAliasForColumn( key )#", { 1 = arguments.attributes[ key ] } );
+            variables._data[ retrieveColumnForAlias( key ) ] = value;
+            invoke( this, "set#retrieveAliasForColumn( key )#", { 1 = value } );
         }
         return this;
     }
@@ -178,20 +199,45 @@ component accessors="true" {
     function isDirty() {
         // TODO: could store hash of incoming attrs and compare hashes.
         // that could get rid of `duplicate` in `assignOriginalAttributes`
-        return ! deepEqual( get_OriginalAttributes(), retrieveAttributesData() );
+        return ! deepEqual( variables._originalAttributes, retrieveAttributesData() );
     }
 
     function retrieveAttribute( name, defaultValue = "" ) {
-        return variables._data.keyExists( retrieveColumnForAlias( name ) ) ?
-            variables._data[ retrieveColumnForAlias( name ) ] :
-            defaultValue;
+        return castValueForGetter(
+            name,
+            variables._data.keyExists( retrieveColumnForAlias( name ) ) ?
+                variables._data[ retrieveColumnForAlias( name ) ] :
+                defaultValue
+        );
     }
 
-    function assignAttribute( name, value ) {
-        guardAgainstNonExistentAttribute( name );
-        guardAgainstReadOnlyAttribute( name );
-        variables._data[ retrieveColumnForAlias( name ) ] = value;
-        variables[ retrieveAliasForColumn( name ) ] = value;
+    function forceAssignAttribute( name, value ) {
+        arguments.force = true;
+        return assignAttribute( argumentCollection = arguments );
+    }
+
+    function assignAttribute( name, value, force = false ) {
+        if ( force ) {
+            if ( ! variables._attributes.keyExists( retrieveAliasForColumn( name ) ) ) {
+                variables._attributes[ name ] = name;
+                variables._meta.properties.append( { "name" = name } );
+            }
+        } else {
+            guardAgainstNonExistentAttribute( name );
+            guardAgainstReadOnlyAttribute( name );
+        }
+        if ( ! isSimpleValue( arguments.value ) ) {
+            if ( ! structKeyExists( arguments.value, "keyValue" ) ) {
+                throw(
+                    type = "QuickNotEntityException",
+                    message = "The value assigned to [#name#] is not a Quick entity.  Perhaps you forgot to add `persistent=""false""` to a new property?",
+                    detail = isSimpleValue( value ) ? value : getMetadata( value ).fullname
+                );
+            }
+            arguments.value = castValueForSetter( name, arguments.value.keyValue() );
+        }
+        variables._data[ retrieveColumnForAlias( name ) ] = castValueForSetter( name, value );
+        variables[ retrieveAliasForColumn( name ) ] = castValueForSetter( name, value );
         return this;
     }
 
@@ -207,6 +253,7 @@ component accessors="true" {
     =====================================*/
 
     function getEntities() {
+        applyGlobalScopes();
         return retrieveQuery()
             .get( options = variables._queryOptions )
             .map( function( attrs ) {
@@ -218,8 +265,10 @@ component accessors="true" {
     }
 
     function all() {
+        resetQuery();
+        applyGlobalScopes();
         return eagerLoadRelations(
-            newQuery().from( variables._table )
+            retrieveQuery().from( variables._table )
                 .get( options = variables._queryOptions )
                 .map( function( attrs ) {
                     return newEntity()
@@ -231,10 +280,12 @@ component accessors="true" {
     }
 
     function get() {
+        applyGlobalScopes();
         return eagerLoadRelations( getEntities() );
     }
 
     function first() {
+        applyGlobalScopes();
         var attrs = retrieveQuery().first( options = variables._queryOptions );
         return structIsEmpty( attrs ) ?
             javacast( "null", "" ) :
@@ -246,11 +297,8 @@ component accessors="true" {
 
     function find( id ) {
         fireEvent( "preLoad", { id = id, metadata = variables._meta } );
+        applyGlobalScopes();
         var data = retrieveQuery()
-            .select( arrayMap( structKeyArray( variables._attributes ), function( key ) {
-                return retrieveColumnForAlias( key );
-            } ) )
-            .addSelect( variables._key )
             .from( variables._table )
             .find( id, variables._key, variables._queryOptions );
         if ( structIsEmpty( data ) ) {
@@ -280,6 +328,7 @@ component accessors="true" {
     }
 
     function firstOrFail() {
+        applyGlobalScopes();
         var attrs = retrieveQuery().first( options = variables._queryOptions );
         if ( structIsEmpty( attrs ) ) {
             throw(
@@ -293,8 +342,11 @@ component accessors="true" {
             .set_Loaded( true );
     }
 
-    function newEntity() {
-        return variables._entityCreator.new( this );
+    function newEntity( name ) {
+        if ( isNull( arguments.name ) ) {
+            return variables._entityCreator.new( this );
+        }
+        return variables._wirebox.getInstance( arguments.name );
     }
 
     function reset() {
@@ -328,22 +380,27 @@ component accessors="true" {
     ===========================================*/
 
     function save() {
+        guardNoAttributes();
         guardReadOnly();
         fireEvent( "preSave", { entity = this } );
         if ( variables._loaded ) {
             fireEvent( "preUpdate", { entity = this } );
-            guardValid();
             newQuery()
                 .where( variables._key, keyValue() )
-                .update( retrieveAttributesData( withoutKey = true ).map( function( key, value, attributes ) {
-                    if ( isNull( value ) || isNullValue( key, value ) ) {
-                        return { value = "", nulls = true, null = true };
-                    }
-                    if ( attributeHasSqlType( key ) ) {
-                        return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
-                    }
-                    return value;
-                } ), variables._queryOptions );
+                .update(
+                    retrieveAttributesData( withoutKey = true )
+                        .filter( canUpdateAttribute )
+                        .map( function( key, value, attributes ) {
+                            if ( isNull( value ) || isNullValue( key, value ) ) {
+                                return { value = "", nulls = true, null = true };
+                            }
+                            if ( attributeHasSqlType( key ) ) {
+                                return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
+                            }
+                            return value;
+                        } ),
+                    variables._queryOptions
+                );
             assignOriginalAttributes( retrieveAttributesData() );
             variables._loaded = true;
             fireEvent( "postUpdate", { entity = this } );
@@ -351,17 +408,23 @@ component accessors="true" {
         else {
             resetQuery();
             retrieveKeyType().preInsert( this );
-            fireEvent( "preInsert", { entity = this } );
-            guardValid();
-            var result = retrieveQuery().insert( retrieveAttributesData().map( function( key, value, attributes ) {
-                if ( isNull( value ) || isNullValue( key, value ) ) {
-                    return { value = "", nulls = true, null = true };
-                }
-                if ( attributeHasSqlType( key ) ) {
-                    return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
-                }
-                return value;
-            } ), variables._queryOptions );
+            var attrs = retrieveAttributesData()
+                .filter( canInsertAttribute )
+                .map( function( key, value, attributes ) {
+                    if ( isNull( value ) || isNullValue( key, value ) ) {
+                        return { value = "", nulls = true, null = true };
+                    }
+                    if ( attributeHasSqlType( key ) ) {
+                        return { value = value, cfsqltype = getSqlTypeForAttribute( key ) };
+                    }
+                    return value;
+                } );
+            fireEvent( "preInsert", { entity = this, attributes = attrs } );
+            guardEmptyAttributeData( attrs );
+            var result = retrieveQuery().insert(
+                attrs,
+                variables._queryOptions
+            );
             retrieveKeyType().postInsert( this, result );
             assignOriginalAttributes( retrieveAttributesData() );
             variables._loaded = true;
@@ -387,7 +450,7 @@ component accessors="true" {
     }
 
     function create( attributes = {} ) {
-        return newEntity().assignAttributesData( attributes ).save();
+        return newEntity().fill( attributes ).save();
     }
 
     function updateAll( attributes = {} ) {
@@ -664,12 +727,29 @@ component accessors="true" {
     }
 
     private function eagerLoadRelation( relationName, entities ) {
-        var relation = invoke( this, relationName ).resetQuery();
+        var callback = function() {};
+        if ( ! isSimpleValue( relationName ) ) {
+            if ( ! isStruct( relationName ) ) {
+                throw(
+                    type = "QuickInvalidEagerLoadParameter",
+                    message = "Only strings or structs are supported eager load parameters.  You passed [#serializeJSON( relationName )#"
+                );
+            }
+            for ( var key in relationName ) {
+                callback = relationName[ key ];
+                arguments.relationName = key;
+                break;
+            }
+        }
+        var currentRelationship = listFirst( relationName, "." );
+        var relation = invoke( this, currentRelationship ).resetQuery();
+        callback( relation );
         relation.addEagerConstraints( entities );
+        relation.with( listRest( relationName, "." ) );
         return relation.match(
-            relation.initRelation( entities, relationName ),
+            relation.initRelation( entities, currentRelationship ),
             relation.getEager(),
-            relationName
+            currentRelationship
         );
     }
 
@@ -690,6 +770,9 @@ component accessors="true" {
         }
         variables.query = variables._builder.newQuery()
             .setReturnFormat( "array" )
+            .setColumnFormatter( function( column ) {
+                return retrieveColumnForAlias( column );
+            } )
             .from( variables._table );
         return variables.query;
     }
@@ -699,6 +782,27 @@ component accessors="true" {
             variables.query = newQuery();
         }
         return variables.query;
+    }
+
+    public function addSubselect( name, subselect ) {
+        if ( ! variables._attributes.keyExists( retrieveAliasForColumn( name ) ) ) {
+            variables._attributes[ name ] = name;
+            variables._meta.properties.append( { "name" = name, "update" = false, "insert" = false } );
+        }
+
+        if ( retrieveQuery().getColumns().isEmpty() ||
+        ( retrieveQuery().getColumns().len() == 1 && isSimpleValue( retrieveQuery().getColumns()[ 1 ] ) && retrieveQuery().getColumns()[ 1 ] == "*" ) ) {
+            retrieveQuery().select( retrieveQuery().getFrom() & ".*" );
+        }
+
+        var subselectQuery = subselect;
+        if ( isClosure( subselectQuery ) ) {
+            subselectQuery = retrieveQuery().newQuery();
+            subselectQuery = subselect( subselectQuery );
+        }
+
+        retrieveQuery().subselect( name, subselectQuery.retrieveQuery().limit( 1 ) );
+        return this;
     }
 
     /*=====================================
@@ -713,8 +817,10 @@ component accessors="true" {
             variables.query = q.retrieveQuery();
             return this;
         }
-        var r = tryRelationshipGetter( missingMethodName, missingMethodArguments );
-        if ( ! isNull( r ) ) { return r; }
+        var rg = tryRelationshipGetter( missingMethodName, missingMethodArguments );
+        if ( ! isNull( rg ) ) { return rg; }
+        var rs = tryRelationshipSetter( missingMethodName, missingMethodArguments );
+        if ( ! isNull( rs ) ) { return rs; }
         if ( relationshipIsNull( missingMethodName ) ) {
             return javacast( "null", "" );
         }
@@ -736,12 +842,8 @@ component accessors="true" {
 
         var columnName = variables._str.slice( missingMethodName, 4 );
 
-        if ( isColumnAlias( columnName ) ) {
-            return retrieveAttribute( retrieveColumnForAlias( columnName ) );
-        }
-
         if ( hasAttribute( columnName ) ) {
-            return retrieveAttribute( columnName );
+            return retrieveAttribute( retrieveColumnForAlias( columnName ) );
         }
 
         return;
@@ -753,6 +855,9 @@ component accessors="true" {
         }
 
         var columnName = variables._str.slice( missingMethodName, 4 );
+        if ( ! hasAttribute( columnName ) ) {
+            return;
+        }
         assignAttribute( columnName, missingMethodArguments[ 1 ] );
         return missingMethodArguments[ 1 ];
     }
@@ -777,6 +882,22 @@ component accessors="true" {
         return retrieveRelationship( relationshipName );
     }
 
+    private function tryRelationshipSetter( missingMethodName, missingMethodArguments ) {
+        if ( ! variables._str.startsWith( missingMethodName, "set" ) ) {
+            return;
+        }
+
+        var relationshipName = variables._str.slice( missingMethodName, 4 );
+
+        if ( ! hasRelationship( relationshipName ) ) {
+            return;
+        }
+
+        var relationship = invoke( this, relationshipName );
+
+        return relationship.applySetter( argumentCollection = missingMethodArguments );
+    }
+
     private function relationshipIsNull( name ) {
         if ( ! variables._str.startsWith( name, "get" ) ) {
             return false;
@@ -786,6 +907,9 @@ component accessors="true" {
 
     private function tryScopes( missingMethodName, missingMethodArguments ) {
         if ( structKeyExists( variables, "scope#missingMethodName#" ) ) {
+            if ( arrayContains( variables._globalScopeExclusions, lcase( missingMethodName ) ) ) {
+                return this;
+            }
             var scopeArgs = { "1" = this };
             // this is to allow default arguments to be set for scopes
             if ( ! structIsEmpty( missingMethodArguments ) ) {
@@ -793,9 +917,22 @@ component accessors="true" {
                     scopeArgs[ i + 1 ] = missingMethodArguments[ i ];
                 }
             }
-            return invoke( this, "scope#missingMethodName#", scopeArgs );
+            invoke( this, "scope#missingMethodName#", scopeArgs );
+            return this;
         }
         return;
+    }
+
+    function applyGlobalScopes() {
+        return this;
+    }
+
+    function withoutGlobalScope( name ) {
+        variables.name = isArray( name ) ? name : [ name ];
+        variables.name.each( function( n ) {
+            variables._globalScopeExclusions.append( lcase( name ) );
+        } );
+        return this;
     }
 
     private function forwardToQB( missingMethodName, missingMethodArguments ) {
@@ -860,6 +997,10 @@ component accessors="true" {
             param prop.convertToNull = true;
             if ( prop.convertToNull ) {
                 variables._nullValues[ prop.name ] = prop.nullValue;
+            }
+            param prop.casts = "";
+            if ( prop.casts != "" ) {
+                variables._casts[ prop.name ] = prop.casts;
             }
             if ( javacast( "boolean", prop.persistent ) ) {
                 acc[ prop.name ] = prop.column;
@@ -998,53 +1139,6 @@ component accessors="true" {
         return false;
     }
 
-    public struct function groupBy( required array items, required string key, boolean forceLookup = false ) {
-        return items.reduce( function( acc, item ) {
-            if ( ( isObject( item ) && structKeyExists( item, "get#key#" ) ) || forceLookup ) {
-                var value = invoke( item, "get#key#" );
-            }
-            else {
-                var value = item[ key ];
-            }
-            if ( ! structKeyExists( acc, value ) ) {
-                acc[ value ] = [];
-            }
-            arrayAppend( acc[ value ], item );
-            return acc;
-        }, {} );
-    }
-
-    /*=================================
-    =           Validation            =
-    =================================*/
-
-    private function guardValid() {
-        if ( isNull( variables._validationManager ) ) {
-            return this;
-        }
-
-        // TOOD: retrieve and store settings here
-        param variables._settings.automaticValidation = false;
-        if ( ! variables._settings.automaticValidation ) {
-            return this;
-        }
-
-        var validationResult = variables._validationManager.validate(
-            target = retrieveAttributesData( aliased = true ),
-            constraints = this.constraints
-        );
-
-        if ( ! validationResult.hasErrors() ) {
-            return this;
-        }
-
-        throw(
-            type = "InvalidEntity",
-            message = "The #variables._entityName# entity failed to pass validation",
-            detail = validationResult.getAllErrorsAsJson()
-        );
-    }
-
     /*=================================
     =            Read Only            =
     =================================*/
@@ -1101,8 +1195,26 @@ component accessors="true" {
         return foundProperties[ 1 ].keyExists( "readonly" ) && foundProperties[ 1 ].readonly;
     }
 
+    private function guardNoAttributes() {
+        if ( retrieveAttributeNames().isEmpty() ) {
+            throw(
+                type = "QuickNoAttributesException",
+                message = "[#variables._entityName#] does not have any attributes specified."
+            );
+        }
+    }
+
+    private function guardEmptyAttributeData( required struct attrs ) {
+        if ( attrs.isEmpty() ) {
+            throw(
+                type = "QuickNoAttributesDataException",
+                message = "[#variables._entityName#] does not have any attributes data for insert."
+            );
+        }
+    }
+
     /*==============================
-    =            Events            =
+    =            Events          =
     ==============================*/
 
     function fireEvent( eventName, eventData ) {
@@ -1131,9 +1243,65 @@ component accessors="true" {
         } )[ 1 ].sqltype;
     }
 
+    function isNullAttribute( key ) {
+        return isNullValue( key, retrieveAttribute( key ) );
+    }
+
     private function isNullValue( key, value ) {
         return variables._nullValues.keyExists( retrieveAliasForColumn( key ) ) &&
             compare( variables._nullValues[ retrieveAliasForColumn( key ) ], value ) == 0;
+    }
+
+    private function castValueForGetter( key, value ) {
+        arguments.key = retrieveAliasForColumn( arguments.key );
+        if ( ! structKeyExists( variables._casts, key ) ) {
+            return value;
+        }
+        switch ( variables._casts[ key ] ) {
+            case "boolean":
+                return javacast( "boolean", value );
+            default:
+                return value;
+        }
+    }
+
+    private function castValueForSetter( key, value ) {
+        arguments.key = retrieveAliasForColumn( arguments.key );
+        if ( ! structKeyExists( variables._casts, key ) ) {
+            return value;
+        }
+        switch ( variables._casts[ key ] ) {
+            case "boolean":
+                return value ? 1 : 0;
+            default:
+                return value;
+        }
+    }
+
+    private function canUpdateAttribute( name ) {
+        return ! variables._meta.properties.filter( function( property ) {
+            return property.name == retrieveAliasForColumn( name ) &&
+                (
+                    ! property.keyExists( "update" ) ||
+                    (
+                        property.keyExists( "update" ) &&
+                        property.update
+                    )
+                );
+        } ).isEmpty();
+    }
+
+    private function canInsertAttribute( name ) {
+        return ! variables._meta.properties.filter( function( property ) {
+            return property.name == retrieveAliasForColumn( name ) &&
+                (
+                    ! property.keyExists( "insert" ) ||
+                    (
+                        property.keyExists( "insert" ) &&
+                        property.insert
+                    )
+                );
+        } ).isEmpty();
     }
 
     function timeIt( callback, label ) {

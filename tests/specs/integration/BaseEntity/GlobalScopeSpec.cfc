@@ -14,6 +14,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( admins ).toBeArray();
                 expect( admins ).toHaveLength( 3 );
             } );
+
+            it( "can apply a global scope constraining a query correctly", function() {
+                var users = getInstance( "UserWithGlobalScope" ).get();
+                expect ( users ).toBeArray();
+                expect( users ).toHaveLength( 2 );
+            } );
         } );
     }
 

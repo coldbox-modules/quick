@@ -1,3 +1,11 @@
+# v2.1.3
+## 14 May 2019 — 01:57:33 UTC
+
+### tests
+
++ __Relationships:__ Prove relationship setters use the cache ([953d653](https://github.com/coldbox-modules/quick/commit/953d65310159a51e8388cf653283c201bd6bc680))
+
+
 # v2.1.2
 ## 07 May 2019 — 07:07:20 UTC
 

@@ -1,3 +1,11 @@
+# v2.2.0
+## 29 May 2019 — 03:27:23 UTC
+
+### feat
+
++ __Relationships:__ Add fetch methods to all Relationships ([61a6035](https://github.com/coldbox-modules/quick/commit/61a6035beba2f6d3fbcbcfd5a36941f32d38ae20))
+
+
 # v2.1.3
 ## 14 May 2019 — 01:57:33 UTC
 

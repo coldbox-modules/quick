@@ -99,6 +99,39 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( newPost.getBody() ).toBe( "A new post created directly here!" );
                 expect( user.fresh().getPosts() ).toHaveLength( 3 );
             } );
+
+            it( "can first off of the relationship", function() {
+                var user = getInstance( "User" ).find( 1 );
+                var post = user.posts().first();
+                expect( post.keyValue() ).toBe( 1245 );
+            } );
+
+            it( "can firstOrFail off of the relationship", function() {
+                var user = getInstance( "User" ).find( 2 );
+                expect( function() {
+                    var post = user.posts().firstOrFail( 7777 );
+                } ).toThrow( "EntityNotFound" );
+            } );
+
+            it( "can find off of the relationship", function() {
+                var user = getInstance( "User" ).find( 1 );
+                var post = user.posts().find( 523526 );
+                expect( post.keyValue() ).toBe( 523526 );
+            } );
+
+            it( "can findOrFail off of the relationship", function() {
+                var user = getInstance( "User" ).find( 1 );
+                expect( function() {
+                    var post = user.posts().findOrFail( 7777 );
+                } ).toThrow( "EntityNotFound" );
+            } );
+
+            it( "can all off of the relationship", function() {
+                var user = getInstance( "User" ).find( 1 );
+                var posts = user.posts().all();
+                expect( posts ).toBeArray();
+                expect( posts ).toHaveLength( 3 );
+            } );
         } );
     }
 

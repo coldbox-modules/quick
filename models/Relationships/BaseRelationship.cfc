@@ -22,11 +22,31 @@ component {
         return variables.related.get();
     }
 
+    function first() {
+        return variables.related.first();
+    }
+
+    function firstOrFail() {
+        return variables.related.firstOrFail();
+    }
+
+    function find( id ) {
+        return variables.related.find( arguments.id );
+    }
+
+    function findOrFail( id ) {
+        return variables.related.findOrFail( arguments.id );
+    }
+
+    function all() {
+        return variables.related.all();
+    }
+
     /**
     * get()
     * @hint wrapper for getResults() on relationship types that have them, which is most of them. get() implemented for consistency with QB and Quick
-    */ 
-    
+    */
+
     function get() {
         return getResults();
     }

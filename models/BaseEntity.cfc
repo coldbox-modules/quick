@@ -117,7 +117,8 @@ component accessors="true" {
         if ( force ) {
             if ( ! variables._attributes.keyExists( retrieveAliasForColumn( name ) ) ) {
                 variables._attributes[ name ] = name;
-                variables._meta.properties.append( { "name" = name } );
+                variables._meta.properties[ name ] = paramProperty( { "name" = name } );
+                variables._meta.originalMetadata.properties.append( variables._meta.properties[ name ] );
             }
         }
         if ( setToNull ) {
@@ -220,7 +221,8 @@ component accessors="true" {
         if ( force ) {
             if ( ! variables._attributes.keyExists( retrieveAliasForColumn( name ) ) ) {
                 variables._attributes[ name ] = name;
-                variables._meta.properties.append( { "name" = name } );
+                variables._meta.properties[ name ] = paramProperty( { "name" = name } );
+                variables._meta.originalMetadata.properties.append( variables._meta.properties[ name ] );
             }
         } else {
             guardAgainstNonExistentAttribute( name );
@@ -472,7 +474,7 @@ component accessors="true" {
     =====================================*/
 
     function hasRelationship( name ) {
-        var md = variables._meta;
+        var md = variables._meta.originalMetadata;
         param md.functions = [];
         return ! arrayIsEmpty( arrayFilter( md.functions, function( func ) {
             return compareNoCase( func.name, name ) == 0;
@@ -763,9 +765,9 @@ component accessors="true" {
     }
 
     public function newQuery() {
-        if ( variables._meta.keyExists( "grammar" ) ) {
+        if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
             variables._builder.setGrammar(
-                variables._wirebox.getInstance( variables._meta.grammar & "@qb" )
+                variables._wirebox.getInstance( variables._meta.originalMetadata.grammar & "@qb" )
             );
         }
         variables.query = variables._builder.newQuery()
@@ -787,7 +789,12 @@ component accessors="true" {
     public function addSubselect( name, subselect ) {
         if ( ! variables._attributes.keyExists( retrieveAliasForColumn( name ) ) ) {
             variables._attributes[ name ] = name;
-            variables._meta.properties.append( { "name" = name, "update" = false, "insert" = false } );
+            variables._meta.properties[ name ] = paramProperty( {
+                "name" = name,
+                "update" = false,
+                "insert" = false
+            } );
+            variables._meta.originalMetadata.properties.append( variables._meta.properties[ name ] );
         }
 
         if ( retrieveQuery().getColumns().isEmpty() ||
@@ -966,47 +973,66 @@ component accessors="true" {
     private function metadataInspection() {
         if ( ! isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
             var util = createObject( "component", "coldbox.system.core.util.Util" );
-            variables._meta = util.getInheritedMetadata( this );
+            variables._meta = {
+                "originalMetadata" = util.getInheritedMetadata( this )
+            };
         }
         param variables._key = "id";
-        variables._fullName = variables._meta.fullname;
-        param variables._meta.mapping = listLast( variables._meta.fullname, "." );
+        param variables._meta.fullName = variables._meta.originalMetadata.fullname;
+        variables._fullName = variables._meta.fullName;
+        param variables._meta.originalMetadata.mapping = listLast( variables._meta.originalMetadata.fullname, "." );
+        param variables._meta.mapping = variables._meta.originalMetadata.mapping;
         variables._mapping = variables._meta.mapping;
-        param variables._meta.entityName = listLast( variables._meta.name, "." );
+        param variables._meta.originalMetadata.entityName = listLast( variables._meta.originalMetadata.name, "." );
+        param variables._meta.entityName = variables._meta.originalMetadata.entityName;
         variables._entityName = variables._meta.entityName;
-        param variables._meta.table = variables._str.plural( variables._str.snake( variables._entityName ) );
+        param variables._meta.originalMetadata.table = variables._str.plural( variables._str.snake( variables._entityName ) );
+        param variables._meta.table = variables._meta.originalMetadata.table;
         variables._table = variables._meta.table;
         param variables._queryOptions = {};
-        if ( variables._meta.keyExists( "datasource" ) ) {
-            variables._queryOptions = { datasource = variables._meta.datasource };
+        if ( variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists( "datasource" ) ) {
+            variables._queryOptions = { datasource = variables._meta.originalMetadata.datasource };
         }
-        param variables._meta.readonly = false;
+        param variables._meta.originalMetadata.readonly = false;
+        param variables._meta.readonly = variables._meta.originalMetadata.readonly;
         variables._readonly = variables._meta.readonly;
-        param variables._meta.properties = [];
+        param variables._meta.originalMetadata.properties = [];
+        param variables._meta.properties = generateProperties( variables._meta.originalMetadata.properties );
         assignAttributesFromProperties( variables._meta.properties );
     }
 
-    private function assignAttributesFromProperties( properties ) {
-        variables._attributes = properties.reduce( function( acc, prop ) {
-            param prop.column = prop.name;
-            param prop.persistent = true;
-            if ( ! prop.persistent ) {
+    private function generateProperties( properties ) {
+        return properties.reduce( function( acc, prop ) {
+            var newProp = paramProperty( prop );
+            if ( ! newProp.persistent ) {
                 return acc;
             }
-            param prop.nullValue = "";
-            param prop.convertToNull = true;
-            if ( prop.convertToNull ) {
-                variables._nullValues[ prop.name ] = prop.nullValue;
-            }
-            param prop.casts = "";
-            if ( prop.casts != "" ) {
-                variables._casts[ prop.name ] = prop.casts;
-            }
-            if ( javacast( "boolean", prop.persistent ) ) {
-                acc[ prop.name ] = prop.column;
-            }
+            acc[ newProp.name ] = newProp;
             return acc;
         }, {} );
+    }
+
+    private function paramProperty( prop ) {
+        param prop.column = prop.name;
+        param prop.persistent = true;
+        param prop.nullValue = "";
+        param prop.convertToNull = true;
+        param prop.casts = "";
+        param prop.readOnly = false;
+        return prop;
+    }
+
+    private function assignAttributesFromProperties( properties ) {
+        for ( var alias in properties ) {
+            var options = properties[ alias ];
+            variables._attributes[ alias ] = options.column;
+            if ( options.convertToNull ) {
+                variables._nullValues[ alias ] = options.nullValue;
+            }
+            if ( options.casts != "" ) {
+                variables._casts[ alias ] = options.casts;
+            }
+        }
         return this;
     }
 
@@ -1181,7 +1207,7 @@ component accessors="true" {
     }
 
     private function isReadOnlyAttribute( name ) {
-        var md = variables._meta;
+        var md = variables._meta.originalMetadata;
         if ( ! md.keyExists( "properties" ) || arrayIsEmpty( md.properties ) ) {
             return false;
         }
@@ -1232,13 +1258,13 @@ component accessors="true" {
     }
 
     private function attributeHasSqlType( name ) {
-        return ! variables._meta.properties.filter( function( property ) {
+        return ! variables._meta.originalMetadata.properties.filter( function( property ) {
             return property.name == retrieveAliasForColumn( name ) && property.keyExists( "sqltype" );
         } ).isEmpty();
     }
 
     private function getSqlTypeForAttribute( name ) {
-        return variables._meta.properties.filter( function( property ) {
+        return variables._meta.originalMetadata.properties.filter( function( property ) {
             return property.name == retrieveAliasForColumn( name );
         } )[ 1 ].sqltype;
     }
@@ -1279,7 +1305,7 @@ component accessors="true" {
     }
 
     private function canUpdateAttribute( name ) {
-        return ! variables._meta.properties.filter( function( property ) {
+        return ! variables._meta.originalMetadata.properties.filter( function( property ) {
             return property.name == retrieveAliasForColumn( name ) &&
                 (
                     ! property.keyExists( "update" ) ||
@@ -1292,7 +1318,7 @@ component accessors="true" {
     }
 
     private function canInsertAttribute( name ) {
-        return ! variables._meta.properties.filter( function( property ) {
+        return ! variables._meta.originalMetadata.properties.filter( function( property ) {
             return property.name == retrieveAliasForColumn( name ) &&
                 (
                     ! property.keyExists( "insert" ) ||

@@ -36,8 +36,6 @@ component accessors="true" {
     property name="_loaded" persistent="false";
     property name="_globalScopeExclusions" persistent="false";
 
-    this.constraints = {};
-
     function init( struct meta = {} ) {
         assignDefaultProperties();
         variables._meta = arguments.meta;
@@ -455,9 +453,11 @@ component accessors="true" {
         return newEntity().fill( attributes ).save();
     }
 
-    function updateAll( attributes = {} ) {
-        guardReadOnly();
-        guardAgainstReadOnlyAttributes( attributes );
+    function updateAll( attributes = {}, force = false ) {
+        if ( ! force ) {
+            guardReadOnly();
+            guardAgainstReadOnlyAttributes( attributes );
+        }
         return retrieveQuery().update( attributes, variables._queryOptions );
     }
 
@@ -998,6 +998,10 @@ component accessors="true" {
         variables._readonly = variables._meta.readonly;
         param variables._meta.originalMetadata.properties = [];
         param variables._meta.properties = generateProperties( variables._meta.originalMetadata.properties );
+        if ( ! variables._meta.properties.keyExists( variables._key ) ) {
+            var keyProp = paramProperty( { "name" = variables._key } );
+            variables._meta.properties[ keyProp.name ] = keyProp;
+        }
         assignAttributesFromProperties( variables._meta.properties );
     }
 
@@ -1207,18 +1211,7 @@ component accessors="true" {
     }
 
     private function isReadOnlyAttribute( name ) {
-        var md = variables._meta.originalMetadata;
-        if ( ! md.keyExists( "properties" ) || arrayIsEmpty( md.properties ) ) {
-            return false;
-        }
-        // TODO: use stored metadata and store as struct of struct
-        var foundProperties = arrayFilter( md.properties, function( prop ) {
-            return prop.name == name;
-        } );
-        if ( arrayIsEmpty( foundProperties ) ) {
-            return false;
-        }
-        return foundProperties[ 1 ].keyExists( "readonly" ) && foundProperties[ 1 ].readonly;
+        return variables._meta.properties[ retrieveAliasForColumn( name ) ].readOnly;
     }
 
     private function guardNoAttributes() {

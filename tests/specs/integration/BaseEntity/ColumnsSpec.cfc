@@ -7,7 +7,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 var configuredAttributes = link.get_Attributes();
                 expect( configuredAttributes ).toBeStruct();
-                expect( configuredAttributes ).notToHaveKey( "link_id" );
 
                 var attributeNames = link.retrieveAttributeNames( columnNames = true );
                 arraySort( attributeNames, "textnocase" );
@@ -15,8 +14,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( attributeNames ).toHaveLength( 3 );
                 expect( attributeNames ).toBe( [ "created_date", "link_id", "link_url" ] );
 
-                expect( link.getId() ).toBe( 1 );
-                expect( link.getId() ).toBe( link.retrieveAttributesData()[ "link_id" ] );
+                expect( link.getLink_Id() ).toBe( 1 );
+                expect( link.getLink_Id() ).toBe( link.retrieveAttributesData()[ "link_id" ] );
                 expect( link.getUrl() ).toBe( "http://example.com/some-link" );
                 expect( link.getUrl() ).toBe( link.retrieveAttributesData()[ "link_url" ] );
             } );

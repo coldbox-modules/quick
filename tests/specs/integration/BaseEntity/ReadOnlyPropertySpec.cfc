@@ -27,13 +27,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 
-            it( "prevents assignAttributesData from being called containing a read-only property", function() {
-                var link = getInstance( "Link" ).findOrFail( 1 );
-                expect( function() {
-                    link.assignAttributesData( { createdDate = now() } );
-                } ).toThrow( type = "QuickReadOnlyException" );
-            } );
-
             it( "prevents fill from being called containing a read-only property", function() {
                 var link = getInstance( "Link" ).findOrFail( 1 );
                 expect( function() {

@@ -132,7 +132,6 @@ component accessors="true" {
     }
 
     function assignAttributesData( attrs ) {
-        guardAgainstReadOnlyAttributes( attrs );
         if ( isNull( attrs ) ) {
             variables._loaded = false;
             variables._data = {};
@@ -153,6 +152,7 @@ component accessors="true" {
             var rs = tryRelationshipSetter( "set#key#", { "1" = value } );
             if ( ! isNull( rs ) ) { continue; }
             guardAgainstNonExistentAttribute( key );
+            guardAgainstReadOnlyAttribute( key );
             variables._data[ retrieveColumnForAlias( key ) ] = value;
             invoke( this, "set#retrieveAliasForColumn( key )#", { 1 = value } );
         }

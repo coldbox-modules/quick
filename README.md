@@ -31,7 +31,7 @@ You need the following configured before using Quick:
 * Add a mapping for `quick` in your `Application.cfc`
 * Configure your `BaseGrammar` in `config/ColdBox.cfc`
 
-See [Getting Started](https://github.com/ortus-docs/quick-docs/blob/master/getting-started) for more details.
+See [Getting Started](https://quick.ortusbooks.com/getting-started) for more details.
 
 ### Supported Databases
 

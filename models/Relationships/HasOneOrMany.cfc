@@ -64,9 +64,12 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
     }
 
     function applySetter() {
-        variables.related.updateAll( {
-            "#variables.foreignKey#" = { "value" = "", "cfsqltype" = "varchar", "null" = true, "nulls" = true }
-        } );
+        variables.related.updateAll(
+            attributes = {
+                "#variables.foreignKey#" = { "value" = "", "cfsqltype" = "varchar", "null" = true, "nulls" = true }
+            },
+            force = true
+        );
         return saveMany( argumentCollection = arguments );
     }
 

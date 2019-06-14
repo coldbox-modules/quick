@@ -1,3 +1,16 @@
+# v2.2.1
+## 14 Jun 2019 — 04:37:21 UTC
+
+### chore
+
++ __build:__ Use openjdk8 in Travis builds
+ ([d8f7d41](https://github.com/coldbox-modules/quick/commit/d8f7d41e00d53b740ee5d824087db90f47129177))
+
+### other
+
++ __\*:__ docs: Fix Getting Started 404 ([5c9eddd](https://github.com/coldbox-modules/quick/commit/5c9eddd1d3f32daf87d80a2aa47e9c0d845da0c8))
+
+
 # v2.2.0
 ## 29 May 2019 — 03:27:23 UTC
 

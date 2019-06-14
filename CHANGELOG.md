@@ -1,3 +1,11 @@
+# v2.2.2
+## 14 Jun 2019 — 05:10:05 UTC
+
+### perf
+
++ __BaseEntity:__ Better caching of metadata ([27b6ec3](https://github.com/coldbox-modules/quick/commit/27b6ec38a4ff3fc513807bad69f4461e7f3b8655))
+
+
 # v2.2.1
 ## 14 Jun 2019 — 04:37:21 UTC
 

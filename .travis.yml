@@ -3,7 +3,7 @@ sudo: required
 services:
   - mysql
 jdk:
-  - oraclejdk8
+  - openjdk8
 cache:
   directories:
   - "$HOME/.CommandBox/artifacts/"

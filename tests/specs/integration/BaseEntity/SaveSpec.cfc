@@ -23,6 +23,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( newUserAgain.getFirstName() ).toBe( "New" );
                 expect( newUserAgain.getLastName() ).toBe( "User" );
             } );
+
             it( "allow inserting of column where update=false in property", function() {
                 var newUser = getInstance( "User" );
                 newUser.setUsername( "new_user2" );
@@ -39,6 +40,102 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( newUserAgain.getFirstName() ).toBe( "New2" );
                 expect( newUserAgain.getLastName() ).toBe( "User2" );
                 expect( newUserAgain.getEmail() ).toBe( "test2@test.com" );
+            } );
+
+            describe( "normal saving", function() {
+                it( "inserts the attributes as a new row if it has not been loaded", function() {
+                    var newUser = getInstance( "User" );
+                    newUser.setUsername( "new_user" );
+                    newUser.setFirstName( "New" );
+                    newUser.setLastName( "User" );
+                    newUser.setPassword( hash( "password" ) );
+                    var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPreSave ).toHaveLength( 4 );
+                    newUser.save();
+                    var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPostSave ).toHaveLength( 5 );
+                    var newUserAgain = getInstance( "User" ).whereUsername( "new_user" ).firstOrFail();
+                    expect( newUserAgain.getFirstName() ).toBe( "New" );
+                    expect( newUserAgain.getLastName() ).toBe( "User" );
+                } );
+
+                it( "allow inserting of column where update=false in property", function() {
+                    var newUser = getInstance( "User" );
+                    newUser.setUsername( "new_user2" );
+                    newUser.setFirstName( "New2" );
+                    newUser.setLastName( "User2" );
+                    newUser.setEmail( "test2@test.com" );
+                    newUser.setPassword( hash( "password" ) );
+                    var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPreSave ).toHaveLength( 4 );
+                    newUser.save();
+                    var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPostSave ).toHaveLength( 5 );
+                    var newUserAgain = getInstance( "User" ).whereUsername( "new_user2" ).firstOrFail();
+                    expect( newUserAgain.getFirstName() ).toBe( "New2" );
+                    expect( newUserAgain.getLastName() ).toBe( "User2" );
+                    expect( newUserAgain.getEmail() ).toBe( "test2@test.com" );
+                } );
+
+                it( "retrieves the generated key when saving a new record", function() {
+                    var newUser = getInstance( "User" );
+                    newUser.setUsername( "new_user" );
+                    newUser.setFirstName( "New" );
+                    newUser.setLastName( "User" );
+                    newUser.setPassword( hash( "password" ) );
+                    newUser.save();
+                    expect( newUser.retrieveAttributesData() ).toHaveKey( "id" );
+                } );
+
+                it( "a saved entity is not dirty", function() {
+                    var newUser = getInstance( "User" );
+                    newUser.setUsername( "new_user" );
+                    newUser.setFirstName( "New" );
+                    newUser.setLastName( "User" );
+                    newUser.setPassword( hash( "password" ) );
+                    newUser.save();
+                    expect( newUser.isDirty() ).toBeFalse();
+                } );
+
+                it( "updates the attributes of an existing row if it has been loaded", function() {
+                    var existingUser = getInstance( "User" ).find( 1 );
+                    existingUser.setUsername( "new_elpete_username" );
+                    var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPreSave ).toHaveLength( 4 );
+                    existingUser.save();
+                    var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPostSave ).toHaveLength( 4 );
+                } );
+
+                it( "does not allow updating of column where update=false in property", function() {
+                    var existingUser = getInstance( "User" ).find( 1 );
+                    existingUser.setEmail( "test2@test.com" );
+                    var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPreSave ).toHaveLength( 4 );
+                    existingUser.save();
+                    var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+                    expect( userRowsPostSave ).toHaveLength( 4 );
+                    expect( userRowsPostSave.email ).toBe( "" );
+                } );
+
+                it( "uses the type attribute if present for each column", function() {
+                    structDelete( request, "saveSpecPreQBExecute" );
+
+                    var newPhoneNumber = getInstance( "PhoneNumber" );
+                    newPhoneNumber.setNumber( "+18018644200" );
+                    newPhoneNumber.save();
+
+                    expect( request ).toHaveKey( "saveSpecPreQBExecute" );
+                    expect( request.saveSpecPreQBExecute ).toBeArray();
+                    expect( request.saveSpecPreQBExecute ).toHaveLength( 1 );
+                    expect( request.saveSpecPreQBExecute[ 1 ] ).toHaveKey( "bindings" );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toBeArray();
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toHaveLength( 1 );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "value" );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].value ).toBe( "+18018644200" );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "cfsqltype" );
+                    expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+                } );
             } );
 
 

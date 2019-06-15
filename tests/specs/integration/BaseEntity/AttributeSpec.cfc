@@ -82,7 +82,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "createdDate" = "",
                     "modifiedDate" = "",
                     "type" = "",
-                    "email" = ""
+                    "email" = "",
+                    "externalId" = ""
                 } );
             } );
 
@@ -97,7 +98,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "createdDate" = "2017-07-28 02:06:36",
                     "modifiedDate" = "2017-07-28 02:06:36",
                     "type" = "admin",
-                    "email" = ""
+                    "email" = "",
+                    "externalId" = "1234"
                 } );
             } );
         } );

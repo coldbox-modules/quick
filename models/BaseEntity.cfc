@@ -1239,7 +1239,9 @@ component accessors="true" {
     }
 
     private function isReadOnlyAttribute( name ) {
-        return variables._meta.properties[ retrieveAliasForColumn( arguments.name ) ].readOnly;
+        var alias = retrieveAliasForColumn( arguments.name );
+        return variables._meta.properties.keyExists( alias ) &&
+            variables._meta.properties[ alias ].readOnly;
     }
 
     private function guardNoAttributes() {
@@ -1279,11 +1281,14 @@ component accessors="true" {
     }
 
     private function attributeHasSqlType( name ) {
-        return variables._meta.properties[ retrieveAliasForColumn( arguments.name ) ].sqltype != "";
+        var alias = retrieveAliasForColumn( arguments.name );
+        return variables._meta.properties.keyExists( alias ) &&
+            variables._meta.properties[ alias ].sqltype != "";
     }
 
     private function getSqlTypeForAttribute( name ) {
-        return variables._meta.properties[ retrieveAliasForColumn( arguments.name ) ].sqltype;
+        var alias = retrieveAliasForColumn( arguments.name );
+        return variables._meta.properties[ alias ].sqltype;
     }
 
     function isNullAttribute( key ) {
@@ -1323,11 +1328,15 @@ component accessors="true" {
     }
 
     private function canUpdateAttribute( name ) {
-        return variables._meta.properties[ retrieveAliasForColumn( arguments.name ) ].update;
+        var alias = retrieveAliasForColumn( arguments.name );
+        return variables._meta.properties.keyExists( alias ) &&
+            variables._meta.properties[ alias ].update;
     }
 
     private function canInsertAttribute( name ) {
-        return variables._meta.properties[ retrieveAliasForColumn( arguments.name ) ].insert;
+        var alias = retrieveAliasForColumn( arguments.name );
+        return variables._meta.properties.keyExists( alias ) &&
+            variables._meta.properties[ alias ].insert;
     }
 
 }

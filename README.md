@@ -1,4 +1,3 @@
-
 <p align="center">
     <img src="/quick300.png" /><br />
     <a href="https://travis-ci.org/coldbox-modules/quick"><img src="https://travis-ci.org/coldbox-modules/quick.svg?branch=master" alt="Build Status"></a>
@@ -10,11 +9,11 @@
 
 Quick was built out of lessons learned and persistent challenges in developing complex RDBMS applications using built-in Hibernate ORM in CFML.
 
-* Hibernate ORM error messages often obfuscate the actual cause of the error because they are provided directly by the Java classes.
-* Complex CFML Hibernate ORM applications can consume significant memory and processing resources, making them cost-prohibitive and inefficient when used in microservices architecture.
-* Hibernate ORM is tied to the engine releases. This means that updates come infrequently and may be costly for non-OSS engine users.
-* Hibernate ORM is built in Java. This limits contributions from CFML developers who don't know Java or don't feel comfortable contributing to a Java project.
-* Hibernate ORM doesn't take advantage of a lot of dynamic- and meta-programming available in CFML. \(Tools like CBORM have helped to bridge this gap.\)
+-   Hibernate ORM error messages often obfuscate the actual cause of the error because they are provided directly by the Java classes.
+-   Complex CFML Hibernate ORM applications can consume significant memory and processing resources, making them cost-prohibitive and inefficient when used in microservices architecture.
+-   Hibernate ORM is tied to the engine releases. This means that updates come infrequently and may be costly for non-OSS engine users.
+-   Hibernate ORM is built in Java. This limits contributions from CFML developers who don't know Java or don't feel comfortable contributing to a Java project.
+-   Hibernate ORM doesn't take advantage of a lot of dynamic- and meta-programming available in CFML. \(Tools like CBORM have helped to bridge this gap.\)
 
 We can do better.
 
@@ -26,10 +25,10 @@ Quick is an ORM \(Object Relational Mapper\) written in CFML for CFML. It provid
 
 You need the following configured before using Quick:
 
-* Configure a default datasource in your CFML engine
-* ColdBox 4.3+
-* Add a mapping for `quick` in your `Application.cfc`
-* Configure your `BaseGrammar` in `config/ColdBox.cfc`
+-   Configure a default datasource in your CFML engine
+-   ColdBox 4.3+
+-   Add a mapping for `quick` in your `Application.cfc`
+-   Configure your `BaseGrammar` in `config/ColdBox.cfc`
 
 See [Getting Started](https://quick.ortusbooks.com/getting-started) for more details.
 
@@ -102,7 +101,7 @@ Quick's test suite runs specifically on MySQL, so you will need a MySQL database
 If you do not have one, Docker provides an easy way to start one.
 
 ```sh
-docker run -d --name quick -p 3306:3306 -e MYSQL_DATABASE=quick -e MYSQL_USER=quick -e MYSQL_PASSWORD=quick mysql:5
+docker run -d --name quick -p 3306:3306 -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=quick -e MYSQL_USER=quick -e MYSQL_PASSWORD=quick mysql:5
 ```
 
 Finally, copy the `.env.example` file to `.env` and fill in the values for your database.

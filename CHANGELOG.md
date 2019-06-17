@@ -1,3 +1,11 @@
+# v2.2.3
+## 17 Jun 2019 — 15:06:40 UTC
+
+### fix
+
++ __BaseEntity:__ Temporary fix for extra values in data ([821a054](https://github.com/coldbox-modules/quick/commit/821a05492a7184cb7a97361bfb6a1134991e1536))
+
+
 # v2.2.2
 ## 14 Jun 2019 — 05:10:05 UTC
 

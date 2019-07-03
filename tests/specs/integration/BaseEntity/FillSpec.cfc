@@ -25,6 +25,22 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     } );
                 } ).toThrow( type = "AttributeNotFound" );
             } );
+
+            it( "can ignore non-existant properties", function() {
+                var user = getInstance( "User" );
+                expect( user.retrieveAttribute( "username" ) ).toBe( "" );
+                expect( user.retrieveAttribute( "first_name" ) ).toBe( "" );
+                expect( user.retrieveAttribute( "last_name" ) ).toBe( "" );
+                user.fill( {
+                    "username" = "JaneDoe",
+                    "first_name" = "Jane",
+                    "last_name" = "Doe",
+                    "non-existant-property" = "any-value"
+                }, true );
+                expect( user.retrieveAttribute( "username" ) ).toBe( "JaneDoe" );
+                expect( user.retrieveAttribute( "first_name" ) ).toBe( "Jane" );
+                expect( user.retrieveAttribute( "last_name" ) ).toBe( "Doe" );
+            } );
         } );
     }
 

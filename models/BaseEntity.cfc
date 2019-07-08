@@ -144,15 +144,18 @@ component accessors="true" {
         return this;
     }
 
-    function fill( attributes ) {
+    function fill( attributes, ignoreNonExistentAttributes = false ) {
         for ( var key in arguments.attributes ) {
             var value = arguments.attributes[ key ];
             var rs = tryRelationshipSetter( "set#key#", { "1" = value } );
-            if ( ! isNull( rs ) ) { continue; }
-            guardAgainstNonExistentAttribute( key );
+			if ( ! isNull( rs ) ) { continue; }
+			if( ! arguments.ignoreNonExistentAttributes && ! hasAttribute( key ) ) {
+                guardAgainstNonExistentAttribute( key );
+			} else if( hasAttribute( key ) ) {
+                variables._data[ retrieveColumnForAlias( key ) ] = value;
+				invoke( this, "set#retrieveAliasForColumn( key )#", { 1 = value } );
+			}
             guardAgainstReadOnlyAttribute( key );
-            variables._data[ retrieveColumnForAlias( key ) ] = value;
-            invoke( this, "set#retrieveAliasForColumn( key )#", { 1 = value } );
         }
         return this;
     }
@@ -448,13 +451,13 @@ component accessors="true" {
         return this;
     }
 
-    function update( attributes = {} ) {
-        fill( arguments.attributes );
+    function update( attributes = {}, ignoreNonExistentAttributes = false ) {
+        fill( arguments.attributes, arguments.ignoreNonExistentAttributes );
         return save();
     }
 
-    function create( attributes = {} ) {
-        return newEntity().fill( arguments.attributes ).save();
+    function create( attributes = {}, ignoreNonExistentAttributes = false ) {
+        return newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes ).save();
     }
 
     function updateAll( attributes = {}, force = false ) {

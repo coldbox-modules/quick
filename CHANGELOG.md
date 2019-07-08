@@ -1,3 +1,11 @@
+# v2.3.0
+## 08 Jul 2019 — 15:46:12 UTC
+
+### feat
+
++ __BaseEntity:__ Add flag to ignore non-existing attributes to fill ([428b31a](https://github.com/coldbox-modules/quick/commit/428b31ac0ab5de22440ff92341f079735de2db3a))
+
+
 # v2.2.3
 ## 17 Jun 2019 — 15:06:40 UTC
 

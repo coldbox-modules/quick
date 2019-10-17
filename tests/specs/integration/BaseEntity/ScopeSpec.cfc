@@ -22,6 +22,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( users[ 1 ].getUsername() ).toBe( "johndoe" );
                 expect( users[ 2 ].getUsername() ).toBe( "janedoe" );
             } );
+
+            it( "can return values from scopes as well as instances", function() {
+                expect( getInstance( "User" ).ofType( "admin" ).resetPasswords() ).toBe( 1 );
+            } );
         } );
     }
 

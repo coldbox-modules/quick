@@ -418,6 +418,7 @@ component accessors="true" {
         else {
             resetQuery();
             retrieveKeyType().preInsert( this );
+            fireEvent( "preInsert", { entity = this, attributes = retrieveAttributesData() } );
             var attrs = retrieveAttributesData()
                 .filter( canInsertAttribute )
                 .map( function( key, value, attributes ) {
@@ -429,7 +430,6 @@ component accessors="true" {
                     }
                     return value;
                 } );
-            fireEvent( "preInsert", { entity = this, attributes = attrs } );
             guardEmptyAttributeData( attrs );
             var result = retrieveQuery().insert(
                 attrs,
@@ -850,8 +850,11 @@ component accessors="true" {
         if ( ! isNull( columnValue ) ) { return columnValue; }
         var q = tryScopes( arguments.missingMethodName, arguments.missingMethodArguments );
         if ( ! isNull( q ) ) {
-            variables.query = q.retrieveQuery();
-            return this;
+            if ( isStruct( q ) && structKeyExists( q, "retrieveQuery" ) ) {
+                variables.query = q.retrieveQuery();
+                return this;
+            }
+            return q;
         }
         var rg = tryRelationshipGetter( arguments.missingMethodName, arguments.missingMethodArguments );
         if ( ! isNull( rg ) ) { return rg; }
@@ -953,8 +956,8 @@ component accessors="true" {
                     scopeArgs[ i + 1 ] = arguments.missingMethodArguments[ i ];
                 }
             }
-            invoke( this, "scope#arguments.missingMethodName#", scopeArgs );
-            return this;
+            var result = invoke( this, "scope#arguments.missingMethodName#", scopeArgs );
+            return isNull( result ) ? this : result;
         }
         return;
     }

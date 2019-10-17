@@ -37,11 +37,22 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request.preInsertCalled.entity.isLoaded() ).toBeFalse();
                 structDelete( request, "preInsertCalled" );
             } );
+
+            it( "can influence the values being inserted", function() {
+                var song = getInstance( "Song" ).create( {
+                    title = "Bohemian Rhapsody",
+                    download_url = "https://open.spotify.com/album/3BHe7LbW5yRjyqXNJ3A6mW"
+                } );
+                expect( song.refresh().getCreatedDate() ).toBe( createDate( 1975, 10, 31 ) );
+            } );
         } );
     }
 
     function quickPreInsert( event, interceptData, buffer, rc, prc ) {
         variables.quickPreInsertCalled = duplicate( arguments.interceptData );
+        if ( arguments.interceptData.entity.getTitle() == "Bohemian Rhapsody" ) {
+            arguments.interceptData.entity.assignAttribute( "createdDate", createDate( 1975, 10, 31 ) );
+        }
     }
 
 }

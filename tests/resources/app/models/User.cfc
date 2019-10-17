@@ -19,6 +19,10 @@ component quick {
         return query.where( "type", type );
     }
 
+    function scopeResetPasswords( query ) {
+        return query.updateAll( { "password" = "" } ).result.recordcount;
+    }
+
     function scopeWithLatestPostId( query ) {
         addSubselect( "latestPostId", newEntity( "Post" )
             .select( "post_pk" )

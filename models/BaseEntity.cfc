@@ -77,6 +77,7 @@ component accessors="true" {
     ==================================*/
 
     function keyValue() {
+        guardAgainstNotLoaded( "This instance is not loaded so the `keyValue` cannot be retrieved." );
         return variables._data[ variables._key ];
     }
 
@@ -448,6 +449,7 @@ component accessors="true" {
     function delete() {
         guardReadOnly();
         fireEvent( "preDelete", { entity = this } );
+        guardAgainstNotLoaded( "This instance is not loaded so it cannot be deleted.  Did you maybe mean to use `deleteAll`?" );
         newQuery().delete( keyValue(), variables._key, variables._queryOptions );
         variables._loaded = false;
         fireEvent( "postDelete", { entity = this } );
@@ -455,6 +457,7 @@ component accessors="true" {
     }
 
     function update( attributes = {}, ignoreNonExistentAttributes = false ) {
+        guardAgainstNotLoaded( "This instance is not loaded so it cannot be updated.  Did you maybe mean to use `updateAll`, `insert`, or `save`?" );
         fill( arguments.attributes, arguments.ignoreNonExistentAttributes );
         return save();
     }
@@ -1279,6 +1282,15 @@ component accessors="true" {
             throw(
                 type = "QuickNoAttributesDataException",
                 message = "[#variables._entityName#] does not have any attributes data for insert."
+            );
+        }
+    }
+
+    private function guardAgainstNotLoaded( required string errorMessage ) {
+        if ( ! isLoaded() ) {
+            throw(
+                type = "QuickEntityNotLoaded",
+                message = arguments.errorMessage
             );
         }
     }

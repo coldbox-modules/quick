@@ -19,7 +19,8 @@
     "type":"modules",
     "dependencies":{
         "qb":"^6.1.0",
-        "str":"^1.0.0"
+        "str":"^1.0.0",
+        "testbox":"^3.1.0+339"
     },
     "devDependencies":{
         "coldbox":"be",

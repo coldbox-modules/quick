@@ -209,6 +209,9 @@ component accessors="true" {
     }
 
     function retrieveAttribute( name, defaultValue = "" ) {
+        if ( variables.keyExists( name ) && ! isReadOnlyAttribute( name ) ) {
+            forceAssignAttribute( name, variables[ name ] );
+        }
         return castValueForGetter(
             arguments.name,
             variables._data.keyExists( retrieveColumnForAlias( arguments.name ) ) ?
@@ -482,6 +485,12 @@ component accessors="true" {
 
     function hasRelationship( name ) {
         return variables._meta.functionNames.contains( lcase( arguments.name ) );
+    }
+
+    function loadRelationship( name ) {
+        var relationship = invoke( this, name );
+        relationship.setRelationMethodName( name );
+        assignRelationship( name, relationship.get() );
     }
 
     function isRelationshipLoaded( name ) {
@@ -971,10 +980,16 @@ component accessors="true" {
     }
 
     function getMemento() {
-        return variables._attributes.keyArray().reduce( function( acc, key ) {
+        var data = variables._attributes.keyArray().reduce( function( acc, key ) {
             acc[ key ] = retrieveAttribute( key );
             return acc;
         }, {} );
+        var loadedRelations = variables._relationshipsData.reduce( function( acc, relationshipName, relation ) {
+            acc[ relationshipName ] = relation.getMemento();
+            return acc;
+        }, {} );
+        structAppend( data, loadedRelations );
+        return data;
     }
 
     function $renderdata() {

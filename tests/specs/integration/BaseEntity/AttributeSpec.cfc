@@ -15,6 +15,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getUsername() ).toBe( "new_username" );
             } );
 
+            it( "sets attributes using the `setColumnName` magic methods during object creation", function() {
+                var referral = getInstance( "Referral" ).findOrFail( 1 );
+                expect( referral.getType() ).toBeWithCase( "EXTERNAL", "type should be EXTERNAL in all caps thanks to a `setType` method on the `Referral` entity.  Instead got [#referral.getType()#]." );
+            } );
+
             it( "can retrieve the original attributes of a loaded entity", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var originalAttributes = user.retrieveAttributesData();

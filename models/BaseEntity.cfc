@@ -78,7 +78,7 @@ component accessors="true" {
 
     function keyValue() {
         guardAgainstNotLoaded( "This instance is not loaded so the `keyValue` cannot be retrieved." );
-        return variables._data[ variables._key ];
+        return retrieveAttribute( variables._key );
     }
 
     function retrieveAttributesData( aliased = false, withoutKey = false, withNulls = false ) {
@@ -138,8 +138,12 @@ component accessors="true" {
         }
 
         arguments.attrs.each( function( key, value ) {
-            variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
-            variables[ retrieveAliasForColumn( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
+            if ( variables.keyExists( "set" & retrieveAliasForColumn( arguments.key ) ) ) {
+                invoke( this, "set" & retrieveAliasForColumn( arguments.key ), { 1 = arguments.value } );
+            } else {
+                variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
+                variables[ retrieveAliasForColumn( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
+            }
         } );
 
         return this;
@@ -210,8 +214,8 @@ component accessors="true" {
     }
 
     function retrieveAttribute( name, defaultValue = "" ) {
-        if ( variables.keyExists( name ) && ! isReadOnlyAttribute( name ) ) {
-            forceAssignAttribute( name, variables[ name ] );
+        if ( variables.keyExists( retrieveAliasForColumn( name ) ) && ! isReadOnlyAttribute( name ) ) {
+            forceAssignAttribute( name, variables[ retrieveAliasForColumn( name ) ] );
         }
         return castValueForGetter(
             arguments.name,

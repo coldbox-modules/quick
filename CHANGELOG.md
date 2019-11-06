@@ -1,3 +1,18 @@
+# v2.3.1
+## 06 Nov 2019 — 21:45:40 UTC
+
+### chore
+
++ __build:__ Adjust travis testbox run
+ ([790df84](https://github.com/coldbox-modules/quick/commit/790df84685a411013128d00dd519602930007b2a))
+
+### fix
+
++ __tests:__ Fix strange test error on Lucee 5 with nested describe blocks
+ ([305e0a2](https://github.com/coldbox-modules/quick/commit/305e0a224282bf12df222116ce4a4dd110ca17c6))
++ __BaseEntity:__ Return the correct memento with accessors on ([59614a0](https://github.com/coldbox-modules/quick/commit/59614a00bea3a73346985be1e9487d599d65d178))
+
+
 # v2.3.0
 ## 08 Jul 2019 — 15:46:12 UTC
 

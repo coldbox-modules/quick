@@ -1,3 +1,19 @@
+# v2.4.0
+## 06 Nov 2019 — 22:25:58 UTC
+
+### chore
+
++ __dependencies:__ Update TestBox to version 3
+ ([a0dd6ab](https://github.com/coldbox-modules/quick/commit/a0dd6abb904646f3c0a6eded06186bafa1afd704))
+
+### feat
+
++ __setters:__ Apply setters when hydrating the entity from the database
+ ([e4a0158](https://github.com/coldbox-modules/quick/commit/e4a0158ecb74b189428166c67677147b9ff19d00))
++ __ErrorMessages:__ Improve error messages for not loaded entities ([f3f2e2d](https://github.com/coldbox-modules/quick/commit/f3f2e2d95d2fb47e17765d11d581c1b3283d5dc0))
++ __Scopes:__ Query scopes can return any value ([358e977](https://github.com/coldbox-modules/quick/commit/358e977635b2f6b9f6d30c2c1b3dfdbe26054d73))
+
+
 # v2.3.1
 ## 06 Nov 2019 — 21:45:40 UTC
 

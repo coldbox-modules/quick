@@ -1,3 +1,12 @@
+# v2.4.1
+## 07 Nov 2019 — 16:58:47 UTC
+
+### fix
+
++ __memento:__ Correctly serialize array relationships by default
+ ([479dabc](https://github.com/coldbox-modules/quick/commit/479dabce8f71459a7c3e1f3c084b2290a8b802f1))
+
+
 # v2.4.0
 ## 06 Nov 2019 — 22:25:58 UTC
 

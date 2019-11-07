@@ -495,9 +495,13 @@ component accessors="true" {
     }
 
     function loadRelationship( name ) {
-        var relationship = invoke( this, name );
-        relationship.setRelationMethodName( name );
-        assignRelationship( name, relationship.get() );
+        arguments.name = isArray( arguments.name ) ? arguments.name : [ arguments.name ];
+        arguments.name.each( function( n ) {
+            var relationship = invoke( this, n );
+            relationship.setRelationMethodName( n );
+            assignRelationship( n, relationship.get() );
+        } );
+        return this;
     }
 
     function isRelationshipLoaded( name ) {
@@ -995,7 +999,16 @@ component accessors="true" {
             return acc;
         }, {} );
         var loadedRelations = variables._relationshipsData.reduce( function( acc, relationshipName, relation ) {
-            acc[ relationshipName ] = relation.getMemento();
+            if ( isArray( relation ) ) {
+                var mementos = relation.map( function( r ) {
+                    return r.getMemento();
+                } );
+                // ACF 11 doesn't let use directly assign the result of map
+                // to a dynamic struct key. ¯\_(ツ)_/¯
+                acc[ relationshipName ] = mementos;
+            } else {
+                acc[ relationshipName ] = relation.getMemento();
+            }
             return acc;
         }, {} );
         structAppend( data, loadedRelations );

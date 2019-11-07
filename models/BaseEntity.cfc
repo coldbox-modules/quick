@@ -217,11 +217,21 @@ component accessors="true" {
         if ( variables.keyExists( retrieveAliasForColumn( name ) ) && ! isReadOnlyAttribute( name ) ) {
             forceAssignAttribute( name, variables[ retrieveAliasForColumn( name ) ] );
         }
+
+        if ( ! variables._data.keyExists( retrieveColumnForAlias( arguments.name ) ) ) {
+            return castValueForGetter(
+                arguments.name,
+                arguments.defaultValue
+            );
+        }
+
+        var data = variables.keyExists( "get" & retrieveAliasForColumn( arguments.name ) ) ?
+            invoke( this, "get" & retrieveAliasForColumn( arguments.name ) ) :
+            variables._data[ retrieveColumnForAlias( arguments.name ) ];
+
         return castValueForGetter(
             arguments.name,
-            variables._data.keyExists( retrieveColumnForAlias( arguments.name ) ) ?
-                variables._data[ retrieveColumnForAlias( arguments.name ) ] :
-                arguments.defaultValue
+            data
         );
     }
 

@@ -1,3 +1,12 @@
+# v2.4.2
+## 08 Nov 2019 — 00:45:47 UTC
+
+### fix
+
++ __memento:__ Use available getters for the memento
+ ([ba562c3](https://github.com/coldbox-modules/quick/commit/ba562c3062d1170ff8e50e2a45357358aaf0c444))
+
+
 # v2.4.1
 ## 07 Nov 2019 — 16:58:47 UTC
 

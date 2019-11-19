@@ -213,7 +213,7 @@ component accessors="true" {
         return ! deepEqual( variables._originalAttributes, retrieveAttributesData() );
     }
 
-    function retrieveAttribute( name, defaultValue = "" ) {
+    function retrieveAttribute( name, defaultValue = "", bypassGetters = true ) {
         if ( variables.keyExists( retrieveAliasForColumn( name ) ) && ! isReadOnlyAttribute( name ) ) {
             forceAssignAttribute( name, variables[ retrieveAliasForColumn( name ) ] );
         }
@@ -225,7 +225,7 @@ component accessors="true" {
             );
         }
 
-        var data = variables.keyExists( "get" & retrieveAliasForColumn( arguments.name ) ) ?
+        var data = ! arguments.bypassGetters && variables.keyExists( "get" & retrieveAliasForColumn( arguments.name ) ) ?
             invoke( this, "get" & retrieveAliasForColumn( arguments.name ) ) :
             variables._data[ retrieveColumnForAlias( arguments.name ) ];
 
@@ -1005,7 +1005,7 @@ component accessors="true" {
 
     function getMemento() {
         var data = variables._attributes.keyArray().reduce( function( acc, key ) {
-            acc[ key ] = retrieveAttribute( key );
+            acc[ key ] = retrieveAttribute( name = key, bypassGetters = false );
             return acc;
         }, {} );
         var loadedRelations = variables._relationshipsData.reduce( function( acc, relationshipName, relation ) {

@@ -1,3 +1,11 @@
+# v2.4.3
+## 19 Nov 2019 — 07:59:46 UTC
+
+### fix
+
++ __BaseEntity:__ Avoid stack overflow with getMemento and custom getters ([7c9e073](https://github.com/coldbox-modules/quick/commit/7c9e073c089f62047faac1e3e8fcc87eacbc8e0f))
+
+
 # v2.4.2
 ## 08 Nov 2019 — 00:45:47 UTC
 

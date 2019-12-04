@@ -1,3 +1,11 @@
+# v2.5.0
+## 04 Dec 2019 — 21:53:02 UTC
+
+### feat
+
++ __BaseEntity:__ Allow entities to define a custom collection type. ([9135eee](https://github.com/coldbox-modules/quick/commit/9135eeeeddc86e97160cf473fcbbe79a5e336f42))
+
+
 # v2.4.3
 ## 19 Nov 2019 — 07:59:46 UTC
 

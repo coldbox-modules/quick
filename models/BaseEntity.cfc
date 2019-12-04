@@ -292,21 +292,25 @@ component accessors="true" {
     function all() {
         resetQuery();
         applyGlobalScopes();
-        return eagerLoadRelations(
-            retrieveQuery().from( variables._table )
-                .get( options = variables._queryOptions )
-                .map( function( attrs ) {
-                    return newEntity()
-                        .assignAttributesData( attrs )
-                        .assignOriginalAttributes( attrs )
-                        .markLoaded();
-                } )
+        return newCollection(
+            eagerLoadRelations(
+                retrieveQuery().from( variables._table )
+                    .get( options = variables._queryOptions )
+                    .map( function( attrs ) {
+                        return newEntity()
+                            .assignAttributesData( attrs )
+                            .assignOriginalAttributes( attrs )
+                            .markLoaded();
+                    } )
+            )
         );
     }
 
     function get() {
         applyGlobalScopes();
-        return eagerLoadRelations( getEntities() );
+        return newCollection(
+            eagerLoadRelations( getEntities() )
+        );
     }
 
     function first() {
@@ -1001,6 +1005,10 @@ component accessors="true" {
             return result;
         }
         return this;
+    }
+
+    function newCollection( array entities = [] ) {
+        return arguments.entities;
     }
 
     function getMemento() {

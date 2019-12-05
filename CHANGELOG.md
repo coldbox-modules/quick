@@ -1,3 +1,12 @@
+# v2.5.1
+## 05 Dec 2019 — 04:55:20 UTC
+
+### fix
+
++ __BaseEntity:__ Account for null values with custom setters ([685e175](https://github.com/coldbox-modules/quick/commit/685e17572978b6d9f34a883843e765d3910e4870))
++ __BaseEntity:__ Reset underlying query when resetting entity ([83a6fdb](https://github.com/coldbox-modules/quick/commit/83a6fdb43736170671e9d4ad919c4e5b0b51c788))
+
+
 # v2.5.0
 ## 04 Dec 2019 — 21:53:02 UTC
 

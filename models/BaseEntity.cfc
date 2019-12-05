@@ -139,7 +139,9 @@ component accessors="true" {
 
         arguments.attrs.each( function( key, value ) {
             if ( variables.keyExists( "set" & retrieveAliasForColumn( arguments.key ) ) ) {
-                invoke( this, "set" & retrieveAliasForColumn( arguments.key ), { 1 = arguments.value } );
+                if ( ! isNullValue( arguments.key, arguments.value ) ) {
+                    invoke( this, "set" & retrieveAliasForColumn( arguments.key ), { 1 = arguments.value } );
+                }
             } else {
                 variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
                 variables[ retrieveAliasForColumn( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;

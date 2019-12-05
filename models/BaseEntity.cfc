@@ -379,6 +379,7 @@ component accessors="true" {
     }
 
     function reset() {
+        resetQuery();
         assignAttributesData( {} );
         assignOriginalAttributes( {} );
         variables._data = {};
@@ -386,6 +387,7 @@ component accessors="true" {
         variables._relationshipsLoaded = {};
         variables._eagerLoad = [];
         variables._loaded = false;
+
         return this;
     }
 

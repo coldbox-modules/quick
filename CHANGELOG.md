@@ -1,3 +1,11 @@
+# v2.5.2
+## 09 Dec 2019 — 17:57:41 UTC
+
+### fix
+
++ __BaseEntity:__ Pass the entity to `when` closures ([96a8f3a](https://github.com/coldbox-modules/quick/commit/96a8f3af6bec3383e7acc4a9703fe1de3a9bd0cc))
+
+
 # v2.5.1
 ## 05 Dec 2019 — 04:55:20 UTC
 

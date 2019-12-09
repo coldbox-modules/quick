@@ -19,6 +19,12 @@ component quick {
         return query.where( "type", type );
     }
 
+    function scopeOfTypeWithWhen( query, type ) {
+        return query.when( ! isNull( type ) && len( type ), function( q ) {
+            q.ofType( type );
+        } );
+    }
+
     function scopeResetPasswords( query ) {
         return query.updateAll( { "password" = "" } ).result.recordcount;
     }

@@ -26,6 +26,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can return values from scopes as well as instances", function() {
                 expect( getInstance( "User" ).ofType( "admin" ).resetPasswords() ).toBe( 1 );
             } );
+
+            it( "can use the qb `when` helper in scopes", function() {
+                var users = getInstance( "User" ).ofTypeWithWhen( "admin" ).get();
+                expect( users ).toHaveLength( 1, "One user should exist in the database and be returned." );
+                expect( users[ 1 ].getUsername() ).toBe( "elpete" );
+            } );
         } );
     }
 

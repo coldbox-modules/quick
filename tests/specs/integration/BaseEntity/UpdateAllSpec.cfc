@@ -14,10 +14,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 postA.refresh();
-                // postB.refresh();
+                postB.refresh();
 
-                // expect( postA.getBody() ).toBe( "The new body" );
-                // expect( postB.getBody() ).toBe( "The new body" );
+                expect( postA.getBody() ).toBe( "The new body" );
+                expect( postB.getBody() ).toBe( "The new body" );
             } );
         } );
     }

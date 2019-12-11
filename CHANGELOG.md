@@ -1,3 +1,11 @@
+# v2.5.3
+## 11 Dec 2019 — 21:40:12 UTC
+
+### fix
+
++ __BaseEntity:__ Revert calling setters when hydrating entities ([670fadb](https://github.com/coldbox-modules/quick/commit/670fadbbc5887952c7040025da16c497229a138e))
+
+
 # v2.5.2
 ## 09 Dec 2019 — 17:57:41 UTC
 

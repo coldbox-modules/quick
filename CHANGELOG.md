@@ -1,3 +1,12 @@
+# v2.5.4
+## 20 Dec 2019 — 06:20:30 UTC
+
+### fix
+
++ __CBORMCompat:__ Pass along query options in compat methods
+ ([9a2739e](https://github.com/coldbox-modules/quick/commit/9a2739e0030fc1197e0255a1390fb061f07823e2))
+
+
 # v2.5.3
 ## 11 Dec 2019 — 21:40:12 UTC
 

@@ -65,6 +65,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     getInstance( "User" ).whereUsername( "doesnt-exist" ).firstOrFail();
                 } ).toThrow( type = "EntityNotFound" );
             } );
+
+            it( "can return if an entity exists", function() {
+                expect( getInstance( "User" ).whereUsername( "johndoe" ).exists() ).toBeTrue();
+                expect( getInstance( "User" ).whereUsername( "doesnt-exist" ).exists() ).toBeFalse();
+            } );
+
+            it( "throws an exception if an entity does not exist when calling existsOrFail", function() {
+                expect( function() {
+                    getInstance( "User" ).whereUsername( "johndoe" ).existsOrFail();
+                } ).notToThrow();
+
+                expect( function() {
+                    getInstance( "User" ).whereUsername( "doesnt-exist" ).existsOrFail();
+                } ).toThrow( type = "EntityNotFound" );
+            } );
         } );
     }
 

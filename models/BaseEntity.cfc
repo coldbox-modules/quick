@@ -367,6 +367,17 @@ component accessors="true" {
             .markLoaded();
     }
 
+    function existsOrFail() {
+        applyGlobalScopes();
+        if ( ! retrieveQuery().exists() ) {
+            throw(
+                type = "EntityNotFound",
+                message = "No [#variables._entityName#] found with constraints [#serializeJSON( retrieveQuery().getBindings() )#]"
+            );
+        }
+        return true;
+    }
+
     function newEntity( name ) {
         if ( isNull( arguments.name ) ) {
             return variables._entityCreator.new( this );

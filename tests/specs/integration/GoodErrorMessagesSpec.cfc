@@ -28,6 +28,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     regex = "This instance is not loaded so it cannot be updated\.  Did you maybe mean to use `updateAll`, `insert`, or `save`\?"
                 );
             } );
+
+            it( "throws a helpful error message when the key value is defaulted", function() {
+                expect( function() {
+                    getInstance( "DefaultedKeyEntity" );
+                } ).toThrow(
+                    type = "QuickEntityDefaultedKey",
+                    regex = "The key value \[id\] has a default value\.  Default values on keys prevents Quick from working as expected\.  Remove the default value to continue\."
+                );
+            } );
         } );
     }
 

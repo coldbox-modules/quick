@@ -1106,6 +1106,7 @@ component accessors="true" {
             var keyProp = paramProperty( { "name" = variables._key } );
             variables._meta.properties[ keyProp.name ] = keyProp;
         }
+        guardKeyHasNoDefaultValue();
         assignAttributesFromProperties( variables._meta.properties );
     }
 
@@ -1353,6 +1354,17 @@ component accessors="true" {
                 type = "QuickEntityNotLoaded",
                 message = arguments.errorMessage
             );
+        }
+    }
+
+    private function guardKeyHasNoDefaultValue() {
+        if ( variables._meta.properties.keyExists( variables._key ) ) {
+            if ( variables._meta.properties[ variables._key ].keyExists( "default" ) ) {
+                throw(
+                    type = "QuickEntityDefaultedKey",
+                    message = "The key value [#variables._key#] has a default value.  Default values on keys prevents Quick from working as expected.  Remove the default value to continue."
+                );
+            }
         }
     }
 

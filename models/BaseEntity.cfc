@@ -247,7 +247,7 @@ component accessors="true" {
             guardAgainstNonExistentAttribute( arguments.name );
             guardAgainstReadOnlyAttribute( arguments.name );
         }
-        if ( ! isSimpleValue( arguments.value ) ) {
+        if ( isStruct( arguments.value ) ) {
             if ( ! structKeyExists( arguments.value, "keyValue" ) ) {
                 throw(
                     type = "QuickNotEntityException",

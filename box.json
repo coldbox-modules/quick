@@ -16,7 +16,7 @@
     "scripts":{},
     "type":"modules",
     "dependencies":{
-        "qb":"^7.0.0",
+        "qb":"^7.1.0",
         "str":"^1.0.0",
         "testbox":"^3.1.0+339"
     },

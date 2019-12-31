@@ -23,6 +23,24 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 }
             } );
 
+            it( "does not eager load a belongs to empty record set", function() {
+                var posts = getInstance( "Post" ).whereNull( "createdDate" ).with( "author" ).get();
+                expect( posts ).toBeArray();
+                expect( posts ).toHaveLength( 0, "0 posts should have been loaded" );
+                if ( arrayLen( variables.queries ) != 1 ) {
+                    expect( variables.queries ).toHaveLength( 1, "Only one query should have been executed. #arrayLen( variables.queries )# were instead." );
+                }
+            } );
+
+            it( "does not eager load a has many empty record set", function() {
+                var users = getInstance( "User" ).whereNull( "createdDate" ).with( "posts" ).get();
+                expect( users ).toBeArray();
+                expect( users ).toHaveLength( 0, "0 users should have been loaded" );
+                if ( arrayLen( variables.queries ) != 1 ) {
+                    expect( variables.queries ).toHaveLength( 1, "Only one query should have been executed. #arrayLen( variables.queries )# were instead." );
+                }
+            } );
+
             it( "can eager load a has many relationship", function() {
                 var users = getInstance( "User" ).with( "posts" ).latest().get();
                 expect( users ).toBeArray();

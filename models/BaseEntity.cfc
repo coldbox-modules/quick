@@ -830,8 +830,14 @@ component accessors="true" {
             .setColumnFormatter( function( column ) {
                 return retrieveColumnForAlias( column );
             } )
+            .setParentQuery( this )
             .from( variables._table );
         return variables.query;
+    }
+
+    public function populateQuery( query ) {
+        variables.query = arguments.query.clearParentQuery();
+        return this;
     }
 
     public function retrieveQuery() {
@@ -1010,34 +1016,6 @@ component accessors="true" {
         var result = invoke( retrieveQuery(), arguments.missingMethodName, arguments.missingMethodArguments );
         if ( isSimpleValue( result ) ) {
             return result;
-        }
-        return this;
-    }
-
-    /**
-     * This method mirrors qb's `when` method.
-     * It exists so we can pass through the entity
-     * to the closures instead of just the QueryBuilder.
-     *
-     * @condition A boolean condition that if true will trigger the `onTrue` callback.
-     *            If not true the `onFalse` callback will trigger, if it was passed.
-     *            Otherwise, the query is returned unmodified.
-     * @onTrue    A closure that will be triggered if the `condition` is true.
-     * @onFalse   A closure that will be triggered if the `condition` is false.
-     */
-    public function when(
-        required boolean condition,
-        onTrue,
-        onFalse
-    ) {
-        var defaultCallback = function( q ) {
-            return q;
-        };
-        onFalse = isNull( onFalse ) ? defaultCallback : onFalse;
-        if ( condition ) {
-            onTrue( this );
-        } else {
-            onFalse( this );
         }
         return this;
     }

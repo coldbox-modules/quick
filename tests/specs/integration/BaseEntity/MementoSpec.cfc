@@ -13,7 +13,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "type": "",
                     "countryId": "",
                     "createdDate": "",
-                    "modifiedDate": ""
+                    "modifiedDate": "",
+                    "externalID": ""
                 } );
             } );
 
@@ -49,7 +50,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         "type": "admin",
                         "countryId": "02B84D66-0AA0-F7FB-1F71AFC954843861",
                         "createdDate": "2017-07-28 02:06:36.0",
-                        "modifiedDate": "2017-07-28 02:06:36.0"
+                        "modifiedDate": "2017-07-28 02:06:36.0",
+                        "externalID": "1234"
                     }
                 } );
             } );

@@ -6,7 +6,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var user = getInstance( "User" ).findOrFail( 2 );
                 user.delete();
 
-                expect( getInstance( "User" ).count() ).toBe( 2 );
+                expect( getInstance( "User" ).count() ).toBe( 3 );
                 expect( function() {
                     getInstance( "User" ).findOrFail( 2 );
                 } ).toThrow( type = "EntityNotFound" );
@@ -19,7 +19,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "can delete off of a query", function() {
                 getInstance( "User" ).whereUsername( "johndoe" ).deleteAll();
-                expect( getInstance( "User" ).count() ).toBe( 2 );
+                expect( getInstance( "User" ).count() ).toBe( 3 );
                 expect( function() {
                     getInstance( "User" ).whereUsername( "johndoe" ).firstOrFail();
                 } ).toThrow( type = "EntityNotFound" );
@@ -27,7 +27,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "can delete multiple ids at once", function() {
                 getInstance( "User" ).deleteAll( [ 2 ] );
-                expect( getInstance( "User" ).count() ).toBe( 2 );
+                expect( getInstance( "User" ).count() ).toBe( 3 );
                 expect( function() {
                     getInstance( "User" ).findOrFail( 2 );
                 } ).toThrow( type = "EntityNotFound" );

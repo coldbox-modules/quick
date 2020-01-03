@@ -138,8 +138,12 @@ component accessors="true" {
         }
 
         arguments.attrs.each( function( key, value ) {
-            variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
-            variables[ retrieveAliasForColumn( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
+            variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ?
+                javacast( "null", "" ) :
+                castValueForGetter( key, value );
+            variables[ retrieveAliasForColumn( key ) ] = isNull( value ) ?
+                javacast( "null", "" ) :
+                castValueForGetter( key, value );
         } );
 
         return this;

@@ -832,7 +832,7 @@ component accessors="true" {
     public function newQuery() {
         if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
             variables._builder.setGrammar(
-                variables._wirebox.getInstance( variables._meta.originalMetadata.grammar & "@qb" )
+                variables._wirebox.getInstance( variables._meta.originalMetadata.grammar )
             );
         }
         variables.query = variables._builder.newQuery()

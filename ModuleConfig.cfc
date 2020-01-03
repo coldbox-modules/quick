@@ -44,7 +44,7 @@ component {
     function onLoad() {
         binder.map( "QuickQB@quick" )
             .to( "qb.models.Query.QueryBuilder" )
-            .initArg( name = "grammar", dsl = "#settings.defaultGrammar#@qb" )
+            .initArg( name = "grammar", dsl = settings.defaultGrammar )
             .initArg( name = "utils", dsl = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = "array" );
     }

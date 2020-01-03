@@ -830,9 +830,11 @@ component accessors="true" {
     }
 
     public function newQuery() {
-        variables._builder.setGrammar(
-            variables._wirebox.getInstance( variables._meta.grammar & "@qb" )
-        );
+        if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
+            variables._builder.setGrammar(
+                variables._wirebox.getInstance( variables._meta.originalMetadata.grammar )
+            );
+        }
         variables.query = variables._builder.newQuery()
             .setReturnFormat( "array" )
             .setColumnFormatter( function( column ) {

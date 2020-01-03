@@ -18,6 +18,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( newPost.isLoaded() ).toBeTrue();
                 expect( newPost.getAuthor().getId() ).toBe( user.getId() );
             } );
+            it ( "can save and associate new entities mapped by a field other than their primary keys", function () {
+                var user = getInstance( "User" ).find( 1 );
+                var externalThing = user.externalThings().create( {
+                    userID = user.getID(),
+                    externalID = user.getExternalID(),
+                    value = 'I prefer other keys'
+                } );
+                expect( externalThing.isLoaded() ).toBeTrue();
+                expect( externalThing.getExternalID() ).toBe( user.getExternalID() );
+            } );
 
             it( "can save an id instead of an entity", function() {
                 var newPost = getInstance( "Post" );

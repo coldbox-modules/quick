@@ -46,7 +46,6 @@ component {
     * get()
     * @hint wrapper for getResults() on relationship types that have them, which is most of them. get() implemented for consistency with QB and Quick
     */
-
     function get() {
         return getResults();
     }

@@ -30,6 +30,7 @@
         "coldbox":"tests/resources/app/coldbox/",
         "qb":"modules/qb/",
         "str":"modules/str/",
+        "cbvalidation":"modules/cbvalidation/",
         "cfcollection":"modules/cfcollection/"
     },
     "testbox":{

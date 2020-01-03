@@ -15,10 +15,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newUser.setLastName( "User" );
                 newUser.setPassword( hash( "password" ) );
                 var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPreSave ).toHaveLength( 3 );
+                expect( userRowsPreSave ).toHaveLength( 4 );
                 newUser.save();
                 var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostSave ).toHaveLength( 4 );
+                expect( userRowsPostSave ).toHaveLength( 5 );
                 var newUserAgain = getInstance( "User" ).whereUsername( "new_user" ).firstOrFail();
                 expect( newUserAgain.getFirstName() ).toBe( "New" );
                 expect( newUserAgain.getLastName() ).toBe( "User" );
@@ -31,10 +31,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newUser.setEmail( "test2@test.com" );
                 newUser.setPassword( hash( "password" ) );
                 var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPreSave ).toHaveLength( 3 );
+                expect( userRowsPreSave ).toHaveLength( 4 );
                 newUser.save();
                 var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostSave ).toHaveLength( 4 );
+                expect( userRowsPostSave ).toHaveLength( 5 );
                 var newUserAgain = getInstance( "User" ).whereUsername( "new_user2" ).firstOrFail();
                 expect( newUserAgain.getFirstName() ).toBe( "New2" );
                 expect( newUserAgain.getLastName() ).toBe( "User2" );
@@ -66,20 +66,20 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var existingUser = getInstance( "User" ).find( 1 );
                 existingUser.setUsername( "new_elpete_username" );
                 var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPreSave ).toHaveLength( 3 );
+                expect( userRowsPreSave ).toHaveLength( 4 );
                 existingUser.save();
                 var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostSave ).toHaveLength( 3 );
+                expect( userRowsPostSave ).toHaveLength( 4 );
             } );
 
             it( "does not allow updating of column where update=false in property", function() {
                 var existingUser = getInstance( "User" ).find( 1 );
                 existingUser.setEmail( "test2@test.com" );
                 var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPreSave ).toHaveLength( 3 );
+                expect( userRowsPreSave ).toHaveLength( 4 );
                 existingUser.save();
                 var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostSave ).toHaveLength( 3 );
+                expect( userRowsPostSave ).toHaveLength( 4 );
                 expect( userRowsPostSave.email ).toBe( "" );
             } );
 

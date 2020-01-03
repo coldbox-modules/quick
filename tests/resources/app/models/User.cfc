@@ -10,6 +10,9 @@ component quick {
     property name="modifiedDate" column="modified_date";
     property name="email" column="email" update="false" insert="true";
     property name="type";
+    property name="externalID";
+
+    function externalThings() { return hasMany( relationName = "externalThing", foreignKey = "externalID", localKey = "externalID" ); }
 
     function scopeLatest( query ) {
         return query.orderBy( "created_date", "desc" );

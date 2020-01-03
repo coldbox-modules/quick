@@ -786,6 +786,21 @@ component accessors="true" {
             return entities;
         }
 
+        // This is a workaround for grammars with a parameter limit.  If the grammar
+        // has a `parameterLimit` public property, it is used to slice up the array
+        // and work it in chunks.
+        if ( structKeyExists( arguments.entities[ 1 ].retrieveQuery().getGrammar(), "parameterLimit" ) ) {
+            var parameterLimit = arguments.entities[ 1 ].retrieveQuery().getGrammar().parameterLimit;
+            if ( arguments.entities.len() > parameterLimit ) {
+                for ( var i = 1; i < arguments.entities.len(); i += parameterLimit ) {
+                    var length = min( arguments.entities.len() - i + 1, parameterLimit );
+                    var slice = arraySlice( arguments.entities, i, length );
+                    eagerLoadRelations( slice );
+                }
+                return arguments.entities;
+            }
+        }
+
         arrayEach( variables._eagerLoad, function( relationName ) {
             entities = eagerLoadRelation( relationName, entities );
         } );

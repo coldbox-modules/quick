@@ -12,8 +12,8 @@ component quick {
     property name="type";
     property name="externalID";
 
-    function externalThings() { return hasMany( relationName = "externalThing", foreignKey = "externalID", localKey = "AYSOID" ); }
-    
+    function externalThings() { return hasMany( relationName = "externalThing", foreignKey = "externalID", localKey = "externalID" ); }
+
     function scopeLatest( query ) {
         return query.orderBy( "created_date", "desc" );
     }

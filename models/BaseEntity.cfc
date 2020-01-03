@@ -76,6 +76,10 @@ component accessors="true" {
     =            Attributes            =
     ==================================*/
 
+    function keyName() {
+        return variables._key;
+    }
+
     function keyValue() {
         guardAgainstNotLoaded( "This instance is not loaded so the `keyValue` cannot be retrieved." );
         return retrieveAttribute( variables._key );

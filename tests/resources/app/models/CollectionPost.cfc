@@ -1,7 +1,7 @@
 component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
 
     property name="post_pk";
-    property name="user_id" type="numeric";
+    // property name="userId" column="user_id";
     property name="body";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
@@ -22,6 +22,15 @@ component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
 
     function scopeLatest( query ) {
         return query.orderBy( "created_date", "desc" );
+    }
+
+    function newCollection( array entities = [] ) {
+        return variables._wirebox.getInstance(
+            name = "extras.QuickCollection",
+            initArguments = {
+                "collection" = arguments.entities
+            }
+        );
     }
 
 }

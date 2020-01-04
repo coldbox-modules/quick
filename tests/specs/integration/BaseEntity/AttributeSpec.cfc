@@ -15,6 +15,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getUsername() ).toBe( "new_username" );
             } );
 
+            it( "does not set attributes using the `setColumnName` magic methods during object creation", function() {
+                var referral = getInstance( "Referral" ).findOrFail( 1 );
+                expect( referral.getType() ).toBeWithCase( "external", "type should be `external` in lowercase because the `setType` method on the `Referral` entity should not be called during creation.  Instead got [#referral.getType()#]." );
+            } );
+
             it( "can retrieve the original attributes of a loaded entity", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var originalAttributes = user.retrieveAttributesData();
@@ -77,7 +82,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "createdDate" = "",
                     "modifiedDate" = "",
                     "type" = "",
-                    "email" = ""
+                    "email" = "",
+                    "externalId" = ""
                 } );
             } );
 
@@ -92,7 +98,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "createdDate" = "2017-07-28 02:06:36",
                     "modifiedDate" = "2017-07-28 02:06:36",
                     "type" = "admin",
-                    "email" = ""
+                    "email" = "",
+                    "externalId" = "1234"
                 } );
             } );
         } );

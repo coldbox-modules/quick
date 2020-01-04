@@ -23,22 +23,40 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 }
             } );
 
+            it( "does not eager load a belongs to empty record set", function() {
+                var posts = getInstance( "Post" ).whereNull( "createdDate" ).with( "author" ).get();
+                expect( posts ).toBeArray();
+                expect( posts ).toHaveLength( 0, "0 posts should have been loaded" );
+                if ( arrayLen( variables.queries ) != 1 ) {
+                    expect( variables.queries ).toHaveLength( 1, "Only one query should have been executed. #arrayLen( variables.queries )# were instead." );
+                }
+            } );
+
+            it( "does not eager load a has many empty record set", function() {
+                var users = getInstance( "User" ).whereNull( "createdDate" ).with( "posts" ).get();
+                expect( users ).toBeArray();
+                expect( users ).toHaveLength( 0, "0 users should have been loaded" );
+                if ( arrayLen( variables.queries ) != 1 ) {
+                    expect( variables.queries ).toHaveLength( 1, "Only one query should have been executed. #arrayLen( variables.queries )# were instead." );
+                }
+            } );
+
             it( "can eager load a has many relationship", function() {
                 var users = getInstance( "User" ).with( "posts" ).latest().get();
                 expect( users ).toBeArray();
-                expect( users ).toHaveLength( 3, "Three users should be returned" );
+                expect( users ).toHaveLength( 4, "Four users should be returned" );
 
-                var janedoe = users[ 1 ];
+                var janedoe = users[ 2 ];
                 expect( janedoe.getUsername() ).toBe( "janedoe" );
                 expect( janedoe.getPosts() ).toBeArray();
                 expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
 
-                var johndoe = users[ 2 ];
+                var johndoe = users[ 3 ];
                 expect( johndoe.getUsername() ).toBe( "johndoe" );
                 expect( johndoe.getPosts() ).toBeArray();
                 expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-                var elpete = users[ 3 ];
+                var elpete = users[ 4 ];
                 expect( elpete.getUsername() ).toBe( "elpete" );
                 expect( elpete.getPosts() ).toBeArray();
                 expect( elpete.getPosts() ).toHaveLength( 2, "Two posts should belong to elpete" );
@@ -49,17 +67,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can eager load a hasOne relationship", function() {
                 var users = getInstance( "User" ).with( "latestPost" ).latest().get();
                 expect( users ).toBeArray();
-                expect( users ).toHaveLength( 3, "Three users should be returned" );
+                expect( users ).toHaveLength( 4, "Four users should be returned" );
 
-                var janedoe = users[ 1 ];
+                var janedoe = users[ 2 ];
                 expect( janedoe.getUsername() ).toBe( "janedoe" );
                 expect( janedoe.getLatestPost() ).toBeNull();
 
-                var johndoe = users[ 2 ];
+                var johndoe = users[ 3 ];
                 expect( johndoe.getUsername() ).toBe( "johndoe" );
                 expect( johndoe.getLatestPost() ).toBeNull();
 
-                var elpete = users[ 3 ];
+                var elpete = users[ 4 ];
                 expect( elpete.getUsername() ).toBe( "elpete" );
                 expect( elpete.getLatestPost() ).notToBeNull();
 
@@ -175,19 +193,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can eager load a nested relationship", function() {
                 var users = getInstance( "User" ).with( "posts.comments" ).latest().get();
                 expect( users ).toBeArray();
-                expect( users ).toHaveLength( 3, "Three users should be returned" );
+                expect( users ).toHaveLength( 4, "Four users should be returned" );
 
-                var janedoe = users[ 1 ];
+                var janedoe = users[ 2 ];
                 expect( janedoe.getUsername() ).toBe( "janedoe" );
                 expect( janedoe.getPosts() ).toBeArray();
                 expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
 
-                var johndoe = users[ 2 ];
+                var johndoe = users[ 3 ];
                 expect( johndoe.getUsername() ).toBe( "johndoe" );
                 expect( johndoe.getPosts() ).toBeArray();
                 expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-                var elpete = users[ 3 ];
+                var elpete = users[ 4 ];
                 expect( elpete.getUsername() ).toBe( "elpete" );
 
                 var posts = elpete.getPosts();
@@ -215,19 +233,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } } ).latest().get();
 
                 expect( users ).toBeArray();
-                expect( users ).toHaveLength( 3, "Three users should be returned" );
+                expect( users ).toHaveLength( 4, "Four users should be returned" );
 
-                var janedoe = users[ 1 ];
+                var janedoe = users[ 2 ];
                 expect( janedoe.getUsername() ).toBe( "janedoe" );
                 expect( janedoe.getPosts() ).toBeArray();
                 expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
 
-                var johndoe = users[ 2 ];
+                var johndoe = users[ 3 ];
                 expect( johndoe.getUsername() ).toBe( "johndoe" );
                 expect( johndoe.getPosts() ).toBeArray();
                 expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-                var elpete = users[ 3 ];
+                var elpete = users[ 4 ];
                 expect( elpete.getUsername() ).toBe( "elpete" );
                 expect( elpete.getPosts() ).toBeArray();
                 expect( elpete.getPosts() ).toHaveLength( 1, "One post should belong to elpete" );
@@ -242,19 +260,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     } } );
                 } } ).latest().get();
                 expect( users ).toBeArray();
-                expect( users ).toHaveLength( 3, "Three users should be returned" );
+                expect( users ).toHaveLength( 4, "Four users should be returned" );
 
-                var janedoe = users[ 1 ];
+                var janedoe = users[ 2 ];
                 expect( janedoe.getUsername() ).toBe( "janedoe" );
                 expect( janedoe.getPosts() ).toBeArray();
                 expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
 
-                var johndoe = users[ 2 ];
+                var johndoe = users[ 3 ];
                 expect( johndoe.getUsername() ).toBe( "johndoe" );
                 expect( johndoe.getPosts() ).toBeArray();
                 expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-                var elpete = users[ 3 ];
+                var elpete = users[ 4 ];
                 expect( elpete.getUsername() ).toBe( "elpete" );
 
                 var posts = elpete.getPosts();

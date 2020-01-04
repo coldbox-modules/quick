@@ -24,7 +24,7 @@ component extends="quick.models.BaseEntity" {
             retrieveQuery().limit( max );
         }
         if ( asQuery ) {
-            return retrieveQuery().setReturnFormat( "query" ).get();
+            return retrieveQuery().setReturnFormat( "query" ).get( options = variables._queryOptions );
         } else {
             return super.get();
         }
@@ -34,12 +34,12 @@ component extends="quick.models.BaseEntity" {
         for ( var key in arguments ) {
             retrieveQuery().where( retrieveColumnForAlias( key ), arguments[ key ] );
         }
-        return retrieveQuery().count();
+        return retrieveQuery().count( options = variables._queryOptions );
     }
 
     function deleteById( id ) {
         arguments.id = isArray( arguments.id ) ? arguments.id : [ arguments.id ];
-        retrieveQuery().whereIn( get_key(), arguments.id ).delete();
+        retrieveQuery().whereIn( get_key(), arguments.id ).delete( options = variables._queryOptions );
         return this;
     }
 
@@ -47,14 +47,14 @@ component extends="quick.models.BaseEntity" {
         for ( var key in arguments ) {
             retrieveQuery().where( retrieveColumnForAlias( key ), arguments[ key ] );
         }
-        return deleteAll();
+        return deleteAll( options = variables._queryOptions );
     }
 
     function exists( id ) {
         if ( ! isNull( id ) ) {
             retrieveQuery().where( get_key(), arguments.id );
         }
-        return retrieveQuery().exists();
+        return retrieveQuery().exists( options = variables._queryOptions );
     }
 
     function findAllWhere( criteria = {}, sortOrder ) {
@@ -74,13 +74,14 @@ component extends="quick.models.BaseEntity" {
         structEach( criteria, function( key, value ) {
             retrieveQuery().where( retrieveColumnForAlias( key ), value );
         } );
-        return first();
+        return super.first();
     }
 
     function get( id = 0, returnNew = true ) {
         if ( ( isNull( arguments.id ) || arguments.id == 0 ) && arguments.returnNew ) {
             return newEntity();
         }
+        // This is written this way to avoid conflicts with the BIF `find`
         return invoke( this, "find", { id = arguments.id } );
     }
 

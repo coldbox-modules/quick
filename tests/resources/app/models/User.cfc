@@ -10,6 +10,9 @@ component quick {
     property name="modifiedDate" column="modified_date";
     property name="email" column="email" update="false" insert="true";
     property name="type";
+    property name="externalID";
+
+    function externalThings() { return hasMany( relationName = "externalThing", foreignKey = "externalID", localKey = "externalID" ); }
 
     function scopeLatest( query ) {
         return query.orderBy( "created_date", "desc" );
@@ -17,6 +20,16 @@ component quick {
 
     function scopeOfType( query, type = "limited" ) {
         return query.where( "type", type );
+    }
+
+    function scopeOfTypeWithWhen( query, type ) {
+        return query.when( ! isNull( type ) && len( type ), function( q ) {
+            q.ofType( type );
+        } );
+    }
+
+    function scopeResetPasswords( query ) {
+        return query.updateAll( { "password" = "" } ).result.recordcount;
     }
 
     function scopeWithLatestPostId( query ) {

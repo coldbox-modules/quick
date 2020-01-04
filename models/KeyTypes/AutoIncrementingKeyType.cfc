@@ -13,12 +13,12 @@ component implements="KeyType" {
      * Receives the entity and the queryExecute result as arguments.
      */
     public void function postInsert( required entity, required struct result ) {
-        var generatedKey = result.result.keyExists( entity.get_Key() ) ?
-            result.result[ entity.get_Key() ] :
+        var generatedKey = result.result.keyExists( entity.keyName() ) ?
+            result.result[ entity.keyName() ] :
             result.result.keyExists( "generated_key" ) ?
             result.result[ "generated_key" ] :
             result.result[ "generatedKey" ];
-        entity.assignAttribute( entity.get_Key(), generatedKey );
+        entity.assignAttribute( entity.keyName(), generatedKey );
     }
 
 }

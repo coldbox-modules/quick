@@ -55,18 +55,31 @@ component {
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `type` varchar(50) NOT NULL DEFAULT 'limited',
+              `externalId` varchar(25),
               PRIMARY KEY (`id`)
             )
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `type`) VALUES (1, 'elpete', 'Eric', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:06:36', '2017-07-28 02:06:36', 'admin')
+          CREATE TABLE `externalThings` (
+            `thingId` int(11) NOT NULL AUTO_INCREMENT,
+            `userId` int(11) NOT NULL,
+            `externalId` varchar(25) NOT NULL,
+            `value` varchar(50),
+            PRIMARY KEY (`thingId`)
+            )
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`) VALUES (2, 'johndoe', 'John', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:07:16', '2017-07-28 02:07:16');
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `type`, `externalId`) VALUES (1, 'elpete', 'Eric', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:06:36', '2017-07-28 02:06:36', 'admin', '1234')
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`) VALUES (3, 'janedoe', 'Jane', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', NULL, '2017-07-28 02:08:16', '2017-07-28 02:08:16');
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `externalId`) VALUES (2, 'johndoe', 'John', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:07:16', '2017-07-28 02:07:16', '6789');
         " );
+        queryExecute( "
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `externalId`) VALUES (3, 'janedoe', 'Jane', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', NULL, '2017-07-28 02:08:16', '2017-07-28 02:08:16', '5555');
+        " );
+        queryExecute( "
+             INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `type`, `externalId`) VALUES (4, 'elpete2', 'Another', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2019-06-15 12:29:36', '2017-07-28 02:06:36', 'admin', '1234')
+        " ); 
         queryExecute( "
             CREATE TABLE `my_posts` (
               `post_pk` int(11) NOT NULL AUTO_INCREMENT,

@@ -1,3 +1,118 @@
+# v2.5.4
+## 20 Dec 2019 — 06:20:30 UTC
+
+### fix
+
++ __CBORMCompat:__ Pass along query options in compat methods
+ ([9a2739e](https://github.com/coldbox-modules/quick/commit/9a2739e0030fc1197e0255a1390fb061f07823e2))
+
+
+# v2.5.3
+## 11 Dec 2019 — 21:40:12 UTC
+
+### fix
+
++ __BaseEntity:__ Revert calling setters when hydrating entities ([670fadb](https://github.com/coldbox-modules/quick/commit/670fadbbc5887952c7040025da16c497229a138e))
+
+
+# v2.5.2
+## 09 Dec 2019 — 17:57:41 UTC
+
+### fix
+
++ __BaseEntity:__ Pass the entity to `when` closures ([96a8f3a](https://github.com/coldbox-modules/quick/commit/96a8f3af6bec3383e7acc4a9703fe1de3a9bd0cc))
+
+
+# v2.5.1
+## 05 Dec 2019 — 04:55:20 UTC
+
+### fix
+
++ __BaseEntity:__ Account for null values with custom setters ([685e175](https://github.com/coldbox-modules/quick/commit/685e17572978b6d9f34a883843e765d3910e4870))
++ __BaseEntity:__ Reset underlying query when resetting entity ([83a6fdb](https://github.com/coldbox-modules/quick/commit/83a6fdb43736170671e9d4ad919c4e5b0b51c788))
+
+
+# v2.5.0
+## 04 Dec 2019 — 21:53:02 UTC
+
+### feat
+
++ __BaseEntity:__ Allow entities to define a custom collection type. ([9135eee](https://github.com/coldbox-modules/quick/commit/9135eeeeddc86e97160cf473fcbbe79a5e336f42))
+
+
+# v2.4.3
+## 19 Nov 2019 — 07:59:46 UTC
+
+### fix
+
++ __BaseEntity:__ Avoid stack overflow with getMemento and custom getters ([7c9e073](https://github.com/coldbox-modules/quick/commit/7c9e073c089f62047faac1e3e8fcc87eacbc8e0f))
+
+
+# v2.4.2
+## 08 Nov 2019 — 00:45:47 UTC
+
+### fix
+
++ __memento:__ Use available getters for the memento
+ ([ba562c3](https://github.com/coldbox-modules/quick/commit/ba562c3062d1170ff8e50e2a45357358aaf0c444))
+
+
+# v2.4.1
+## 07 Nov 2019 — 16:58:47 UTC
+
+### fix
+
++ __memento:__ Correctly serialize array relationships by default
+ ([479dabc](https://github.com/coldbox-modules/quick/commit/479dabce8f71459a7c3e1f3c084b2290a8b802f1))
+
+
+# v2.4.0
+## 06 Nov 2019 — 22:25:58 UTC
+
+### chore
+
++ __dependencies:__ Update TestBox to version 3
+ ([a0dd6ab](https://github.com/coldbox-modules/quick/commit/a0dd6abb904646f3c0a6eded06186bafa1afd704))
+
+### feat
+
++ __setters:__ Apply setters when hydrating the entity from the database
+ ([e4a0158](https://github.com/coldbox-modules/quick/commit/e4a0158ecb74b189428166c67677147b9ff19d00))
++ __ErrorMessages:__ Improve error messages for not loaded entities ([f3f2e2d](https://github.com/coldbox-modules/quick/commit/f3f2e2d95d2fb47e17765d11d581c1b3283d5dc0))
++ __Scopes:__ Query scopes can return any value ([358e977](https://github.com/coldbox-modules/quick/commit/358e977635b2f6b9f6d30c2c1b3dfdbe26054d73))
+
+
+# v2.3.1
+## 06 Nov 2019 — 21:45:40 UTC
+
+### chore
+
++ __build:__ Adjust travis testbox run
+ ([790df84](https://github.com/coldbox-modules/quick/commit/790df84685a411013128d00dd519602930007b2a))
+
+### fix
+
++ __tests:__ Fix strange test error on Lucee 5 with nested describe blocks
+ ([305e0a2](https://github.com/coldbox-modules/quick/commit/305e0a224282bf12df222116ce4a4dd110ca17c6))
++ __BaseEntity:__ Return the correct memento with accessors on ([59614a0](https://github.com/coldbox-modules/quick/commit/59614a00bea3a73346985be1e9487d599d65d178))
+
+
+# v2.3.0
+## 08 Jul 2019 — 15:46:12 UTC
+
+### feat
+
++ __BaseEntity:__ Add flag to ignore non-existing attributes to fill ([428b31a](https://github.com/coldbox-modules/quick/commit/428b31ac0ab5de22440ff92341f079735de2db3a))
+
+
+# v2.2.3
+## 17 Jun 2019 — 15:06:40 UTC
+
+### fix
+
++ __BaseEntity:__ Temporary fix for extra values in data ([821a054](https://github.com/coldbox-modules/quick/commit/821a05492a7184cb7a97361bfb6a1134991e1536))
+
+
 # v2.2.2
 ## 14 Jun 2019 — 05:10:05 UTC
 

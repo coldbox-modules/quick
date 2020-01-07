@@ -354,4 +354,31 @@ component extends="quick.models.Relationships.BaseRelationship" {
         } );
     }
 
+    /**
+     * Gets the query used to check for relation existance.
+     *
+     * @base    The base entity for the query.
+     *
+     * @return  qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function getRelationExistenceQuery( required any base ) {
+        return variables.parent
+            .newQuery()
+            .selectRaw( 1 )
+            .from( variables.table )
+            .whereColumn(
+                getQualifiedForeignKeyName(),
+                variables.parent.retrieveQualifiedKeyName()
+            );
+    }
+
+    /**
+     * Returns the fully-qualified column name of foreign key.
+     *
+     * @return   string
+     */
+    public string function getQualifiedForeignKeyName() {
+        return getQualifiedForeignPivotKeyName();
+    }
+
 }

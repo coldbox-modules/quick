@@ -88,8 +88,8 @@ component
      *
      * @return  quick.models.Relationships.HasManyThrough
      */
-    public HasManyThrough function performJoin() {
-        variables.related.join(
+    public HasManyThrough function performJoin( any base = variables.related ) {
+        arguments.base.join(
             variables.throughParent.tableName(),
             getQualifiedParentKeyName(),
             getQualifiedFarKeyName()
@@ -243,6 +243,27 @@ component
             arrayAppend( arguments.dict[ key ], arguments.result );
             return arguments.dict;
         }, {} );
+    }
+
+    /**
+     * Gets the query used to check for relation existance.
+     *
+     * @base    The base entity for the query.
+     *
+     * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
+     */
+    public any function getRelationExistenceQuery( required any base ) {
+        return tap( arguments.base.newQuery(), function( q ) {
+            performJoin( arguments.q );
+            arguments.q.whereColumn(
+                variables.farParent.qualifyColumn(
+                    variables.localKey
+                ),
+                variables.throughParent.qualifyColumn(
+                    variables.firstKey
+                )
+            );
+        } );
     }
 
 }

@@ -17,14 +17,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var posts = getInstance( "Post" ).with( "author" ).get();
                 expect( posts ).toBeArray();
                 expect( posts ).toHaveLength(
-                    3,
-                    "3 posts should have been loaded"
+                    4,
+                    "4 posts should have been loaded"
                 );
                 expect( posts[ 1 ].getAuthor() ).toBeInstanceOf(
                     "app.models.User"
                 );
-                expect( posts[ 2 ].getAuthor() ).toBeNull();
-                expect( posts[ 3 ].getAuthor() ).toBeInstanceOf(
+                expect( posts[ 2 ].getAuthor() ).toBeInstanceOf(
+                    "app.models.User"
+                );
+                expect( posts[ 3 ].getAuthor() ).toBeNull();
+                expect( posts[ 4 ].getAuthor() ).toBeInstanceOf(
                     "app.models.User"
                 );
                 if ( arrayLen( variables.queries ) != 2 ) {
@@ -144,16 +147,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can eager load a belongs to many relationship", function() {
                 var posts = getInstance( "Post" ).with( "tags" ).get();
                 expect( posts ).toBeArray();
-                expect( posts ).toHaveLength( 3 );
+                expect( posts ).toHaveLength( 4 );
 
                 expect( posts[ 1 ].getTags() ).toBeArray();
-                expect( posts[ 1 ].getTags() ).toHaveLength( 2 );
+                expect( posts[ 1 ].getTags() ).toHaveLength( 0 );
 
                 expect( posts[ 2 ].getTags() ).toBeArray();
-                expect( posts[ 2 ].getTags() ).toHaveLength( 0 );
+                expect( posts[ 2 ].getTags() ).toHaveLength( 2 );
 
                 expect( posts[ 3 ].getTags() ).toBeArray();
-                expect( posts[ 3 ].getTags() ).toHaveLength( 2 );
+                expect( posts[ 3 ].getTags() ).toHaveLength( 0 );
+
+                expect( posts[ 4 ].getTags() ).toBeArray();
+                expect( posts[ 4 ].getTags() ).toHaveLength( 2 );
 
                 expect( variables.queries ).toHaveLength(
                     2,
@@ -167,11 +173,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( countries ).toHaveLength( 2 );
 
                 expect( countries[ 1 ].getPosts() ).toBeArray();
-                expect( countries[ 1 ].getPosts() ).toHaveLength( 2 );
+                expect( countries[ 1 ].getPosts() ).toHaveLength( 3 );
                 expect( countries[ 1 ].getPosts()[ 1 ].getBody() ).toBe(
-                    "My awesome post body"
+                    "My post with a different author"
                 );
                 expect( countries[ 1 ].getPosts()[ 2 ].getBody() ).toBe(
+                    "My awesome post body"
+                );
+                expect( countries[ 1 ].getPosts()[ 3 ].getBody() ).toBe(
                     "My second awesome post body"
                 );
 
@@ -222,16 +231,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var posts = getInstance( "Post" ).with( "comments" ).get();
 
                 expect( posts ).toBeArray();
-                expect( posts ).toHaveLength( 3 );
+                expect( posts ).toHaveLength( 4 );
 
                 expect( posts[ 1 ].getComments() ).toBeArray();
-                expect( posts[ 1 ].getComments() ).toHaveLength( 2 );
+                expect( posts[ 1 ].getComments() ).toBeEmpty();
 
                 expect( posts[ 2 ].getComments() ).toBeArray();
-                expect( posts[ 2 ].getComments() ).toBeEmpty();
+                expect( posts[ 2 ].getComments() ).toHaveLength( 2 );
 
                 expect( posts[ 3 ].getComments() ).toBeArray();
                 expect( posts[ 3 ].getComments() ).toBeEmpty();
+
+                expect( posts[ 4 ].getComments() ).toBeArray();
+                expect( posts[ 4 ].getComments() ).toBeEmpty();
 
                 expect( variables.queries ).toHaveLength(
                     2,

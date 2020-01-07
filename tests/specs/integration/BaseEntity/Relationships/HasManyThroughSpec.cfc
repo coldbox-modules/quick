@@ -10,11 +10,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var countryA = getInstance( "Country" ).find(
                     "02B84D66-0AA0-F7FB-1F71AFC954843861"
                 );
-                expect( arrayLen( countryA.getPosts() ) ).toBe( 2 );
+                expect( arrayLen( countryA.getPosts() ) ).toBe( 3 );
                 expect( countryA.getPosts()[ 1 ].getBody() ).toBe(
-                    "My awesome post body"
+                    "My post with a different author"
                 );
                 expect( countryA.getPosts()[ 2 ].getBody() ).toBe(
+                    "My awesome post body"
+                );
+                expect( countryA.getPosts()[ 3 ].getBody() ).toBe(
                     "My second awesome post body"
                 );
 

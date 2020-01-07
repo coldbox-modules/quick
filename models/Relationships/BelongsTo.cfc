@@ -243,4 +243,22 @@ component extends="quick.models.Relationships.BaseRelationship" {
             .clearRelationship( variables.relationMethodName );
     }
 
+    /**
+     * Returns the fully-qualified local key.
+     *
+     * @return  String
+     */
+    public string function getQualifiedLocalKey() {
+        return variables.related.retrieveQualifiedKeyName();
+    }
+
+    /**
+     * Get the key to compare in the existence query.
+     *
+     * @return  String
+     */
+    public string function getExistenceCompareKey() {
+        return variables.parent.qualifyColumn( variables.foreignKey );
+    }
+
 }

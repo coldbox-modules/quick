@@ -200,9 +200,10 @@ component
      * Relationships on entities can be called with `set` in front of it.
      * If it is, a `HasOne` or `HasMany` relationship forwards the call to `saveMany`.
      *
-     * @entities
+     * @entities      An array of entities to set.
      *
-     * @return    quick.models.BaseEntity
+     * @doc_abstract  quick.models.BaseEntity
+     * @return        [quick.models.BaseEntity]
      */
     public array function applySetter() {
         variables.related.updateAll(

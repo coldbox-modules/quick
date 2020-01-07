@@ -18,6 +18,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( newPost.isLoaded() ).toBeTrue();
                 expect( newPost.getAuthor().getId() ).toBe( user.getId() );
             } );
+
             it( "can save and associate new entities mapped by a field other than their primary keys", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var externalThing = user
@@ -143,11 +144,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } ).toThrow( "EntityNotFound" );
             } );
 
-            it( "can all off of the relationship", function() {
+            it( "can call `all` off of the relationship", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var posts = user.posts().all();
                 expect( posts ).toBeArray();
-                expect( posts ).toHaveLength( 3 );
+                expect( posts ).toHaveLength( 4 );
             } );
         } );
     }

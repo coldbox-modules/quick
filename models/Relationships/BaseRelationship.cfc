@@ -151,6 +151,45 @@ component {
     }
 
     /**
+     * Gets the query used to check for relation existance.
+     *
+     * @base    The base entity for the query.
+     *
+     * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
+     */
+    public any function getRelationExistenceQuery( required any base ) {
+        return arguments.base
+            .newQuery()
+            .selectRaw( 1 )
+            .whereColumn( getQualifiedLocalKey(), getExistenceCompareKey() );
+    }
+
+    /**
+     * Returns the fully-qualified local key.
+     *
+     * @return  String
+     */
+    public string function getQualifiedLocalKey() {
+        return variables.parent.retrieveQualifiedKeyName();
+    }
+
+    /**
+     * Get the key to compare in the existence query.
+     *
+     * @return  String
+     */
+    public string function getExistenceCompareKey() {
+        return getQualifiedForeignKeyName();
+    }
+
+    /**
+     * Returns the related entity for the relationship.
+     */
+    public any function getRelated() {
+        return variables.related;
+    }
+
+    /**
      * Forwards missing method calls on to the related entity.
      *
      * @missingMethodName       The missing method name.
@@ -158,16 +197,12 @@ component {
      *
      * @return                  any
      */
-    public any function onMissingMethod(
-        required string missingMethodName,
-        required struct missingMethodArguments
-    ) {
+    function onMissingMethod( missingMethodName, missingMethodArguments ) {
         var result = invoke(
             variables.related,
-            arguments.missingMethodName,
-            arguments.missingMethodArguments
+            missingMethodName,
+            missingMethodArguments
         );
-
         if ( isSimpleValue( result ) ) {
             return result;
         }
@@ -188,6 +223,20 @@ component {
             createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(),
             1
         );
+    }
+
+    /**
+     * Calls the callback with the given value and then returns the given value.
+     * Nice to avoid temporary variables.
+     *
+     * @value     The value to pass to the callback and as the return value.
+     * @callback  The callback to execute.
+     *
+     * @return    any
+     */
+    private any function tap( required any value, required any callback ) {
+        arguments.callback( arguments.value );
+        return arguments.value;
     }
 
 }

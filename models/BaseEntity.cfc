@@ -237,6 +237,8 @@ component accessors="true" {
 
     /**
      * Returns the name for this entity.
+     *
+     * @return  String
      */
     public string function entityName() {
         return variables._entityName;
@@ -244,9 +246,20 @@ component accessors="true" {
 
     /**
      * Returns the table name for this entity.
+     *
+     * @return  String
      */
     public string function tableName() {
         return variables._table;
+    }
+
+    /**
+     * Returns the qualified key name for this entity.
+     *
+     * @return  String
+     */
+    public string function retrieveQualifiedKeyName() {
+        return variables._table & "." & variables._key;
     }
 
     /**
@@ -1257,6 +1270,275 @@ component accessors="true" {
     /*=====================================
     =          Relationship Types         =
     =====================================*/
+
+    /**
+     * Checks for the existence of a relationship when executing the query.
+     *
+     * @relationshipName  The relationship to check.
+     * @operator          An optional operator to constrain the check.
+     * @count             An optional count to constrain the check.
+     *
+     * @return            quick.models.BaseEntity
+     */
+    public any function has(
+        required string relationshipName,
+        string operator,
+        numeric count,
+        boolean negate = false
+    ) {
+        var methodName = arguments.negate ? "whereNotExists" : "whereExists";
+        var relation = invoke(
+            this,
+            listFirst( arguments.relationshipName, "." )
+        );
+        arguments.relationQuery = relation.getRelationExistenceQuery(
+            relation.getRelated()
+        );
+
+        if ( listLen( arguments.relationshipName, "." ) > 1 ) {
+            arguments.relationshipName = listRest(
+                arguments.relationshipName,
+                "."
+            );
+
+            invoke( retrieveQuery(), methodName, {
+                "query": hasNested( argumentCollection = arguments )
+            } );
+
+            return this;
+        }
+
+        invoke( retrieveQuery(), methodName, {
+            "query": arguments.relationQuery.when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
+                q.having( q.raw( "COUNT(*)" ), operator, count );
+            } )
+        } );
+        return this;
+    }
+
+    /**
+     * Checks for the absence of a relationship when executing the query.
+     *
+     * @relationshipName  The relationship to check.
+     * @operator          An optional operator to constrain the check.
+     * @count             An optional count to constrain the check.
+     *
+     * @return            quick.models.BaseEntity
+     */
+    public any function doesntHave(
+        required string relationshipName,
+        string operator,
+        numeric count
+    ) {
+        arguments.negate = true;
+        return has( argumentCollection = arguments );
+    }
+
+    private any function hasNested(
+        required any relationQuery,
+        required string relationshipName,
+        string operator,
+        numeric count
+    ) {
+        var relation = invoke(
+            relationQuery,
+            listFirst( arguments.relationshipName, "." )
+        );
+
+        if ( listLen( arguments.relationshipName, "." ) == 1 ) {
+            return invoke( arguments.relationQuery, "whereExists", {
+                "query": relation
+                    .getRelationExistenceQuery( relation.getRelated() )
+                    .when(
+                        !isNull( arguments.operator ) && !isNull(
+                            arguments.count
+                        ),
+                        function( q ) {
+                            q.having( q.raw( "COUNT(*)" ), operator, count );
+                        }
+                    )
+            } );
+        }
+
+        arguments.relationQuery = invoke( arguments.relationQuery, "whereExists", {
+            "query": relation.getRelationExistenceQuery( relation.getRelated() )
+        } );
+
+        return hasNested( argumentCollection = arguments );
+    }
+
+    /**
+     * Checks for the existence of a relationship when executing the query.
+     * The existence check is constrained by a closure.
+     *
+     * @relationshipName  The relationship to check.
+     * @closure           A closure to constrain the relationship check.
+     * @operator          An optional operator to constrain the check.
+     * @count             An optional count to constrain the check.
+     * @combinator        The boolean combinator for the clause (e.g. "and" or "or").
+     *                    Default: "and"
+     * @negate            If true, use `whereNotExists` instead of `whereExists`.
+     *
+     * @return            quick.models.BaseEntity
+     */
+    public any function whereHas(
+        required string relationshipName,
+        any callback,
+        any operator,
+        any count,
+        string combinator = "and",
+        boolean negate = false
+    ) {
+        var methodName = arguments.negate ? "whereNotExists" : "whereExists";
+        var relation = invoke(
+            this,
+            listFirst( arguments.relationshipName, "." )
+        );
+        arguments.relationQuery = relation.getRelationExistenceQuery(
+            relation.getRelated()
+        );
+
+        if ( listLen( arguments.relationshipName, "." ) > 1 ) {
+            arguments.relationshipName = listRest(
+                arguments.relationshipName,
+                "."
+            );
+
+            invoke( retrieveQuery(), methodName, {
+                "query": whereHasNested( argumentCollection = arguments )
+            } );
+
+            return this;
+        }
+
+        invoke( retrieveQuery(), methodName, {
+            "query": arguments.relationQuery
+                .when( !isNull( callback ), function( q ) {
+                    callback( q );
+                } )
+                .when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
+                    q.having( q.raw( "COUNT(*)" ), operator, count );
+                } ),
+            "combinator": arguments.combinator
+        } );
+        return this;
+    }
+
+    /**
+     * Checks for the absence of a relationship when executing the query.
+     * The absence check is constrained by a closure.
+     *
+     * @relationshipName  The relationship to check.
+     * @closure           A closure to constrain the relationship check.
+     * @operator          An optional operator to constrain the check.
+     * @count             An optional count to constrain the check.
+     * @combinator        The boolean combinator for the clause (e.g. "and" or "or").
+     *                    Default: "and"
+     *
+     * @return            quick.models.BaseEntity
+     */
+    public any function whereDoesntHave(
+        required string relationshipName,
+        any callback,
+        any operator,
+        any count,
+        string combinator = "and"
+    ) {
+        arguments.negate = true;
+        return whereHas( argumentCollection = arguments );
+    }
+
+    /**
+     * Checks for the existence of a nested relationship.
+     *
+     * @relationQuery     The currently configured query for the existence check.
+     * @relationshipName  The rest of the relationship name to check.
+     * @callback          An optional callback to configured the last nested relation.
+     * @operator          An optional operator to constrain the check.
+     * @count             An optional count to constrain the check.
+     *
+     * @return            qb.models.Query.QueryBuilder
+     */
+    private any function whereHasNested(
+        required any relationQuery,
+        required string relationshipName,
+        any callback,
+        string operator,
+        numeric count
+    ) {
+        var relation = invoke(
+            relationQuery,
+            listFirst( arguments.relationshipName, "." )
+        );
+
+        if ( listLen( arguments.relationshipName, "." ) == 1 ) {
+            return invoke( arguments.relationQuery, "whereExists", {
+                "query": relation
+                    .getRelationExistenceQuery( relation.getRelated() )
+                    .when( !isNull( callback ), function( q ) {
+                        callback( q );
+                    } )
+                    .when(
+                        !isNull( arguments.operator ) && !isNull(
+                            arguments.count
+                        ),
+                        function( q ) {
+                            q.having( q.raw( "COUNT(*)" ), operator, count );
+                        }
+                    )
+            } );
+        }
+
+        arguments.relationQuery = invoke( arguments.relationQuery, "whereExists", {
+            "query": relation.getRelationExistenceQuery( relation.getRelated() )
+        } );
+
+        return whereHasNested( argumentCollection = arguments );
+    }
+
+    /**
+     * Checks for the existence of a relationship when executing the query.
+     * The existence check is constrained by a closure.
+     * This method uses the "or" combinator.
+     *
+     * @relationshipName  The relationship to check.
+     * @closure           A closure to constrain the relationship check.
+     * @operator          An optional operator to constrain the check.
+     * @count             An optional count to constrain the check.
+     *
+     * @return            quick.models.BaseEntity
+     */
+    public any function orWhereHas(
+        required string relationshipName,
+        any callback,
+        any operator,
+        any count
+    ) {
+        arguments.combinator = "or";
+        return whereHas( argumentCollection = arguments );
+    }
+
+    /**
+     * Checks for the absence of a relationship when executing the query.
+     * The absence check is constrained by a closure.
+     * This method uses the "or" combinator.
+     *
+     * @relationshipName  The relationship to check.
+     * @closure           A closure to constrain the relationship check.
+     * @operator          An optional operator to constrain the check.
+     * @count             An optional count to constrain the check.
+     *
+     * @return            quick.models.BaseEntity
+     */
+    public any function orWhereDoesntHave(
+        required string relationshipName,
+        any callback,
+        any operator,
+        any count
+    ) {
+        arguments.combinator = "or";
+        return whereDoesntHave( argumentCollection = arguments );
+    }
 
     /**
      * Returns a BelongsTo relationship between this entity and the entity

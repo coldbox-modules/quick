@@ -100,6 +100,9 @@ component {
             INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (7777, NULL, 'My post with no author', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
         " );
         queryExecute( "
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (321, 4, 'My post with a different author', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
+        " );
+        queryExecute( "
             CREATE TABLE `videos` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `url` varchar(50) NOT NULL,

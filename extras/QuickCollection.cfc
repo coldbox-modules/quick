@@ -1,42 +1,85 @@
+/**
+ * QuickCollection extends CFCollection with some nice additions.
+ * However, since CFCollection has some performance issues on some engines
+ * due to supporting old engines, it is included in the extras.
+ */
 component extends="cfcollection.models.Collection" {
 
-    function collect( data ) {
-        return new QuickCollection( data );
+    /**
+     * Returns a new QuickCollection for the passed in data.
+     *
+     * @data     The data to collect.
+     *
+     * @returns  QuickCollection
+     */
+    public QuickCollection function collect( required any data ) {
+        return new QuickCollection( arguments.data );
     }
 
-    function load( relationName ) {
+    /**
+     * Eager loads the given relation or array of relations.
+     * Nested relations can be loaded using dot-notation ("posts.comments").
+     * The current collection (now with the relation loaded) is returned.
+     *
+     * @relationName  The relation to load.  It can be passed a single relation
+     *                or an array of relations.  Nested relations can be loaded
+     *                using dot-notation ("posts.comments").
+     *
+     * @returns       QuickCollection
+     */
+    public QuickCollection function load( required any relationName ) {
         if ( this.empty() ) {
             return this;
         }
 
-        if ( ! isArray( relationName ) ) {
-            relationName = [ relationName ];
+        if ( ! isArray( arguments.relationName ) ) {
+            arguments.relationName = [ arguments.relationName ];
         }
 
-        for ( var relation in relationName ) {
-            eagerLoadRelation( relation );
+        for ( var relation in arguments.relationName ) {
+            variables.eagerLoadRelation( relation );
         }
 
         return this;
     }
 
-    function getMemento() {
+    /**
+     * Returns an array of each item's mementos.
+     *
+     * @return [any]
+     */
+    public array function getMemento() {
         return this.map( function( entity ) {
-            return entity.$renderData();
+            return arguments.entity.$renderData();
         } ).get();
     }
 
+    /**
+     * ColdBox magic method to return the result of the `getMemento` call
+     * when returning a QuickCollection directly from a handler.
+     *
+     * @returns  [any]
+     */
     function $renderData() {
-        return getMemento();
+        return variables.getMemento();
     }
 
-    private function eagerLoadRelation( relationName ) {
-        var relation = invoke( get( 1 ), relationName ).resetQuery();
+    /**
+     * Eager loads a single relation for the entities in the collection.
+     * This is useful if you later want to eager load based on some condition
+     * rather than when retrieving the results initially.
+     *
+     * @relationName  The relation to load.
+     *
+     * @returns       void
+     */
+    private void function eagerLoadRelation( required string relationName ) {
+        var relation = invoke( get( 1 ), arguments.relationName ).resetQuery();
         relation.addEagerConstraints( get() );
         variables.collection = relation.match(
-            relation.initRelation( get(), relationName ),
+            relation.initRelation( get(), arguments.relationName ),
             relation.getEager(),
-            relationName
+            arguments.relationName
         );
     }
 

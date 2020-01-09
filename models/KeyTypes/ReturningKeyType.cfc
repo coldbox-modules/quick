@@ -1,19 +1,34 @@
+/**
+ * Handles the key being set and returned by the database using the
+ * `RETURNING` functionality of select databases.
+ */
 component implements="KeyType" {
 
     /**
-     * Called to handle any tasks before inserting into the database.
-     * Receives the entity as the only argument.
+     * Adds a RETURNING clause for the primary key to the query.
+     *
+     * @entity   The entity that is being inserted.
+     *
+     * @returns  void
      */
-    public void function preInsert( required entity ) {
-        entity.retrieveQuery().returning( entity.get_Key() );
+    public void function preInsert( required any entity ) {
+        arguments.entity.retrieveQuery()
+            .returning( arguments.entity.get_Key() );
     }
 
     /**
-     * Called to handle any tasks after inserting into the database.
-     * Receives the entity and the queryExecute result as arguments.
+     * Sets the primary key equal to the returned value.
+     *
+     * @entity   The entity that was inserted.
+     * @result   The result of the queryExecute call.
+     *
+     * @returns  void
      */
-    public void function postInsert( required entity, required struct result ) {
-        entity.assignAttribute( entity.get_Key(), result.query[ entity.get_Key() ] );
+    public void function postInsert( required any entity, required struct result ) {
+        arguments.entity.assignAttribute(
+            arguments.entity.get_Key(),
+            arguments.result.query[ arguments.entity.get_Key() ]
+        );
     }
 
 }

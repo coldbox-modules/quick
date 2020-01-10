@@ -22,15 +22,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "ignores non-persistent attributes", function() {
                 expect( function() {
-                     var link = getInstance( "Link" ).findOrFail( 1 );
+                    var link = getInstance( "Link" ).findOrFail( 1 );
                 } ).notToThrow();
             } );
 
             it( "translates attributes to their column names", function() {
                 expect( function() {
-                    getInstance( "Link" ).create( {
-                        url = "https://example.com"
-                    } );
+                    getInstance( "Link" ).create( { url: "https://example.com" } );
                 } ).notToThrow();
             } );
 
@@ -40,7 +38,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( john.getId() ).toBe( 2 );
                 expect( john.getUsername() ).toBe( "johndoe" );
 
-                var bindings = getInstance( "User" ).where( "firstName", "firstName" ).retrieveQuery().getBindings();
+                var bindings = getInstance( "User" )
+                    .where( "firstName", "firstName" )
+                    .retrieveQuery()
+                    .getBindings();
                 expect( bindings ).toBeArray();
                 expect( bindings ).toHaveLength( 1 );
                 expect( bindings[ 1 ] ).toBeStruct();

@@ -7,10 +7,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getUsername() ).toBe( "johndoe" );
                 expect( user.getFirstName() ).toBe( "John" );
                 expect( user.getLastName() ).toBe( "Doe" );
-                user.update( {
-                    "username" = "janedoe",
-                    "first_name" = "Jane"
-                } );
+                user.update( { "username": "janedoe", "first_name": "Jane" } );
                 user.refresh();
                 expect( user.getUsername() ).toBe( "janedoe" );
                 expect( user.getFirstName() ).toBe( "Jane" );
@@ -22,11 +19,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getUsername() ).toBe( "johndoe" );
                 expect( user.getFirstName() ).toBe( "John" );
                 expect( user.getLastName() ).toBe( "Doe" );
-                user.update( {
-                    "username" = "janedoe",
-                    "first_name" = "Jane",
-                    "non-existant-property" = "any-value"
-                }, true );
+                user.update(
+                    { "username": "janedoe", "first_name": "Jane", "non-existant-property": "any-value" },
+                    true
+                );
                 user.refresh();
                 expect( user.getUsername() ).toBe( "janedoe" );
                 expect( user.getFirstName() ).toBe( "Jane" );

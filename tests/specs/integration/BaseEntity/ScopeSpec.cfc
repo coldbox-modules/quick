@@ -9,7 +9,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( users[ 2 ].getUsername() ).toBe( "janedoe" );
                 expect( users[ 3 ].getUsername() ).toBe( "johndoe" );
                 expect( users[ 4 ].getUsername() ).toBe( "elpete" );
-
             } );
 
             it( "sends through extra parameters as arguments", function() {
@@ -37,9 +36,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can use scopes inside qb closures", function() {
-                var users = getInstance( "User" ).where( function( q ) {
-                    q.ofType( "admin" );
-                } ).get();
+                var users = getInstance( "User" )
+                    .where( function( q ) {
+                        q.ofType( "admin" );
+                    } )
+                    .get();
                 expect( users ).toHaveLength( 2, "Two users should exist in the database and be returned." );
                 expect( users[ 1 ].getUsername() ).toBe( "elpete" );
                 expect( users[ 2 ].getUsername() ).toBe( "elpete2" );

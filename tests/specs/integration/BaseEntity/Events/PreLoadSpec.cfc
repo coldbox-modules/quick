@@ -34,7 +34,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         } );
     }
 
-    function quickPreLoad( event, interceptData, buffer, rc, prc ) {
+    function quickPreLoad(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         variables.quickPreLoadCalled = arguments.interceptData;
     }
 

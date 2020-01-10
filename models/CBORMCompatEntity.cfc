@@ -14,13 +14,13 @@ component extends="quick.models.BaseEntity" {
         structEach( criteria, function( key, value ) {
             retrieveQuery().where( retrieveColumnForAlias( key ), value );
         } );
-        if ( ! isNull( sortOrder ) ) {
+        if ( !isNull( sortOrder ) ) {
             retrieveQuery().orderBy( sortOrder );
         }
-        if ( ! isNull( offset ) && offset > 0 ) {
+        if ( !isNull( offset ) && offset > 0 ) {
             retrieveQuery().offset( offset );
         }
-        if ( ! isNull( max ) && max > 0 ) {
+        if ( !isNull( max ) && max > 0 ) {
             retrieveQuery().limit( max );
         }
         if ( asQuery ) {
@@ -51,7 +51,7 @@ component extends="quick.models.BaseEntity" {
     }
 
     function exists( id ) {
-        if ( ! isNull( id ) ) {
+        if ( !isNull( id ) ) {
             retrieveQuery().where( get_key(), arguments.id );
         }
         return retrieveQuery().exists( options = variables._queryOptions );
@@ -61,7 +61,7 @@ component extends="quick.models.BaseEntity" {
         structEach( criteria, function( key, value ) {
             retrieveQuery().where( retrieveColumnForAlias( key ), value );
         } );
-        if ( ! isNull( sortOrder ) ) {
+        if ( !isNull( sortOrder ) ) {
             var sorts = listToArray( sortOrder, "," ).map( function( sort ) {
                 return replace( sort, " ", "|", "ALL" );
             } );
@@ -82,12 +82,12 @@ component extends="quick.models.BaseEntity" {
             return newEntity();
         }
         // This is written this way to avoid conflicts with the BIF `find`
-        return invoke( this, "find", { id = arguments.id } );
+        return invoke( this, "find", { id: arguments.id } );
     }
 
     function getAll( id, sortOrder ) {
         if ( isNull( id ) ) {
-            if ( ! isNull( sortOrder ) ) {
+            if ( !isNull( sortOrder ) ) {
                 var sorts = listToArray( sortOrder, "," ).map( function( sort ) {
                     return replace( sort, " ", "|", "ALL" );
                 } );
@@ -124,8 +124,7 @@ component extends="quick.models.BaseEntity" {
     }
 
     function newCriteria() {
-        return CBORMCriteriaBuilderCompat.get()
-            .setEntity( this );
+        return CBORMCriteriaBuilderCompat.get().setEntity( this );
     }
 
 }

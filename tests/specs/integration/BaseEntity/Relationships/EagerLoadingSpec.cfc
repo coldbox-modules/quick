@@ -19,30 +19,48 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( posts[ 2 ].getAuthor() ).toBeNull();
                 expect( posts[ 3 ].getAuthor() ).toBeInstanceOf( "app.models.User" );
                 if ( arrayLen( variables.queries ) != 2 ) {
-                    expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed. #arrayLen( variables.queries )# were instead." );
+                    expect( variables.queries ).toHaveLength(
+                        2,
+                        "Only two queries should have been executed. #arrayLen( variables.queries )# were instead."
+                    );
                 }
             } );
 
             it( "does not eager load a belongs to empty record set", function() {
-                var posts = getInstance( "Post" ).whereNull( "createdDate" ).with( "author" ).get();
+                var posts = getInstance( "Post" )
+                    .whereNull( "createdDate" )
+                    .with( "author" )
+                    .get();
                 expect( posts ).toBeArray();
                 expect( posts ).toHaveLength( 0, "0 posts should have been loaded" );
                 if ( arrayLen( variables.queries ) != 1 ) {
-                    expect( variables.queries ).toHaveLength( 1, "Only one query should have been executed. #arrayLen( variables.queries )# were instead." );
+                    expect( variables.queries ).toHaveLength(
+                        1,
+                        "Only one query should have been executed. #arrayLen( variables.queries )# were instead."
+                    );
                 }
             } );
 
             it( "does not eager load a has many empty record set", function() {
-                var users = getInstance( "User" ).whereNull( "createdDate" ).with( "posts" ).get();
+                var users = getInstance( "User" )
+                    .whereNull( "createdDate" )
+                    .with( "posts" )
+                    .get();
                 expect( users ).toBeArray();
                 expect( users ).toHaveLength( 0, "0 users should have been loaded" );
                 if ( arrayLen( variables.queries ) != 1 ) {
-                    expect( variables.queries ).toHaveLength( 1, "Only one query should have been executed. #arrayLen( variables.queries )# were instead." );
+                    expect( variables.queries ).toHaveLength(
+                        1,
+                        "Only one query should have been executed. #arrayLen( variables.queries )# were instead."
+                    );
                 }
             } );
 
             it( "can eager load a has many relationship", function() {
-                var users = getInstance( "User" ).with( "posts" ).latest().get();
+                var users = getInstance( "User" )
+                    .with( "posts" )
+                    .latest()
+                    .get();
                 expect( users ).toBeArray();
                 expect( users ).toHaveLength( 4, "Four users should be returned" );
 
@@ -65,7 +83,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can eager load a hasOne relationship", function() {
-                var users = getInstance( "User" ).with( "latestPost" ).latest().get();
+                var users = getInstance( "User" )
+                    .with( "latestPost" )
+                    .latest()
+                    .get();
                 expect( users ).toBeArray();
                 expect( users ).toHaveLength( 4, "Four users should be returned" );
 
@@ -157,31 +178,30 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can eager load a large relationship quickly", function() {
-                queryExecute( "
+                queryExecute(
+                    "
                     CREATE TABLE `a` (
                         `id` int(11) NOT NULL AUTO_INCREMENT,
                         `name` varchar(50) NOT NULL,
                         PRIMARY KEY (`id`)
                     )
-                " );
-                queryExecute( "
+                "
+                );
+                queryExecute(
+                    "
                     CREATE TABLE `b` (
                         `id` int(11) NOT NULL AUTO_INCREMENT,
                         `a_id` int(11),
                         `name` varchar(50) NOT NULL,
                         PRIMARY KEY (`id`)
                     )
-                " );
+                "
+                );
                 for ( var i = 1; i < 20; i++ ) {
                     // create A
-                    var a = getInstance( "A" ).create( {
-                        "name" = "Instance #i#"
-                    } );
+                    var a = getInstance( "A" ).create( { "name": "Instance #i#" } );
                     for ( var j = 1; j < 5; j++ ) {
-                        getInstance( "B" ).create( {
-                            "name" = "Instance #j#",
-                            "a_id" = a.getId()
-                        } );
+                        getInstance( "B" ).create( { "name": "Instance #j#", "a_id": a.getId() } );
                     }
                 }
 
@@ -191,7 +211,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can eager load a nested relationship", function() {
-                var users = getInstance( "User" ).with( "posts.comments" ).latest().get();
+                var users = getInstance( "User" )
+                    .with( "posts.comments" )
+                    .latest()
+                    .get();
                 expect( users ).toBeArray();
                 expect( users ).toHaveLength( 4, "Four users should be returned" );
 
@@ -228,9 +251,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can constrain eager loading on a belongs to relationship", function() {
-                var users = getInstance( "User" ).with( { "posts" = function( query ) {
-                    return query.where( "post_pk", "<", 7777 );
-                } } ).latest().get();
+                var users = getInstance( "User" )
+                    .with( {
+                        "posts" =function( query ) {
+                            return query.where( "post_pk", "<", 7777 );
+                        }
+                    } )
+                    .latest()
+                    .get();
 
                 expect( users ).toBeArray();
                 expect( users ).toHaveLength( 4, "Four users should be returned" );
@@ -254,11 +282,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can constrain an eager load on a nested relationship", function() {
-                var users = getInstance( "User" ).with( { "posts" = function( q1 ) {
-                    return q1.with( { "comments" = function( q2 ) {
-                        return q2.where( "body", "like", "%not%" );
-                    } } );
-                } } ).latest().get();
+                var users = getInstance( "User" )
+                    .with( {
+                        "posts" =function( q1 ) {
+                            return q1.with( {
+                                "comments" =function( q2 ) {
+                                    return q2.where( "body", "like", "%not%" );
+                                }
+                            } );
+                        }
+                    } )
+                    .latest()
+                    .get();
                 expect( users ).toBeArray();
                 expect( users ).toHaveLength( 4, "Four users should be returned" );
 
@@ -294,7 +329,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         } );
     }
 
-    function preQBExecute( event, interceptData, buffer, rc, prc ) {
+    function preQBExecute(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         arrayAppend( variables.queries, interceptData );
     }
 

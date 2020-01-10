@@ -223,11 +223,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var existingTags = post.getTags().toArray();
 
                 var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
-                var tagIds = [
-                    existingTags[ 1 ].keyValue(),
-                    newTagA.keyValue(),
-                    newTagB.keyValue()
-                ];
+                var tagIds = [ existingTags[ 1 ].keyValue(), newTagA.keyValue(), newTagB.keyValue() ];
 
                 post.tags().sync( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
 
@@ -235,7 +231,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 expect( post.getTags().toArray() ).toBeArray();
                 expect( post.getTags().toArray() ).toHaveLength( 3 );
-                expect( post.getTags().map( function( tag ) { return tag.keyValue(); } ).toArray() ).toBe( tagIds );
+                expect(
+                    post.getTags()
+                        .map( function( tag ) {
+                            return tag.keyValue();
+                        } )
+                        .toArray()
+                ).toBe( tagIds );
             } );
 
             it( "sets the related ids equal to the list passed in using a relationship setter", function() {
@@ -254,11 +256,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var existingTags = post.getTags().toArray();
 
                 var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
-                var tagIds = [
-                    existingTags[ 1 ].keyValue(),
-                    newTagA.keyValue(),
-                    newTagB.keyValue()
-                ];
+                var tagIds = [ existingTags[ 1 ].keyValue(), newTagA.keyValue(), newTagB.keyValue() ];
 
                 post.setTags( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
 
@@ -266,12 +264,24 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 expect( post.getTags().toArray() ).toBeArray();
                 expect( post.getTags().toArray() ).toHaveLength( 3 );
-                expect( post.getTags().map( function( tag ) { return tag.keyValue(); } ).toArray() ).toBe( tagIds );
+                expect(
+                    post.getTags()
+                        .map( function( tag ) {
+                            return tag.keyValue();
+                        } )
+                        .toArray()
+                ).toBe( tagIds );
             } );
         } );
     }
 
-    function preQBExecute( event, interceptData, buffer, rc, prc ) {
+    function preQBExecute(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         param request.saveSpecPreQBExecute = [];
         arrayAppend( request.saveSpecPreQBExecute, duplicate( arguments.interceptData ) );
     }

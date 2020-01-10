@@ -13,10 +13,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "announces a quickPostInsert interception point", function() {
-                var song = getInstance( "Song" ).create( {
-                    title = "Rainbow Connection",
-                    download_url = "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
-                } );
+                var song = getInstance( "Song" ).create( { title: "Rainbow Connection", download_url: "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG" } );
                 expect( variables ).toHaveKey( "quickPostInsertCalled" );
                 expect( variables.quickPostInsertCalled ).toBeStruct();
                 expect( variables.quickPostInsertCalled ).toHaveKey( "entity" );
@@ -26,10 +23,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "calls any postInsert method on the component", function() {
-                var song = getInstance( "Song" ).create( {
-                    title = "Rainbow Connection",
-                    download_url = "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
-                } );
+                var song = getInstance( "Song" ).create( { title: "Rainbow Connection", download_url: "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG" } );
                 expect( request ).toHaveKey( "postInsertCalled" );
                 expect( request.postInsertCalled ).toBeStruct();
                 expect( request.postInsertCalled ).toHaveKey( "entity" );
@@ -40,7 +34,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         } );
     }
 
-    function quickPostInsert( event, interceptData, buffer, rc, prc ) {
+    function quickPostInsert(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         variables.quickPostInsertCalled = duplicate( arguments.interceptData );
     }
 

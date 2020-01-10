@@ -13,10 +13,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "announces a quickPreInsert interception point", function() {
-                var song = getInstance( "Song" ).create( {
-                    title = "Rainbow Connection",
-                    download_url = "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
-                } );
+                var song = getInstance( "Song" ).create( { title: "Rainbow Connection", download_url: "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG" } );
                 expect( variables ).toHaveKey( "quickPreInsertCalled" );
                 expect( variables.quickPreInsertCalled ).toBeStruct();
                 expect( variables.quickPreInsertCalled ).toHaveKey( "entity" );
@@ -26,10 +23,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "calls any preInsert method on the component", function() {
-                var song = getInstance( "Song" ).create( {
-                    title = "Rainbow Connection",
-                    download_url = "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
-                } );
+                var song = getInstance( "Song" ).create( { title: "Rainbow Connection", download_url: "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG" } );
                 expect( request ).toHaveKey( "preInsertCalled" );
                 expect( request.preInsertCalled ).toBeStruct();
                 expect( request.preInsertCalled ).toHaveKey( "entity" );
@@ -39,19 +33,25 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can influence the values being inserted", function() {
-                var song = getInstance( "Song" ).create( {
-                    title = "Bohemian Rhapsody",
-                    download_url = "https://open.spotify.com/album/3BHe7LbW5yRjyqXNJ3A6mW"
-                } );
+                var song = getInstance( "Song" ).create( { title: "Bohemian Rhapsody", download_url: "https://open.spotify.com/album/3BHe7LbW5yRjyqXNJ3A6mW" } );
                 expect( song.refresh().getCreatedDate() ).toBe( createDate( 1975, 10, 31 ) );
             } );
         } );
     }
 
-    function quickPreInsert( event, interceptData, buffer, rc, prc ) {
+    function quickPreInsert(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         variables.quickPreInsertCalled = duplicate( arguments.interceptData );
         if ( arguments.interceptData.entity.getTitle() == "Bohemian Rhapsody" ) {
-            arguments.interceptData.entity.assignAttribute( "createdDate", createDate( 1975, 10, 31 ) );
+            arguments.interceptData.entity.assignAttribute(
+                "createdDate",
+                createDate( 1975, 10, 31 )
+            );
         }
     }
 

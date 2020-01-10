@@ -19,7 +19,7 @@ component {
      * @relationMethodName  The method name called to retrieve this relationship.
      * @parent              The parent entity instance for the relationship.
      *
-     * @returns             BaseRelationship
+     * @return              BaseRelationship
      */
     public BaseRelationship function init(
         required any related,
@@ -42,7 +42,7 @@ component {
      *
      * @name     The relation method name for this relationship.
      *
-     * @returns  BaseRelationship
+     * @return   BaseRelationship
      */
     public BaseRelationship function setRelationMethodName( required string name ) {
         variables.relationMethodName = arguments.name;
@@ -53,7 +53,7 @@ component {
      * Retrieves the entities for eager loading.
      *
      * @doc_generic  quick.models.BaseEntity
-     * @returns      [quick.models.BaseEntity]
+     * @return       [quick.models.BaseEntity]
      */
     public array function getEager() {
         return variables.related.get();
@@ -63,7 +63,7 @@ component {
      * Gets the first matching record for the relationship.
      * Returns null if no record is found.
      *
-     * @returns  quick.models.BaseEntity
+     * @return   quick.models.BaseEntity
      */
     public any function first() {
         return variables.related.first();
@@ -75,7 +75,7 @@ component {
      *
      * @throws   EntityNotFound
      *
-     * @returns  quick.models.BaseEntity
+     * @return   quick.models.BaseEntity
      */
     public any function firstOrFail() {
         return variables.related.firstOrFail();
@@ -87,7 +87,7 @@ component {
      *
      * @id       The id of the entity to find.
      *
-     * @returns  quick.models.BaseEntity
+     * @return   quick.models.BaseEntity
      */
     public any function find( required any id ) {
         return variables.related.find( arguments.id );
@@ -101,7 +101,7 @@ component {
      *
      * @throws   EntityNotFound
      *
-     * @returns  quick.models.BaseEntity
+     * @return   quick.models.BaseEntity
      */
     public any function findOrFail( required any id ) {
         return variables.related.findOrFail( arguments.id );
@@ -112,7 +112,7 @@ component {
      * Note: `all` resets any query restrictions, including relationship restrictions.
      *
      * @doc_generic  quick.models.BaseEntity
-     * @returns      [quick.models.BaseEntity]
+     * @return       [quick.models.BaseEntity]
      */
     public array function all() {
         return variables.related.all();
@@ -122,7 +122,7 @@ component {
      * Wrapper for `getResults()` on relationship types that have them.
      * `get()` implemented for consistency with qb and Quick.
      *
-     * @returns  quick.models.BaseEntity or [quick.models.BaseEntity]
+     * @return   quick.models.BaseEntity or [quick.models.BaseEntity]
      */
     public any function get() {
         return variables.getResults();
@@ -135,12 +135,14 @@ component {
      * @key       The key to retrieve from each entity.
      *
      * @doc_generic  any
-     * @returns  [any]
+     * @return   [any]
      */
     public array function getKeys( required array entities, required string key ) {
-        return unique( arguments.entities.map( function( entity ) {
-            return arguments.entity.retrieveAttribute( key );
-        } ) );
+        return unique(
+            arguments.entities.map( function( entity ) {
+                return arguments.entity.retrieveAttribute( key );
+            } )
+        );
     }
 
     /**
@@ -149,17 +151,10 @@ component {
      * @missingMethodName       The missing method name.
      * @missingMethodArguments  The missing method arguments struct.
      *
-     * @returns                 any
+     * @return                  any
      */
-    public any function onMissingMethod(
-        required string missingMethodName,
-        required struct missingMethodArguments
-    ) {
-        var result = invoke(
-            variables.related,
-            arguments.missingMethodName,
-            arguments.missingMethodArguments
-        );
+    public any function onMissingMethod( required string missingMethodName, required struct missingMethodArguments ) {
+        var result = invoke( variables.related, arguments.missingMethodName, arguments.missingMethodArguments );
 
         if ( isSimpleValue( result ) ) {
             return result;
@@ -174,15 +169,10 @@ component {
      * @items        An array of items.
      *
      * @doc_generic  any
-     * @returns      [any]
+     * @return       [any]
      */
     public array function unique( required array items ) {
-        return arraySlice(
-            createObject( "java", "java.util.HashSet" )
-                .init( arguments.items )
-                .toArray(),
-            1
-        );
+        return arraySlice( createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(), 1 );
     }
 
 }

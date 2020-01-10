@@ -10,14 +10,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         describe( "preSave spec", function() {
             it( "announces a quickPreSave interception point on insert", function() {
                 var song = getInstance( "Song" ).create( {
-                    "title" = "Rainbow Connection",
-                    "downloadUrl" = "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
+                    "title": "Rainbow Connection",
+                    "downloadUrl": "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
                 } );
 
                 expect( variables ).toHaveKey( "quickPreSaveCalled" );
                 expect( variables.quickPreSaveCalled ).toBeStruct();
                 expect( variables.quickPreSaveCalled ).toHaveKey( "entity" );
-                expect( variables.quickPreSaveCalled.entity.getDownloadUrl() ).toBe( "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG" );
+                expect( variables.quickPreSaveCalled.entity.getDownloadUrl() ).toBe(
+                    "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
+                );
                 expect( variables.quickPreSaveCalled.entity.isLoaded() ).toBeFalse();
                 structDelete( variables, "quickPreSaveCalled" );
             } );
@@ -26,25 +28,29 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var song = getInstance( "Song" ).findOrFail( 1 );
                 expect( song.getDownloadUrl() ).toBe( "https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV" );
 
-                song.update( { "downloadUrl" = "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" } );
+                song.update( { "downloadUrl": "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" } );
 
                 expect( variables ).toHaveKey( "quickPreSaveCalled" );
                 expect( variables.quickPreSaveCalled ).toBeStruct();
                 expect( variables.quickPreSaveCalled ).toHaveKey( "entity" );
-                expect( variables.quickPreSaveCalled.entity.getDownloadUrl() ).toBe( "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" );
+                expect( variables.quickPreSaveCalled.entity.getDownloadUrl() ).toBe(
+                    "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
+                );
                 structDelete( variables, "quickPreSaveCalled" );
             } );
 
             it( "calls any preSave method on the component on insert", function() {
                 var song = getInstance( "Song" ).create( {
-                    "title" = "Rainbow Connection",
-                    "downloadUrl" = "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
+                    "title": "Rainbow Connection",
+                    "downloadUrl": "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
                 } );
 
                 expect( request ).toHaveKey( "preSaveCalled" );
                 expect( request.preSaveCalled ).toBeStruct();
                 expect( request.preSaveCalled ).toHaveKey( "entity" );
-                expect( request.preSaveCalled.entity.getDownloadUrl() ).toBe( "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG" );
+                expect( request.preSaveCalled.entity.getDownloadUrl() ).toBe(
+                    "https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
+                );
                 expect( request.preSaveCalled.entity.isLoaded() ).toBeFalse();
                 structDelete( request, "preSaveCalled" );
             } );
@@ -53,18 +59,26 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var song = getInstance( "Song" ).findOrFail( 1 );
                 expect( song.getDownloadUrl() ).toBe( "https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV" );
 
-                song.update( { "downloadUrl" = "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" } );
+                song.update( { "downloadUrl": "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" } );
 
                 expect( request ).toHaveKey( "preSaveCalled" );
                 expect( request.preSaveCalled ).toBeStruct();
                 expect( request.preSaveCalled ).toHaveKey( "entity" );
-                expect( request.preSaveCalled.entity.getDownloadUrl() ).toBe( "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" );
+                expect( request.preSaveCalled.entity.getDownloadUrl() ).toBe(
+                    "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
+                );
                 structDelete( request, "preSaveCalled" );
             } );
         } );
     }
 
-    function quickPreSave( event, interceptData, buffer, rc, prc ) {
+    function quickPreSave(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         variables.quickPreSaveCalled = duplicate( arguments.interceptData );
     }
 

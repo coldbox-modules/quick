@@ -12,8 +12,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var user = getInstance( "User" ).findOrFail( 1 );
                 user.setCountryId( "" );
                 user.save();
-                expect( getInstance( "User" ).whereId( 1 ).whereNull( "country_id" ).count() ).toBe( 1 );
-                expect( getInstance( "User" ).whereId( 1 ).whereNotNull( "country_id" ).count() ).toBe( 0 );
+                expect(
+                    getInstance( "User" )
+                        .whereId( 1 )
+                        .whereNull( "country_id" )
+                        .count()
+                ).toBe( 1 );
+                expect(
+                    getInstance( "User" )
+                        .whereId( 1 )
+                        .whereNotNull( "country_id" )
+                        .count()
+                ).toBe( 0 );
             } );
 
             it( "can set a column to not convert empty strings to null", function() {
@@ -26,22 +36,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can choose a custom value to convert to nulls in the database", function() {
                 expect( getInstance( "Song" ).whereNull( "title" ).count() ).toBe( 0 );
 
-                getInstance( "Song" ).fill( {
-                    title = "",
-                    downloadUrl = "https://example.com/songs/1"
-                } ).save();
+                getInstance( "Song" ).fill( { title: "", downloadUrl: "https://example.com/songs/1" } ).save();
                 expect( getInstance( "Song" ).whereNull( "title" ).count() ).toBe( 0 );
 
-                getInstance( "Song" ).fill( {
-                    title = "Really_Null",
-                    downloadUrl = "https://example.com/songs/1"
-                } ).save();
+                getInstance( "Song" ).fill( { title: "Really_Null", downloadUrl: "https://example.com/songs/1" } ).save();
                 expect( getInstance( "Song" ).whereNull( "title" ).count() ).toBe( 0 );
 
-                getInstance( "Song" ).fill( {
-                    title = "REALLY_NULL",
-                    downloadUrl = "https://example.com/songs/1"
-                } ).save();
+                getInstance( "Song" ).fill( { title: "REALLY_NULL", downloadUrl: "https://example.com/songs/1" } ).save();
                 expect( getInstance( "Song" ).whereNull( "title" ).count() ).toBe( 1 );
             } );
         } );

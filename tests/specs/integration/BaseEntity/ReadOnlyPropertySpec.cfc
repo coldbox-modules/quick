@@ -14,9 +14,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "prevents create from setting read-only properties", function() {
                 expect( function() {
-                    getInstance( "Link" ).create( {
-                        createdDate = now()
-                    } );
+                    getInstance( "Link" ).create( { createdDate: now() } );
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 
@@ -30,20 +28,20 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "prevents fill from being called containing a read-only property", function() {
                 var link = getInstance( "Link" ).findOrFail( 1 );
                 expect( function() {
-                    link.fill( { createdDate = now() } );
+                    link.fill( { createdDate: now() } );
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 
             it( "prevents updates from being performed on a read-only property", function() {
                 var link = getInstance( "Link" ).findOrFail( 1 );
                 expect( function() {
-                    link.update( { createdDate = now() } );
+                    link.update( { createdDate: now() } );
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 
             it( "prevents mass updates from being performed on read-only properties", function() {
                 expect( function() {
-                    getInstance( "Link" ).updateAll( { createdDate = now() } );
+                    getInstance( "Link" ).updateAll( { createdDate: now() } );
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
         } );

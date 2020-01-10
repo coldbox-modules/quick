@@ -11,7 +11,7 @@ component {
      * @interceptData  The struct of intercept data for the
      *                 afterInstanceInspection interception point.
      *
-     * @returns        void
+     * @return         void
      */
     public void function afterInstanceInspection( required struct interceptData ) {
         if ( interceptData.mapping.getObjectMetadata().keyExists( "quick" ) ) {

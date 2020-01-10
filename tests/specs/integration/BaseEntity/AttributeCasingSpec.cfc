@@ -23,11 +23,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 expect( function() {
                     user.getFirstName();
-                }).notToThrow();
+                } ).notToThrow();
 
                 expect( function() {
                     user.getFirstName();
-                }).notToThrow();
+                } ).notToThrow();
 
                 user.setCreatedDate( now() );
 

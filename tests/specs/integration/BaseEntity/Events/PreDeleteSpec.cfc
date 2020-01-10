@@ -40,7 +40,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         } );
     }
 
-    function quickPreDelete( event, interceptData, buffer, rc, prc ) {
+    function quickPreDelete(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         param request.quickPreDeleteCalled = [];
         arrayAppend( request.quickPreDeleteCalled, duplicate( arguments.interceptData ) );
     }

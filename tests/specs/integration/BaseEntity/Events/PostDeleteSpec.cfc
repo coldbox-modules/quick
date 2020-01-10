@@ -40,7 +40,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         } );
     }
 
-    function quickPostDelete( event, interceptData, buffer, rc, prc ) {
+    function quickPostDelete(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         param request.quickPostDeleteCalled = [];
         arrayAppend( request.quickPostDeleteCalled, duplicate( arguments.interceptData ) );
     }

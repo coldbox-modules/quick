@@ -25,6 +25,7 @@ before_script:
   - box server start cfengine=$ENGINE port=8500 debug=true
 script:
   - box testbox run runner='http://127.0.0.1:8500/tests/runner.cfm' verbose=false
+  - box run-script format:check
 after_success:
   - box install commandbox-semantic-release
   - box config set endpoints.forgebox.APIToken=${FORGEBOX_TOKEN}

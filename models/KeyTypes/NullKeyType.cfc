@@ -11,7 +11,7 @@ component implements="KeyType" {
      *
      * @entity   The entity that is being inserted.
      *
-     * @returns  void
+     * @return   void
      */
     public void function preInsert( required any entity ) {
         return;
@@ -23,7 +23,7 @@ component implements="KeyType" {
      * @entity   The entity that was inserted.
      * @result   The result of the queryExecute call.
      *
-     * @returns  void
+     * @return   void
      */
     public void function postInsert( required any entity, required struct result ) {
         return;

@@ -8,7 +8,7 @@ component {
      *
      * @injector  The WireBox injector.
      *
-     * @returns   QuickServiceDSL
+     * @return    QuickServiceDSL
      */
     public QuickServiceDSL function init( required Injector injector ) {
         variables.injector = arguments.injector;
@@ -21,14 +21,12 @@ component {
      *
      * @definition  The dsl struct definition.
      *
-     * @returns     BaseService or extending component.
+     * @return      BaseService or extending component.
      */
     public any function process( required struct definition ) {
         return variables.injector.getInstance(
             name = "BaseService@quick",
-            initArguments = {
-                entity = variables.injector.getInstance( listRest( arguments.definition.dsl, ":" ) )
-            }
+            initArguments = { entity: variables.injector.getInstance( listRest( arguments.definition.dsl, ":" ) ) }
         );
     }
 

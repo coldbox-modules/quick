@@ -8,13 +8,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "returns null if the record cannot be found", function() {
-                expect( getInstance( "User" ).find( 999 ) )
-                    .toBeNull( "The user instance should be null because it could not be found, but was not." );
+                expect( getInstance( "User" ).find( 999 ) ).toBeNull(
+                    "The user instance should be null because it could not be found, but was not."
+                );
             } );
 
             it( "returns null if the first record cannot be found", function() {
-                expect( getInstance( "Empty" ).first() )
-                    .toBeNull( "The instance should be null because there are none in the database." );
+                expect( getInstance( "Empty" ).first() ).toBeNull(
+                    "The instance should be null because there are none in the database."
+                );
             } );
 
             it( "can refresh itself from the database", function() {

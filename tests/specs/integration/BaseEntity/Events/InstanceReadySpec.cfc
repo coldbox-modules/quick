@@ -30,7 +30,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         } );
     }
 
-    function quickInstanceReady( event, interceptData, buffer, rc, prc ) {
+    function quickInstanceReady(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         variables.quickInstanceReadyCalled = arguments.interceptData;
     }
 

@@ -9,7 +9,7 @@ component implements="KeyType" {
      *
      * @entity   The entity that is being inserted.
      *
-     * @returns  void
+     * @return   void
      */
     public void function preInsert( required any entity ) {
         return;
@@ -21,14 +21,14 @@ component implements="KeyType" {
      * @entity   The entity that was inserted.
      * @result   The result of the queryExecute call.
      *
-     * @returns  void
+     * @return   void
      */
     public void function postInsert( required any entity, required struct result ) {
-        var generatedKey = arguments.result.result.keyExists( arguments.entity.keyName() ) ?
-            arguments.result.result[ arguments.entity.keyName() ] :
-            arguments.result.result.keyExists( "generated_key" ) ?
-            arguments.result.result[ "generated_key" ] :
-            arguments.result.result[ "generatedKey" ];
+        var generatedKey = arguments.result.result.keyExists( arguments.entity.keyName() ) ? arguments.result.result[
+            arguments.entity.keyName()
+        ] : arguments.result.result.keyExists( "generated_key" ) ? arguments.result.result[ "generated_key" ] : arguments.result.result[
+            "generatedKey"
+        ];
         arguments.entity.assignAttribute( arguments.entity.keyName(), generatedKey );
     }
 

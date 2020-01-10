@@ -3,7 +3,7 @@ component accessors="true" {
     property name="entity";
 
     function init( entity, query ) {
-        if ( ! isNull( arguments.entity ) ) {
+        if ( !isNull( arguments.entity ) ) {
             variables.entity = arguments.entity;
         }
         return this;
@@ -115,11 +115,13 @@ component accessors="true" {
 
     function order( orders ) {
         arguments.orders = isArray( arguments.orders ) ? arguments.orders : listToArray( arguments.orders, "," );
-        getEntity().retrieveQuery().orderBy(
-            arguments.orders.map( function( order ) {
-                return replace( order, " ", "|" );
-            } )
-        );
+        getEntity()
+            .retrieveQuery()
+            .orderBy(
+                arguments.orders.map( function( order ) {
+                    return replace( order, " ", "|" );
+                } )
+            );
         return this;
     }
 

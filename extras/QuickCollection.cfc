@@ -10,7 +10,7 @@ component extends="cfcollection.models.Collection" {
      *
      * @data     The data to collect.
      *
-     * @returns  QuickCollection
+     * @return   QuickCollection
      */
     public QuickCollection function collect( required any data ) {
         return new QuickCollection( arguments.data );
@@ -25,14 +25,14 @@ component extends="cfcollection.models.Collection" {
      *                or an array of relations.  Nested relations can be loaded
      *                using dot-notation ("posts.comments").
      *
-     * @returns       QuickCollection
+     * @return        QuickCollection
      */
     public QuickCollection function load( required any relationName ) {
         if ( this.empty() ) {
             return this;
         }
 
-        if ( ! isArray( arguments.relationName ) ) {
+        if ( !isArray( arguments.relationName ) ) {
             arguments.relationName = [ arguments.relationName ];
         }
 
@@ -49,16 +49,18 @@ component extends="cfcollection.models.Collection" {
      * @return [any]
      */
     public array function getMemento() {
-        return this.map( function( entity ) {
-            return arguments.entity.$renderData();
-        } ).get();
+        return this
+            .map( function( entity ) {
+                return arguments.entity.$renderData();
+            } )
+            .get();
     }
 
     /**
      * ColdBox magic method to return the result of the `getMemento` call
      * when returning a QuickCollection directly from a handler.
      *
-     * @returns  [any]
+     * @return   [any]
      */
     function $renderData() {
         return variables.getMemento();
@@ -71,7 +73,7 @@ component extends="cfcollection.models.Collection" {
      *
      * @relationName  The relation to load.
      *
-     * @returns       void
+     * @return        void
      */
     private void function eagerLoadRelation( required string relationName ) {
         var relation = invoke( get( 1 ), arguments.relationName ).resetQuery();

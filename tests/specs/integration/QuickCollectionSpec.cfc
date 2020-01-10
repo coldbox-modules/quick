@@ -15,7 +15,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var posts = getInstance( "CollectionPost" ).all();
                 expect( variables.queries ).toHaveLength( 1 );
                 expectAll( posts.get() ).toSatisfy( function( post ) {
-                    return ! post.isRelationshipLoaded( "author" );
+                    return !post.isRelationshipLoaded( "author" );
                 }, "The relationship should not be loaded." );
                 posts.load( "author" );
                 expect( variables.queries ).toHaveLength( 2 );
@@ -26,7 +26,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         } );
     }
 
-    function preQBExecute( event, interceptData, buffer, rc, prc ) {
+    function preQBExecute(
+        event,
+        interceptData,
+        buffer,
+        rc,
+        prc
+    ) {
         arrayAppend( variables.queries, interceptData );
     }
 

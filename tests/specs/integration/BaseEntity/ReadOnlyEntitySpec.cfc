@@ -12,9 +12,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "prevents create from being performed on new instances", function() {
                 expect( function() {
-                    getInstance( "Referral" ).create( {
-                        type = "internal"
-                    } );
+                    getInstance( "Referral" ).create( { type: "internal" } );
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 
@@ -29,13 +27,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "prevents updates from being performed on existing instances", function() {
                 var referral = getInstance( "Referral" ).findOrFail( 1 );
                 expect( function() {
-                    referral.update( { type = "external" } );
+                    referral.update( { type: "external" } );
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 
             it( "prevents mass updates from being performed on existing instances", function() {
                 expect( function() {
-                    getInstance( "Referral" ).updateAll( { type = "external" } );
+                    getInstance( "Referral" ).updateAll( { type: "external" } );
                 } ).toThrow( type = "QuickReadOnlyException" );
             } );
 

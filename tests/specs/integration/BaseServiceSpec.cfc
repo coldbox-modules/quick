@@ -7,9 +7,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     var user = getInstance( "User" );
                     var service = getWireBox().getInstance(
                         name = "BaseService@quick",
-                        initArguments = {
-                            entity = user
-                        }
+                        initArguments = { entity: user }
                     );
                     expect( service.get_entityName() ).toBe( "User" );
                 } );
@@ -17,17 +15,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 it( "can be instantiated with a wirebox mapping", function() {
                     var service = getWireBox().getInstance(
                         name = "BaseService@quick",
-                        initArguments = {
-                            entity = "User"
-                        }
+                        initArguments = { entity: "User" }
                     );
                     expect( service.get_entityName() ).toBe( "User" );
                 } );
 
                 it( "can inject a service using the wirebox dsl", function() {
-                    var service = getWireBox().getInstance(
-                        dsl = "quickService:User"
-                    );
+                    var service = getWireBox().getInstance( dsl = "quickService:User" );
                     expect( service.get_entityName() ).toBe( "User" );
                 } );
             } );
@@ -52,9 +46,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 it( "can handle any qb methods", function() {
-                    var users = variables.service
-                        .where( "last_name", "Doe" )
-                        .get();
+                    var users = variables.service.where( "last_name", "Doe" ).get();
                     expect( users ).toBeArray();
                     expect( users ).toHaveLength( 2 );
                 } );

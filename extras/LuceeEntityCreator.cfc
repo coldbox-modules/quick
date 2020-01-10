@@ -10,7 +10,7 @@ component {
      *
      * @entity   The entity to create a new instance.
      *
-     * @returns  A Quick instance.
+     * @return   A Quick instance.
      */
     public any function new( required any entity ) {
         // Lucee allows a shallow copy which does not copy the object graph.

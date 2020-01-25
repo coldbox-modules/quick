@@ -253,7 +253,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can constrain eager loading on a belongs to relationship", function() {
                 var users = getInstance( "User" )
                     .with( {
-                        "posts" =function( query ) {
+                        "posts": function( query ) {
                             return query.where( "post_pk", "<", 7777 );
                         }
                     } )
@@ -284,9 +284,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can constrain an eager load on a nested relationship", function() {
                 var users = getInstance( "User" )
                     .with( {
-                        "posts" =function( q1 ) {
+                        "posts": function( q1 ) {
                             return q1.with( {
-                                "comments" =function( q2 ) {
+                                "comments": function( q2 ) {
                                     return q2.where( "body", "like", "%not%" );
                                 }
                             } );

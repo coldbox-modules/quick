@@ -217,15 +217,32 @@ component accessors="true" {
     =            Attributes            =
     ==================================*/
 
+    /**
+     * Returns the aliased name for the primary key column.
+     *
+     * @return  String
+     */
     public string function keyName() {
         return variables._key;
     }
 
+    /**
+     * Returns the value of the primary key for this entity.
+     *
+     * @return  any
+     */
     public any function keyValue() {
         guardAgainstNotLoaded( "This instance is not loaded so the `keyValue` cannot be retrieved." );
         return retrieveAttribute( variables._key );
     }
 
+    /**
+     * Retrieves a struct of the current attributes with their associated values.
+     *
+     * @aliased     Uses attribute aliases as the keys instead of column names.
+     * @withoutKey  Excludes the keyName attribute from the returned struct.
+     * @withNulls   Includes null values in the returned struct.
+     */
     public struct function retrieveAttributesData(
         boolean aliased = false,
         boolean withoutKey = false,
@@ -711,8 +728,10 @@ component accessors="true" {
     ) {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
-        param arguments.foreignKey = related.get_EntityName() & related.get_Key();
-        param arguments.ownerKey = related.get_Key();
+        param arguments.foreignKey = related
+        .get_EntityName() & related.get_Key();
+        param arguments.ownerKey = related
+        .get_Key();
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -736,8 +755,10 @@ component accessors="true" {
     ) {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
-        param arguments.foreignKey = variables._entityName & variables._key;
-        param arguments.localKey = variables._key;
+        param arguments.foreignKey = variables
+        ._entityName & variables._key;
+        param arguments.localKey = variables
+        ._key;
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -761,8 +782,10 @@ component accessors="true" {
     ) {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
-        param arguments.foreignKey = variables._entityName & variables._key;
-        param arguments.localKey = variables._key;
+        param arguments.foreignKey = variables
+        ._entityName & variables._key;
+        param arguments.localKey = variables
+        ._key;
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -790,11 +813,15 @@ component accessors="true" {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
         param arguments.table = generateDefaultPivotTableString( related.get_table(), variables._table );
-        param arguments.foreignPivotKey = variables._entityName & variables._key;
-        param arguments.relatedPivotKey = related.get_entityName() & related.get_key();
+        param arguments.foreignPivotKey = variables
+        ._entityName & variables._key;
+        param arguments.relatedPivotKey = related
+        .get_entityName() & related.get_key();
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-        param arguments.parentKey = variables._key;
-        param arguments.relatedKey = related.get_key();
+        param arguments.parentKey = variables
+        ._key;
+        param arguments.relatedKey = related
+        .get_key();
 
         return variables._wirebox.getInstance(
             name = "BelongsToMany@quick",
@@ -828,10 +855,14 @@ component accessors="true" {
         var related = variables._wirebox.getInstance( arguments.relationName );
         var intermediate = variables._wirebox.getInstance( arguments.intermediateName );
 
-        param arguments.firstKey = variables._entityName & variables._key;
-        param arguments.secondKey = intermediate.get_entityName() & intermediate.get_key();
-        param arguments.localKey = variables._key;
-        param arguments.secondLocalKey = intermediate.get_key();
+        param arguments.firstKey = variables
+        ._entityName & variables._key;
+        param arguments.secondKey = intermediate
+        .get_entityName() & intermediate.get_key();
+        param arguments.localKey = variables
+        ._key;
+        param arguments.secondLocalKey = intermediate
+        .get_key();
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -860,9 +891,12 @@ component accessors="true" {
     ) {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
-        param arguments.type = arguments.name & "_type";
-        param arguments.id = arguments.name & "_id";
-        param arguments.localKey = variables._key;
+        param arguments.type = arguments
+        .name & "_type";
+        param arguments.id = arguments
+        .name & "_id";
+        param arguments.localKey = variables
+        ._key;
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -887,9 +921,12 @@ component accessors="true" {
         string relationMethodName
     ) {
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-        param arguments.name = arguments.relationMethodName;
-        param arguments.type = arguments.name & "_type";
-        param arguments.id = arguments.name & "_id";
+        param arguments.name = arguments
+        .relationMethodName;
+        param arguments.type = arguments
+        .name & "_type";
+        param arguments.id = arguments
+        .name & "_id";
 
         var relationName = retrieveAttribute( arguments.type, "" );
         if ( relationName == "" ) {
@@ -908,7 +945,8 @@ component accessors="true" {
         }
 
         var related = variables._wirebox.getInstance( relationName );
-        param arguments.ownerKey = related.get_key();
+        param arguments.ownerKey = related
+        .get_key();
 
         return variables._wirebox.getInstance(
             name = "PolymorphicBelongsTo@quick",
@@ -1088,7 +1126,22 @@ component accessors="true" {
         if ( relationshipIsNull( arguments.missingMethodName ) ) {
             return javacast( "null", "" );
         }
-        return forwardToQB( arguments.missingMethodName, arguments.missingMethodArguments );
+
+        try {
+            return forwardToQB( arguments.missingMethodName, arguments.missingMethodArguments );
+        } catch ( QBMissingMethod e ) {
+            throw(
+                type = "QuickMissingMethod",
+                message = arrayToList(
+                    [
+                        "Quick couldn't figure out what to do with [#arguments.missingMethodName#].",
+                        "We tried checking columns, aliases, scopes, and relationships locally.",
+                        "We also forwarded the call on the qb to see if it could do anything with it, but it couldn't."
+                    ],
+                    " "
+                )
+            )
+        }
     }
 
     private any function tryColumnName( required string missingMethodName, struct missingMethodArguments = {} ) {
@@ -1262,18 +1315,21 @@ component accessors="true" {
             variables._meta = { "originalMetadata": util.getInheritedMetadata( this ) };
         }
         param variables._key = "id";
-        param variables._meta.fullName = variables._meta.originalMetadata.fullname;
+        param variables._meta.fullName = variables
+        ._meta.originalMetadata.fullname;
         variables._fullName = variables._meta.fullName;
         param variables._meta.originalMetadata.mapping = listLast( variables._meta.originalMetadata.fullname, "." );
-        param variables._meta.mapping = variables._meta.originalMetadata.mapping;
+        param variables._meta.mapping = variables
+        ._meta.originalMetadata.mapping;
         variables._mapping = variables._meta.mapping;
         param variables._meta.originalMetadata.entityName = listLast( variables._meta.originalMetadata.name, "." );
-        param variables._meta.entityName = variables._meta.originalMetadata.entityName;
+        param variables._meta.entityName = variables
+        ._meta.originalMetadata.entityName;
         variables._entityName = variables._meta.entityName;
-        param variables._meta.originalMetadata.table = variables._str.plural(
-            variables._str.snake( variables._entityName )
-        );
-        param variables._meta.table = variables._meta.originalMetadata.table;
+        param variables._meta.originalMetadata.table = variables
+        ._str.plural( variables._str.snake( variables._entityName ) );
+        param variables._meta.table = variables
+        ._meta.originalMetadata.table;
         variables._table = variables._meta.table;
         param variables._queryOptions = {};
         if (
@@ -1284,7 +1340,8 @@ component accessors="true" {
             variables._queryOptions = { datasource: variables._meta.originalMetadata.datasource };
         }
         param variables._meta.originalMetadata.readonly = false;
-        param variables._meta.readonly = variables._meta.originalMetadata.readonly;
+        param variables._meta.readonly = variables
+        ._meta.originalMetadata.readonly;
         variables._readonly = variables._meta.readonly;
         param variables._meta.originalMetadata.functions = [];
         param variables._meta.functionNames = generateFunctionNameList( variables._meta.originalMetadata.functions );
@@ -1316,7 +1373,8 @@ component accessors="true" {
     }
 
     private struct function paramProperty( required struct prop ) {
-        param prop.column = arguments.prop.name;
+        param prop.column = arguments
+        .prop.name;
         param prop.persistent = true;
         param prop.nullValue = "";
         param prop.convertToNull = true;

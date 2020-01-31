@@ -2,7 +2,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function beforeAll() {
         super.beforeAll();
-        var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
+        var interceptorService = getWireBox().getInstance(
+            dsl = "coldbox:interceptorService"
+        );
         interceptorService.registerInterceptor( interceptorObject = this );
     }
 
@@ -18,8 +20,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request.quickPostDeleteCalled ).toBeArray();
                 expect( request.quickPostDeleteCalled ).toHaveLength( 1 );
                 expect( request.quickPostDeleteCalled[ 1 ] ).toBeStruct();
-                expect( request.quickPostDeleteCalled[ 1 ] ).toHaveKey( "entity" );
-                expect( request.quickPostDeleteCalled[ 1 ].entity.getId() ).toBe( 1 );
+                expect( request.quickPostDeleteCalled[ 1 ] ).toHaveKey(
+                    "entity"
+                );
+                expect( request.quickPostDeleteCalled[ 1 ].entity.getId() ).toBe(
+                    1
+                );
                 structDelete( request, "quickPostDeleteCalled" );
             } );
 
@@ -34,7 +40,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request.postDeleteCalled ).toHaveLength( 1 );
                 expect( request.postDeleteCalled[ 1 ] ).toBeStruct();
                 expect( request.postDeleteCalled[ 1 ] ).toHaveKey( "entity" );
-                expect( request.postDeleteCalled[ 1 ].entity.getId() ).toBe( 1 );
+                expect( request.postDeleteCalled[ 1 ].entity.getId() ).toBe(
+                    1
+                );
                 structDelete( request, "postDeleteCalled" );
             } );
         } );
@@ -48,7 +56,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         prc
     ) {
         param request.quickPostDeleteCalled = [];
-        arrayAppend( request.quickPostDeleteCalled, duplicate( arguments.interceptData ) );
+        arrayAppend(
+            request.quickPostDeleteCalled,
+            duplicate( arguments.interceptData )
+        );
     }
 
 }

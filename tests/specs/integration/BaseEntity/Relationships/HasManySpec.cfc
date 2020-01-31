@@ -20,9 +20,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
             it( "can save and associate new entities mapped by a field other than their primary keys", function() {
                 var user = getInstance( "User" ).find( 1 );
-                var externalThing = user.externalThings().create( { userID: user.getID(), externalID: user.getExternalID(), value: "I prefer other keys" } );
+                var externalThing = user
+                    .externalThings()
+                    .create( {
+                        userID: user.getID(),
+                        externalID: user.getExternalID(),
+                        value: "I prefer other keys"
+                    } );
                 expect( externalThing.isLoaded() ).toBeTrue();
-                expect( externalThing.getExternalID() ).toBe( user.getExternalID() );
+                expect( externalThing.getExternalID() ).toBe(
+                    user.getExternalID()
+                );
             } );
 
             it( "can save an id instead of an entity", function() {
@@ -100,8 +108,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getPosts() ).toHaveLength( 2 );
                 var newPost = user.posts().create( { "body": "A new post created directly here!" } );
                 expect( newPost.isLoaded() ).toBeTrue();
-                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
-                expect( newPost.getBody() ).toBe( "A new post created directly here!" );
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe(
+                    user.getId()
+                );
+                expect( newPost.getBody() ).toBe(
+                    "A new post created directly here!"
+                );
                 expect( user.fresh().getPosts() ).toHaveLength( 3 );
             } );
 

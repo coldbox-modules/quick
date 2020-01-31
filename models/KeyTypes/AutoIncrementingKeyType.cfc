@@ -23,13 +23,21 @@ component implements="KeyType" {
      *
      * @return   void
      */
-    public void function postInsert( required any entity, required struct result ) {
-        var generatedKey = arguments.result.result.keyExists( arguments.entity.keyName() ) ? arguments.result.result[
+    public void function postInsert(
+        required any entity,
+        required struct result
+    ) {
+        var generatedKey = arguments.result.result.keyExists(
             arguments.entity.keyName()
-        ] : arguments.result.result.keyExists( "generated_key" ) ? arguments.result.result[ "generated_key" ] : arguments.result.result[
+        ) ? arguments.result.result[ arguments.entity.keyName() ] : arguments.result.result.keyExists(
+            "generated_key"
+        ) ? arguments.result.result[ "generated_key" ] : arguments.result.result[
             "generatedKey"
         ];
-        arguments.entity.assignAttribute( arguments.entity.keyName(), generatedKey );
+        arguments.entity.assignAttribute(
+            arguments.entity.keyName(),
+            generatedKey
+        );
     }
 
 }

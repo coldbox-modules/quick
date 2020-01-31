@@ -18,7 +18,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var videoB = getInstance( "Video" ).find( 2 );
                 var videoBComments = videoB.getComments();
                 expect( arrayLen( videoBComments ) ).toBe( 1 );
-                expect( videoBComments[ 1 ].getBody() ).toBe( "What a great video! So fun!" );
+                expect( videoBComments[ 1 ].getBody() ).toBe(
+                    "What a great video! So fun!"
+                );
             } );
         } );
     }

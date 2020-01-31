@@ -13,9 +13,17 @@ component {
      *
      * @return         void
      */
-    public void function afterInstanceInspection( required struct interceptData ) {
-        if ( interceptData.mapping.getObjectMetadata().keyExists( "quick" ) ) {
-            interceptData.mapping.setVirtualInheritance( "quick.models.BaseEntity" );
+    public void function afterInstanceInspection(
+        required struct interceptData
+    ) {
+        if (
+            interceptData.mapping
+                .getObjectMetadata()
+                .keyExists( "quick" )
+        ) {
+            interceptData.mapping.setVirtualInheritance(
+                "quick.models.BaseEntity"
+            );
         }
     }
 

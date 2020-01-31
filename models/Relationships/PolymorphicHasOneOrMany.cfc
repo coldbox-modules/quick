@@ -53,7 +53,10 @@ component extends="quick.models.Relationships.HasOneOrMany" {
      */
     public PolymorphicHasOneOrMany function addConstraints() {
         super.addConstraints();
-        variables.related.where( variables.morphType, variables.morphClass );
+        variables.related.where(
+            variables.morphType,
+            variables.morphClass
+        );
         return this;
     }
 
@@ -64,9 +67,14 @@ component extends="quick.models.Relationships.HasOneOrMany" {
      *
      * @return    quick.models.Relationships.PolymorphicHasOneOrMany
      */
-    public PolymorphicHasOneOrMany function addEagerConstraints( required array entities ) {
+    public PolymorphicHasOneOrMany function addEagerConstraints(
+        required array entities
+    ) {
         super.addEagerConstraints( arguments.entities );
-        variables.related.where( variables.morphType, variables.morphClass );
+        variables.related.where(
+            variables.morphType,
+            variables.morphClass
+        );
         return this;
     }
 

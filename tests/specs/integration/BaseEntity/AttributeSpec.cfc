@@ -26,7 +26,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "returns a default value if the attribute is not yet set", function() {
                 var user = getInstance( "User" );
                 expect( user.retrieveAttribute( "username" ) ).toBe( "" );
-                expect( user.retrieveAttribute( "username", "default-value" ) ).toBe( "default-value" );
+                expect( user.retrieveAttribute( "username", "default-value" ) ).toBe(
+                    "default-value"
+                );
             } );
 
             it( "throws an exception when trying to set an attribute that does not exist", function() {

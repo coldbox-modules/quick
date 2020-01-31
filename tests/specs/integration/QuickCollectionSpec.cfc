@@ -2,7 +2,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function beforeAll() {
         super.beforeAll();
-        controller.getInterceptorService().registerInterceptor( interceptorObject = this );
+        controller
+            .getInterceptorService()
+            .registerInterceptor( interceptorObject = this );
     }
 
     function run() {

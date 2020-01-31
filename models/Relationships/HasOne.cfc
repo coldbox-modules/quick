@@ -35,9 +35,15 @@ component extends="quick.models.Relationships.HasOneOrMany" {
      * @doc_generic  quick.models.BaseEntity
      * @return       [quick.models.BaseEntity]
      */
-    public array function initRelation( required array entities, required string relation ) {
+    public array function initRelation(
+        required array entities,
+        required string relation
+    ) {
         return arguments.entities.map( function( entity ) {
-            return arguments.entity.assignRelationship( relation, javacast( "null", "" ) );
+            return arguments.entity.assignRelationship(
+                relation,
+                javacast( "null", "" )
+            );
         } );
     }
 
@@ -52,7 +58,11 @@ component extends="quick.models.Relationships.HasOneOrMany" {
      * @doc_generic  quick.models.BaseEntity
      * @return       [quick.models.BaseEntity]
      */
-    public array function match( required array entities, required array results, required string relation ) {
+    public array function match(
+        required array entities,
+        required array results,
+        required string relation
+    ) {
         return matchOne( argumentCollection = arguments );
     }
 

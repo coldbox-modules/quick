@@ -9,12 +9,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "list (without arguments)", function() {
                 var users = user.list();
                 expect( users ).toBeQuery();
-                expect( users ).toHaveLength( 4, "Four users should exist in the database and be returned." );
+                expect( users ).toHaveLength(
+                    4,
+                    "Four users should exist in the database and be returned."
+                );
             } );
 
             it( "list (as objects)", function() {
                 var users = user.list( asQuery = false );
-                expect( users ).toHaveLength( 4, "Four users should exist in the database and be returned." );
+                expect( users ).toHaveLength(
+                    4,
+                    "Four users should exist in the database and be returned."
+                );
                 expect( users[ 1 ].getId() ).toBe( 1 );
                 expect( users[ 1 ].getUsername() ).toBe( "elpete" );
                 expect( users[ 2 ].getId() ).toBe( 2 );
@@ -33,7 +39,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     offset = 1,
                     asQuery = false
                 );
-                expect( users ).toHaveLength( 1, "One users should be returned." );
+                expect( users ).toHaveLength(
+                    1,
+                    "One users should be returned."
+                );
                 expect( users[ 1 ].getId() ).toBe( 2 );
                 expect( users[ 1 ].getUsername() ).toBe( "johndoe" );
             } );
@@ -43,7 +52,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "countWhere", function() {
-                expect( user.countWhere( lastName = "Doe", firstName = "Jane" ) ).toBe( 1 );
+                expect(
+                    user.countWhere( lastName = "Doe", firstName = "Jane" )
+                ).toBe( 1 );
             } );
 
             it( "deleteById (single)", function() {
@@ -84,7 +95,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "findAllWhere", function() {
                 var users = user.findAllWhere( { "lastName": "Doe" } );
-                expect( users ).toHaveLength( 2, "Two users should exist in the database and be returned." );
+                expect( users ).toHaveLength(
+                    2,
+                    "Two users should exist in the database and be returned."
+                );
                 expect( users[ 1 ].getId() ).toBe( 2 );
                 expect( users[ 1 ].getUsername() ).toBe( "johndoe" );
                 expect( users[ 2 ].getId() ).toBe( 3 );
@@ -92,8 +106,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "findAllWhere (with sort order)", function() {
-                var users = user.findAllWhere( { "lastName": "Doe" }, "username asc" );
-                expect( users ).toHaveLength( 2, "Two users should exist in the database and be returned." );
+                var users = user.findAllWhere(
+                    { "lastName": "Doe" },
+                    "username asc"
+                );
+                expect( users ).toHaveLength(
+                    2,
+                    "Two users should exist in the database and be returned."
+                );
                 expect( users[ 1 ].getId() ).toBe( 3 );
                 expect( users[ 1 ].getUsername() ).toBe( "janedoe" );
                 expect( users[ 2 ].getId() ).toBe( 2 );
@@ -181,12 +201,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             describe( "criteria builder compatibility", function() {
                 it( "between", function() {
                     var rightNow = dateFormat( now(), "MM/DD/YYYY" );
-                    var lastWeek = dateFormat( dateAdd( "d", -7, rightNow ), "MM/DD/YYYY" );
+                    var lastWeek = dateFormat(
+                        dateAdd( "d", -7, rightNow ),
+                        "MM/DD/YYYY"
+                    );
                     var actual = user
                         .newCriteria()
                         .between( "created_date", rightNow, lastWeek )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `created_date` BETWEEN ? AND ?" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `created_date` BETWEEN ? AND ?"
+                    );
                 } );
 
                 it( "eqProperty", function() {
@@ -194,7 +219,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .eqProperty( "created_date", "modified_date" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `created_date` = `modified_date`" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `created_date` = `modified_date`"
+                    );
                 } );
 
                 it( "isEQ", function() {
@@ -202,7 +229,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .isEQ( "username", "elpete" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `username` = ?" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `username` = ?"
+                    );
                 } );
 
                 it( "isGT", function() {
@@ -210,7 +239,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .isGT( "created_date", now() )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `created_date` > ?" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `created_date` > ?"
+                    );
                 } );
 
                 it( "gtProperty", function() {
@@ -218,7 +249,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .gtProperty( "modified_date", "created_date" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `modified_date` > `created_date`" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `modified_date` > `created_date`"
+                    );
                 } );
 
                 it( "isGE", function() {
@@ -226,7 +259,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .isGE( "created_date", now() )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `created_date` >= ?" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `created_date` >= ?"
+                    );
                 } );
 
                 it( "geProperty", function() {
@@ -234,7 +269,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .geProperty( "modified_date", "created_date" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `modified_date` >= `created_date`" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `modified_date` >= `created_date`"
+                    );
                 } );
 
                 it( "idEQ", function() {
@@ -242,7 +279,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .idEQ( 1 )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `id` = ?" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `id` = ?"
+                    );
                 } );
 
                 it( "like", function() {
@@ -250,7 +289,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .like( "username", "e%" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `username` LIKE ?" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `username` LIKE ?"
+                    );
                 } );
 
                 it( "ilike", function() {
@@ -258,7 +299,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .ilike( "username", "e%" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `username` ILIKE ?" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `username` ILIKE ?"
+                    );
                 } );
 
                 it( "isIn", function() {
@@ -266,7 +309,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .isIn( "id", [ 2, 3 ] )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `id` IN (?, ?)" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `id` IN (?, ?)"
+                    );
                 } );
 
                 it( "isNull", function() {
@@ -274,7 +319,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .isNull( "country_id" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `country_id` IS NULL" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `country_id` IS NULL"
+                    );
                 } );
 
                 it( "isNotNull", function() {
@@ -282,7 +329,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .isNotNull( "country_id" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `country_id` IS NOT NULL" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `country_id` IS NOT NULL"
+                    );
                 } );
 
                 it( "isLT", function() {
@@ -290,7 +339,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .isLT( "created_date", now() )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `created_date` < ?" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `created_date` < ?"
+                    );
                 } );
 
                 it( "ltProperty", function() {
@@ -298,7 +349,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .ltProperty( "created_date", "modified_date" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `created_date` < `modified_date`" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `created_date` < `modified_date`"
+                    );
                 } );
 
                 it( "isLE", function() {
@@ -306,7 +359,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .isLE( "created_date", now() )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `created_date` <= ?" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `created_date` <= ?"
+                    );
                 } );
 
                 it( "leProperty", function() {
@@ -314,7 +369,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .leProperty( "created_date", "modified_date" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `created_date` <= `modified_date`" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `created_date` <= `modified_date`"
+                    );
                 } );
 
                 it( "neProperty", function() {
@@ -322,7 +379,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .neProperty( "created_date", "modified_date" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` WHERE `created_date` <> `modified_date`" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` WHERE `created_date` <> `modified_date`"
+                    );
                 } );
 
                 it( "maxResults", function() {
@@ -346,7 +405,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .newCriteria()
                         .order( "username" )
                         .getSQL();
-                    expect( actual ).toBe( "SELECT * FROM `users` ORDER BY `username` ASC" );
+                    expect( actual ).toBe(
+                        "SELECT * FROM `users` ORDER BY `username` ASC"
+                    );
                 } );
 
                 it( "list", function() {

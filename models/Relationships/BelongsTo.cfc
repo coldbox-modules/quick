@@ -88,7 +88,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     public BelongsTo function addEagerConstraints( required array entities ) {
         var key = variables.related.get_Table() & "." & variables.ownerKey;
-        variables.related.whereIn( key, getEagerEntityKeys( arguments.entities ) );
+        variables.related.whereIn(
+            key,
+            getEagerEntityKeys( arguments.entities )
+        );
         return this;
     }
 
@@ -103,8 +106,16 @@ component extends="quick.models.Relationships.BaseRelationship" {
     public array function getEagerEntityKeys( required array entities ) {
         return arguments.entities
             .reduce( function( keys, entity ) {
-                if ( !isNull( arguments.entity.retrieveAttribute( variables.foreignKey ) ) ) {
-                    var key = arguments.entity.retrieveAttribute( variables.foreignKey );
+                if (
+                    !isNull(
+                        arguments.entity.retrieveAttribute(
+                            variables.foreignKey
+                        )
+                    )
+                ) {
+                    var key = arguments.entity.retrieveAttribute(
+                        variables.foreignKey
+                    );
                     if ( key != "" ) {
                         arguments.keys[ key ] = {};
                     }
@@ -123,9 +134,15 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @doc_generic  quick.models.BaseEntity
      * @return       [quick.models.BaseEntity]
      */
-    public array function initRelation( required array entities, required string relation ) {
+    public array function initRelation(
+        required array entities,
+        required string relation
+    ) {
         arguments.entities.each( function( entity ) {
-            arguments.entity.assignRelationship( relation, javacast( "null", "" ) );
+            arguments.entity.assignRelationship(
+                relation,
+                javacast( "null", "" )
+            );
         } );
         return arguments.entities;
     }
@@ -141,17 +158,28 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @doc_generic  quick.models.BaseEntity
      * @return       [quick.models.BaseEntity]
      */
-    public array function match( required array entities, required array results, required string relation ) {
+    public array function match(
+        required array entities,
+        required array results,
+        required string relation
+    ) {
         var dictionary = arguments.results.reduce( function( dict, result ) {
-            var key = arguments.result.retrieveAttribute( variables.ownerKey );
+            var key = arguments.result.retrieveAttribute(
+                variables.ownerKey
+            );
             arguments.dict[ key ] = arguments.result;
             return arguments.dict;
         }, {} );
 
         arguments.entities.each( function( entity ) {
-            var foreignKeyValue = arguments.entity.retrieveAttribute( variables.foreignKey );
+            var foreignKeyValue = arguments.entity.retrieveAttribute(
+                variables.foreignKey
+            );
             if ( structKeyExists( dictionary, foreignKeyValue ) ) {
-                arguments.entity.assignRelationship( relation, dictionary[ foreignKeyValue ] );
+                arguments.entity.assignRelationship(
+                    relation,
+                    dictionary[ foreignKeyValue ]
+                );
             }
         } );
 
@@ -189,9 +217,15 @@ component extends="quick.models.Relationships.BaseRelationship" {
         var ownerKeyValue = isSimpleValue( arguments.entity ) ? arguments.entity : arguments.entity.retrieveAttribute(
             variables.ownerKey
         );
-        variables.child.forceAssignAttribute( variables.foreignKey, ownerKeyValue );
+        variables.child.forceAssignAttribute(
+            variables.foreignKey,
+            ownerKeyValue
+        );
         if ( !isSimpleValue( arguments.entity ) ) {
-            variables.child.assignRelationship( variables.relationMethodName, arguments.entity );
+            variables.child.assignRelationship(
+                variables.relationMethodName,
+                arguments.entity
+            );
         }
         return variables.child;
     }
@@ -205,7 +239,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     function dissociate() {
         return variables.child
-            .forceClearAttribute( name = variables.foreignKey, setToNull = true )
+            .forceClearAttribute(
+                name = variables.foreignKey,
+                setToNull = true
+            )
             .clearRelationship( variables.relationMethodName );
     }
 

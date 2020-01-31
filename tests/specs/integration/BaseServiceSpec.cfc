@@ -21,14 +21,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 it( "can inject a service using the wirebox dsl", function() {
-                    var service = getWireBox().getInstance( dsl = "quickService:User" );
+                    var service = getWireBox().getInstance(
+                        dsl = "quickService:User"
+                    );
                     expect( service.get_entityName() ).toBe( "User" );
                 } );
             } );
 
             describe( "retriving records", function() {
                 beforeEach( function() {
-                    variables.service = getWireBox().getInstance( dsl = "quickService:User" );
+                    variables.service = getWireBox().getInstance(
+                        dsl = "quickService:User"
+                    );
                 } );
 
                 afterEach( function() {
@@ -46,7 +50,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 it( "can handle any qb methods", function() {
-                    var users = variables.service.where( "last_name", "Doe" ).get();
+                    var users = variables.service
+                        .where( "last_name", "Doe" )
+                        .get();
                     expect( users ).toBeArray();
                     expect( users ).toHaveLength( 2 );
                 } );

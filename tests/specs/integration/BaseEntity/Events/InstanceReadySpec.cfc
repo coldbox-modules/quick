@@ -2,7 +2,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function beforeAll() {
         super.beforeAll();
-        var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
+        var interceptorService = getWireBox().getInstance(
+            dsl = "coldbox:interceptorService"
+        );
         interceptorService.registerInterceptor( interceptorObject = this );
     }
 
@@ -16,7 +18,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var song = getInstance( "Song" ).findOrFail( 1 );
                 expect( variables ).toHaveKey( "quickInstanceReadyCalled" );
                 expect( variables.quickInstanceReadyCalled ).toBeStruct();
-                expect( variables.quickInstanceReadyCalled ).toHaveKey( "entity" );
+                expect( variables.quickInstanceReadyCalled ).toHaveKey(
+                    "entity"
+                );
                 structDelete( variables, "quickInstanceReadyCalled" );
             } );
 

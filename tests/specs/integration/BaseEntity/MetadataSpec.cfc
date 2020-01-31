@@ -7,7 +7,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var md = getMetadata( user );
                 expect( md ).toHaveKey( "extends" );
                 expect( md.extends ).toHaveKey( "name" );
-                expect( md.extends.name ).toInclude( "quick.models.BaseEntity" );
+                expect( md.extends.name ).toInclude(
+                    "quick.models.BaseEntity"
+                );
             } );
 
             describe( "full name", function() {

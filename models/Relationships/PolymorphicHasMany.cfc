@@ -39,7 +39,10 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" {
      * @doc_generic  quick.models.BaseEntity
      * @return       [quick.models.BaseEntity]
      */
-    public array function initRelation( required array entities, required string relation ) {
+    public array function initRelation(
+        required array entities,
+        required string relation
+    ) {
         return arguments.entities.map( function( entity ) {
             return arguments.entity.assignRelationship( relation, [] );
         } );

@@ -4,7 +4,10 @@
  *
  * @doc_abstract true
  */
-component extends="quick.models.Relationships.BaseRelationship" accessors="true" {
+component
+    extends="quick.models.Relationships.BaseRelationship"
+    accessors="true"
+{
 
     /**
      * Creates a HasOneOrMany relationship.
@@ -60,7 +63,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
     public HasOneOrMany function addEagerConstraints( required array entities ) {
         variables.related
             .retrieveQuery()
-            .whereIn( variables.foreignKey, getKeys( arguments.entities, variables.localKey ) );
+            .whereIn(
+                variables.foreignKey,
+                getKeys( arguments.entities, variables.localKey )
+            );
         return this;
     }
 
@@ -75,7 +81,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
      * @doc_generic  quick.models.BaseEntity
      * @return       [quick.models.BaseEntity]
      */
-    public array function matchOne( required array entities, required array results, required string relation ) {
+    public array function matchOne(
+        required array entities,
+        required array results,
+        required string relation
+    ) {
         arguments.type = "one";
         return matchOneOrMany( argumentCollection = arguments );
     }
@@ -91,7 +101,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
      * @doc_generic  quick.models.BaseEntity
      * @return       [quick.models.BaseEntity]
      */
-    public array function matchMany( required array entities, required array results, required string relation ) {
+    public array function matchMany(
+        required array entities,
+        required array results,
+        required string relation
+    ) {
         arguments.type = "many";
         return matchOneOrMany( argumentCollection = arguments );
     }
@@ -117,9 +131,14 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
     ) {
         var dictionary = buildDictionary( arguments.results );
         arguments.entities.each( function( entity ) {
-            var key = arguments.entity.retrieveAttribute( variables.localKey );
+            var key = arguments.entity.retrieveAttribute(
+                variables.localKey
+            );
             if ( structKeyExists( dictionary, key ) ) {
-                arguments.entity.assignRelationship( relation, getRelationValue( dictionary, key, type ) );
+                arguments.entity.assignRelationship(
+                    relation,
+                    getRelationValue( dictionary, key, type )
+                );
             }
         } );
         return arguments.entities;
@@ -135,7 +154,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
      */
     public struct function buildDictionary( required array results ) {
         return arguments.results.reduce( function( dict, result ) {
-            var key = arguments.result.retrieveAttribute( variables.foreignKey );
+            var key = arguments.result.retrieveAttribute(
+                variables.foreignKey
+            );
             if ( !structKeyExists( arguments.dict, key ) ) {
                 arguments.dict[ key ] = [];
             }
@@ -155,7 +176,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
      *
      * @return      quick.models.BaseEntity | [quick.models.BaseEntity]
      */
-    public any function getRelationValue( required struct dictionary, required string key, required string type ) {
+    public any function getRelationValue(
+        required struct dictionary,
+        required string key,
+        required string type
+    ) {
         var value = arguments.dictionary[ arguments.key ];
         return arguments.type == "one" ? value[ 1 ] : value;
     }
@@ -203,7 +228,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
      * @return        [quick.models.BaseEntity]
      */
     public array function saveMany( required any entities ) {
-        arguments.entities = isArray( arguments.entities ) ? arguments.entities : [ arguments.entities ];
+        arguments.entities = isArray( arguments.entities ) ? arguments.entities : [
+            arguments.entities
+        ];
 
         return arguments.entities.map( function( entity ) {
             return save( arguments.entity );
@@ -222,7 +249,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
             arguments.entity = variables.related
                 .newEntity()
                 .set_loaded( true )
-                .forceAssignAttribute( variables.related.keyName(), arguments.entity );
+                .forceAssignAttribute(
+                    variables.related.keyName(),
+                    arguments.entity
+                );
         }
         setForeignAttributesForCreate( arguments.entity );
         return arguments.entity.save();
@@ -236,7 +266,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
      * @return      quick.models.BaseEntity
      */
     public any function create( struct attributes = {} ) {
-        var newInstance = variables.related.newEntity().fill( arguments.attributes );
+        var newInstance = variables.related
+            .newEntity()
+            .fill( arguments.attributes );
         setForeignAttributesForCreate( newInstance );
         return newInstance.save();
     }
@@ -249,7 +281,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
      * @return   quick.models.BaseEntity
      */
     public any function setForeignAttributesForCreate( required any entity ) {
-        return arguments.entity.forceAssignAttribute( getForeignKeyName(), getParentKey() );
+        return arguments.entity.forceAssignAttribute(
+            getForeignKeyName(),
+            getParentKey()
+        );
     }
 
     /**
@@ -278,7 +313,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
      * @return   any
      */
     private any function arrayLast( required array arr ) {
-        return arguments.arr.isEmpty() ? javacast( "null", "" ) : arguments.arr[ arguments.arr.len() ];
+        return arguments.arr.isEmpty() ? javacast( "null", "" ) : arguments.arr[
+            arguments.arr.len()
+        ];
     }
 
 }

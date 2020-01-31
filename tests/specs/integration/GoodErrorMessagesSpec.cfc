@@ -16,7 +16,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     getInstance( "User" ).delete();
                 } ).toThrow(
                     type = "QuickEntityNotLoaded",
-                    regex = "This instance is not loaded so it cannot be deleted\.  Did you maybe mean to use `deleteAll`\?"
+                    regex = "This instance is not loaded so it cannot be deleted\. Did you maybe mean to use `deleteAll`\?"
                 );
             } );
 
@@ -25,7 +25,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     getInstance( "User" ).update( { "username": "johndoe" } );
                 } ).toThrow(
                     type = "QuickEntityNotLoaded",
-                    regex = "This instance is not loaded so it cannot be updated\.  Did you maybe mean to use `updateAll`, `insert`, or `save`\?"
+                    regex = "This instance is not loaded so it cannot be updated\. Did you maybe mean to use `updateAll`, `create`, or `save`\?"
                 );
             } );
 

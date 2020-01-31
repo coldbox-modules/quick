@@ -22,7 +22,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             describe( "entity name", function() {
                 it( "calculates the entity name from the file name if no `entityname` attribute is present", function() {
                     var post = getInstance( "User" );
-                    expect( post.get_EntityName() ).toBe( "User" );
+                    expect( post.entityName() ).toBe( "User" );
                 } );
             } );
 
@@ -36,29 +36,29 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             describe( "table name", function() {
                 it( "determines the table name from the metadata if a `table` attribute is present", function() {
                     var post = getInstance( "Post" );
-                    expect( post.get_Table() ).toBe( "my_posts" );
+                    expect( post.tableName() ).toBe( "my_posts" );
                 } );
 
                 it( "calculates the table name from the entity name if no `table` attribute is present", function() {
                     var post = getInstance( "User" );
-                    expect( post.get_Table() ).toBe( "users" );
+                    expect( post.tableName() ).toBe( "users" );
                 } );
 
                 it( "uses the snake case plural version of the component name", function() {
                     var phoneNumber = getInstance( "PhoneNumber" );
-                    expect( phoneNumber.get_Table() ).toBe( "phone_numbers" );
+                    expect( phoneNumber.tableName() ).toBe( "phone_numbers" );
                 } );
             } );
 
             describe( "primary key", function() {
                 it( "uses the `variables._key` value if set", function() {
                     var post = getInstance( "Post" );
-                    expect( post.get_Key() ).toBe( "post_pk" );
+                    expect( post.keyName() ).toBe( "post_pk" );
                 } );
 
                 it( "uses the `id` as the `variables._key` value by default", function() {
                     var user = getInstance( "User" );
-                    expect( user.get_Key() ).toBe( "id" );
+                    expect( user.keyName() ).toBe( "id" );
                 } );
             } );
         } );

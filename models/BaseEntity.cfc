@@ -235,6 +235,20 @@ component accessors="true" {
     ==================================*/
 
     /**
+     * Returns the name for this entity.
+     */
+    public string function entityName() {
+        return variables._entityName;
+    }
+
+    /**
+     * Returns the table name for this entity.
+     */
+    public string function tableName() {
+        return variables._table;
+    }
+
+    /**
      * Returns the aliased name for the primary key column.
      *
      * @return  String
@@ -252,7 +266,7 @@ component accessors="true" {
         guardAgainstNotLoaded(
             "This instance is not loaded so the `keyValue` cannot be retrieved."
         );
-        return retrieveAttribute( variables._key );
+        return retrieveAttribute( keyName() );
     }
 
     /**
@@ -275,7 +289,7 @@ component accessors="true" {
                 }
             } );
         return variables._data.reduce( function( acc, key, value ) {
-            if ( withoutKey && key == variables._key ) {
+            if ( withoutKey && key == keyName() ) {
                 return acc;
             }
             if ( isNull( value ) || ( isNullValue( key, value ) && withNulls ) ) {
@@ -443,7 +457,7 @@ component accessors="true" {
         return structKeyExists(
             variables._attributes,
             retrieveAliasForColumn( arguments.name )
-        ) || variables._key == name;
+        ) || keyName() == name;
     }
 
     /**
@@ -693,7 +707,7 @@ component accessors="true" {
         if ( findNoCase( ".", arguments.column ) != 0 ) {
             return arguments.column;
         }
-        return variables._table & "." & arguments.column;
+        return tableName() & "." & arguments.column;
     }
 
     /*=====================================
@@ -760,8 +774,8 @@ component accessors="true" {
         fireEvent( "preLoad", { id: arguments.id, metadata: variables._meta } );
         applyGlobalScopes();
         var data = retrieveQuery()
-            .from( variables._table )
-            .find( arguments.id, variables._key, variables._queryOptions );
+            .from( tableName() )
+            .find( arguments.id, keyName(), variables._queryOptions );
         if ( structIsEmpty( data ) ) {
             return javacast( "null", "" );
         }
@@ -802,7 +816,7 @@ component accessors="true" {
         if ( isNull( entity ) ) {
             throw(
                 type = "EntityNotFound",
-                message = "No [#variables._entityName#] found with id [#arguments.id#]"
+                message = "No [#entityName()#] found with id [#arguments.id#]"
             );
         }
         return entity;
@@ -822,7 +836,7 @@ component accessors="true" {
         if ( structIsEmpty( attrs ) ) {
             throw(
                 type = "EntityNotFound",
-                message = "No [#variables._entityName#] found with constraints " &
+                message = "No [#entityName()#] found with constraints " &
                 "[#serializeJSON( retrieveQuery().getBindings() )#]"
             );
         }
@@ -852,7 +866,7 @@ component accessors="true" {
         if ( !retrieveQuery().exists() ) {
             throw(
                 type = "EntityNotFound",
-                message = "No [#variables._entityName#] found with constraints " &
+                message = "No [#entityName()#] found with constraints " &
                 "[#serializeJSON( retrieveQuery().getBindings() )#]"
             );
         }
@@ -921,7 +935,7 @@ component accessors="true" {
     public any function fresh() {
         return variables
             .resetQuery()
-            .find( keyValue(), variables._key, variables._queryOptions );
+            .find( keyValue(), keyName(), variables._queryOptions );
     }
 
     /**
@@ -935,8 +949,8 @@ component accessors="true" {
         variables._relationshipsLoaded = {};
         assignAttributesData(
             newQuery()
-                .from( variables._table )
-                .find( keyValue(), variables._key, variables._queryOptions )
+                .from( tableName() )
+                .find( keyValue(), keyName(), variables._queryOptions )
         );
         return this;
     }
@@ -959,7 +973,7 @@ component accessors="true" {
         if ( variables._loaded ) {
             fireEvent( "preUpdate", { entity: this } );
             newQuery()
-                .where( variables._key, keyValue() )
+                .where( keyName(), keyValue() )
                 .update(
                     retrieveAttributesData( withoutKey = true )
                         .filter( canUpdateAttribute )
@@ -1033,11 +1047,7 @@ component accessors="true" {
             "This instance is not loaded so it cannot be deleted. " &
             "Did you maybe mean to use `deleteAll`?"
         );
-        newQuery().delete(
-            keyValue(),
-            variables._key,
-            variables._queryOptions
-        );
+        newQuery().delete( keyValue(), keyName(), variables._queryOptions );
         variables._loaded = false;
         fireEvent( "postDelete", { entity: this } );
         return this;
@@ -1132,7 +1142,7 @@ component accessors="true" {
     public struct function deleteAll( array ids = [] ) {
         guardReadOnly();
         if ( !arrayIsEmpty( arguments.ids ) ) {
-            retrieveQuery().whereIn( variables._key, arguments.ids );
+            retrieveQuery().whereIn( keyName(), arguments.ids );
         }
         return retrieveQuery().delete( options = variables._queryOptions );
     }
@@ -1173,10 +1183,25 @@ component accessors="true" {
         return this;
     }
 
+    /**
+     * Returns if a relationship has been loaded.
+     *
+     * @name    The relationship name to check.
+     *
+     * @return  Boolean
+     */
     public boolean function isRelationshipLoaded( required string name ) {
         return structKeyExists( variables._relationshipsLoaded, arguments.name );
     }
 
+    /**
+     * Retrieves the result of a loaded relationship.
+     * If there is no data, returns null instead.
+     *
+     * @name  The relationship name to retrieve.
+     *
+     * @return  quick.models.BaseEntity | [quick.models.BaseEntity]
+     */
     public any function retrieveRelationship( required string name ) {
         return variables._relationshipsData.keyExists(
             arguments.name
@@ -1186,6 +1211,14 @@ component accessors="true" {
         );
     }
 
+    /**
+     * Assigns a result to a relationship.
+     *
+     * @name    The name of the relationship to assign.
+     * @value   The result for the relationship.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function assignRelationship( required string name, any value ) {
         if ( !isNull( arguments.value ) ) {
             variables._relationshipsData[ arguments.name ] = arguments.value;
@@ -1194,16 +1227,57 @@ component accessors="true" {
         return this;
     }
 
+    /**
+     * Clears out any loaded relationships.
+     *
+     * @returns  quick.models.BaseEntity
+     */
     public any function clearRelationships() {
         variables._relationshipsData = {};
+        variables._relationshipsLoaded = {};
         return this;
     }
 
+    /**
+     * Clears out a loaded relationship by name.
+     *
+     * @name     The name of the relationship to clear.
+     *
+     * @returns  quick.models.BaseEntity
+     */
     public any function clearRelationship( required string name ) {
         variables._relationshipsData.delete( arguments.name );
+        variables._relationshipsLoaded.delete(
+            arguments.name
+        );
         return this;
     }
 
+    /*=====================================
+    =          Relationship Types         =
+    =====================================*/
+
+    /**
+     * Returns a BelongsTo relationship between this entity and the entity
+     * defined by `relationName`.
+     *
+     * Given a Post `belongsTo` a User and using the defaults, the SQL would be:
+     * ```sql
+     * SELECT *
+     * FROM users [relationName.tableName()]
+     * WHERE users.id [ownerKey] = 'posts.userId' [foreignKey]
+     * ```
+     *
+     * @relationName        The WireBox mapping for the related entity.
+     * @foreignKey          The column name on the `parent` entity that refers to
+     *                      the `ownerKey` on the `related` entity.
+     * @ownerKey            The column name on the `realted` entity that is referred
+     *                      to by the `foreignKey` of the `parent` entity.
+     * @relationMethodName  The method name called to retrieve this relationship.
+     *                      Uses a stack backtrace to determine by default,
+     *
+     * @return              quick.models.Relationships.BelongsTo
+     */
     private BelongsTo function belongsTo(
         required string relationName,
         string foreignKey,
@@ -1214,7 +1288,7 @@ component accessors="true" {
             arguments.relationName
         );
 
-        param arguments.foreignKey = related.get_EntityName() & related.keyName();
+        param arguments.foreignKey = related.entityName() & related.keyName();
         param arguments.ownerKey = related.keyName();
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
@@ -1233,6 +1307,25 @@ component accessors="true" {
         );
     }
 
+    /**
+     * Returns a HasOne relationship between this entity and the entity
+     * defined by `relationName`.
+     *
+     * Given a User `hasOne` UserProfile and using the defaults, the SQL would be:
+     * ```sql
+     * SELECT *
+     * FROM userProfiles [relationName.tableName()]
+     * WHERE usersProfiles.userId [foreignKey] = 'users.id' [localKey]
+     * ```
+     *
+     * @relationName        The WireBox mapping for the related entity.
+     * @foreignKey          The foreign key on the parent entity.
+     * @localKey            The local primary key on the parent entity.
+     * @relationMethodName  The method name called to retrieve this relationship.
+     *                      Uses a stack backtrace to determine by default,
+     *
+     * @return              quick.models.Relationships.HasOne
+     */
     private HasOne function hasOne(
         required string relationName,
         string foreignKey,
@@ -1243,8 +1336,8 @@ component accessors="true" {
             arguments.relationName
         );
 
-        param arguments.foreignKey = variables._entityName & variables._key;
-        param arguments.localKey = variables._key;
+        param arguments.foreignKey = entityName() & keyName();
+        param arguments.localKey = keyName();
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
@@ -1262,6 +1355,25 @@ component accessors="true" {
         );
     }
 
+    /**
+     * Returns a HasMany relationship between this entity and the entity
+     * defined by `relationName`.
+     *
+     * Given a User `hasMany` Posts and using the defaults, the SQL would be:
+     * ```sql
+     * SELECT *
+     * FROM posts [relationName.tableName()]
+     * WHERE posts.userId [foreignKey] = 'users.id' [localKey]
+     * ```
+     *
+     * @relationName        The WireBox mapping for the related entity.
+     * @foreignKey          The foreign key on the parent entity.
+     * @localKey            The local primary key on the parent entity.
+     * @relationMethodName  The method name called to retrieve this relationship.
+     *                      Uses a stack backtrace to determine by default,
+     *
+     * @return              quick.models.Relationships.HasMany
+     */
     private HasMany function hasMany(
         required string relationName,
         string foreignKey,
@@ -1272,8 +1384,8 @@ component accessors="true" {
             arguments.relationName
         );
 
-        param arguments.foreignKey = variables._entityName & variables._key;
-        param arguments.localKey = variables._key;
+        param arguments.foreignKey = entityName() & keyName();
+        param arguments.localKey = keyName();
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
@@ -1291,6 +1403,39 @@ component accessors="true" {
         );
     }
 
+    /**
+     * Returns a BelongsToMany relationship between this entity and the entity
+     * defined by `relationName`.
+     *
+     * Given a Tag `belongsToMany` Posts and using the defaults, the SQL would be:
+     * ```sql
+     * SELECT *
+     * FROM tags [relationName.tableName()]
+     * JOIN posts_tags [table]
+     * ON tags.id [relatedKey] = posts_tags.tagsId [relatedPivotKey]
+     * WHERE posts_tags.postId [foreignPivotKey] = 'posts.id' [parentKey]
+     * ```
+     *
+     * @relationName        The WireBox mapping for the related entity.
+     * @table               The table name used as the pivot table for the
+     *                      relationship.  A pivot table is a table that stores,
+     *                      at a minimum, the primary key values of each side
+     *                      of the relationship as foreign keys.
+     *                      Defaults to the names of both entities in alphabetic
+     *                      order separated by an underscore.
+     * @foreignPivotKey     The name of the column on the pivot `table` that holds
+     *                      the value of the `parentKey` of the `parent` entity.
+     * @relatedPivotKey     The name of the column on the pivot `table` that holds
+     *                      the value of the `relatedKey` of the `ralated` entity.
+     * @parentKey           The name of the column on the `parent` entity that is
+     *                      stored in the `foreignPivotKey` column on `table`.
+     * @relatedKey          The name of the column on the `related` entity that is
+     *                      stored in the `relatedPivotKey` column on `table`.
+     * @relationMethodName  The method name called to retrieve this relationship.
+     *                      Uses a stack backtrace to determine by default,
+     *
+     * @return              quick.models.Relationships.BelongsToMany
+     */
     private BelongsToMany function belongsToMany(
         required string relationName,
         string table,
@@ -1305,15 +1450,15 @@ component accessors="true" {
         );
 
         param arguments.table = generateDefaultPivotTableString(
-            related.get_table(),
-            variables._table
+            related.tableName(),
+            tableName()
         );
-        param arguments.foreignPivotKey = variables._entityName & variables._key;
-        param arguments.relatedPivotKey = related.get_entityName() & related.keyName();
+        param arguments.foreignPivotKey = entityName() & keyName();
+        param arguments.relatedPivotKey = related.entityName() & related.keyName();
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
-        param arguments.parentKey = variables._key;
+        param arguments.parentKey = keyName();
         param arguments.relatedKey = related.keyName();
 
         return variables._wirebox.getInstance(
@@ -1332,15 +1477,51 @@ component accessors="true" {
         );
     }
 
+    /**
+     * Returns a pivot table name which is the name of the two provided tables
+     * in alphabetical order separated with an underscore.
+     *
+     * @tableA  The first table name.
+     * @tableB  The second table name.
+     *
+     * @return  string
+     */
     private string function generateDefaultPivotTableString(
         required string tableA,
         required string tableB
     ) {
-        return compareNoCase( tableA, tableB ) < 0 ? lCase(
-            "#tableA#_#tableB#"
-        ) : lCase( "#tableB#_#tableA#" );
+        return compareNoCase( arguments.tableA, arguments.tableB ) < 0 ? lCase(
+            "#arguments.tableA#_#arguments.tableB#"
+        ) : lCase( "#arguments.tableB#_#arguments.tableA#" );
     }
 
+    /**
+     * Returns a HasManyThrough relationship between this entity and the entity
+     * defined by `relationName` through the entity defined by `intermediateName`.
+     *
+     * Given a User `hasMany` Permissions `Through` Roles and using the defaults,
+     * the SQL would be:
+     * ```sql
+     * SELECT *
+     * FROM permissions [relationName.tableName()]
+     * JOIN roles [intermediate.tableName()]
+     * ON roles.id [secondLocalKey] = permissions.roleId [secondKey]
+     * WHERE roles.userId [firstKey] = 'users.id' [localKey]
+     * ```
+     *
+     * @relationName        The WireBox mapping for the related entity.
+     * @intermediate        The WireBox mapping for the intermediate entity
+     * @firstKey            The key on the intermediate table linking it to the
+     *                      parent entity.
+     * @secondKey           The key on the related entity linking it to the
+     *                      intermediate entity.
+     * @localKey            The local primary key on the parent entity.
+     * @secondLocalKey      The local primary key on the intermediate entity.
+     * @relationMethodName  The method name called to retrieve this relationship.
+     *                      Uses a stack backtrace to determine by default,
+     *
+     * @return              quick.models.Relationships.HasManyThrough
+     */
     private HasManyThrough function hasManyThrough(
         required string relationName,
         required string intermediateName,
@@ -1357,9 +1538,9 @@ component accessors="true" {
             arguments.intermediateName
         );
 
-        param arguments.firstKey = variables._entityName & variables._key;
-        param arguments.secondKey = intermediate.get_entityName() & intermediate.keyName();
-        param arguments.localKey = variables._key;
+        param arguments.firstKey = entityName() & keyName();
+        param arguments.secondKey = intermediate.entityName() & intermediate.keyName();
+        param arguments.localKey = keyName();
         param arguments.secondLocalKey = intermediate.keyName();
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
@@ -1381,6 +1562,31 @@ component accessors="true" {
         );
     }
 
+    /**
+     * Returns a PolymorphicHasMany relationship between this entity and the entity
+     * defined by `relationName`.
+     *
+     * Given a Post and a Video `polymorphicHasMany` Comments
+     * and using the defaults, the SQL would be:
+     * ```sql
+     * SELECT *
+     * FROM comments [relationName.tableName()]
+     * WHERE comments.commentable_id [id] = 'posts.id' [localKey]
+     * AND comments.commentable_type [type] = 'Post' [relationName.entityName()]
+     * ```
+     *
+     * @relationName        The WireBox mapping for the related entity.
+     * @name                The name given to the polymorphic relationship.
+     * @type                The column name that defines the type of the
+     *                      polymorphic relationship. Defaults to `#name#_type`.
+     * @id                  The column name that defines the id of the
+     *                      polymorphic relationship. Defaults to `#name#_id`.
+     * @localKey            The local primary key on the parent entity.
+     * @relationMethodName  The method name called to retrieve this relationship.
+     *                      Uses a stack backtrace to determine by default,
+     *
+     * @return              quick.models.Relationships.PolymorphicHasMany
+     */
     private PolymorphicHasMany function polymorphicHasMany(
         required string relationName,
         required string name,
@@ -1395,7 +1601,7 @@ component accessors="true" {
 
         param arguments.type = arguments.name & "_type";
         param arguments.id = arguments.name & "_id";
-        param arguments.localKey = variables._key;
+        param arguments.localKey = keyName();
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
@@ -1414,6 +1620,30 @@ component accessors="true" {
         );
     }
 
+    /**
+     * Returns a PolymorphicBelongsTo relationship between this entity and the entity
+     * defined by `relationName`.
+     *
+     * Given a Comment `polymorphicBelongsTo` either a Post or Video
+     * and using the defaults, the SQL would be:
+     * ```sql
+     * SELECT *
+     * FROM posts [#type#.tableName()]
+     * WHERE posts.id [ownerKey] = 'comments.commentable_id' [id]
+     * ```
+     *
+     * @name                The name given to the polymorphic relationship.
+     * @type                The column name that defines the type of the
+     *                      polymorphic relationship. Defaults to `#name#_type`.
+     * @id                  The column name that defines the id of the
+     *                      polymorphic relationship. Defaults to `#name#_id`.
+     * @ownerKey            The column name on the `realted` entity that is referred
+     *                      to by the `foreignKey` of the `parent` entity.
+     * @relationMethodName  The method name called to retrieve this relationship.
+     *                      Uses a stack backtrace to determine by default,
+     *
+     * @return              quick.models.Relationships.PolymorphicBelongsTo
+     */
     private PolymorphicBelongsTo function polymorphicBelongsTo(
         required string name,
         string type,
@@ -1461,23 +1691,46 @@ component accessors="true" {
         );
     }
 
+    /**
+     * Add an relation or an array of relations to be eager loaded.
+     * Eager loaded relations are retrieved at the same time as loading
+     * the original query decreasing the number of queries that need
+     * to be ran for the same data.
+     *
+     * @relationName  A single relation name or array of relation
+     *                names to eager load.
+     *
+     * @return        quick.models.BaseEntity
+     */
     public any function with( required any relationName ) {
         if (
             isSimpleValue( arguments.relationName ) && arguments.relationName == ""
         ) {
             return this;
         }
+
         arrayAppend(
             variables._eagerLoad,
             arrayWrap( arguments.relationName ),
             true
         );
+
         return this;
     }
 
-    public array function eagerLoadRelations( required array entities ) {
+    /**
+     * Eager loads the configured relations for the retrieved entities.
+     * Returns the retrieved entities eager loaded with the configured
+     * relationships.
+     *
+     * @entities     The retrieved entities to eager load.
+     *
+     * @doc_generic  quick.models.BaseEntity
+     * @return       [quick.models.BaseEntity]
+     */
+    private array function eagerLoadRelations( required array entities ) {
         if ( arguments.entities.isEmpty() || variables._eagerLoad.isEmpty() ) {
-            return entities;
+            return arguments.entities;
         }
 
         // This is a workaround for grammars with a parameter limit.  If the grammar
@@ -1504,12 +1757,22 @@ component accessors="true" {
         }
 
         arrayEach( variables._eagerLoad, function( relationName ) {
-            entities = eagerLoadRelation( relationName, entities );
+            entities = eagerLoadRelation( arguments.relationName, entities );
         } );
 
         return arguments.entities;
     }
 
+    /**
+     * Eager loads the given relation for the retrieved entities.
+     * Returns the retrieved entities eager loaded with the given relation.
+     *
+     * @relationName  The relationship to eager load.
+     * @entities      The retrieved entities to eager load the relationship.
+     *
+     * @doc_generic   quick.models.BaseEntity
+     * @return        [quick.models.BaseEntity]
+     */
     private array function eagerLoadRelation(
         required any relationName,
         required array entities
@@ -1545,11 +1808,21 @@ component accessors="true" {
     =            QB Utilities            =
     =======================================*/
 
+    /**
+     * Resets the configured query to new.
+     *
+     * @returns  quick.models.BaseEntity
+     */
     public any function resetQuery() {
-        newQuery();
+        variables.query = newQuery();
         return this;
     }
 
+    /**
+     * Configures a new query, assigns it to the entity, and returns it.
+     *
+     * @return  qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function newQuery() {
         if (
             variables._meta.originalMetadata.keyExists(
@@ -1563,16 +1836,14 @@ component accessors="true" {
             );
         }
 
-        variables.query = variables._builder
+        return variables._builder
             .newQuery()
             .setReturnFormat( "array" )
             .setColumnFormatter( function( column ) {
                 return retrieveColumnForAlias( column );
             } )
             .setParentQuery( this )
-            .from( variables._table );
-
-        return variables.query;
+            .from( tableName() );
     }
 
     public any function populateQuery( required QueryBuilder query ) {
@@ -2058,7 +2329,7 @@ component accessors="true" {
         if ( isReadOnly() ) {
             throw(
                 type = "QuickReadOnlyException",
-                message = "[#variables._entityName#] is marked as a read-only entity."
+                message = "[#entityName()#] is marked as a read-only entity."
             );
         }
     }
@@ -2081,7 +2352,7 @@ component accessors="true" {
         if ( !hasAttribute( arguments.name ) ) {
             throw(
                 type = "AttributeNotFound",
-                message = "The [#arguments.name#] attribute was not found on the [#variables._entityName#] entity"
+                message = "The [#arguments.name#] attribute was not found on the [#entityName()#] entity"
             );
         }
     }
@@ -2090,7 +2361,7 @@ component accessors="true" {
         if ( isReadOnlyAttribute( arguments.name ) ) {
             throw(
                 type = "QuickReadOnlyException",
-                message = "[#arguments.name#] is a read-only property on [#variables._entityName#]"
+                message = "[#arguments.name#] is a read-only property on [#entityName()#]"
             );
         }
     }
@@ -2107,7 +2378,7 @@ component accessors="true" {
         if ( retrieveAttributeNames().isEmpty() ) {
             throw(
                 type = "QuickNoAttributesException",
-                message = "[#variables._entityName#] does not have any attributes specified."
+                message = "[#entityName()#] does not have any attributes specified."
             );
         }
     }
@@ -2116,7 +2387,7 @@ component accessors="true" {
         if ( arguments.attrs.isEmpty() ) {
             throw(
                 type = "QuickNoAttributesDataException",
-                message = "[#variables._entityName#] does not have any attributes data for insert."
+                message = "[#entityName()#] does not have any attributes data for insert."
             );
         }
     }
@@ -2133,17 +2404,13 @@ component accessors="true" {
     private void function guardKeyHasNoDefaultValue() {
         if (
             variables._meta.properties.keyExists(
-                variables._key
+                keyName()
             )
         ) {
-            if (
-                variables._meta.properties[ variables._key ].keyExists(
-                    "default"
-                )
-            ) {
+            if ( variables._meta.properties[ keyName() ].keyExists( "default" ) ) {
                 throw(
                     type = "QuickEntityDefaultedKey",
-                    message = "The key value [#variables._key#] has a default value.  Default values on keys prevents Quick from working as expected.  Remove the default value to continue."
+                    message = "The key value [#keyName()#] has a default value.  Default values on keys prevents Quick from working as expected.  Remove the default value to continue."
                 );
             }
         }
@@ -2157,7 +2424,7 @@ component accessors="true" {
         required string eventName,
         struct eventData = {}
     ) {
-        arguments.eventData.entityName = variables._entityName;
+        arguments.eventData.entityName = entityName();
         if ( eventMethodExists( arguments.eventName ) ) {
             invoke(
                 this,

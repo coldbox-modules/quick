@@ -176,11 +176,9 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.Relationships.BelongsToMany
      */
     public BelongsToMany function performJoin() {
-        var baseTable = variables.related.get_table();
-        var key = baseTable & "." & variables.relatedKey;
         variables.related.join(
             variables.table,
-            key,
+            variables.related.qualifyColumn( variables.relatedKey ),
             getQualifiedRelatedPivotKeyName()
         );
         return this;

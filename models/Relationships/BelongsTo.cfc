@@ -71,10 +71,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  void
      */
     public void function addConstraints() {
-        var table = variables.related.get_Table();
         variables.related.where(
-            "#table#.#variables.ownerKey#",
-            "=",
+            variables.related.qualifyColumn( variables.ownerKey ),
             variables.child.retrieveAttribute( variables.foreignKey )
         );
     }
@@ -87,9 +85,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return    quick.models.Relationships.BelongsTo
      */
     public BelongsTo function addEagerConstraints( required array entities ) {
-        var key = variables.related.get_Table() & "." & variables.ownerKey;
         variables.related.whereIn(
-            key,
+            variables.related.qualifyColumn( variables.ownerKey ),
             getEagerEntityKeys( arguments.entities )
         );
         return this;

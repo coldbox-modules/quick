@@ -48,8 +48,8 @@ component
     public HasOneOrMany function addConstraints() {
         variables.related
             .retrieveQuery()
-            .where( variables.foreignKey, "=", getParentKey() )
-            .whereNotNull( variables.foreignKey );
+            .where( getQualifiedForeignKeyName(), getParentKey() )
+            .whereNotNull( getQualifiedForeignKeyName() );
         return this;
     }
 
@@ -282,18 +282,9 @@ component
      */
     public any function setForeignAttributesForCreate( required any entity ) {
         return arguments.entity.forceAssignAttribute(
-            getForeignKeyName(),
+            variables.foreignKey,
             getParentKey()
         );
-    }
-
-    /**
-     * Returns just the column name of foreign key.
-     *
-     * @return   string
-     */
-    public string function getForeignKeyName() {
-        return arrayLast( listToArray( getQualifiedForeignKeyName(), "." ) );
     }
 
     /**
@@ -302,7 +293,7 @@ component
      * @return   string
      */
     public string function getQualifiedForeignKeyName() {
-        return variables.foreignKey;
+        return variables.related.qualifyColumn( variables.foreignKey );
     }
 
     /**

@@ -34,7 +34,7 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         required string localKey
     ) {
         variables.morphType = arguments.type;
-        variables.morphClass = arguments.parent.get_entityName();
+        variables.morphClass = arguments.parent.entityName();
 
         return super.init(
             related = arguments.related,

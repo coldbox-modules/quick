@@ -191,7 +191,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( comments ).toHaveLength( 3 );
 
                 expect( comments[ 1 ].getId() ).toBe( 1 );
-                expect( comments[ 1 ].getCommentable().get_entityName() ).toBe(
+                expect( comments[ 1 ].getCommentable().entityName() ).toBe(
                     "Post"
                 );
                 expect( comments[ 1 ].getCommentable().getPost_Pk() ).toBe(
@@ -199,7 +199,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 );
 
                 expect( comments[ 2 ].getId() ).toBe( 2 );
-                expect( comments[ 2 ].getCommentable().get_entityName() ).toBe(
+                expect( comments[ 2 ].getCommentable().entityName() ).toBe(
                     "Post"
                 );
                 expect( comments[ 2 ].getCommentable().getPost_Pk() ).toBe(
@@ -207,7 +207,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 );
 
                 expect( comments[ 3 ].getId() ).toBe( 3 );
-                expect( comments[ 3 ].getCommentable().get_entityName() ).toBe(
+                expect( comments[ 3 ].getCommentable().entityName() ).toBe(
                     "Video"
                 );
                 expect( comments[ 3 ].getCommentable().getId() ).toBe( 2 );

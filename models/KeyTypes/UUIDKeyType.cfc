@@ -12,7 +12,7 @@ component implements="KeyType" {
      */
     public void function preInsert( required any entity ) {
         arguments.entity.assignAttribute(
-            arguments.entity.get_Key(),
+            arguments.entity.keyName(),
             createUUID()
         );
     }

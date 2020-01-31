@@ -151,12 +151,7 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
      * @return       [quick.models.BaseEntity]
      */
     public array function get() {
-        var entities = variables.related.getEntities();
-        // TODO: Is this line needed?
-        if ( entities.len() > 0 ) {
-            entities = variables.related.eagerLoadRelations( entities );
-        }
-        return entities;
+        return variables.related.get();
     }
 
     /**

@@ -47,7 +47,7 @@ component extends="quick.models.BaseEntity" {
     function deleteById( id ) {
         arguments.id = isArray( arguments.id ) ? arguments.id : [ arguments.id ];
         retrieveQuery()
-            .whereIn( get_key(), arguments.id )
+            .whereIn( keyName(), arguments.id )
             .delete( options = variables._queryOptions );
         return this;
     }
@@ -64,7 +64,7 @@ component extends="quick.models.BaseEntity" {
 
     function exists( id ) {
         if ( !isNull( id ) ) {
-            retrieveQuery().where( get_key(), arguments.id );
+            retrieveQuery().where( keyName(), arguments.id );
         }
         return retrieveQuery().exists( options = variables._queryOptions );
     }
@@ -110,7 +110,7 @@ component extends="quick.models.BaseEntity" {
             return super.get();
         }
         var ids = isArray( id ) ? id : listToArray( id, "," );
-        retrieveQuery().whereIn( get_key(), ids );
+        retrieveQuery().whereIn( keyName(), ids );
         return super.get();
     }
 

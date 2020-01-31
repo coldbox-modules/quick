@@ -57,7 +57,7 @@ component accessors="true" {
     function idEQ( id ) {
         getEntity()
             .retrieveQuery()
-            .where( getEntity().get_key(), id );
+            .where( getEntity().keyName(), id );
         return this;
     }
 
@@ -157,7 +157,7 @@ component accessors="true" {
     }
 
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
-        invoke( variables.query, missingMethodName, missingMethodArguments );
+        invoke( variables._builder, missingMethodName, missingMethodArguments );
         return this;
     }
 

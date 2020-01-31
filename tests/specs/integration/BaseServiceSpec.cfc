@@ -9,7 +9,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         name = "BaseService@quick",
                         initArguments = { entity: user }
                     );
-                    expect( service.get_entityName() ).toBe( "User" );
+                    expect( service.entityName() ).toBe( "User" );
                 } );
 
                 it( "can be instantiated with a wirebox mapping", function() {
@@ -17,14 +17,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         name = "BaseService@quick",
                         initArguments = { entity: "User" }
                     );
-                    expect( service.get_entityName() ).toBe( "User" );
+                    expect( service.entityName() ).toBe( "User" );
                 } );
 
                 it( "can inject a service using the wirebox dsl", function() {
                     var service = getWireBox().getInstance(
                         dsl = "quickService:User"
                     );
-                    expect( service.get_entityName() ).toBe( "User" );
+                    expect( service.entityName() ).toBe( "User" );
                 } );
             } );
 

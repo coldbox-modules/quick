@@ -79,7 +79,7 @@ component {
         " );
         queryExecute( "
              INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `type`, `externalId`) VALUES (4, 'elpete2', 'Another', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2019-06-15 12:29:36', '2017-07-28 02:06:36', 'admin', '1234')
-        " ); 
+        " );
         queryExecute( "
             CREATE TABLE `my_posts` (
               `post_pk` int(11) NOT NULL AUTO_INCREMENT,

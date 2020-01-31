@@ -90,9 +90,8 @@ component
      */
     public HasManyThrough function performJoin() {
         variables.related.join(
-            variables.throughParent.get_Table(),
+            variables.throughParent.tableName(),
             getQualifiedParentKeyName(),
-            "=",
             getQualifiedFarKeyName()
         );
         return this;

@@ -1141,20 +1141,34 @@ component accessors="true" {
     =            Relationships            =
     =====================================*/
 
+    /**
+     * Returns if the entity has a function matching the name of the relationship.
+     *
+     * @name    The relationship name to check.
+     *
+     * @return  Boolean
+     */
     public boolean function hasRelationship( required string name ) {
-        return variables._meta.functionNames.contains(
-            lCase( arguments.name )
+        return arrayContainsNoCase(
+            variables._meta.functionNames,
+            arguments.name
         );
     }
 
+    /**
+     * Loads a single relationship or an array of relationships by name.
+     * Use this method if you need to load the relationship, but don't
+     * need the relationship value returned.
+     *
+     * @name    A single relationship name or an array of relationship names.
+     *
+     * @return  quick.models.BaseEntity;
+     */
     public any function loadRelationship( required any name ) {
-        arguments.name = isArray( arguments.name ) ? arguments.name : [
-            arguments.name
-        ];
-        arguments.name.each( function( n ) {
-            var relationship = invoke( this, n );
-            relationship.setRelationMethodName( n );
-            assignRelationship( n, relationship.get() );
+        arrayWrap( arguments.name ).each( function( n ) {
+            var relationship = invoke( this, arguments.n );
+            relationship.setRelationMethodName( arguments.n );
+            assignRelationship( arguments.n, relationship.get() );
         } );
         return this;
     }
@@ -1453,10 +1467,11 @@ component accessors="true" {
         ) {
             return this;
         }
-        arguments.relationName = isArray( arguments.relationName ) ? arguments.relationName : [
-            arguments.relationName
-        ];
-        arrayAppend( variables._eagerLoad, arguments.relationName, true );
+        arrayAppend(
+            variables._eagerLoad,
+            arrayWrap( arguments.relationName ),
+            true
+        );
         return this;
     }
 
@@ -1852,12 +1867,9 @@ component accessors="true" {
     }
 
     public any function withoutGlobalScope( required any name ) {
-        arguments.name = isArray( arguments.name ) ? arguments.name : [
-            arguments.name
-        ];
-        arguments.name.each( function( n ) {
+        arrayWrap( arguments.name ).each( function( n ) {
             variables._globalScopeExclusions.append(
-                lCase( n )
+                lCase( arguments.n )
             );
         } );
         return this;
@@ -2228,6 +2240,21 @@ component accessors="true" {
             alias
         ) &&
         variables._meta.properties[ alias ].insert;
+    }
+
+    /**
+     * Ensures the return value is an array, either by returning an array
+     * or by returning the value wrapped in an array.
+     *
+     * @value        The value to ensure is an array.
+     *
+     * @doc_generic  any
+     * @return       [any]
+     */
+    private array function arrayWrap( required any value ) {
+        return isArray( arguments.value ) ? arguments.value : [
+            arguments.value
+        ];
     }
 
 }

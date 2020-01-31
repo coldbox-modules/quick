@@ -729,6 +729,11 @@ component accessors="true" {
         return loadEntity( attrs );
     }
 
+    public boolean function exists() {
+        applyGlobalScopes();
+        return retrieveQuery().exists();
+    }
+
     public boolean function existsOrFail() {
         applyGlobalScopes();
         if ( !retrieveQuery().exists() ) {

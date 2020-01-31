@@ -23,18 +23,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 );
             } );
 
-            it( "can retrieve the original attributes of a loaded entity", function() {
-                var user = getInstance( "User" ).find( 1 );
-                var originalAttributes = user.retrieveAttributesData();
-                user.setUsername( "new_username" );
-                expect( originalAttributes ).notToBe( user.retrieveAttributesData() );
-                expect(
-                    originalAttributes.map( function( key, value ) {
-                        return isNull( value ) ? "" : value;
-                    } )
-                ).toBe( user.get_OriginalAttributes() );
-            } );
-
             it( "returns a default value if the attribute is not yet set", function() {
                 var user = getInstance( "User" );
                 expect( user.retrieveAttribute( "username" ) ).toBe( "" );

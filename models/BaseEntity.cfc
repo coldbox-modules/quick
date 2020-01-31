@@ -163,7 +163,7 @@ component accessors="true" {
      */
     private any function assignDefaultProperties() {
         assignAttributesData( {} );
-        assignOriginalAttributes( {} );
+        assignOriginalAttributesHash( {} );
         variables._globalScopeExclusions = [];
         param variables._meta = {};
         param variables._data = {};
@@ -268,6 +268,14 @@ component accessors="true" {
         }, {} );
     }
 
+    /**
+     * Retrieves an array of the attribute names.
+     *
+     * @columnNames  If true, returns an array of column names instead of aliases.
+     *
+     * @doc_generic  string
+     * @return       [string]
+     */
     public array function retrieveAttributeNames( boolean columnNames = false ) {
         return variables._attributes.reduce( function( items, key, value ) {
             items.append( columnNames ? value : key );
@@ -275,11 +283,29 @@ component accessors="true" {
         }, [] );
     }
 
+    /**
+     * Clears the value of an attribute.
+     * Creates the attribute if it doesn't already exist.
+     *
+     * @name       The name of the attribute to clear.
+     * @setToNull  If true, set's the value of the attribute to null.
+     *
+     * @return     quick.models.BaseEntity
+     */
     public any function forceClearAttribute( required string name, boolean setToNull = false ) {
         arguments.force = true;
         return clearAttribute( argumentCollection = arguments );
     }
 
+    /**
+     * Clears the value of an attribute.
+     *
+     * @name       The name of the attribute to clear.
+     * @setToNull  If true, set's the value of the attribute to null.
+     * @force      If true, creates the attribute if it doesn't exist.
+     *
+     * @return     quick.models.BaseEntity
+     */
     public any function clearAttribute( required string name, boolean setToNull = false, boolean force = false ) {
         if ( arguments.force ) {
             var alias = retrieveAliasForColumn( arguments.name );
@@ -301,6 +327,17 @@ component accessors="true" {
         return this;
     }
 
+    /**
+     * Assigns a struct of key / value pairs as the attributes data.
+     * This method does not:
+     * 1. Use relationship setters
+     * 2. Call custom attribute setters
+     * 3. Check for the existence of the attribute
+     *
+     * @attrs   The struct of key / value pairs to set.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function assignAttributesData( struct attrs = {} ) {
         if ( arguments.attrs.isEmpty() ) {
             variables._loaded = false;
@@ -322,63 +359,153 @@ component accessors="true" {
         return this;
     }
 
+    /**
+     * Sets attributes data from a struct of key / value pairs.
+     * This method does the following, in order:
+     * 1. Guard against read only attributes
+     * 2. Attempt to call a relationship setter.
+     * 2. Calls custom attribute setters for attributes that exist
+     * 3. Throws an error if an attribute does not exist
+     *
+     * @attributes                   A struct of key / value pairs.
+     * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+     *                               attribute does not exist.  Instead, it skips
+     *                               the non-existent attribute.
+     *
+     * @return                       quick.models.BaseEntity
+     */
     public any function fill( required struct attributes, boolean ignoreNonExistentAttributes = false ) {
         for ( var key in arguments.attributes ) {
+            guardAgainstReadOnlyAttribute( key );
             var value = arguments.attributes[ key ];
             var rs = tryRelationshipSetter( "set#key#", { "1": value } );
             if ( !isNull( rs ) ) {
                 continue;
             }
-            if ( !arguments.ignoreNonExistentAttributes && !hasAttribute( key ) ) {
-                guardAgainstNonExistentAttribute( key );
-            } else if ( hasAttribute( key ) ) {
+            if ( hasAttribute( key ) ) {
                 variables._data[ retrieveColumnForAlias( key ) ] = value;
-                invoke( this, "set#retrieveAliasForColumn( key )#", { 1: value } );
+                invoke( this, "set#retrieveAliasForColumn( key )#", { "1": value } );
+            } else if ( !arguments.ignoreNonExistentAttributes ) {
+                guardAgainstNonExistentAttribute( key );
             }
-            guardAgainstReadOnlyAttribute( key );
         }
         return this;
     }
 
+    /**
+     * Returns if an entity has a given attribute.
+     *
+     * @name    The name of the attribute to check.  Column names will be
+     *          translated to aliases.
+     *
+     * @return  Boolean
+     */
     public boolean function hasAttribute( required string name ) {
         return structKeyExists( variables._attributes, retrieveAliasForColumn( arguments.name ) ) || variables._key == name;
     }
 
-    public boolean function isColumnAlias( required string name ) {
-        return structKeyExists( variables._attributes, arguments.name );
+    /**
+     * Retrieves a column name for a given alias.
+     * If the column does not exist, the given name is returned unchanged.
+     *
+     * @alias   The name of the alias to find an column.
+     *
+     * @return  string
+     */
+    public string function retrieveColumnForAlias( required string alias ) {
+        return variables._attributes.keyExists( arguments.alias ) ? variables._attributes[ arguments.alias ] : arguments.alias;
     }
 
-    public string function retrieveColumnForAlias( required string name ) {
-        return variables._attributes.keyExists( arguments.name ) ? variables._attributes[ arguments.name ] : arguments.name;
+    /**
+     * Retrieves an alias for a given column name.
+     * If the alias does not exist, the given name is returned unchanged.
+     *
+     * @column  The name of the column to find an alias.
+     *
+     * @return  string
+     */
+    public string function retrieveAliasForColumn( required string column ) {
+        return variables._attributes.reduce( function( acc, alias, columnName ) {
+            return column == arguments.columnName ? arguments.alias : arguments.acc;
+        }, arguments.column );
     }
 
-    public string function retrieveAliasForColumn( required string name ) {
-        return variables._attributes.reduce( function( acc, alias, column ) {
-            return name == column ? alias : acc;
-        }, arguments.name );
-    }
-
-    public any function assignOriginalAttributes( required struct attributes ) {
-        variables._originalAttributes = duplicate( arguments.attributes );
+    /**
+     * Stores a hash of the attributes to detect changes to the entity.
+     * You can check if an entity has changed since saving using the `isDirty` method.
+     *
+     * @attributes  A struct of attributes data to store as the original attributes hash.
+     *
+     * @return      quick.models.BaseEntity
+     */
+    public any function assignOriginalAttributesHash( required struct attributes ) {
+        variables._originalAttributesHash = computeAttributesHash( arguments.attributes );
         return this;
     }
 
+    /**
+     * Computes an hash from a struct of key / value pairs.
+     *
+     * @attributes  A struct of attributes data to compute.
+     *
+     * @return      string
+     */
+    public string function computeAttributesHash( required struct attributes ) {
+        var keys = arguments.attributes.keyArray();
+        arraySort( keys, "textnocase" );
+        return hash(
+            keys
+                .map( function( key ) {
+                    var valueIsNotNull = structKeyExists( attributes, arguments.key ) &&
+                    !isNull( attributes[ arguments.key ] );
+                    var value = valueIsNotNull ? attributes[ arguments.key ] : "";
+                    return lCase( arguments.key ) & "=" & value;
+                } )
+                .toList( "&" )
+        );
+    }
+
+    /**
+     * Marks an entity as loaded from the database.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function markLoaded() {
         variables._loaded = true;
         return this;
     }
 
+    /**
+     * Returns if the entity has been loaded from the database.
+     *
+     * @return  Boolean
+     */
     public boolean function isLoaded() {
         return variables._loaded;
     }
 
+    /**
+     * Returns if the entity has been edited since being loaded from the database.
+     *
+     * @return  Boolean
+     */
     public boolean function isDirty() {
-        // TODO: could store hash of incoming attrs and compare hashes.
-        // that could get rid of `duplicate` in `assignOriginalAttributes`
-        return !deepEqual( variables._originalAttributes, retrieveAttributesData() );
+        return compare( variables._originalAttributesHash, computeAttributesHash( retrieveAttributesData() ) ) != 0;
     }
 
+    /**
+     * Retrieves a value for an attribute.
+     *
+     * @name           The name of the attribute to retrieve.
+     * @defaultValue   The default value to return if the attribute doesn't exist.
+     * @bypassGetters  Flag to bypass custom getters.
+     *
+     * @return         quick.models.BaseEntity
+     */
     public any function retrieveAttribute( required string name, any defaultValue = "", boolean bypassGetters = true ) {
+        // If the value exists in the variables scope and is not read only,
+        // ensure that the value in the variables scope is also set as the
+        // value in the attributes struct.
         if (
             variables.keyExists( retrieveAliasForColumn( arguments.name ) ) &&
             !isReadOnlyAttribute( arguments.name )
@@ -386,10 +513,13 @@ component accessors="true" {
             forceAssignAttribute( arguments.name, variables[ retrieveAliasForColumn( arguments.name ) ] );
         }
 
+        // If there is no value set for the attribute, return the default value.
         if ( !variables._data.keyExists( retrieveColumnForAlias( arguments.name ) ) ) {
             return castValueForGetter( arguments.name, arguments.defaultValue );
         }
 
+        // Retrieve the value either from the custom getter
+        // or directly from the attributes struct
         var data = !arguments.bypassGetters && variables.keyExists( "get" & retrieveAliasForColumn( arguments.name ) ) ? invoke(
             this,
             "get" & retrieveAliasForColumn( arguments.name )
@@ -398,11 +528,29 @@ component accessors="true" {
         return castValueForGetter( arguments.name, data );
     }
 
+    /**
+     * Sets the value of an attribute.
+     * Creates the attribute if it doesn't already exist.
+     *
+     * @name    The name of the attribute to set.
+     * @value   The new value of the attribute.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function forceAssignAttribute( required string name, any value ) {
         arguments.force = true;
         return assignAttribute( argumentCollection = arguments );
     }
 
+    /**
+     * Sets the value of an attribute.
+     *
+     * @name    The name of the attribute to set.
+     * @value   The new value of the attribute.
+     * @force   Creates the attribute if it doesn't exist.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function assignAttribute( required string name, any value, boolean force = false ) {
         if ( arguments.force ) {
             if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
@@ -416,24 +564,37 @@ component accessors="true" {
             guardAgainstNonExistentAttribute( arguments.name );
             guardAgainstReadOnlyAttribute( arguments.name );
         }
+
+        // If the value passed in is a Quick entity, use its `keyValue` as the value.
         if ( isStruct( arguments.value ) ) {
+            // Check for the keyValue method that should be on a Quick entity
+            // to check if the value is a Quick entity.
             if ( !structKeyExists( arguments.value, "keyValue" ) ) {
                 throw(
                     type = "QuickNotEntityException",
                     message = "The value assigned to [#arguments.name#] is not a Quick entity.  Perhaps you forgot to add `persistent=""false""` to a new property?",
-                    detail = isSimpleValue( arguments.value ) ? arguments.value : getMetadata( arguments.value ).fullname
+                    detail = getMetadata( arguments.value ).fullname
                 );
             }
             arguments.value = castValueForSetter( arguments.name, arguments.value.keyValue() );
         }
+
         variables._data[ retrieveColumnForAlias( arguments.name ) ] = castValueForSetter(
             arguments.name,
             arguments.value
         );
         variables[ retrieveAliasForColumn( arguments.name ) ] = castValueForSetter( arguments.name, arguments.value );
+
         return this;
     }
 
+    /**
+     * Qualifies a column with the entity's table name.
+     *
+     * @column  The column to qualify.
+     *
+     * @return  string
+     */
     public string function qualifyColumn( required string column ) {
         if ( findNoCase( ".", arguments.column ) != 0 ) {
             return arguments.column;
@@ -445,50 +606,60 @@ component accessors="true" {
     =            Query Methods            =
     =====================================*/
 
-    public array function getEntities() {
+    /**
+     * Executes the configured query and returns the entities in an array.
+     *
+     * @doc_generic  quick.models.BaseEntity
+     * @return       [quick.models.BaseEntity]
+     */
+    private array function getEntities() {
         applyGlobalScopes();
         return retrieveQuery()
             .get( options = variables._queryOptions )
-            .map( function( attrs ) {
-                return newEntity()
-                    .assignAttributesData( attrs )
-                    .assignOriginalAttributes( attrs )
-                    .markLoaded();
-            } );
+            .map( variables.loadEntity );
     }
 
+    /**
+     * Retrieves all the entities.
+     * It does this by resetting the configured query before retrieving the results.
+     *
+     * @return  The result of `newCollection` with the retrieved entities.
+     */
     public any function all() {
         resetQuery();
-        applyGlobalScopes();
-        return newCollection(
-            eagerLoadRelations(
-                retrieveQuery()
-                    .from( variables._table )
-                    .get( options = variables._queryOptions )
-                    .map( function( attrs ) {
-                        return newEntity()
-                            .assignAttributesData( attrs )
-                            .assignOriginalAttributes( attrs )
-                            .markLoaded();
-                    } )
-            )
-        );
+        return variables.get();
     }
 
+    /**
+     * Executes the configured query, eager loads any relations, and returns
+     * the entities in a new collection.
+     *
+     * @return  The result of `newCollection` with the retrieved entities.
+     */
     public any function get() {
-        applyGlobalScopes();
         return newCollection( eagerLoadRelations( getEntities() ) );
     }
 
+    /**
+     * Returns the first matching entity for the configured query.
+     * If no records are found, it returns null instead.
+     *
+     * @return  quick.models.BaseEntity || null
+     */
     public any function first() {
         applyGlobalScopes();
         var attrs = retrieveQuery().first( options = variables._queryOptions );
-        return structIsEmpty( attrs ) ? javacast( "null", "" ) : newEntity()
-            .assignAttributesData( attrs )
-            .assignOriginalAttributes( attrs )
-            .markLoaded();
+        return structIsEmpty( attrs ) ? javacast( "null", "" ) : loadEntity( attrs );
     }
 
+    /**
+     * Returns the entity with the id value as the primary key.
+     * If no records are found, it returns null instead.
+     *
+     * @id      The id value to find.
+     *
+     * @return  quick.models.BaseEntity || null
+     */
     public any function find( required any id ) {
         fireEvent( "preLoad", { id: arguments.id, metadata: variables._meta } );
         applyGlobalScopes();
@@ -503,13 +674,33 @@ component accessors="true" {
         } );
     }
 
+    /**
+     * Loads up an entity with data from the database.
+     * 1. Assigns the key / value pairs.
+     * 2. Assigns the original attributes hash.
+     * 3. Marks the entity as loaded.
+     *
+     * @data    A struct of key / value pairs to load.
+     *
+     * @return  quick.models.BaseEntity
+     */
     private any function loadEntity( required struct data ) {
         return newEntity()
             .assignAttributesData( arguments.data )
-            .assignOriginalAttributes( arguments.data )
+            .assignOriginalAttributesHash( arguments.data )
             .markLoaded();
     }
 
+    /**
+     * Returns the entity with the id value as the primary key.
+     * If no records are found, it throws an `EntityNotFound` exception.
+     *
+     * @id      The id value to find.
+     *
+     * @throws  EntityNotFound
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function findOrFail( required any id ) {
         var entity = variables.find( arguments.id );
         if ( isNull( entity ) ) {
@@ -518,6 +709,14 @@ component accessors="true" {
         return entity;
     }
 
+    /**
+     * Returns the first matching entity for the configured query.
+     * If no records are found, it throws an `EntityNotFound` exception.
+     *
+     * @throws  EntityNotFound
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function firstOrFail() {
         applyGlobalScopes();
         var attrs = retrieveQuery().first( options = variables._queryOptions );
@@ -527,10 +726,7 @@ component accessors="true" {
                 message = "No [#variables._entityName#] found with constraints [#serializeJSON( retrieveQuery().getBindings() )#]"
             );
         }
-        return newEntity()
-            .assignAttributesData( attrs )
-            .assignOriginalAttributes( attrs )
-            .markLoaded();
+        return loadEntity( attrs );
     }
 
     public boolean function existsOrFail() {
@@ -554,7 +750,7 @@ component accessors="true" {
     public any function reset() {
         resetQuery();
         assignAttributesData( {} );
-        assignOriginalAttributes( {} );
+        assignOriginalAttributesHash( {} );
         variables._data = {};
         variables._relationshipsData = {};
         variables._relationshipsLoaded = {};
@@ -603,7 +799,7 @@ component accessors="true" {
                         } ),
                     variables._queryOptions
                 );
-            assignOriginalAttributes( retrieveAttributesData() );
+            assignOriginalAttributesHash( retrieveAttributesData() );
             markLoaded();
             fireEvent( "postUpdate", { entity: this } );
         } else {
@@ -624,7 +820,7 @@ component accessors="true" {
             guardEmptyAttributeData( attrs );
             var result = retrieveQuery().insert( attrs, variables._queryOptions );
             retrieveKeyType().postInsert( this, result );
-            assignOriginalAttributes( retrieveAttributesData() );
+            assignOriginalAttributesHash( retrieveAttributesData() );
             markLoaded();
             fireEvent( "postInsert", { entity: this } );
         }
@@ -728,10 +924,8 @@ component accessors="true" {
     ) {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
-        param arguments.foreignKey = related
-        .get_EntityName() & related.get_Key();
-        param arguments.ownerKey = related
-        .get_Key();
+        param arguments.foreignKey = related.get_EntityName() & related.get_Key();
+        param arguments.ownerKey = related.get_Key();
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -755,10 +949,8 @@ component accessors="true" {
     ) {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
-        param arguments.foreignKey = variables
-        ._entityName & variables._key;
-        param arguments.localKey = variables
-        ._key;
+        param arguments.foreignKey = variables._entityName & variables._key;
+        param arguments.localKey = variables._key;
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -782,10 +974,8 @@ component accessors="true" {
     ) {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
-        param arguments.foreignKey = variables
-        ._entityName & variables._key;
-        param arguments.localKey = variables
-        ._key;
+        param arguments.foreignKey = variables._entityName & variables._key;
+        param arguments.localKey = variables._key;
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -813,15 +1003,11 @@ component accessors="true" {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
         param arguments.table = generateDefaultPivotTableString( related.get_table(), variables._table );
-        param arguments.foreignPivotKey = variables
-        ._entityName & variables._key;
-        param arguments.relatedPivotKey = related
-        .get_entityName() & related.get_key();
+        param arguments.foreignPivotKey = variables._entityName & variables._key;
+        param arguments.relatedPivotKey = related.get_entityName() & related.get_key();
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-        param arguments.parentKey = variables
-        ._key;
-        param arguments.relatedKey = related
-        .get_key();
+        param arguments.parentKey = variables._key;
+        param arguments.relatedKey = related.get_key();
 
         return variables._wirebox.getInstance(
             name = "BelongsToMany@quick",
@@ -855,14 +1041,10 @@ component accessors="true" {
         var related = variables._wirebox.getInstance( arguments.relationName );
         var intermediate = variables._wirebox.getInstance( arguments.intermediateName );
 
-        param arguments.firstKey = variables
-        ._entityName & variables._key;
-        param arguments.secondKey = intermediate
-        .get_entityName() & intermediate.get_key();
-        param arguments.localKey = variables
-        ._key;
-        param arguments.secondLocalKey = intermediate
-        .get_key();
+        param arguments.firstKey = variables._entityName & variables._key;
+        param arguments.secondKey = intermediate.get_entityName() & intermediate.get_key();
+        param arguments.localKey = variables._key;
+        param arguments.secondLocalKey = intermediate.get_key();
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -891,12 +1073,9 @@ component accessors="true" {
     ) {
         var related = variables._wirebox.getInstance( arguments.relationName );
 
-        param arguments.type = arguments
-        .name & "_type";
-        param arguments.id = arguments
-        .name & "_id";
-        param arguments.localKey = variables
-        ._key;
+        param arguments.type = arguments.name & "_type";
+        param arguments.id = arguments.name & "_id";
+        param arguments.localKey = variables._key;
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
         return variables._wirebox.getInstance(
@@ -921,12 +1100,9 @@ component accessors="true" {
         string relationMethodName
     ) {
         param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-        param arguments.name = arguments
-        .relationMethodName;
-        param arguments.type = arguments
-        .name & "_type";
-        param arguments.id = arguments
-        .name & "_id";
+        param arguments.name = arguments.relationMethodName;
+        param arguments.type = arguments.name & "_type";
+        param arguments.id = arguments.name & "_id";
 
         var relationName = retrieveAttribute( arguments.type, "" );
         if ( relationName == "" ) {
@@ -945,8 +1121,7 @@ component accessors="true" {
         }
 
         var related = variables._wirebox.getInstance( relationName );
-        param arguments.ownerKey = related
-        .get_key();
+        param arguments.ownerKey = related.get_key();
 
         return variables._wirebox.getInstance(
             name = "PolymorphicBelongsTo@quick",
@@ -1315,21 +1490,18 @@ component accessors="true" {
             variables._meta = { "originalMetadata": util.getInheritedMetadata( this ) };
         }
         param variables._key = "id";
-        param variables._meta.fullName = variables
-        ._meta.originalMetadata.fullname;
+        param variables._meta.fullName = variables._meta.originalMetadata.fullname;
         variables._fullName = variables._meta.fullName;
         param variables._meta.originalMetadata.mapping = listLast( variables._meta.originalMetadata.fullname, "." );
-        param variables._meta.mapping = variables
-        ._meta.originalMetadata.mapping;
+        param variables._meta.mapping = variables._meta.originalMetadata.mapping;
         variables._mapping = variables._meta.mapping;
         param variables._meta.originalMetadata.entityName = listLast( variables._meta.originalMetadata.name, "." );
-        param variables._meta.entityName = variables
-        ._meta.originalMetadata.entityName;
+        param variables._meta.entityName = variables._meta.originalMetadata.entityName;
         variables._entityName = variables._meta.entityName;
-        param variables._meta.originalMetadata.table = variables
-        ._str.plural( variables._str.snake( variables._entityName ) );
-        param variables._meta.table = variables
-        ._meta.originalMetadata.table;
+        param variables._meta.originalMetadata.table = variables._str.plural(
+            variables._str.snake( variables._entityName )
+        );
+        param variables._meta.table = variables._meta.originalMetadata.table;
         variables._table = variables._meta.table;
         param variables._queryOptions = {};
         if (
@@ -1345,8 +1517,7 @@ component accessors="true" {
             variables._wirebox.getInstance( variables._meta.grammar & "@qb" )
         );
         param variables._meta.originalMetadata.readonly = false;
-        param variables._meta.readonly = variables
-        ._meta.originalMetadata.readonly;
+        param variables._meta.readonly = variables._meta.originalMetadata.readonly;
         variables._readonly = variables._meta.readonly;
         param variables._meta.originalMetadata.functions = [];
         param variables._meta.functionNames = generateFunctionNameList( variables._meta.originalMetadata.functions );
@@ -1378,8 +1549,7 @@ component accessors="true" {
     }
 
     private struct function paramProperty( required struct prop ) {
-        param prop.column = arguments
-        .prop.name;
+        param prop.column = arguments.prop.name;
         param prop.persistent = true;
         param prop.nullValue = "";
         param prop.convertToNull = true;
@@ -1403,134 +1573,6 @@ component accessors="true" {
             }
         }
         return this;
-    }
-
-    private boolean function deepEqual( required any expected, required any actual ) {
-        // Numerics
-        if (
-            isNumeric( arguments.actual ) &&
-            isNumeric( arguments.expected ) &&
-            compare( toString( arguments.actual ), toString( arguments.expected ) ) == 0
-        ) {
-            return true;
-        }
-
-        // Other Simple values
-        if (
-            isSimpleValue( arguments.actual ) &&
-            isSimpleValue( arguments.expected ) &&
-            compare( arguments.actual, arguments.expected ) == 0
-        ) {
-            return true;
-        }
-
-        // Queries
-        if ( isQuery( arguments.actual ) && isQuery( arguments.expected ) ) {
-            // Check number of records
-            if ( arguments.actual.recordCount != arguments.expected.recordCount ) {
-                return false;
-            }
-
-            // Get both column lists and sort them the same
-            var actualColumnList = listSort( arguments.actual.columnList, "textNoCase" );
-            var expectedColumnList = listSort( arguments.expected.columnList, "textNoCase" );
-
-            // Check column lists
-            if ( actualColumnList != expectedColumnList ) {
-                return false;
-            }
-
-            for ( var i = 1; i <= arguments.actual.recordCount; i++ ) {
-                for ( var column in listToArray( actualColumnList ) ) {
-                    if ( arguments.actual[ column ][ i ] != arguments.expected[ column ][ i ] ) {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        // UDFs
-        if (
-            isCustomFunction( arguments.actual ) &&
-            isCustomFunction( arguments.expected ) &&
-            compare( arguments.actual.toString(), arguments.expected.toString() ) == 0
-        ) {
-            return true;
-        }
-
-        // XML
-        if (
-            isXMLDoc( arguments.actual ) &&
-            isXMLDoc( arguments.expected ) &&
-            compare( toString( arguments.actual ), toString( arguments.expected ) ) == 0
-        ) {
-            return true;
-        }
-
-        // Arrays
-        if ( isArray( arguments.actual ) && isArray( arguments.expected ) ) {
-            if ( arrayLen( arguments.actual ) neq arrayLen( arguments.expected ) ) {
-                return false;
-            }
-
-            for ( var i = 1; i <= arrayLen( arguments.actual ); i++ ) {
-                if ( arrayIsDefined( arguments.actual, i ) && arrayIsDefined( arguments.expected, i ) ) {
-                    // check for both nulls
-                    if ( isNull( arguments.actual[ i ] ) && isNull( arguments.expected[ i ] ) ) {
-                        continue;
-                    }
-                    // check if one is null mismatch
-                    if ( isNull( arguments.actual[ i ] ) || isNull( arguments.expected[ i ] ) ) {
-                        return false;
-                    }
-                    // And make sure they match
-                    if ( !deepEqual( arguments.actual[ i ], arguments.expected[ i ] ) ) {
-                        return false;
-                    }
-                    continue;
-                }
-                // check if both not defined, then continue to next element
-                if ( !arrayIsDefined( arguments.actual, i ) && !arrayIsDefined( arguments.expected, i ) ) {
-                    continue;
-                } else {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        // Structs / Object
-        if ( isStruct( arguments.actual ) && isStruct( arguments.expected ) ) {
-            var actualKeys = listSort( structKeyList( arguments.actual ), "textNoCase" );
-            var expectedKeys = listSort( structKeyList( arguments.expected ), "textNoCase" );
-
-            if ( actualKeys != expectedKeys ) {
-                return false;
-            }
-
-            // Loop over each key
-            for ( var key in arguments.actual ) {
-                // check for both nulls
-                if ( isNull( arguments.actual[ key ] ) && isNull( arguments.expected[ key ] ) ) {
-                    continue;
-                }
-                // check if one is null mismatch
-                if ( isNull( arguments.actual[ key ] ) || isNull( arguments.expected[ key ] ) ) {
-                    return false;
-                }
-                // And make sure they match when actual values exist
-                if ( !deepEqual( arguments.actual[ key ], arguments.expected[ key ] ) ) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        return false;
     }
 
     /*=================================

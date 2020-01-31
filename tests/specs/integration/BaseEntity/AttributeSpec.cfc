@@ -64,6 +64,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
             } );
 
+            it( "can reset an entity back to its last loaded data", function() {
+                var user = getInstance( "User" ).find( 1 );
+                expect( user.getUsername() ).toBe( "elpete" );
+                user.setUsername( "new_username" );
+                expect( user.getUsername() ).toBe( "new_username" );
+                user.reset();
+                expect( user.getUsername() ).toBe( "elpete" );
+            } );
+
             it( "shows all the attributes in the memento of a newly created object", function() {
                 expect( getInstance( "User" ).getMemento() ).toBe( {
                     "id": "",

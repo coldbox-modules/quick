@@ -793,13 +793,31 @@ component accessors="true" {
     }
 
     /**
-     * Resets the entity.
+     * Resets the entity to a fresh, unloaded state.
+     *
+     * @return  quick.models.BaseEntity
      */
-    public any function reset() {
+    public any function reset( boolean toNew = false ) {
+        resetQuery();
+        assignAttributesData( arguments.toNew ? {} : variables._originalAttributes );
+        assignOriginalAttributes( arguments.toNew ? {} : variables._originalAttributes );
+        variables._relationshipsData = {};
+        variables._relationshipsLoaded = {};
+        variables._eagerLoad = [];
+        variables._loaded = arguments.toNew ? false : variables._loaded;
+
+        return this;
+    }
+
+    /**
+     * Resets an entity to a new state.
+     *
+     * @return  quick.models.BaseEntity
+     */
+    public any function resetToNew() {
         resetQuery();
         assignAttributesData( {} );
         assignOriginalAttributes( {} );
-        variables._data = {};
         variables._relationshipsData = {};
         variables._relationshipsLoaded = {};
         variables._eagerLoad = [];

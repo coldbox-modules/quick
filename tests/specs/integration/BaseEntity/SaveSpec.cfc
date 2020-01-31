@@ -2,7 +2,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function beforeAll() {
         super.beforeAll();
-        var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
+        var interceptorService = getWireBox().getInstance(
+            dsl = "coldbox:interceptorService"
+        );
         interceptorService.registerInterceptor( interceptorObject = this );
     }
 
@@ -19,7 +21,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newUser.save();
                 var userRowsPostSave = queryExecute( "SELECT * FROM users" );
                 expect( userRowsPostSave ).toHaveLength( 5 );
-                var newUserAgain = getInstance( "User" ).whereUsername( "new_user" ).firstOrFail();
+                var newUserAgain = getInstance( "User" )
+                    .whereUsername( "new_user" )
+                    .firstOrFail();
                 expect( newUserAgain.getFirstName() ).toBe( "New" );
                 expect( newUserAgain.getLastName() ).toBe( "User" );
             } );
@@ -35,7 +39,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newUser.save();
                 var userRowsPostSave = queryExecute( "SELECT * FROM users" );
                 expect( userRowsPostSave ).toHaveLength( 5 );
-                var newUserAgain = getInstance( "User" ).whereUsername( "new_user2" ).firstOrFail();
+                var newUserAgain = getInstance( "User" )
+                    .whereUsername( "new_user2" )
+                    .firstOrFail();
                 expect( newUserAgain.getFirstName() ).toBe( "New2" );
                 expect( newUserAgain.getLastName() ).toBe( "User2" );
                 expect( newUserAgain.getEmail() ).toBe( "test2@test.com" );
@@ -93,13 +99,25 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request ).toHaveKey( "saveSpecPreQBExecute" );
                 expect( request.saveSpecPreQBExecute ).toBeArray();
                 expect( request.saveSpecPreQBExecute ).toHaveLength( 1 );
-                expect( request.saveSpecPreQBExecute[ 1 ] ).toHaveKey( "bindings" );
+                expect( request.saveSpecPreQBExecute[ 1 ] ).toHaveKey(
+                    "bindings"
+                );
                 expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toBeArray();
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toHaveLength( 1 );
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "value" );
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].value ).toBe( "+18018644200" );
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "cfsqltype" );
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+                expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toHaveLength(
+                    1
+                );
+                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey(
+                    "value"
+                );
+                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].value ).toBe(
+                    "+18018644200"
+                );
+                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey(
+                    "cfsqltype"
+                );
+                expect(
+                    request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].cfsqltype
+                ).toBe( "CF_SQL_VARCHAR" );
             } );
 
             it( "can attach an id to a relationship", function() {
@@ -223,7 +241,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var existingTags = post.getTags().toArray();
 
                 var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
-                var tagIds = [ existingTags[ 1 ].keyValue(), newTagA.keyValue(), newTagB.keyValue() ];
+                var tagIds = [
+                    existingTags[ 1 ].keyValue(),
+                    newTagA.keyValue(),
+                    newTagB.keyValue()
+                ];
 
                 post.tags().sync( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
 
@@ -256,7 +278,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var existingTags = post.getTags().toArray();
 
                 var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
-                var tagIds = [ existingTags[ 1 ].keyValue(), newTagA.keyValue(), newTagB.keyValue() ];
+                var tagIds = [
+                    existingTags[ 1 ].keyValue(),
+                    newTagA.keyValue(),
+                    newTagB.keyValue()
+                ];
 
                 post.setTags( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
 
@@ -283,7 +309,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         prc
     ) {
         param request.saveSpecPreQBExecute = [];
-        arrayAppend( request.saveSpecPreQBExecute, duplicate( arguments.interceptData ) );
+        arrayAppend(
+            request.saveSpecPreQBExecute,
+            duplicate( arguments.interceptData )
+        );
     }
 
 }

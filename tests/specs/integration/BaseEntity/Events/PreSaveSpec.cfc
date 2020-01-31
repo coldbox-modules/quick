@@ -2,7 +2,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function beforeAll() {
         super.beforeAll();
-        var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
+        var interceptorService = getWireBox().getInstance(
+            dsl = "coldbox:interceptorService"
+        );
         interceptorService.registerInterceptor( interceptorObject = this );
     }
 
@@ -26,9 +28,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "announces a quickPreSave interception point on update", function() {
                 var song = getInstance( "Song" ).findOrFail( 1 );
-                expect( song.getDownloadUrl() ).toBe( "https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV" );
+                expect( song.getDownloadUrl() ).toBe(
+                    "https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV"
+                );
 
-                song.update( { "downloadUrl": "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" } );
+                song.update( {
+                    "downloadUrl": "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
+                } );
 
                 expect( variables ).toHaveKey( "quickPreSaveCalled" );
                 expect( variables.quickPreSaveCalled ).toBeStruct();
@@ -57,9 +63,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "calls any preSave method on the component on update", function() {
                 var song = getInstance( "Song" ).findOrFail( 1 );
-                expect( song.getDownloadUrl() ).toBe( "https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV" );
+                expect( song.getDownloadUrl() ).toBe(
+                    "https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV"
+                );
 
-                song.update( { "downloadUrl": "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" } );
+                song.update( {
+                    "downloadUrl": "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
+                } );
 
                 expect( request ).toHaveKey( "preSaveCalled" );
                 expect( request.preSaveCalled ).toBeStruct();

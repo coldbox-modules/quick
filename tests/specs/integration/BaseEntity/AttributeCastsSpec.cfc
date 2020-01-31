@@ -18,14 +18,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newNumber.setActive( true );
                 newNumber.save();
 
-                var results = queryExecute( "SELECT * FROM `phone_numbers` WHERE `number` = ?", [ "111-111-1111" ] );
+                var results = queryExecute(
+                    "SELECT * FROM `phone_numbers` WHERE `number` = ?",
+                    [ "111-111-1111" ]
+                );
                 expect( results ).toHaveLength( 1 );
                 expect( results.active ).toBe( 1 );
                 expect( results.active ).toBeNumeric();
             } );
 
             it( "casts values in queries", function() {
-                var inactiveNumbers = getInstance( "PhoneNumber" ).where( "active", false ).get();
+                var inactiveNumbers = getInstance( "PhoneNumber" )
+                    .where( "active", false )
+                    .get();
                 expect( inactiveNumbers ).notToBeEmpty();
                 expect( inactiveNumbers ).toHaveLength( 1 );
                 expect( inactiveNumbers[ 1 ].getId() ).toBe( 2 );

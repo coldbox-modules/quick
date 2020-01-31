@@ -6,20 +6,28 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var post = getInstance( "Post" ).find( 1245 );
 
                 expect( post.retrieveAttributesData() ).toHaveKey( "post_pk" );
-                expect( post.retrieveAttributesData() ).notToHaveKey( "PostPk" );
+                expect( post.retrieveAttributesData() ).notToHaveKey(
+                    "PostPk"
+                );
 
                 expect( post.getPost_Pk() ).notToBeNull();
 
                 post.setCreatedDate( now() );
 
-                expect( post.retrieveAttributesData() ).toHaveKey( "created_date" );
+                expect( post.retrieveAttributesData() ).toHaveKey(
+                    "created_date"
+                );
             } );
 
             it( "converts stores all attributes internally as snake case when the `attributecasing` metadata property is set to `snake`", function() {
                 var user = getInstance( "User" ).find( 1 );
 
-                expect( user.retrieveAttributesData() ).toHaveKey( "first_name" );
-                expect( user.retrieveAttributesData() ).notToHaveKey( "firstName" );
+                expect( user.retrieveAttributesData() ).toHaveKey(
+                    "first_name"
+                );
+                expect( user.retrieveAttributesData() ).notToHaveKey(
+                    "firstName"
+                );
 
                 expect( function() {
                     user.getFirstName();
@@ -31,8 +39,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 user.setCreatedDate( now() );
 
-                expect( user.retrieveAttributesData() ).notToHaveKey( "createdDate" );
-                expect( user.retrieveAttributesData() ).toHaveKey( "created_date" );
+                expect( user.retrieveAttributesData() ).notToHaveKey(
+                    "createdDate"
+                );
+                expect( user.retrieveAttributesData() ).toHaveKey(
+                    "created_date"
+                );
             } );
         } );
     }

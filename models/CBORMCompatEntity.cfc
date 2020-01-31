@@ -1,6 +1,8 @@
 component extends="quick.models.BaseEntity" {
 
-    property name="CBORMCriteriaBuilderCompat" inject="provider:CBORMCriteriaBuilderCompat@quick";
+    property
+        name="CBORMCriteriaBuilderCompat"
+        inject="provider:CBORMCriteriaBuilderCompat@quick";
 
     function list(
         struct criteria = {},
@@ -24,7 +26,9 @@ component extends="quick.models.BaseEntity" {
             retrieveQuery().limit( max );
         }
         if ( asQuery ) {
-            return retrieveQuery().setReturnFormat( "query" ).get( options = variables._queryOptions );
+            return retrieveQuery()
+                .setReturnFormat( "query" )
+                .get( options = variables._queryOptions );
         } else {
             return super.get();
         }
@@ -32,20 +36,28 @@ component extends="quick.models.BaseEntity" {
 
     function countWhere() {
         for ( var key in arguments ) {
-            retrieveQuery().where( retrieveColumnForAlias( key ), arguments[ key ] );
+            retrieveQuery().where(
+                retrieveColumnForAlias( key ),
+                arguments[ key ]
+            );
         }
         return retrieveQuery().count( options = variables._queryOptions );
     }
 
     function deleteById( id ) {
         arguments.id = isArray( arguments.id ) ? arguments.id : [ arguments.id ];
-        retrieveQuery().whereIn( get_key(), arguments.id ).delete( options = variables._queryOptions );
+        retrieveQuery()
+            .whereIn( get_key(), arguments.id )
+            .delete( options = variables._queryOptions );
         return this;
     }
 
     function deleteWhere() {
         for ( var key in arguments ) {
-            retrieveQuery().where( retrieveColumnForAlias( key ), arguments[ key ] );
+            retrieveQuery().where(
+                retrieveColumnForAlias( key ),
+                arguments[ key ]
+            );
         }
         return deleteAll( options = variables._queryOptions );
     }
@@ -78,7 +90,9 @@ component extends="quick.models.BaseEntity" {
     }
 
     function get( id = 0, returnNew = true ) {
-        if ( ( isNull( arguments.id ) || arguments.id == 0 ) && arguments.returnNew ) {
+        if (
+            ( isNull( arguments.id ) || arguments.id == 0 ) && arguments.returnNew
+        ) {
             return newEntity();
         }
         // This is written this way to avoid conflicts with the BIF `find`

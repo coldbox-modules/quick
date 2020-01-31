@@ -50,8 +50,15 @@ component {
      *
      * @return                  any
      */
-    public any function onMissingMethod( required string missingMethodName, struct missingMethodArguments = {} ) {
-        return invoke( variables.entity.resetQuery(), missingMethodName, missingMethodArguments );
+    public any function onMissingMethod(
+        required string missingMethodName,
+        struct missingMethodArguments = {}
+    ) {
+        return invoke(
+            variables.entity.resetQuery(),
+            missingMethodName,
+            missingMethodArguments
+        );
     }
 
 }

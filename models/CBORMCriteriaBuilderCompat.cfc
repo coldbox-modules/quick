@@ -14,7 +14,9 @@ component accessors="true" {
     }
 
     function between( column, start, end ) {
-        getEntity().retrieveQuery().whereBetween( column, start, end );
+        getEntity()
+            .retrieveQuery()
+            .whereBetween( column, start, end );
         return this;
     }
 
@@ -34,7 +36,9 @@ component accessors="true" {
     }
 
     function gtProperty( left, right ) {
-        getEntity().retrieveQuery().whereColumn( left, ">", right );
+        getEntity()
+            .retrieveQuery()
+            .whereColumn( left, ">", right );
         return this;
     }
 
@@ -44,12 +48,16 @@ component accessors="true" {
     }
 
     function geProperty( left, right ) {
-        getEntity().retrieveQuery().whereColumn( left, ">=", right );
+        getEntity()
+            .retrieveQuery()
+            .whereColumn( left, ">=", right );
         return this;
     }
 
     function idEQ( id ) {
-        getEntity().retrieveQuery().where( getEntity().get_key(), id );
+        getEntity()
+            .retrieveQuery()
+            .where( getEntity().get_key(), id );
         return this;
     }
 
@@ -59,7 +67,9 @@ component accessors="true" {
     }
 
     function ilike( column, value ) {
-        getEntity().retrieveQuery().where( column, "ilike", value );
+        getEntity()
+            .retrieveQuery()
+            .where( column, "ilike", value );
         return this;
     }
 
@@ -84,12 +94,16 @@ component accessors="true" {
     }
 
     function ltProperty( left, right ) {
-        getEntity().retrieveQuery().whereColumn( left, "<", right );
+        getEntity()
+            .retrieveQuery()
+            .whereColumn( left, "<", right );
         return this;
     }
 
     function neProperty( left, right ) {
-        getEntity().retrieveQuery().whereColumn( left, "<>", right );
+        getEntity()
+            .retrieveQuery()
+            .whereColumn( left, "<>", right );
         return this;
     }
 
@@ -99,7 +113,9 @@ component accessors="true" {
     }
 
     function leProperty( left, right ) {
-        getEntity().retrieveQuery().whereColumn( left, "<=", right );
+        getEntity()
+            .retrieveQuery()
+            .whereColumn( left, "<=", right );
         return this;
     }
 
@@ -114,7 +130,10 @@ component accessors="true" {
     }
 
     function order( orders ) {
-        arguments.orders = isArray( arguments.orders ) ? arguments.orders : listToArray( arguments.orders, "," );
+        arguments.orders = isArray( arguments.orders ) ? arguments.orders : listToArray(
+            arguments.orders,
+            ","
+        );
         getEntity()
             .retrieveQuery()
             .orderBy(

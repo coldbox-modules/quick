@@ -17,7 +17,10 @@
  * }
  * ```
  */
-component accessors="true" extends="quick.models.Relationships.BaseRelationship" {
+component
+    accessors="true"
+    extends="quick.models.Relationships.BaseRelationship"
+{
 
     /**
      * Creates a HasManyThrough relationship.
@@ -73,7 +76,9 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
         variables.related.where(
             getQualifiedFirstKeyName(),
             "=",
-            variables.farParent.retrieveAttribute( variables.localKey )
+            variables.farParent.retrieveAttribute(
+                variables.localKey
+            )
         );
         return this;
     }
@@ -120,7 +125,9 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
      * @returns  string
      */
     function getQualifiedFirstKeyName() {
-        return variables.throughParent.qualifyColumn( variables.firstKey );
+        return variables.throughParent.qualifyColumn(
+            variables.firstKey
+        );
     }
 
     /**
@@ -130,7 +137,9 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
      * @returns  string
      */
     public string function getQualifiedParentKeyName() {
-        return variables.throughParent.qualifyColumn( variables.secondLocalKey );
+        return variables.throughParent.qualifyColumn(
+            variables.secondLocalKey
+        );
     }
 
     /**
@@ -161,7 +170,9 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
      *
      * @return    quick.models.Relationships.HasManyThrough
      */
-    public HasManyThrough function addEagerConstraints( required array entities ) {
+    public HasManyThrough function addEagerConstraints(
+        required array entities
+    ) {
         performJoin();
         variables.related.whereIn(
             getQualifiedFirstKeyName(),
@@ -179,7 +190,10 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
      * @doc_generic  quick.models.BaseEntity
      * @return       [quick.models.BaseEntity]
      */
-    public array function initRelation( required array entities, required string relation ) {
+    public array function initRelation(
+        required array entities,
+        required string relation
+    ) {
         return arguments.entities.map( function( entity ) {
             return arguments.entity.assignRelationship( relation, [] );
         } );
@@ -196,7 +210,11 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
      * @doc_generic  quick.models.BaseEntity
      * @return       [quick.models.BaseEntity]
      */
-    public array function match( required array entities, required array results, required string relation ) {
+    public array function match(
+        required array entities,
+        required array results,
+        required string relation
+    ) {
         var dictionary = buildDictionary( arguments.results );
         arguments.entities.each( function( entity ) {
             var key = entity.retrieveAttribute( variables.localKey );
@@ -217,7 +235,9 @@ component accessors="true" extends="quick.models.Relationships.BaseRelationship"
      */
     public struct function buildDictionary( required array results ) {
         return arguments.results.reduce( function( dict, result ) {
-            var key = arguments.result.retrieveAttribute( variables.firstKey );
+            var key = arguments.result.retrieveAttribute(
+                variables.firstKey
+            );
             if ( !structKeyExists( arguments.dict, key ) ) {
                 arguments.dict[ key ] = [];
             }

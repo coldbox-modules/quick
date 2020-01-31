@@ -4,7 +4,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         describe( "Get Spec", function() {
             it( "finds an entity by the primary key", function() {
                 var user = getInstance( "User" ).find( 1 );
-                expect( user.isLoaded() ).toBeTrue( "The user instance should be found and loaded, but was not." );
+                expect( user.isLoaded() ).toBeTrue(
+                    "The user instance should be found and loaded, but was not."
+                );
             } );
 
             it( "returns null if the record cannot be found", function() {
@@ -22,7 +24,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can refresh itself from the database", function() {
                 var user = getInstance( "User" ).find( 1 );
                 expect( user.getUsername() ).toBe( "elpete" );
-                queryExecute( "UPDATE `users` SET `username` = ? WHERE `id` = ?", [ "new_username", 1 ] );
+                queryExecute(
+                    "UPDATE `users` SET `username` = ? WHERE `id` = ?",
+                    [ "new_username", 1 ]
+                );
                 expect( user.getUsername() ).toBe( "elpete" );
                 user.refresh();
                 expect( user.getUsername() ).toBe( "new_username" );
@@ -31,7 +36,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can get a fresh instance from the database", function() {
                 var user = getInstance( "User" ).find( 1 );
                 expect( user.getUsername() ).toBe( "elpete" );
-                queryExecute( "UPDATE `users` SET `username` = ? WHERE `id` = ?", [ "new_username", 1 ] );
+                queryExecute(
+                    "UPDATE `users` SET `username` = ? WHERE `id` = ?",
+                    [ "new_username", 1 ]
+                );
                 expect( user.getUsername() ).toBe( "elpete" );
                 var freshUser = user.fresh();
                 expect( user.getUsername() ).toBe( "elpete" );
@@ -69,8 +77,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can return if an entity exists", function() {
-                expect( getInstance( "User" ).whereUsername( "johndoe" ).exists() ).toBeTrue();
-                expect( getInstance( "User" ).whereUsername( "doesnt-exist" ).exists() ).toBeFalse();
+                expect(
+                    getInstance( "User" ).whereUsername( "johndoe" ).exists()
+                ).toBeTrue();
+                expect(
+                    getInstance( "User" ).whereUsername( "doesnt-exist" ).exists()
+                ).toBeFalse();
             } );
 
             it( "throws an exception if an entity does not exist when calling existsOrFail", function() {

@@ -7,8 +7,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.retrieveAttribute( "username" ) ).toBe( "" );
                 expect( user.retrieveAttribute( "first_name" ) ).toBe( "" );
                 expect( user.retrieveAttribute( "last_name" ) ).toBe( "" );
-                user.fill( { "username": "JaneDoe", "first_name": "Jane", "last_name": "Doe" } );
-                expect( user.retrieveAttribute( "username" ) ).toBe( "JaneDoe" );
+                user.fill( {
+                    "username": "JaneDoe",
+                    "first_name": "Jane",
+                    "last_name": "Doe"
+                } );
+                expect( user.retrieveAttribute( "username" ) ).toBe(
+                    "JaneDoe"
+                );
                 expect( user.retrieveAttribute( "first_name" ) ).toBe( "Jane" );
                 expect( user.retrieveAttribute( "last_name" ) ).toBe( "Doe" );
             } );
@@ -34,7 +40,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     },
                     true
                 );
-                expect( user.retrieveAttribute( "username" ) ).toBe( "JaneDoe" );
+                expect( user.retrieveAttribute( "username" ) ).toBe(
+                    "JaneDoe"
+                );
                 expect( user.retrieveAttribute( "first_name" ) ).toBe( "Jane" );
                 expect( user.retrieveAttribute( "last_name" ) ).toBe( "Doe" );
             } );

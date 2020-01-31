@@ -20,7 +20,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getFirstName() ).toBe( "John" );
                 expect( user.getLastName() ).toBe( "Doe" );
                 user.update(
-                    { "username": "janedoe", "first_name": "Jane", "non-existant-property": "any-value" },
+                    {
+                        "username": "janedoe",
+                        "first_name": "Jane",
+                        "non-existant-property": "any-value"
+                    },
                     true
                 );
                 user.refresh();

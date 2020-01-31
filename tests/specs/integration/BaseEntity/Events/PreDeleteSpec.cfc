@@ -2,7 +2,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
     function beforeAll() {
         super.beforeAll();
-        var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
+        var interceptorService = getWireBox().getInstance(
+            dsl = "coldbox:interceptorService"
+        );
         interceptorService.registerInterceptor( interceptorObject = this );
     }
 
@@ -18,8 +20,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request.quickPreDeleteCalled ).toBeArray();
                 expect( request.quickPreDeleteCalled ).toHaveLength( 1 );
                 expect( request.quickPreDeleteCalled[ 1 ] ).toBeStruct();
-                expect( request.quickPreDeleteCalled[ 1 ] ).toHaveKey( "entity" );
-                expect( request.quickPreDeleteCalled[ 1 ].entity.getId() ).toBe( 1 );
+                expect( request.quickPreDeleteCalled[ 1 ] ).toHaveKey(
+                    "entity"
+                );
+                expect( request.quickPreDeleteCalled[ 1 ].entity.getId() ).toBe(
+                    1
+                );
                 structDelete( request, "quickPreDeleteCalled" );
             } );
 
@@ -48,7 +54,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         prc
     ) {
         param request.quickPreDeleteCalled = [];
-        arrayAppend( request.quickPreDeleteCalled, duplicate( arguments.interceptData ) );
+        arrayAppend(
+            request.quickPreDeleteCalled,
+            duplicate( arguments.interceptData )
+        );
     }
 
 }

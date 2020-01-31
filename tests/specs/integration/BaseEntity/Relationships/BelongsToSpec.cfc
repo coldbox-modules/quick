@@ -14,13 +14,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "caches the result of fetching the owning entity", function() {
-                controller.getInterceptorService().registerInterceptor( interceptorObject = this );
+                controller
+                    .getInterceptorService()
+                    .registerInterceptor( interceptorObject = this );
                 var post = getInstance( "Post" ).find( 1245 );
                 post.getAuthor();
                 post.getAuthor();
                 post.getAuthor();
                 post.getAuthor();
-                expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+                expect( variables.queries ).toHaveLength(
+                    2,
+                    "Only two queries should have been executed."
+                );
             } );
 
             it( "returns null if there is no owning entity", function() {
@@ -36,7 +41,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     .author()
                     .associate( user )
                     .save();
-                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe(
+                    user.getId()
+                );
                 expect( user.posts().count() ).toBe( 3 );
             } );
 
@@ -45,7 +52,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newPost.setBody( "A new post by me!" );
                 var user = getInstance( "User" ).find( 1 );
                 newPost.setAuthor( user ).save();
-                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe(
+                    user.getId()
+                );
                 expect( user.posts().count() ).toBe( 3 );
             } );
 
@@ -58,8 +67,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newPost.getAuthor();
                 newPost.getAuthor();
                 newPost.getAuthor();
-                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
-                expect( variables.queries ).toHaveLength( 1, "Only one query should have been executed." );
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe(
+                    user.getId()
+                );
+                expect( variables.queries ).toHaveLength(
+                    1,
+                    "Only one query should have been executed."
+                );
             } );
 
             it( "can set the associated relationship by calling a relationship setter with an id", function() {
@@ -67,7 +81,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 newPost.setBody( "A new post by me!" );
                 var user = getInstance( "User" ).find( 1 );
                 newPost.setAuthor( user.keyValue() ).save();
-                expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
+                expect( newPost.retrieveAttribute( "user_id" ) ).toBe(
+                    user.getId()
+                );
                 expect( user.posts().count() ).toBe( 3 );
             } );
 

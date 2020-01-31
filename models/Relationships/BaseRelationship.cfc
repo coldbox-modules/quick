@@ -44,7 +44,9 @@ component {
      *
      * @return   BaseRelationship
      */
-    public BaseRelationship function setRelationMethodName( required string name ) {
+    public BaseRelationship function setRelationMethodName(
+        required string name
+    ) {
         variables.relationMethodName = arguments.name;
         return this;
     }
@@ -137,7 +139,10 @@ component {
      * @doc_generic  any
      * @return   [any]
      */
-    public array function getKeys( required array entities, required string key ) {
+    public array function getKeys(
+        required array entities,
+        required string key
+    ) {
         return unique(
             arguments.entities.map( function( entity ) {
                 return arguments.entity.retrieveAttribute( key );
@@ -153,8 +158,15 @@ component {
      *
      * @return                  any
      */
-    public any function onMissingMethod( required string missingMethodName, required struct missingMethodArguments ) {
-        var result = invoke( variables.related, arguments.missingMethodName, arguments.missingMethodArguments );
+    public any function onMissingMethod(
+        required string missingMethodName,
+        required struct missingMethodArguments
+    ) {
+        var result = invoke(
+            variables.related,
+            arguments.missingMethodName,
+            arguments.missingMethodArguments
+        );
 
         if ( isSimpleValue( result ) ) {
             return result;
@@ -172,7 +184,10 @@ component {
      * @return       [any]
      */
     public array function unique( required array items ) {
-        return arraySlice( createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(), 1 );
+        return arraySlice(
+            createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(),
+            1
+        );
     }
 
 }

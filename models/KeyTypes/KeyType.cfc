@@ -22,6 +22,9 @@ interface displayname="KeyType" {
      *
      * @return   void
      */
-    public void function postInsert( required any entity, required struct result );
+    public void function postInsert(
+        required any entity,
+        required struct result
+    );
 
 }

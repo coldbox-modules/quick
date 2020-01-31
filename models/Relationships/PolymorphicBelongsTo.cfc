@@ -67,7 +67,9 @@ component extends="quick.models.Relationships.BelongsTo" {
      *
      * @return    quick.models.Relationships.PolymorphicBelongsTo
      */
-    public PolymorphicBelongsTo function addEagerConstraints( required array entities ) {
+    public PolymorphicBelongsTo function addEagerConstraints(
+        required array entities
+    ) {
         variables.entities = arguments.entities;
         buildDictionary();
         return this;
@@ -82,11 +84,15 @@ component extends="quick.models.Relationships.BelongsTo" {
      */
     public struct function buildDictionary() {
         variables.dictionary = variables.entities.reduce( function( dict, entity ) {
-            var type = arguments.entity.retrieveAttribute( variables.morphType );
+            var type = arguments.entity.retrieveAttribute(
+                variables.morphType
+            );
             if ( !structKeyExists( arguments.dict, type ) ) {
                 arguments.dict[ type ] = {};
             }
-            var key = arguments.entity.retrieveAttribute( variables.foreignKey );
+            var key = arguments.entity.retrieveAttribute(
+                variables.foreignKey
+            );
             if ( !structKeyExists( arguments.dict[ type ], key ) ) {
                 arguments.dict[ type ][ key ] = [];
             }
@@ -102,7 +108,10 @@ component extends="quick.models.Relationships.BelongsTo" {
      * @return  quick.models.BaseEntity | null
      */
     public any function getResults() {
-        return variables.ownerKey != "" ? super.getResults() : javacast( "null", "" );
+        return variables.ownerKey != "" ? super.getResults() : javacast(
+            "null",
+            ""
+        );
     }
 
     /**
@@ -113,7 +122,10 @@ component extends="quick.models.Relationships.BelongsTo" {
      */
     public array function getEager() {
         structKeyArray( variables.dictionary ).each( function( type ) {
-            matchToMorphParents( arguments.type, getResultsByType( arguments.type ) );
+            matchToMorphParents(
+                arguments.type,
+                getResultsByType( arguments.type )
+            );
         } );
 
         return variables.entities;
@@ -128,11 +140,18 @@ component extends="quick.models.Relationships.BelongsTo" {
      * @return       [quick.models.BaseEntity]
      */
     public array function getResultsByType( required string type ) {
-        var instance = createModelByType( arguments.type ).with( variables.related.get_eagerLoad() );
+        var instance = createModelByType( arguments.type ).with(
+            variables.related.get_eagerLoad()
+        );
 
         var localOwnerKey = variables.ownerKey != "" ? variables.ownerKey : instance.keyName();
 
-        return instance.whereIn( instance.qualifyColumn( localOwnerKey ), gatherKeysByType( arguments.type ) ).get();
+        return instance
+            .whereIn(
+                instance.qualifyColumn( localOwnerKey ),
+                gatherKeysByType( arguments.type )
+            )
+            .get();
     }
 
     /**
@@ -148,7 +167,12 @@ component extends="quick.models.Relationships.BelongsTo" {
             structReduce(
                 variables.dictionary[ arguments.type ],
                 function( acc, key, values ) {
-                    arrayAppend( arguments.acc, arguments.values[ 1 ].retrieveAttribute( variables.foreignKey ) );
+                    arrayAppend(
+                        arguments.acc,
+                        arguments.values[ 1 ].retrieveAttribute(
+                            variables.foreignKey
+                        )
+                    );
                     return acc;
                 },
                 []
@@ -175,14 +199,28 @@ component extends="quick.models.Relationships.BelongsTo" {
      *
      * @return   quick.models.Relationships.PolymorphicBelongsTo
      */
-    public PolymorphicBelongsTo function matchToMorphParents( required string type, required array results ) {
+    public PolymorphicBelongsTo function matchToMorphParents(
+        required string type,
+        required array results
+    ) {
         for ( var result in arguments.results ) {
-            var ownerKeyValue = variables.ownerKey != "" ? result.retrieveAttribute( variables.ownerKey ) : result.keyValue();
+            var ownerKeyValue = variables.ownerKey != "" ? result.retrieveAttribute(
+                variables.ownerKey
+            ) : result.keyValue();
 
-            if ( variables.dictionary[ arguments.type ].keyExists( ownerKeyValue ) ) {
-                var entities = variables.dictionary[ arguments.type ][ ownerKeyValue ];
+            if (
+                variables.dictionary[ arguments.type ].keyExists(
+                    ownerKeyValue
+                )
+            ) {
+                var entities = variables.dictionary[ arguments.type ][
+                    ownerKeyValue
+                ];
                 for ( var entity in entities ) {
-                    entity.assignRelationship( variables.relationMethodName, result );
+                    entity.assignRelationship(
+                        variables.relationMethodName,
+                        result
+                    );
                 }
             }
         }

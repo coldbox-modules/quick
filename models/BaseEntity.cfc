@@ -114,9 +114,15 @@ component accessors="true" {
 
     /**
      * The original values of the attributes.
-     * Used to check if the entity has been edited.
+     * Used if the entity is reset.
      */
     property name="_originalAttributes" persistent="false";
+
+    /**
+     * A hash of the original attributes and their values.
+     * Used to check if the entity has been edited.
+     */
+    property name="_originalAttributesHash" persistent="false";
 
     /**
      * A struct of relationships to their loaded data.
@@ -163,7 +169,7 @@ component accessors="true" {
      */
     private any function assignDefaultProperties() {
         assignAttributesData( {} );
-        assignOriginalAttributesHash( {} );
+        assignOriginalAttributes( {} );
         variables._globalScopeExclusions = [];
         param variables._meta = {};
         param variables._data = {};
@@ -431,6 +437,19 @@ component accessors="true" {
     }
 
     /**
+     * Stores the original attributes in the entity in case the entity
+     * needs to be reset.
+     *
+     * @attributes  A struct of attributes data to store as the original attributes.
+     *
+     * @return      quick.models.BaseEntity
+     */
+    public any function assignOriginalAttributes( required struct attributes ) {
+        variables._originalAttributes = arguments.attributes;
+        return assignOriginalAttributesHash( arguments.attributes );
+    }
+
+    /**
      * Stores a hash of the attributes to detect changes to the entity.
      * You can check if an entity has changed since saving using the `isDirty` method.
      *
@@ -687,7 +706,7 @@ component accessors="true" {
     private any function loadEntity( required struct data ) {
         return newEntity()
             .assignAttributesData( arguments.data )
-            .assignOriginalAttributesHash( arguments.data )
+            .assignOriginalAttributes( arguments.data )
             .markLoaded();
     }
 
@@ -729,11 +748,24 @@ component accessors="true" {
         return loadEntity( attrs );
     }
 
+    /**
+     * Returns if any entities exist with the configured query.
+     *
+     * @return  Boolean
+     */
     public boolean function exists() {
         applyGlobalScopes();
         return retrieveQuery().exists();
     }
 
+    /**
+     * Returns true if any entities exist with the configured query.
+     * If no entities exist, it throws an EntityNotFound exception.
+     *
+     * @throws  EntityNotFound
+     *
+     * @return  Boolean
+     */
     public boolean function existsOrFail() {
         applyGlobalScopes();
         if ( !retrieveQuery().exists() ) {
@@ -745,6 +777,14 @@ component accessors="true" {
         return true;
     }
 
+    /**
+     * Creates a new entity.  If no name is passed, the current entity is duplicated.
+     *
+     * @name    An optional name of an entity to create.  If no name is provided,
+     *          the current entity is duplicated.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function newEntity( string name ) {
         if ( isNull( arguments.name ) ) {
             return variables._entityCreator.new( this );
@@ -752,10 +792,13 @@ component accessors="true" {
         return variables._wirebox.getInstance( arguments.name );
     }
 
+    /**
+     * Resets the entity.
+     */
     public any function reset() {
         resetQuery();
         assignAttributesData( {} );
-        assignOriginalAttributesHash( {} );
+        assignOriginalAttributes( {} );
         variables._data = {};
         variables._relationshipsData = {};
         variables._relationshipsLoaded = {};
@@ -804,7 +847,7 @@ component accessors="true" {
                         } ),
                     variables._queryOptions
                 );
-            assignOriginalAttributesHash( retrieveAttributesData() );
+            assignOriginalAttributes( retrieveAttributesData() );
             markLoaded();
             fireEvent( "postUpdate", { entity: this } );
         } else {
@@ -825,7 +868,7 @@ component accessors="true" {
             guardEmptyAttributeData( attrs );
             var result = retrieveQuery().insert( attrs, variables._queryOptions );
             retrieveKeyType().postInsert( this, result );
-            assignOriginalAttributesHash( retrieveAttributesData() );
+            assignOriginalAttributes( retrieveAttributesData() );
             markLoaded();
             fireEvent( "postInsert", { entity: this } );
         }

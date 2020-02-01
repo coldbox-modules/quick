@@ -13,7 +13,7 @@ component accessors="true" {
     /**
      * The underlying qb Query Builder for the entity.
      */
-    property name="_builder" inject="provider:QuickQB@quick" persistent="false";
+    property name="_builder" inject="QuickQB@quick" persistent="false";
 
     /**
      * The WireBox injector.  Used to inject other entities.
@@ -23,7 +23,7 @@ component accessors="true" {
     /**
      * A string helper library.
      */
-    property name="_str" inject="provider:Str@str" persistent="false";
+    property name="_str" inject="Str@str" persistent="false";
 
     /**
      * The configured module settings for Quick.
@@ -39,7 +39,7 @@ component accessors="true" {
      */
     property
         name="_interceptorService"
-        inject="provider:coldbox:interceptorService"
+        inject="coldbox:interceptorService"
         persistent="false";
 
     /**
@@ -49,7 +49,7 @@ component accessors="true" {
      */
     property
         name="_entityCreator"
-        inject="provider:EntityCreator@quick"
+        inject="EntityCreator@quick"
         persistent="false";
 
     /*===========================================
@@ -198,6 +198,7 @@ component accessors="true" {
      */
     public void function onDIComplete() {
         metadataInspection();
+        resetQuery();
         fireEvent( "instanceReady", { entity: this } );
     }
 
@@ -354,9 +355,9 @@ component accessors="true" {
             var alias = retrieveAliasForColumn( arguments.name );
             if ( !variables._attributes.keyExists( alias ) ) {
                 variables._attributes[ arguments.name ] = arguments.name;
-                variables._meta.properties[ arguments.name ] = paramProperty( { "name": arguments.name } );
+                variables._meta.attributes[ arguments.name ] = paramAttribute( { "name": arguments.name } );
                 variables._meta.originalMetadata.properties.append(
-                    variables._meta.properties[ arguments.name ]
+                    variables._meta.attributes[ arguments.name ]
                 );
             }
         }
@@ -408,7 +409,7 @@ component accessors="true" {
     /**
      * Sets attributes data from a struct of key / value pairs.
      * This method does the following, in order:
-     * 1. Guard against read only attributes
+     * 1. Guard against read-only attributes
      * 2. Attempt to call a relationship setter.
      * 2. Calls custom attribute setters for attributes that exist
      * 3. Throws an error if an attribute does not exist
@@ -588,7 +589,7 @@ component accessors="true" {
         any defaultValue = "",
         boolean bypassGetters = true
     ) {
-        // If the value exists in the variables scope and is not read only,
+        // If the value exists in the variables scope and is not read-only,
         // ensure that the value in the variables scope is also set as the
         // value in the attributes struct.
         if (
@@ -656,9 +657,9 @@ component accessors="true" {
                 )
             ) {
                 variables._attributes[ arguments.name ] = arguments.name;
-                variables._meta.properties[ arguments.name ] = paramProperty( { "name": arguments.name } );
+                variables._meta.attributes[ arguments.name ] = paramAttribute( { "name": arguments.name } );
                 variables._meta.originalMetadata.properties.append(
-                    variables._meta.properties[ arguments.name ]
+                    variables._meta.attributes[ arguments.name ]
                 );
             }
         } else {
@@ -667,7 +668,7 @@ component accessors="true" {
         }
 
         // If the value passed in is a Quick entity, use its `keyValue` as the value.
-        if ( isStruct( arguments.value ) ) {
+        if ( !isNull( arguments.value ) && isStruct( arguments.value ) ) {
             // Check for the keyValue method that should be on a Quick entity
             // to check if the value is a Quick entity.
             if ( !structKeyExists( arguments.value, "keyValue" ) ) {
@@ -686,11 +687,11 @@ component accessors="true" {
 
         variables._data[ retrieveColumnForAlias( arguments.name ) ] = castValueForSetter(
             arguments.name,
-            arguments.value
+            isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
         );
         variables[ retrieveAliasForColumn( arguments.name ) ] = castValueForSetter(
             arguments.name,
-            arguments.value
+            isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
         );
 
         return this;
@@ -1809,17 +1810,17 @@ component accessors="true" {
     =======================================*/
 
     /**
-     * Resets the configured query to new.
+     * Resets the configured query builder to new.
      *
      * @returns  quick.models.BaseEntity
      */
     public any function resetQuery() {
-        variables.query = newQuery();
+        variables._builder = newQuery();
         return this;
     }
 
     /**
-     * Configures a new query, assigns it to the entity, and returns it.
+     * Configures a new query builder and returns it.
      *
      * @return  qb.models.Query.QueryBuilder
      */
@@ -1846,18 +1847,37 @@ component accessors="true" {
             .from( tableName() );
     }
 
+    /**
+     * Populates this entity's query bulider with the passed in query builder.
+     *
+     * @query    The query to use as this entity's query.
+     *
+     * @returns  quick.models.BaseEntity
+     */
     public any function populateQuery( required QueryBuilder query ) {
-        variables.query = arguments.query.clearParentQuery();
+        variables._builder = arguments.query.clearParentQuery();
         return this;
     }
 
+    /**
+     * Retrieves the current query builder instance.
+     *
+     * @return  qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function retrieveQuery() {
-        if ( !structKeyExists( variables, "query" ) ) {
-            variables.query = newQuery();
-        }
-        return variables.query;
+        return variables._builder;
     }
 
+    /**
+     * Adds a subselect query with the given name to the entity.
+     * Useful for computed properties and computed relationship keys.
+     *
+     * @name       The name to use for the subselect result on the entity.
+     * @subselect  The subselect query builder instance or closure to configure
+     *             the subselect.
+     *
+     * @return     quick.models.BaseEntity
+     */
     public any function addSubselect(
         required string name,
         required any subselect
@@ -1868,9 +1888,9 @@ component accessors="true" {
             )
         ) {
             variables._attributes[ arguments.name ] = arguments.name;
-            variables._meta.properties[ arguments.name ] = paramProperty( { "name": arguments.name, "update": false, "insert": false } );
+            variables._meta.attributes[ arguments.name ] = paramAttribute( { "name": arguments.name, "update": false, "insert": false } );
             variables._meta.originalMetadata.properties.append(
-                variables._meta.properties[ arguments.name ]
+                variables._meta.attributes[ arguments.name ]
             );
         }
 
@@ -1902,11 +1922,31 @@ component accessors="true" {
     =            Magic Methods            =
     =====================================*/
 
+    /**
+     * Quick tries a lot of things when encountering a missing method.
+     * Here they are in order:
+     *
+     * 1. `get{missingMethodName}` methods.
+     * 2. `set{missingMethodName}` methods
+     * 3. `scope{missingMethodName}` methods
+     * 4. Relationship getters
+     * 5. Relationship setters
+     * 6. Forwarding the method call to qb
+     *
+     * If none of those steps are successful, it throws a `QuickMissingMethod` exception.
+     *
+     * @missingMethodName       The method name that is missing.
+     * @missingMethodArguments  The arguments passed to the missing method call.
+     *
+     * @throws                  QuickMissingMethod
+     *
+     * @return                  any
+     */
     public any function onMissingMethod(
         required string missingMethodName,
         struct missingMethodArguments = {}
     ) {
-        var columnValue = tryColumnName(
+        var columnValue = tryAttributeAccessor(
             arguments.missingMethodName,
             arguments.missingMethodArguments
         );
@@ -1918,8 +1958,10 @@ component accessors="true" {
             arguments.missingMethodArguments
         );
         if ( !isNull( q ) ) {
+            // If a query is returned, set it as the current query and return
+            // the entity. Otherwise return whatever came back from the scope.
             if ( isStruct( q ) && structKeyExists( q, "retrieveQuery" ) ) {
-                variables.query = q.retrieveQuery();
+                variables._builder = q.retrieveQuery();
                 return this;
             }
             return q;
@@ -1962,25 +2004,44 @@ component accessors="true" {
         }
     }
 
-    private any function tryColumnName(
+    /**
+     * Attempts to use a attribute getter or setter.
+     *
+     * @missingMethodName       The potential attribute name.
+     * @missingMethodArguments  The arguments passed to the missing method call.
+     *
+     * @return                  any
+     */
+    private any function tryAttributeAccessor(
         required string missingMethodName,
         struct missingMethodArguments = {}
     ) {
-        var getColumnValue = tryColumnGetters( arguments.missingMethodName );
-        if ( !isNull( getColumnValue ) ) {
-            return getColumnValue;
+        var getAttributeValue = tryAttributeGetter(
+            arguments.missingMethodName
+        );
+        if ( !isNull( getAttributeValue ) ) {
+            return getAttributeValue;
         }
-        var setColumnValue = tryColumnSetters(
+        var setAttributeValue = tryAttributeSetter(
             arguments.missingMethodName,
             arguments.missingMethodArguments
         );
-        if ( !isNull( setColumnValue ) ) {
+        if ( !isNull( setAttributeValue ) ) {
             return this;
         }
         return;
     }
 
-    private any function tryColumnGetters( required string missingMethodName ) {
+    /**
+     * Attempts to retrieve the value of a potential attribute.
+     *
+     * @missingMethodName  The potential attribute name.
+     *
+     * @return             any
+     */
+    private any function tryAttributeGetter(
+        required string missingMethodName
+    ) {
         if (
             !variables._str.startsWith(
                 arguments.missingMethodName,
@@ -2002,7 +2063,13 @@ component accessors="true" {
         return;
     }
 
-    private any function tryColumnSetters(
+    /**
+     * Attempts to set the missing method arguments as the value of an attribute.
+     *
+     * @missingMethodName       The potential attribute name.
+     * @missingMethodArguments  Any arguments to pass to set for the potential attribute.
+     */
+    private any function tryAttributeSetter(
         required string missingMethodName,
         struct missingMethodArguments = {}
     ) {
@@ -2023,9 +2090,17 @@ component accessors="true" {
             return;
         }
         assignAttribute( columnName, arguments.missingMethodArguments[ 1 ] );
-        return arguments.missingMethodArguments[ 1 ];
+        return this;
     }
 
+    /**
+     * Attempts to retrieve a relationship and executes it.
+     *
+     * @missingMethodName       The potential relationship name.
+     * @missingMethodArguments  Any arguments to pass to the potential relationship.
+     *
+     * @return                  any
+     */
     private any function tryRelationshipGetter(
         required string missingMethodName,
         struct missingMethodArguments = {}
@@ -2061,6 +2136,14 @@ component accessors="true" {
         return retrieveRelationship( relationshipName );
     }
 
+    /**
+     * Attempts to save a new relation to a relationship.
+     *
+     * @missingMethodName       The potential relationship name.
+     * @missingMethodArguments  Any arguments to pass to the potential relationship.
+     *
+     * @return                  any
+     */
     private any function tryRelationshipSetter(
         required string missingMethodName,
         struct missingMethodArguments = {}
@@ -2090,15 +2173,37 @@ component accessors="true" {
         );
     }
 
-    private boolean function relationshipIsNull( required string name ) {
-        if ( !variables._str.startsWith( arguments.name, "get" ) ) {
+    /**
+     * Checks if a relationship exists but is unloaded.
+     *
+     * @missingMethodName  The potential relationship name.
+     *
+     * @return             Boolean
+     */
+    private boolean function relationshipIsNull(
+        required string missingMethodName
+    ) {
+        if (
+            !variables._str.startsWith(
+                arguments.missingMethodName,
+                "get"
+            )
+        ) {
             return false;
         }
         return variables._relationshipsLoaded.keyExists(
-            variables._str.slice( arguments.name, 4 )
+            variables._str.slice( arguments.missingMethodName, 4 )
         );
     }
 
+    /**
+     * Attempts to call a query scope on the entity.
+     *
+     * @missingMethodName       The potential scope name.
+     * @missingMethodArguments  Any arguments to pass to the potential scope.
+     *
+     * @return                  any
+     */
     private any function tryScopes(
         required string missingMethodName,
         struct missingMethodArguments = {}
@@ -2133,10 +2238,24 @@ component accessors="true" {
         return;
     }
 
+    /**
+     * Lifecycle function to apply global scopes to the entity.
+     * It is expected to override this method in your entity if you
+     * need to specify global scopes to load.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function applyGlobalScopes() {
         return this;
     }
 
+    /**
+     * Allows a query to override one or more global scopes for one execution.
+     *
+     * @name    The name of the global scope to override.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function withoutGlobalScope( required any name ) {
         arrayWrap( arguments.name ).each( function( n ) {
             variables._globalScopeExclusions.append(
@@ -2146,6 +2265,14 @@ component accessors="true" {
         return this;
     }
 
+    /**
+     * Forwards a missing method call on to qb.
+     *
+     * @missingMethodName       The potential scope name.
+     * @missingMethodArguments  Any arguments to pass to the potential scope.
+     *
+     * @return                  any
+     */
     private any function forwardToQB(
         required string missingMethodName,
         struct missingMethodArguments = {}
@@ -2163,10 +2290,27 @@ component accessors="true" {
         return this;
     }
 
+    /**
+     * Returns a new collection of the given entities.
+     * It is expected to override this method in your entity if you
+     * need to specify a different collection to return.
+     *
+     * You can also call this method with no arguments to get
+     * an empty collection.
+     *
+     * @entities  The array of entities returned by the query.
+     */
     public any function newCollection( array entities = [] ) {
         return arguments.entities;
     }
 
+    /**
+     * Returns a serializable representation of the entity.
+     * The default getMemento implementation returns all
+     * attributes as well as any loaded relationships.
+     *
+     * @return  struct of data representing the entity.
+     */
     public struct function getMemento() {
         var data = variables._attributes
             .keyArray()
@@ -2182,7 +2326,7 @@ component accessors="true" {
                 var mementos = relation.map( function( r ) {
                     return r.getMemento();
                 } );
-                // ACF 11 doesn't let use directly assign the result of map
+                // ACF 2016 doesn't let use directly assign the result of map
                 // to a dynamic struct key. ¯\_(ツ)_/¯
                 acc[ relationshipName ] = mementos;
             } else {
@@ -2194,6 +2338,12 @@ component accessors="true" {
         return data;
     }
 
+    /**
+     * Special ColdBox method that is called and rendered if this component
+     * is returned from a handler action method.
+     *
+     * @return  struct
+     */
     public struct function $renderdata() {
         return getMemento();
     }
@@ -2202,11 +2352,27 @@ component accessors="true" {
     =            Other Utilities            =
     =======================================*/
 
+    /**
+     * Calls the callback with the given value and then returns the given value.
+     * Nice to avoid temporary variables.
+     *
+     * @value     The value to pass to the callback and as the return value.
+     * @callback  The callback to execute.
+     *
+     * @return    any
+     */
     private any function tap( required any value, required any callback ) {
         arguments.callback( arguments.value );
         return arguments.value;
     }
 
+    /**
+     * Inspects the entity for the required metadata information.
+     * Quick uses a lot of metadata about the entity to do its job.
+     * Since metadata inspection can be expensive (especially inherited
+     * metadata), Quick tries to keep the original metadata around
+     * through creating new entities and executing queries.
+     */
     private void function metadataInspection() {
         if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
             var util = createObject(
@@ -2256,60 +2422,93 @@ component accessors="true" {
         param variables._meta.readonly = variables._meta.originalMetadata.readonly;
         variables._readonly = variables._meta.readonly;
         param variables._meta.originalMetadata.functions = [];
-        param variables._meta.functionNames = generateFunctionNameList(
+        param variables._meta.functionNames = generateFunctionNameArray(
             variables._meta.originalMetadata.functions
         );
         param variables._meta.originalMetadata.properties = [];
-        param variables._meta.properties = generateProperties(
+        param variables._meta.attributes = generateAttributesFromProperties(
             variables._meta.originalMetadata.properties
         );
         if (
-            !variables._meta.properties.keyExists(
+            !variables._meta.attributes.keyExists(
                 variables._key
             )
         ) {
-            var keyProp = paramProperty( { "name": variables._key } );
-            variables._meta.properties[ keyProp.name ] = keyProp;
+            var keyProp = paramAttribute( { "name": variables._key } );
+            variables._meta.attributes[ keyProp.name ] = keyProp;
         }
         guardKeyHasNoDefaultValue();
-        assignAttributesFromProperties( variables._meta.properties );
+        explodeAttributesMetadata( variables._meta.attributes );
     }
 
-    private array function generateFunctionNameList( required array functions ) {
+    /**
+     * Creates an array of all the function names in the metadata.
+     *
+     * @functions    An array of function definitions.
+     *
+     * @doc_generic  String
+     * @return       [String]
+     */
+    private array function generateFunctionNameArray(
+        required array functions
+    ) {
         return arguments.functions.map( function( func ) {
             return lCase( func.name );
         } );
     }
 
-    private struct function generateProperties( required array properties ) {
+    /**
+     * Creates an internal attribute struct for each persistent property
+     * on the entity.
+     *
+     * @properties  The array of properties on the entity.
+     *
+     * @return      A struct of attributes for the entity.
+     */
+    private struct function generateAttributesFromProperties(
+        required array properties
+    ) {
         return arguments.properties.reduce( function( acc, prop ) {
-            var newProp = paramProperty( prop );
+            var newProp = paramAttribute( arguments.prop );
             if ( !newProp.persistent ) {
-                return acc;
+                return arguments.acc;
             }
-            acc[ newProp.name ] = newProp;
-            return acc;
+            arguments.acc[ newProp.name ] = newProp;
+            return arguments.acc;
         }, {} );
     }
 
-    private struct function paramProperty( required struct prop ) {
-        param prop.column = arguments.prop.name;
-        param prop.persistent = true;
-        param prop.nullValue = "";
-        param prop.convertToNull = true;
-        param prop.casts = "";
-        param prop.readOnly = false;
-        param prop.sqltype = "";
-        param prop.insert = true;
-        param prop.update = true;
-        return arguments.prop;
+    /**
+     * Creates the internal attribute struct from an existing struct.
+     * The only required field on the passed in struct is `name`.
+     *
+     * @prop    The attribute struct to param.
+     *
+     * @return  An attribute struct with all the keys needed.
+     */
+    private struct function paramAttribute( required struct attr ) {
+        param attr.column = arguments.attr.name;
+        param attr.persistent = true;
+        param attr.nullValue = "";
+        param attr.convertToNull = true;
+        param attr.casts = "";
+        param attr.readOnly = false;
+        param attr.sqltype = "";
+        param attr.insert = true;
+        param attr.update = true;
+        return arguments.attr;
     }
 
-    private any function assignAttributesFromProperties(
-        required struct properties
+    /**
+     * Sets up some other helper structs for Quick to quickly check metadata.
+     *
+     * @attributes  The attributes to explode
+     */
+    private any function explodeAttributesMetadata(
+        required struct attributes
     ) {
-        for ( var alias in arguments.properties ) {
-            var options = arguments.properties[ alias ];
+        for ( var alias in arguments.attributes ) {
+            var options = arguments.attributes[ alias ];
             variables._attributes[ alias ] = options.column;
             if ( options.convertToNull ) {
                 variables._nullValues[ alias ] = options.nullValue;
@@ -2322,9 +2521,14 @@ component accessors="true" {
     }
 
     /*=================================
-    =            Read Only            =
+    =            Read-Only            =
     =================================*/
 
+    /**
+     * Throws an exception if an entity is marked as read-only
+     *
+     * @throws  QuickReadOnlyException
+     */
     private void function guardReadOnly() {
         if ( isReadOnly() ) {
             throw(
@@ -2334,10 +2538,22 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Returns true if an entity is marked as read-only.
+     *
+     * @return  Boolean
+     */
     private boolean function isReadOnly() {
         return variables._readonly;
     }
 
+    /**
+     * Throws an exception if any read-only attributes are provided.
+     *
+     * @attributes  The attributes to check if they are read-only.
+     *
+     * @throws      QuickReadOnlyException
+     */
     private void function guardAgainstReadOnlyAttributes(
         required struct attributes
     ) {
@@ -2346,6 +2562,13 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Throws an exception if an attribute does not exists on the entity.
+     *
+     * @name    The attribute name to check.
+     *
+     * @throws  AttributeNotFound
+     */
     private void function guardAgainstNonExistentAttribute(
         required string name
     ) {
@@ -2357,6 +2580,13 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Throws an exception if the provided alias is a read-only attribute.
+     *
+     * @name    The name of the attribute to check.
+     *
+     * @throws  QuickReadOnlyException
+     */
     private void function guardAgainstReadOnlyAttribute( required string name ) {
         if ( isReadOnlyAttribute( arguments.name ) ) {
             throw(
@@ -2366,14 +2596,26 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Returns true if an attribute is marked as read-only.
+     *
+     * @name    The name of the attribute to check.
+     *
+     * @return  Boolean
+     */
     private boolean function isReadOnlyAttribute( required string name ) {
         var alias = retrieveAliasForColumn( arguments.name );
-        return variables._meta.properties.keyExists(
+        return variables._meta.attributes.keyExists(
             alias
         ) &&
-        variables._meta.properties[ alias ].readOnly;
+        variables._meta.attributes[ alias ].readOnly;
     }
 
+    /**
+     * Throws an exception if the entity does not have any attributes defined.
+     *
+     * @throws  QuickNoAttributesException
+     */
     private void function guardNoAttributes() {
         if ( retrieveAttributeNames().isEmpty() ) {
             throw(
@@ -2383,6 +2625,13 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Throws an exception if there are no attributes data to insert.
+     *
+     * @attrs   The attributes struct to check.
+     *
+     * @throws  QuickNoAttributesDataException
+     */
     private void function guardEmptyAttributeData( required struct attrs ) {
         if ( arguments.attrs.isEmpty() ) {
             throw(
@@ -2392,6 +2641,13 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Throws an exception if the entity is not loaded.
+     *
+     * @errorMessage  The error message to throw.
+     *
+     * @throws        QuickEntityNotLoaded
+     */
     private void function guardAgainstNotLoaded( required string errorMessage ) {
         if ( !isLoaded() ) {
             throw(
@@ -2401,13 +2657,18 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Throws an exception if the key has a default value.
+     *
+     * @throws  QuickEntityDefaultedKey
+     */
     private void function guardKeyHasNoDefaultValue() {
         if (
-            variables._meta.properties.keyExists(
+            variables._meta.attributes.keyExists(
                 keyName()
             )
         ) {
-            if ( variables._meta.properties[ keyName() ].keyExists( "default" ) ) {
+            if ( variables._meta.attributes[ keyName() ].keyExists( "default" ) ) {
                 throw(
                     type = "QuickEntityDefaultedKey",
                     message = "The key value [#keyName()#] has a default value.  Default values on keys prevents Quick from working as expected.  Remove the default value to continue."
@@ -2420,6 +2681,15 @@ component accessors="true" {
     =            Events          =
     ==============================*/
 
+    /**
+     * Fires a Quick lifecycle event.
+     * This will call the lifecycle event on the entity, if it exists.
+     * It will also announce an interception point with the same name
+     * prefixed with `quick`.
+     *
+     * @eventName  The name of the lifecycle event to announce.
+     * @eventData  The data associated with the lifecycle event.
+     */
     private void function fireEvent(
         required string eventName,
         struct eventData = {}
@@ -2440,33 +2710,86 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Returns true if the event method exists on the entity.
+     *
+     * @eventName  The name of the event being announced.
+     *
+     * @return     Boolean
+     */
     private boolean function eventMethodExists( required string eventName ) {
         return variables.keyExists( arguments.eventName );
     }
 
+    /**
+     * Returns true if an attribute has a defined sql type.
+     *
+     * @name    The name of the attribute to check.
+     *
+     * @return  Boolean
+     */
     private boolean function attributeHasSqlType( required string name ) {
         var alias = retrieveAliasForColumn( arguments.name );
-        return variables._meta.properties.keyExists(
+        return variables._meta.attributes.keyExists(
             alias
         ) &&
-        variables._meta.properties[ alias ].sqltype != "";
+        variables._meta.attributes[ alias ].sqltype != "";
     }
 
+    /**
+     * Returns the sql type for an attribute.
+     *
+     * @name    The name of the attribute to retrieve.
+     *
+     * @return  String
+     */
     private string function getSqlTypeForAttribute( required string name ) {
         var alias = retrieveAliasForColumn( arguments.name );
-        return variables._meta.properties[ alias ].sqltype;
+        return variables._meta.attributes[ alias ].sqltype;
     }
 
+    /**
+     * Returns true if an attribute currently has its configured null value.
+     *
+     * @key     The attribute to check.
+     *
+     * @return  Boolean
+     */
     public boolean function isNullAttribute( required string key ) {
         return isNullValue( key, retrieveAttribute( key ) );
     }
 
+    /**
+     * Checks if a value is considered null for a given key.
+     * This is needed for cases where an empty string is a valid value
+     * for a column.  You can define the null value for a property
+     * to be a custom value.  This function checks if the passed in value
+     * matches the configured null value.
+     *
+     * By default, the null value for a column is an empty string ("").
+     *
+     * @key     The attribute name to check.
+     * @value   The value to check.
+     *
+     * @return  Boolean
+     */
     public boolean function isNullValue( required string key, any value ) {
         var alias = retrieveAliasForColumn( arguments.key );
         return variables._nullValues.keyExists( alias ) &&
         compare( variables._nullValues[ alias ], arguments.value ) == 0;
     }
 
+    /**
+     * Casts a value when retrieving it as a getter.
+     * Casting values lets you store it in the database in one format,
+     * but use it in your entity as a different.  One example is a boolean
+     * which is stored as a bit in the database.
+     *
+     * @key     The attribute name to check for casts.
+     * @value   The value to potentially cast.
+     *
+     * @return  any
+     */
     private any function castValueForGetter( required string key, any value ) {
         arguments.key = retrieveAliasForColumn( arguments.key );
         if ( !structKeyExists( variables._casts, arguments.key ) ) {
@@ -2480,7 +2803,22 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Casts a value when setting an attribute.
+     * Casting values lets you store it in the database in one format,
+     * but use it in your entity as a different.  One example is a boolean
+     * which is stored as a bit in the database.
+     *
+     * @key     The attribute name to check for casts.
+     * @value   The value to potentially cast.
+     *
+     * @return  any
+     */
     private any function castValueForSetter( required string key, any value ) {
+        if ( isNull( arguments.value ) ) {
+            return javacast( "null", "" );
+        }
+
         arguments.key = retrieveAliasForColumn( arguments.key );
         if ( !structKeyExists( variables._casts, arguments.key ) ) {
             return arguments.value;
@@ -2493,20 +2831,34 @@ component accessors="true" {
         }
     }
 
+    /**
+     * Checks if an attribute can be updated.
+     *
+     * @name    The name of the attribute to check.
+     *
+     * @return  Boolean
+     */
     private boolean function canUpdateAttribute( required string name ) {
         var alias = retrieveAliasForColumn( arguments.name );
-        return variables._meta.properties.keyExists(
+        return variables._meta.attributes.keyExists(
             alias
         ) &&
-        variables._meta.properties[ alias ].update;
+        variables._meta.attributes[ alias ].update;
     }
 
+    /**
+     * Checks if an attribute can be inserted.
+     *
+     * @name    The name of the attribute to check.
+     *
+     * @return  Boolean
+     */
     private boolean function canInsertAttribute( required string name ) {
         var alias = retrieveAliasForColumn( arguments.name );
-        return variables._meta.properties.keyExists(
+        return variables._meta.attributes.keyExists(
             alias
         ) &&
-        variables._meta.properties[ alias ].insert;
+        variables._meta.attributes[ alias ].insert;
     }
 
     /**

@@ -15,6 +15,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.getUsername() ).toBe( "new_username" );
             } );
 
+            it( "can set a value to null using the `setColumnName` magic methods", function() {
+                var user = getInstance( "User" ).find( 1 );
+                expect( user.getUsername() ).toBe( "elpete" );
+                user.setUsername( javacast( "null", "" ) );
+                expect( user.getUsername() ).toBe( "" );
+            } );
+
             it( "does not set attributes using the `setColumnName` magic methods during object creation", function() {
                 var referral = getInstance( "Referral" ).findOrFail( 1 );
                 expect( referral.getType() ).toBeWithCase(

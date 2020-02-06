@@ -11,7 +11,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     } );
 
                     it( "can constrain the count of the has check", function() {
-                        var users = getInstance( "User" ).has( "posts", ">=", 2 ).get();
+                        var users = getInstance( "User" )
+                            .has( "posts", ">=", 2 )
+                            .get();
                         expect( users ).toBeArray();
                         expect( users ).toHaveLength( 1 );
 
@@ -44,7 +46,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     } );
 
                     it( "can check nested relationships for existence", function() {
-                        var users = getInstance( "User" ).has( "posts.comments" ).get();
+                        var users = getInstance( "User" )
+                            .has( "posts.comments" )
+                            .get();
                         expect( users ).toBeArray();
                         expect( users ).toHaveLength( 1 );
                     } );
@@ -148,11 +152,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     } );
 
                     it( "can constrain the count of the doesntHave check", function() {
-                        var users = getInstance( "User" ).doesntHave( "posts", ">=", 2 ).get();
+                        var users = getInstance( "User" )
+                            .doesntHave( "posts", ">=", 2 )
+                            .get();
                         expect( users ).toBeArray();
                         expect( users ).toHaveLength( 3 );
 
-                        var users = getInstance( "User" ).doesntHave( "posts", "=", 1 ).get();
+                        var users = getInstance( "User" )
+                            .doesntHave( "posts", "=", 1 )
+                            .get();
                         expect( users ).toBeArray();
                         expect( users ).toHaveLength( 3 );
                     } );
@@ -181,7 +189,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     } );
 
                     it( "can check nested relationships for absence", function() {
-                        var users = getInstance( "User" ).doesntHave( "posts.comments" ).get();
+                        var users = getInstance( "User" )
+                            .doesntHave( "posts.comments" )
+                            .get();
                         expect( users ).toBeArray();
                         expect( users ).toHaveLength( 3 );
                     } );
@@ -261,7 +271,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 describe( "hasManyThrough", function() {
                     it( "can find only entities that do not have a related belongsToMany entity", function() {
-                        var countries = getInstance( "Country" ).doesntHave( "posts" ).get();
+                        var countries = getInstance( "Country" )
+                            .doesntHave( "posts" )
+                            .get();
                         expect( countries ).toBeArray();
                         expect( countries ).toHaveLength( 1 );
                     } );
@@ -269,7 +281,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 describe( "hasOne", function() {
                     it( "can find only entities that do not have a related hasOne entity", function() {
-                        var users = getInstance( "User" ).doesntHave( "latestPost" ).get();
+                        var users = getInstance( "User" )
+                            .doesntHave( "latestPost" )
+                            .get();
                         expect( users ).toBeArray();
                         expect( users ).toHaveLength( 2 );
                     } );

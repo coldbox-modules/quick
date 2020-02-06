@@ -12,6 +12,16 @@ component {
     property name="wirebox" inject="wirebox";
 
     /**
+     * Flag to return a default model if the relation returns null.
+     */
+    property name="returnDefaultEntity" type="boolean" default="false";
+
+    /**
+     * Flag to return a default model if the relation returns null.
+     */
+    property name="defaultAttributes";
+
+    /**
      * Creates a new relationship component to query and retrieve results.
      *
      * @related             The related entity instance.
@@ -27,6 +37,9 @@ component {
         required string relationMethodName,
         required any parent
     ) {
+        variables.returnDefaultEntity = false;
+        variables.defaultAttributes = {};
+
         variables.related = arguments.related.resetQuery();
         variables.relationName = arguments.relationName;
         variables.relationMethodName = arguments.relationMethodName;
@@ -187,6 +200,17 @@ component {
      */
     public any function getRelated() {
         return variables.related;
+    }
+
+    /**
+     * Flags the entity to return a default entity if the relation returns null.
+     *
+     * @return  quick.models.Relationships.BaseRelationship
+     */
+    public BaseRelationship function withDefault( any attributes = {} ) {
+        variables.returnDefaultEntity = true;
+        variables.defaultAttributes = arguments.attributes;
+        return this;
     }
 
     /**

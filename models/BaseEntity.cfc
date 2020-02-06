@@ -1301,18 +1301,24 @@ component accessors="true" {
                 "."
             );
 
-            invoke( retrieveQuery(), methodName, {
-                "query": hasNested( argumentCollection = arguments )
-            } );
+            invoke(
+                retrieveQuery(),
+                methodName,
+                { "query": hasNested( argumentCollection = arguments ) }
+            );
 
             return this;
         }
 
-        invoke( retrieveQuery(), methodName, {
-            "query": arguments.relationQuery.when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
-                q.having( q.raw( "COUNT(*)" ), operator, count );
-            } )
-        } );
+        invoke(
+            retrieveQuery(),
+            methodName,
+            {
+                "query": arguments.relationQuery.when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
+                    q.having( q.raw( "COUNT(*)" ), operator, count );
+                } )
+            }
+        );
         return this;
     }
 
@@ -1346,23 +1352,33 @@ component accessors="true" {
         );
 
         if ( listLen( arguments.relationshipName, "." ) == 1 ) {
-            return invoke( arguments.relationQuery, "whereExists", {
-                "query": relation
-                    .getRelationExistenceQuery( relation.getRelated() )
-                    .when(
-                        !isNull( arguments.operator ) && !isNull(
-                            arguments.count
-                        ),
-                        function( q ) {
-                            q.having( q.raw( "COUNT(*)" ), operator, count );
-                        }
-                    )
-            } );
+            return invoke(
+                arguments.relationQuery,
+                "whereExists",
+                {
+                    "query": relation
+                        .getRelationExistenceQuery( relation.getRelated() )
+                        .when(
+                            !isNull( arguments.operator ) && !isNull(
+                                arguments.count
+                            ),
+                            function( q ) {
+                                q.having( q.raw( "COUNT(*)" ), operator, count );
+                            }
+                        )
+                }
+            );
         }
 
-        arguments.relationQuery = invoke( arguments.relationQuery, "whereExists", {
-            "query": relation.getRelationExistenceQuery( relation.getRelated() )
-        } );
+        arguments.relationQuery = invoke(
+            arguments.relationQuery,
+            "whereExists",
+            {
+                "query": relation.getRelationExistenceQuery(
+                    relation.getRelated()
+                )
+            }
+        );
 
         return hasNested( argumentCollection = arguments );
     }
@@ -1404,23 +1420,34 @@ component accessors="true" {
                 "."
             );
 
-            invoke( retrieveQuery(), methodName, {
-                "query": whereHasNested( argumentCollection = arguments )
-            } );
+            invoke(
+                retrieveQuery(),
+                methodName,
+                { "query": whereHasNested( argumentCollection = arguments ) }
+            );
 
             return this;
         }
 
-        invoke( retrieveQuery(), methodName, {
-            "query": arguments.relationQuery
-                .when( !isNull( callback ), function( q ) {
-                    callback( q );
-                } )
-                .when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
-                    q.having( q.raw( "COUNT(*)" ), operator, count );
-                } ),
-            "combinator": arguments.combinator
-        } );
+        invoke(
+            retrieveQuery(),
+            methodName,
+            {
+                "query": arguments.relationQuery
+                    .when( !isNull( callback ), function( q ) {
+                        callback( q );
+                    } )
+                    .when(
+                        !isNull( arguments.operator ) && !isNull(
+                            arguments.count
+                        ),
+                        function( q ) {
+                            q.having( q.raw( "COUNT(*)" ), operator, count );
+                        }
+                    ),
+                "combinator": arguments.combinator
+            }
+        );
         return this;
     }
 
@@ -1472,26 +1499,36 @@ component accessors="true" {
         );
 
         if ( listLen( arguments.relationshipName, "." ) == 1 ) {
-            return invoke( arguments.relationQuery, "whereExists", {
-                "query": relation
-                    .getRelationExistenceQuery( relation.getRelated() )
-                    .when( !isNull( callback ), function( q ) {
-                        callback( q );
-                    } )
-                    .when(
-                        !isNull( arguments.operator ) && !isNull(
-                            arguments.count
-                        ),
-                        function( q ) {
-                            q.having( q.raw( "COUNT(*)" ), operator, count );
-                        }
-                    )
-            } );
+            return invoke(
+                arguments.relationQuery,
+                "whereExists",
+                {
+                    "query": relation
+                        .getRelationExistenceQuery( relation.getRelated() )
+                        .when( !isNull( callback ), function( q ) {
+                            callback( q );
+                        } )
+                        .when(
+                            !isNull( arguments.operator ) && !isNull(
+                                arguments.count
+                            ),
+                            function( q ) {
+                                q.having( q.raw( "COUNT(*)" ), operator, count );
+                            }
+                        )
+                }
+            );
         }
 
-        arguments.relationQuery = invoke( arguments.relationQuery, "whereExists", {
-            "query": relation.getRelationExistenceQuery( relation.getRelated() )
-        } );
+        arguments.relationQuery = invoke(
+            arguments.relationQuery,
+            "whereExists",
+            {
+                "query": relation.getRelationExistenceQuery(
+                    relation.getRelated()
+                )
+            }
+        );
 
         return whereHasNested( argumentCollection = arguments );
     }

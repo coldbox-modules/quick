@@ -60,4 +60,20 @@ component quick {
         return hasOne( "Post", "user_id" ).latest();
     }
 
+    function latestPostWithEmptyDefault() {
+        return hasOne( "Post", "user_id" ).latest().withDefault();
+    }
+
+    function latestPostWithDefaultAttributes() {
+        return hasOne( "Post", "user_id" ).latest().withDefault( {
+            "body": "Default Post"
+        } );
+    }
+
+    function latestPostWithCallbackConfiguredDefault() {
+        return hasOne( "Post", "user_id" ).latest().withDefault( function( post, user ) {
+            post.setBody( user.getUsername() );
+        } );
+    }
+
 }

@@ -23,7 +23,29 @@ component extends="quick.models.Relationships.HasOneOrMany" {
      * @return  quick.models.BaseEntity
      */
     public any function getResults() {
-        return variables.related.first();
+        var result = variables.related.first();
+
+        if ( !isNull( result ) ) {
+            return result;
+        }
+
+        if ( !variables.returnDefaultEntity ) {
+            return javacast( "null", "" );
+        }
+
+        if (
+            isClosure( variables.defaultAttributes ) || isCustomFunction(
+                variables.defaultAttributes
+            )
+        ) {
+            return tap( variables.related.newEntity(), function( newEntity ) {
+                variables.defaultAttributes( newEntity, variables.parent );
+            } );
+        }
+
+        return variables.related
+            .newEntity()
+            .fill( variables.defaultAttributes );
     }
 
     /**

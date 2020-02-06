@@ -12,6 +12,23 @@ component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
         return belongsTo( "User", "user_id" );
     }
 
+    function authorWithEmptyDefault() {
+        return belongsTo( "User", "user_id" ).withDefault();
+    }
+
+    function authorWithDefaultAttributes() {
+        return belongsTo( "User", "user_id" ).withDefault( {
+            "firstName": "Guest",
+            "lastName": "User"
+        } );
+    }
+
+    function authorWithCalllbackConfiguredDefault() {
+        return belongsTo( "User", "user_id" ).withDefault( function( user, post ) {
+            user.setUsername( post.getBody() );
+        } );
+    }
+
     function tags() {
         return belongsToMany( "Tag", "my_posts_tags", "custom_post_pk", "tag_id" );
     }

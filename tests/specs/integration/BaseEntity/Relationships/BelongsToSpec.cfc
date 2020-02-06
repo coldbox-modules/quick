@@ -33,6 +33,39 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( post.getAuthor() ).toBeNull();
             } );
 
+            it( "can return an empty default entity if there is no owning entity", function() {
+                var post = getInstance( "Post" ).find( 7777 );
+                expect( post.getAuthorWithEmptyDefault() ).notToBeNull();
+                var author = post.getAuthorWithEmptyDefault();
+                expect( author ).toBeInstanceOf( "User" );
+                expect( author.isLoaded() ).toBeFalse(
+                    "A default model is not loaded"
+                );
+                expect( author.retrieveAttributesData() ).toBeEmpty();
+            } );
+
+            it( "can return a configured default entity if there is no owning entity", function() {
+                var post = getInstance( "Post" ).find( 7777 );
+                expect( post.getAuthorWithDefaultAttributes() ).notToBeNull();
+                var author = post.getAuthorWithDefaultAttributes();
+                expect( author ).toBeInstanceOf( "User" );
+                expect( author.isLoaded() ).toBeFalse(
+                    "A default model is not loaded"
+                );
+                expect( author.retrieveAttributesData( aliased = true ) ).toBe( { "firstName": "Guest", "lastName": "User" } );
+            } );
+
+            it( "can configure a default entity with a callback", function() {
+                var post = getInstance( "Post" ).find( 7777 );
+                expect( post.getAuthorWithCalllbackConfiguredDefault() ).notToBeNull();
+                var author = post.getAuthorWithCalllbackConfiguredDefault();
+                expect( author ).toBeInstanceOf( "User" );
+                expect( author.isLoaded() ).toBeFalse(
+                    "A default model is not loaded"
+                );
+                expect( author.getUsername() ).toBe( post.getBody() );
+            } );
+
             it( "can associate a new entity", function() {
                 var newPost = getInstance( "Post" );
                 newPost.setBody( "A new post by me!" );

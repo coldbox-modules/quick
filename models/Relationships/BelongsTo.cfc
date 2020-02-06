@@ -55,11 +55,35 @@ component extends="quick.models.Relationships.BaseRelationship" {
 
     /**
      * Returns the result of the relationship.
+     * If a null is returned, an optional default model can be returned.
+     * The default model can be configured using a `withDefault` method.
      *
      * @return  quick.models.BaseEntity | null
      */
     public any function getResults() {
-        return variables.related.first();
+        var result = variables.related.first();
+
+        if ( !isNull( result ) ) {
+            return result;
+        }
+
+        if ( !variables.returnDefaultEntity ) {
+            return javacast( "null", "" );
+        }
+
+        if (
+            isClosure( variables.defaultAttributes ) || isCustomFunction(
+                variables.defaultAttributes
+            )
+        ) {
+            return tap( variables.related.newEntity(), function( newEntity ) {
+                variables.defaultAttributes( newEntity, variables.parent );
+            } );
+        }
+
+        return variables.related
+            .newEntity()
+            .fill( variables.defaultAttributes );
     }
 
     /**

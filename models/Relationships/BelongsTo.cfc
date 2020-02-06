@@ -59,9 +59,6 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.BaseEntity | null
      */
     public any function getResults() {
-        if ( variables.child.isNullAttribute( variables.foreignKey ) ) {
-            return javacast( "null", "" );
-        }
         return variables.related.first();
     }
 

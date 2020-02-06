@@ -460,6 +460,43 @@ component accessors="true" {
     }
 
     /**
+     * Hyrdates an entity from a struct of data.
+     * Hydrating an entity fills the entity and then marks it as loaded.
+     *
+     * @attributes                   A struct of key / value pairs.
+     * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+     *                               attribute does not exist.  Instead, it skips
+     *                               the non-existent attribute.
+     *
+     * @return                       quick.models.BaseEntity
+     */
+    public any function hydrate(
+        required struct attributes,
+        boolean ignoreNonExistentAttributes = false
+    ) {
+        fill( argumentCollection = arguments );
+        markLoaded();
+        return this;
+    }
+
+    /**
+     * Hydrates a new collection of entities from an array of structs.
+     *
+     * @mementos                     An array of structs to hydrate into entities.
+     * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+     *                               attribute does not exist.  Instead, it skips
+     *                               the non-existent attribute.
+     */
+    public any function hydrateAll(
+        array mementos = [],
+        boolean ignoreNonExistentAttributes = false
+    ) {
+        return newCollection( arguments.mementos.map( function( memento ) {
+            return newEntity().hydrate( memento, ignoreNonExistentAttributes );
+        } ) );
+    }
+
+    /**
      * Returns if an entity has a given attribute.
      *
      * @name    The name of the attribute to check.  Column names will be

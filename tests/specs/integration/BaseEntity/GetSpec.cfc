@@ -134,6 +134,218 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( firstB.getId() ).toBe( 1 );
                 expect( firstB.isRelationshipLoaded( "a" ) ).toBeTrue();
             } );
+
+            describe( "firstOrNew", function() {
+                it( "can return a found entity with firstOrNew", function() {
+                    var existingUser = getInstance( "User" )
+                        .whereUsername( "elpete" )
+                        .firstOrNew();
+
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getUsername() ).toBe( "elpete" );
+                } );
+
+                it( "can return a new unloaded entity with firstOrNew", function() {
+                    var newUser = getInstance( "User" )
+                        .whereUsername( "doesnotexist" )
+                        .firstOrNew();
+
+                    expect( newUser.isLoaded() ).toBeFalse();
+                    expect( newUser.retrieveAttributesData() ).toBe( {} );
+                } );
+
+                it( "can accept a struct of attributes to restrict the query", function() {
+                    var existingUser = getInstance( "User" ).firstOrNew( { "username": "elpete" } );
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getUsername() ).toBe( "elpete" );
+                } );
+
+                it( "the struct of attributes is returned as the new entity data", function() {
+                    var newUser = getInstance( "User" ).firstOrNew( { "username": "doesntexist" } );
+                    expect( newUser.isLoaded() ).toBeFalse();
+                    expect( newUser.retrieveAttributesData( aliased = true ) ).toBe( { "username": "doesntexist" } );
+                } );
+
+                it( "an optional second struct of attributes can be set on the new entity", function() {
+                    var newUser = getInstance( "User" ).firstOrNew(
+                        { "username": "doesntexist" },
+                        { "firstName": "Doesnt", "lastName": "Exist" }
+                    );
+                    expect( newUser.isLoaded() ).toBeFalse();
+                    expect( newUser.retrieveAttributesData( aliased = true ) ).toBe( {
+                        "username": "doesntexist",
+                        "firstName": "Doesnt",
+                        "lastName": "Exist"
+                    } );
+                } );
+
+                it( "the second struct of attributes is ignored if an entity is found", function() {
+                    var existingUser = getInstance( "User" ).firstOrNew(
+                        { "username": "elpete" },
+                        { "firstName": "Doesnt", "lastName": "Exist" }
+                    );
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getFirstName() ).notToBe( "Doesnt" );
+                    expect( existingUser.getLastName() ).notToBe( "Exist" );
+                } );
+            } );
+
+            describe( "firstOrCreate", function() {
+                it( "can return a found entity with firstOrCreate", function() {
+                    var existingUser = getInstance( "User" )
+                        .whereUsername( "elpete" )
+                        .firstOrCreate();
+
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getUsername() ).toBe( "elpete" );
+                } );
+
+                it( "can accept a struct of attributes to restrict the query", function() {
+                    var existingUser = getInstance( "User" ).firstOrCreate( { "username": "elpete" } );
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getUsername() ).toBe( "elpete" );
+                } );
+
+                it( "the struct of attributes is returned as the new entity data", function() {
+                    var newUser = getInstance( "User" ).firstOrCreate( {
+                        "username": "doesntexist",
+                        "firstName": "doesnt",
+                        "lastName": "exist",
+                        "password": "secret"
+                    } );
+                    expect( newUser.isLoaded() ).toBeTrue();
+                    var attrs = newUser.retrieveAttributesData(
+                        aliased = true
+                    );
+                    attrs.delete( "id" );
+                    expect( attrs ).toBe( {
+                        "username": "doesntexist",
+                        "firstName": "doesnt",
+                        "lastName": "exist",
+                        "password": "secret"
+                    } );
+                } );
+
+                it( "an optional second struct of attributes can be set on the new entity", function() {
+                    var newUser = getInstance( "User" ).firstOrCreate(
+                        { "username": "doesntexist" },
+                        {
+                            "firstName": "Doesnt",
+                            "lastName": "Exist",
+                            "password": "secret"
+                        }
+                    );
+                    expect( newUser.isLoaded() ).toBeTrue();
+                    var attrs = newUser.retrieveAttributesData(
+                        aliased = true
+                    );
+                    attrs.delete( "id" );
+                    expect( attrs ).toBe( {
+                        "username": "doesntexist",
+                        "firstName": "doesnt",
+                        "lastName": "exist",
+                        "password": "secret"
+                    } );
+                } );
+
+                it( "the second struct of attributes is ignored if an entity is found", function() {
+                    var existingUser = getInstance( "User" ).firstOrCreate(
+                        { "username": "elpete" },
+                        { "firstName": "Doesnt", "lastName": "Exist" }
+                    );
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getFirstName() ).notToBe( "Doesnt" );
+                    expect( existingUser.getLastName() ).notToBe( "Exist" );
+                } );
+            } );
+
+            describe( "findOrNew", function() {
+                it( "can return a found entity with findOrNew", function() {
+                    var existingUser = getInstance( "User" ).findOrNew( 1 );
+
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getUsername() ).toBe( "elpete" );
+                } );
+
+                it( "can return a new unloaded entity with findOrNew", function() {
+                    var newUser = getInstance( "User" ).findOrNew( 9999 );
+
+                    expect( newUser.isLoaded() ).toBeFalse();
+                    expect( newUser.retrieveAttributesData() ).toBe( {} );
+                } );
+
+                it( "an optional struct of attributes can be set on the new entity", function() {
+                    var newUser = getInstance( "User" ).findOrNew(
+                        9999,
+                        { "firstName": "Doesnt", "lastName": "Exist" }
+                    );
+                    expect( newUser.isLoaded() ).toBeFalse();
+                    expect( newUser.retrieveAttributesData( aliased = true ) ).toBe( { "firstName": "Doesnt", "lastName": "Exist" } );
+                } );
+
+                it( "the second struct of attributes is ignored if an entity is found", function() {
+                    var existingUser = getInstance( "User" ).findOrNew(
+                        1,
+                        { "firstName": "Doesnt", "lastName": "Exist" }
+                    );
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getFirstName() ).notToBe( "Doesnt" );
+                    expect( existingUser.getLastName() ).notToBe( "Exist" );
+                } );
+            } );
+
+            describe( "findOrCreate", function() {
+                it( "can return a found entity with findOrCreate", function() {
+                    var existingUser = getInstance( "User" ).findOrCreate( 1 );
+
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getUsername() ).toBe( "elpete" );
+                } );
+
+                it( "the struct of attributes is returned as the new entity data", function() {
+                    var newUser = getInstance( "User" ).findOrCreate(
+                        9999,
+                        {
+                            "username": "doesntexist",
+                            "firstName": "doesnt",
+                            "lastName": "exist",
+                            "password": "secret"
+                        }
+                    );
+                    expect( newUser.isLoaded() ).toBeTrue();
+                    var attrs = newUser.retrieveAttributesData(
+                        aliased = true
+                    );
+                    attrs.delete( "id" );
+                    expect( attrs ).toBe( {
+                        "username": "doesntexist",
+                        "firstName": "doesnt",
+                        "lastName": "exist",
+                        "password": "secret"
+                    } );
+                } );
+
+                it( "the second struct of attributes is ignored if an entity is found", function() {
+                    var existingUser = getInstance( "User" ).findOrCreate(
+                        1,
+                        { "firstName": "Doesnt", "lastName": "Exist" }
+                    );
+                    expect( existingUser.isLoaded() ).toBeTrue();
+                    expect( existingUser.getFirstName() ).notToBe( "Doesnt" );
+                    expect( existingUser.getLastName() ).notToBe( "Exist" );
+                } );
+            } );
+
+            describe( "firstWhere", function() {
+                it( "can restirct a query and get the first result", function() {
+                    var user = getInstance( "User" ).firstWhere(
+                        "username",
+                        "elpete"
+                    );
+                    expect( user.isLoaded() ).toBeTrue();
+                    expect( user.getUsername() ).toBe( "elpete" );
+                } );
+            } );
         } );
     }
 

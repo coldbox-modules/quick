@@ -14,12 +14,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( user.retrieveAttribute( "first_name" ) ).toBe( "" );
                 expect( user.retrieveAttribute( "last_name" ) ).toBe( "" );
                 user.hydrate( memento );
-                expect( user.isLoaded() ).toBeTrue( "An entity should be loaded after calling hydrate" );
+                expect( user.isLoaded() ).toBeTrue(
+                    "An entity should be loaded after calling hydrate"
+                );
                 expect( user.retrieveAttribute( "username" ) ).toBe(
                     "elpete2"
                 );
-                expect( user.retrieveAttribute( "first_name" ) ).toBe( "Another" );
-                expect( user.retrieveAttribute( "last_name" ) ).toBe( "Peterson" );
+                expect( user.retrieveAttribute( "first_name" ) ).toBe(
+                    "Another"
+                );
+                expect( user.retrieveAttribute( "last_name" ) ).toBe(
+                    "Peterson"
+                );
             } );
 
             it( "can hydrate multiple entities at once from an array of structs", function() {
@@ -41,20 +47,30 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var users = getInstance( "User" ).hydrateAll( mementos );
 
                 var userA = users[ 1 ];
-                expect( userA.isLoaded() ).toBeTrue( "An entity should be loaded after calling hydrate" );
+                expect( userA.isLoaded() ).toBeTrue(
+                    "An entity should be loaded after calling hydrate"
+                );
                 expect( userA.retrieveAttribute( "username" ) ).toBe(
                     "johndoe"
                 );
-                expect( userA.retrieveAttribute( "first_name" ) ).toBe( "John" );
+                expect( userA.retrieveAttribute( "first_name" ) ).toBe(
+                    "John"
+                );
                 expect( userA.retrieveAttribute( "last_name" ) ).toBe( "Doe" );
 
                 var userB = users[ 2 ];
-                expect( userB.isLoaded() ).toBeTrue( "An entity should be loaded after calling hydrate" );
+                expect( userB.isLoaded() ).toBeTrue(
+                    "An entity should be loaded after calling hydrate"
+                );
                 expect( userB.retrieveAttribute( "username" ) ).toBe(
                     "elpete2"
                 );
-                expect( userB.retrieveAttribute( "first_name" ) ).toBe( "Another" );
-                expect( userB.retrieveAttribute( "last_name" ) ).toBe( "Peterson" );
+                expect( userB.retrieveAttribute( "first_name" ) ).toBe(
+                    "Another"
+                );
+                expect( userB.retrieveAttribute( "last_name" ) ).toBe(
+                    "Peterson"
+                );
             } );
         } );
     }

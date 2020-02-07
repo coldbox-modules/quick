@@ -491,9 +491,14 @@ component accessors="true" {
         array mementos = [],
         boolean ignoreNonExistentAttributes = false
     ) {
-        return newCollection( arguments.mementos.map( function( memento ) {
-            return newEntity().hydrate( memento, ignoreNonExistentAttributes );
-        } ) );
+        return newCollection(
+            arguments.mementos.map( function( memento ) {
+                return newEntity().hydrate(
+                    memento,
+                    ignoreNonExistentAttributes
+                );
+            } )
+        );
     }
 
     /**
@@ -2274,6 +2279,50 @@ component accessors="true" {
         return this;
     }
 
+    /**
+     * This handles the .is call, since ACF doesn't parse it correctly.
+     * If the method name is not `is`, then it returns null.
+     *
+     * @missingMethodName       The method name that is missing.
+     * @missingMethodArguments  The arguments passed to the missing method call.
+     *
+     * @return                  Boolean
+     */
+    private any function tryIsMethod(
+        missingMethodName,
+        missingMethodArguments
+    ) {
+        if ( arguments.missingMethodName != "is" ) {
+            return;
+        }
+
+        return handleIs( argumentCollection = missingMethodArguments );
+    }
+
+    /**
+     * Checks if an entity is another entity.
+     *
+     * @otherEntity  The entity to compare.
+     *
+     * @return       Boolean
+     */
+    private boolean function handleIs( required any otherEntity ) {
+        return keyValue() == arguments.otherEntity.keyValue() &&
+        entityName() == arguments.otherEntity.entityName() &&
+        tableName() == arguments.otherEntity.tableName();
+    }
+
+    /**
+     * Returns true if an entity is not another entity.
+     *
+     * @otherEntity  The entity to check.
+     *
+     * @return       Boolean
+     */
+    public boolean function isNot( required any otherEntity ) {
+        return !handleIs( arguments.otherEntity );
+    }
+
     /*=====================================
     =            Magic Methods            =
     =====================================*/
@@ -2302,6 +2351,14 @@ component accessors="true" {
         required string missingMethodName,
         struct missingMethodArguments = {}
     ) {
+        var isValue = tryIsMethod(
+            arguments.missingMethodName,
+            arguments.missingMethodArguments
+        );
+        if ( !isNull( isValue ) ) {
+            return isValue;
+        }
+
         var columnValue = tryAttributeAccessor(
             arguments.missingMethodName,
             arguments.missingMethodArguments

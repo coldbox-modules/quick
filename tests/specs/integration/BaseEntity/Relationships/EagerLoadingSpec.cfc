@@ -252,25 +252,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can eager load a large relationship quickly", function() {
-                queryExecute(
-                    "
-                    CREATE TABLE `a` (
-                        `id` int(11) NOT NULL AUTO_INCREMENT,
-                        `name` varchar(50) NOT NULL,
-                        PRIMARY KEY (`id`)
-                    )
-                "
-                );
-                queryExecute(
-                    "
-                    CREATE TABLE `b` (
-                        `id` int(11) NOT NULL AUTO_INCREMENT,
-                        `a_id` int(11),
-                        `name` varchar(50) NOT NULL,
-                        PRIMARY KEY (`id`)
-                    )
-                "
-                );
                 for ( var i = 1; i < 20; i++ ) {
                     // create A
                     var a = getInstance( "A" ).create( { "name": "Instance #i#" } );

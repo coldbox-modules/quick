@@ -94,6 +94,46 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     getInstance( "User" ).whereUsername( "doesnt-exist" ).existsOrFail();
                 } ).toThrow( type = "EntityNotFound" );
             } );
+
+            it( "can paginate a Quick query", function() {
+                for ( var i = 1; i <= 45; i++ ) {
+                    // create A
+                    var a = getInstance( "A" ).create( { "name": "Instance #i#" } );
+                }
+
+                var p = getInstance( "A" ).paginate();
+                expect( p.pagination.page ).toBe( 1 );
+                expect( p.results ).toHaveLength( 25 );
+                expect( p.results[ 1 ].getId() ).toBe( 1 );
+                expect( p.results[ p.results.len() ].getId() ).toBe( 25 );
+
+                p = getInstance( "A" ).paginate( 2 );
+                expect( p.pagination.page ).toBe( 2 );
+                expect( p.results ).toHaveLength( 20 );
+                expect( p.results[ 1 ].getId() ).toBe( 26 );
+                expect( p.results[ p.results.len() ].getId() ).toBe( 45 );
+            } );
+
+            it( "can eager load and paginate a Quick query", function() {
+                var as = [];
+                var bs = [];
+                for ( var i = 1; i < 10; i++ ) {
+                    as.append( { "name": "Instance #i#" } );
+                    for ( var j = 1; j < 5; j++ ) {
+                        bs.append( { "name": "Instance #j#", "a_id": i } );
+                    }
+                }
+
+                getInstance( "A" ).insert( as );
+                getInstance( "B" ).insert( bs );
+
+                var p = getInstance( "B" ).with( "a" ).paginate();
+                expect( p.pagination.page ).toBe( 1 );
+                expect( p.results ).toHaveLength( 25 );
+                var firstB = p.results[ 1 ];
+                expect( firstB.getId() ).toBe( 1 );
+                expect( firstB.isRelationshipLoaded( "a" ) ).toBeTrue();
+            } );
         } );
     }
 

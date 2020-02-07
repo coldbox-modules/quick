@@ -805,6 +805,22 @@ component accessors="true" {
     }
 
     /**
+     * Returns a Pagination Collection of entities.
+     *
+     * @page     The page of results to return.
+     * @maxRows  The number of rows to return.
+     *
+     * @return   A Pagination Collection object of the entities.
+     */
+    public any function paginate( numeric page = 1, numeric maxRows = 25 ) {
+        return tap( retrieveQuery().paginate( page, maxRows, variables._queryOptions ), function( p ) {
+            p.results = eagerLoadRelations(
+                p.results.map( variables.loadEntity )
+            );
+        } );
+    }
+
+    /**
      * Returns the first matching entity for the configured query.
      * If no records are found, it returns null instead.
      *

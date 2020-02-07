@@ -219,5 +219,24 @@ component {
               PRIMARY KEY (`id`)
             )
         " );
+        queryExecute(
+            "
+            CREATE TABLE `a` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `name` varchar(50) NOT NULL,
+                PRIMARY KEY (`id`)
+            )
+        "
+        );
+        queryExecute(
+            "
+            CREATE TABLE `b` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `a_id` int(11),
+                `name` varchar(50) NOT NULL,
+                PRIMARY KEY (`id`)
+            )
+        "
+        );
     }
 }

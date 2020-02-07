@@ -835,8 +835,77 @@ component accessors="true" {
     }
 
     /**
+     * Returns the first matching entity for the configured query.
+     * If no records are found, it throws an `EntityNotFound` exception.
+     *
+     * @throws  EntityNotFound
+     *
+     * @return  quick.models.BaseEntity
+     */
+    public any function firstOrFail() {
+        applyGlobalScopes();
+        var attrs = retrieveQuery().first( options = variables._queryOptions );
+        if ( structIsEmpty( attrs ) ) {
+            throw(
+                type = "EntityNotFound",
+                message = "No [#entityName()#] found with constraints " &
+                "[#serializeJSON( retrieveQuery().getBindings() )#]"
+            );
+        }
+        return loadEntity( attrs );
+    }
+
+    /**
+     * Finds the first matching record or returns an unloaded new entity.
+     *
+     * @attrs     A struct of attributes to restrict the query. If no entity is
+     *            found the attrs are filled on the new entity returned.
+     * @newAttrs  A struct of attributes to fill on the new entity if no entity
+     *            is found. These attributes are combined with `attrs`.
+     *
+     * @return    quick.models.BaseEntity
+     */
+    public any function firstOrNew( struct attrs = {}, struct newAttrs = {} ) {
+        try {
+            arguments.attrs.each( function( key, value ) {
+                retrieveQuery().where( key, value );
+            } );
+            return firstOrFail();
+        } catch ( EntityNotFound e ) {
+            arguments.attrs.append( arguments.newAttrs, true );
+            return newEntity().fill( arguments.attrs );
+        }
+    }
+
+    /**
+     * Finds the first matching record or creates a new entity.
+     *
+     * @attrs     A struct of attributes to restrict the query. If no entity is
+     *            found the attrs are filled on the new entity created.
+     * @newAttrs  A struct of attributes to fill on the created entity if no entity
+     *            is found. These attributes are combined with `attrs`.
+     *
+     * @return    quick.models.BaseEntity
+     */
+    public any function firstOrCreate(
+        struct attrs = {},
+        struct newAttrs = {}
+    ) {
+        arguments.attrs.each( function( key, value ) {
+            retrieveQuery().where( key, value );
+        } );
+
+        try {
+            return firstOrFail();
+        } catch ( EntityNotFound e ) {
+            arguments.attrs.append( arguments.newAttrs, true );
+            return create( arguments.attrs );
+        }
+    }
+
+    /**
      * Returns the entity with the id value as the primary key.
-     * If no records are found, it returns null instead.
+     * If no record is found, it returns null instead.
      *
      * @id      The id value to find.
      *
@@ -857,25 +926,27 @@ component accessors="true" {
     }
 
     /**
-     * Loads up an entity with data from the database.
-     * 1. Assigns the key / value pairs.
-     * 2. Assigns the original attributes hash.
-     * 3. Marks the entity as loaded.
+     * Adds a basic where clause to the query and returns the first result.
      *
-     * @data    A struct of key / value pairs to load.
+     * @column      The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+     * @operator    The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+     * @value       The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+     * @combinator  The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
      *
-     * @return  quick.models.BaseEntity
+     * @return      quick.models.BaseEntity
      */
-    private any function loadEntity( required struct data ) {
-        return newEntity()
-            .assignAttributesData( arguments.data )
-            .assignOriginalAttributes( arguments.data )
-            .markLoaded();
+    public any function firstWhere(
+        any column,
+        any operator,
+        any value,
+        string combinator = "and"
+    ) {
+        return this.where( argumentCollection = arguments ).first();
     }
 
     /**
      * Returns the entity with the id value as the primary key.
-     * If no records are found, it throws an `EntityNotFound` exception.
+     * If no record is found, it throws an `EntityNotFound` exception.
      *
      * @id      The id value to find.
      *
@@ -895,24 +966,56 @@ component accessors="true" {
     }
 
     /**
-     * Returns the first matching entity for the configured query.
-     * If no records are found, it throws an `EntityNotFound` exception.
+     * Returns the entity with the id value as the primary key.
+     * If no record is found, it returns a new unloaded entity.
      *
-     * @throws  EntityNotFound
+     * @id      The id value to find.
+     * @attrs   A struct of attributes to fill on the new entity if no entity
+     *          is found.
      *
      * @return  quick.models.BaseEntity
      */
-    public any function firstOrFail() {
-        applyGlobalScopes();
-        var attrs = retrieveQuery().first( options = variables._queryOptions );
-        if ( structIsEmpty( attrs ) ) {
-            throw(
-                type = "EntityNotFound",
-                message = "No [#entityName()#] found with constraints " &
-                "[#serializeJSON( retrieveQuery().getBindings() )#]"
-            );
+    public any function findOrNew( required any id, struct attrs = {} ) {
+        try {
+            return findOrFail( arguments.id );
+        } catch ( EntityNotFound e ) {
+            return newEntity().fill( arguments.attrs );
         }
-        return loadEntity( attrs );
+    }
+
+    /**
+     * Returns the entity with the id value as the primary key.
+     * If no record is found, it returns a newly created entity.
+     *
+     * @id      The id value to find.
+     * @attrs   A struct of attributes to use when creating the new entity
+     *          if no entity is found.
+     *
+     * @return  quick.models.BaseEntity
+     */
+    public any function findOrCreate( required any id, struct attrs = {} ) {
+        try {
+            return findOrFail( arguments.id );
+        } catch ( EntityNotFound e ) {
+            return create( arguments.attrs );
+        }
+    }
+
+    /**
+     * Loads up an entity with data from the database.
+     * 1. Assigns the key / value pairs.
+     * 2. Assigns the original attributes hash.
+     * 3. Marks the entity as loaded.
+     *
+     * @data    A struct of key / value pairs to load.
+     *
+     * @return  quick.models.BaseEntity
+     */
+    private any function loadEntity( required struct data ) {
+        return newEntity()
+            .assignAttributesData( arguments.data )
+            .assignOriginalAttributes( arguments.data )
+            .markLoaded();
     }
 
     /**
@@ -1148,6 +1251,25 @@ component accessors="true" {
         );
         fill( arguments.attributes, arguments.ignoreNonExistentAttributes );
         return save();
+    }
+
+    /**
+     * Updates an existing record or creates a new record with the given attributes.
+     *
+     * @attrs     A struct of attributes to restrict the query. If no entity is
+     *            found the attrs are filled on the new entity created.
+     * @newAttrs  A struct of attributes to update on the found entity or the
+     *            new entity if no entity is found.
+     *
+     * @return    quick.models.BaseEntity
+     */
+    public any function updateOrCreate(
+        struct attrs = {},
+        struct newAttrs = {}
+    ) {
+        return tap( firstOrNew( arguments.attrs ), function( entity ) {
+            arguments.entity.fill( newAttrs ).save();
+        } );
     }
 
     /**

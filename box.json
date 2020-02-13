@@ -2,7 +2,7 @@
     "name":"quick",
     "version":"2.5.4",
     "author":"Ortus Solutions",
-    "location":"coldbox-modules/quick#v2.5.4",
+    "location":"forgeboxStorage",
     "homepage":"https://github.com/coldbox-modules/quick",
     "documentation":"https://github.com/coldbox-modules/quick",
     "repository":{
@@ -13,9 +13,7 @@
     "slug":"quick",
     "shortDescription":"A ColdBox ORM Engine",
     "description":"A ColdBox ORM Engine",
-    "scripts":{
-        "postVersion":"package set location='coldbox-modules/quick#v`package version`'"
-    },
+    "scripts":{},
     "type":"modules",
     "dependencies":{
         "qb":"^6.1.0",

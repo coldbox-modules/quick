@@ -1,3 +1,11 @@
+# v2.5.5
+## 13 Feb 2020 — 17:30:08 UTC
+
+### other
+
++ __\*:__ chore: Use forgeboxStorage ([ad6c413](https://github.com/coldbox-modules/quick/commit/ad6c41392be2cff5b1d738a15209ed5b01beef1d))
+
+
 # v2.5.4
 ## 20 Dec 2019 — 06:20:30 UTC
 

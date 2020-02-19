@@ -1,3 +1,12 @@
+# v2.5.6
+## 19 Feb 2020 — 22:22:10 UTC
+
+### fix
+
++ __BaseEntity:__ Correctly use the grammar annotation
+ ([2312e9e](https://github.com/coldbox-modules/quick/commit/2312e9e3bcfdd441b4d80207d0636402aa612b1a))
+
+
 # v2.5.5
 ## 13 Feb 2020 — 17:30:08 UTC
 

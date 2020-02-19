@@ -3,12 +3,12 @@ component accessors="true" {
     /*====================================
     =            Dependencies            =
     ====================================*/
-    property name="_builder" inject="provider:QuickQB@quick" persistent="false";
+    property name="_builder" inject="QuickQB@quick" persistent="false";
     property name="_wirebox" inject="wirebox" persistent="false";
-    property name="_str" inject="provider:Str@str" persistent="false";
+    property name="_str" inject="Str@str" persistent="false";
     property name="_settings" inject="coldbox:modulesettings:quick" persistent="false";
-    property name="_interceptorService" inject="provider:coldbox:interceptorService" persistent="false";
-    property name="_entityCreator" inject="provider:EntityCreator@quick" persistent="false";
+    property name="_interceptorService" inject="coldbox:interceptorService" persistent="false";
+    property name="_entityCreator" inject="EntityCreator@quick" persistent="false";
 
     /*===========================================
     =            Metadata Properties            =
@@ -811,11 +811,9 @@ component accessors="true" {
     }
 
     public function newQuery() {
-        if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
-            variables._builder.setGrammar(
-                variables._wirebox.getInstance( variables._meta.originalMetadata.grammar & "@qb" )
-            );
-        }
+        variables._builder.setGrammar(
+            variables._wirebox.getInstance( variables._meta.grammar & "@qb" )
+        );
         variables.query = variables._builder.newQuery()
             .setReturnFormat( "array" )
             .setColumnFormatter( function( column ) {
@@ -1095,6 +1093,11 @@ component accessors="true" {
         if ( variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists( "datasource" ) ) {
             variables._queryOptions = { datasource = variables._meta.originalMetadata.datasource };
         }
+        param variables._meta.originalMetadata.grammar = "AutoDiscover";
+        param variables._meta.grammar = variables._meta.originalMetadata.grammar;
+        variables._builder.setGrammar(
+            variables._wirebox.getInstance( variables._meta.grammar & "@qb" )
+        );
         param variables._meta.originalMetadata.readonly = false;
         param variables._meta.readonly = variables._meta.originalMetadata.readonly;
         variables._readonly = variables._meta.readonly;

@@ -1,3 +1,11 @@
+# v2.5.7
+## 26 Feb 2020 — 00:16:25 UTC
+
+### other
+
++ __\*:__ docs: Fix link to Gitbook from README ([5a8cf6a](https://github.com/coldbox-modules/quick/commit/5a8cf6aa945b4e5dc21b17823a475feaa0ab8e06))
+
+
 # v2.5.6
 ## 19 Feb 2020 — 22:22:10 UTC
 

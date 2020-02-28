@@ -155,6 +155,7 @@ component
      * @return       [quick.models.BaseEntity]
      */
     public array function getResults() {
+        variables.addConstraints();
         return this.get();
     }
 

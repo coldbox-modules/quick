@@ -61,6 +61,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.BaseEntity | null
      */
     public any function getResults() {
+        variables.addConstraints();
+
         var result = variables.related.first();
 
         if ( !isNull( result ) ) {

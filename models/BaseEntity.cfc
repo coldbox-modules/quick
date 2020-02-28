@@ -2461,7 +2461,7 @@ component accessors="true" {
 
         retrieveQuery().subselect(
             name,
-            subselectQuery.retrieveQuery().limit( 1 )
+            subselectQuery.limit( 1 )
         );
         return this;
     }

@@ -71,6 +71,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return       [quick.models.BaseEntity]
      */
     public array function getResults() {
+        variables.addConstraints();
         return variables.related.get();
     }
 

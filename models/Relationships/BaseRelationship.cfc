@@ -45,8 +45,6 @@ component {
         variables.relationMethodName = arguments.relationMethodName;
         variables.parent = arguments.parent;
 
-        variables.addConstraints();
-
         return this;
     }
 
@@ -81,6 +79,7 @@ component {
      * @return   quick.models.BaseEntity
      */
     public any function first() {
+        variables.addConstraints();
         return variables.related.first();
     }
 
@@ -93,6 +92,7 @@ component {
      * @return   quick.models.BaseEntity
      */
     public any function firstOrFail() {
+        variables.addConstraints();
         return variables.related.firstOrFail();
     }
 
@@ -105,6 +105,7 @@ component {
      * @return   quick.models.BaseEntity
      */
     public any function find( required any id ) {
+        variables.addConstraints();
         return variables.related.find( arguments.id );
     }
 
@@ -119,6 +120,7 @@ component {
      * @return   quick.models.BaseEntity
      */
     public any function findOrFail( required any id ) {
+        variables.addConstraints();
         return variables.related.findOrFail( arguments.id );
     }
 
@@ -130,6 +132,7 @@ component {
      * @return       [quick.models.BaseEntity]
      */
     public array function all() {
+        variables.addConstraints();
         return variables.related.all();
     }
 

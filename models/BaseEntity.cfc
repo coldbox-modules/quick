@@ -2341,7 +2341,7 @@ component accessors="true" {
             }
         }
         var currentRelationship = listFirst( arguments.relationName, "." );
-        var relation = invoke( this, currentRelationship ).resetQuery();
+        var relation = invoke( this, currentRelationship );
         callback( relation );
         relation.addEagerConstraints( arguments.entities );
         relation.with( listRest( arguments.relationName, "." ) );

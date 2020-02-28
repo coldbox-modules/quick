@@ -89,11 +89,18 @@ component
      * @return  quick.models.Relationships.HasManyThrough
      */
     public HasManyThrough function performJoin( any base = variables.related ) {
-        arguments.base.join(
-            variables.throughParent.tableName(),
-            getQualifiedParentKeyName(),
-            getQualifiedFarKeyName()
-        );
+        arguments.base
+            .join(
+                variables.throughParent.tableName(),
+                getQualifiedParentKeyName(),
+                getQualifiedFarKeyName()
+            )
+            .addSelect(
+                variables.throughParent.qualifyColumn(
+                    variables.firstKey
+                )
+            );
+
         return this;
     }
 
@@ -253,7 +260,7 @@ component
      * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
      */
     public any function getRelationExistenceQuery( required any base ) {
-        return tap( arguments.base.newQuery(), function( q ) {
+        return tap( arguments.base.newQuery().select(), function( q ) {
             performJoin( arguments.q );
             arguments.q.whereColumn(
                 variables.farParent.qualifyColumn(

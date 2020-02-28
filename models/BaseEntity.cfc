@@ -21,6 +21,11 @@ component accessors="true" {
     property name="_wirebox" inject="wirebox" persistent="false";
 
     /**
+     * The default CacheBox cache.
+     */
+    property name="_cache" inject="cachebox:default" persistent="false";
+
+    /**
      * A string helper library.
      */
     property name="_str" inject="Str@str" persistent="false";
@@ -2969,34 +2974,57 @@ component accessors="true" {
      * through creating new entities and executing queries.
      */
     private void function metadataInspection() {
-        if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
-            var util = createObject(
-                "component",
-                "coldbox.system.core.util.Util"
-            );
-            variables._meta = {
-                "originalMetadata": util.getInheritedMetadata( this )
-            };
-        }
         param variables._key = "id";
-        param variables._meta.fullName = variables._meta.originalMetadata.fullname;
+
+        if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
+            variables._meta = duplicate(
+                variables._cache.getOrSet( "quick-metadata:#getMetadata( this ).fullname#", function() {
+                    var util = createObject(
+                        "component",
+                        "coldbox.system.core.util.Util"
+                    );
+                    var meta = {};
+                    meta[ "originalMetadata" ] = util.getInheritedMetadata(
+                        this
+                    );
+                    meta[ "fullName" ] = meta.originalMetadata.fullname;
+                    param meta.originalMetadata.mapping = listLast(
+                        meta.originalMetadata.fullname,
+                        "."
+                    );
+                    meta[ "mapping" ] = meta.originalMetadata.mapping;
+                    param meta.originalMetadata.entityName = listLast(
+                        meta.originalMetadata.name,
+                        "."
+                    );
+                    meta[ "entityName" ] = meta.originalMetadata.entityName;
+                    param meta.originalMetadata.table = variables._str.plural(
+                        variables._str.snake( meta.entityName )
+                    );
+                    meta[ "table" ] = meta.originalMetadata.table;
+                    param meta.originalMetadata.readonly = false;
+                    meta[ "readonly" ] = meta.originalMetadata.readonly;
+                    param meta.originalMetadata.functions = [];
+                    meta[ "functionNames" ] = generateFunctionNameArray(
+                        meta.originalMetadata.functions
+                    );
+                    param meta.originalMetadata.properties = [];
+                    meta[ "attributes" ] = generateAttributesFromProperties(
+                        meta.originalMetadata.properties
+                    );
+                    if ( !meta.attributes.keyExists( variables._key ) ) {
+                        var keyProp = paramAttribute( { "name": variables._key } );
+                        meta.attributes[ keyProp.name ] = keyProp;
+                    }
+                    guardKeyHasNoDefaultValue( meta.attributes );
+                    return meta;
+                } )
+            );
+        }
+
         variables._fullName = variables._meta.fullName;
-        param variables._meta.originalMetadata.mapping = listLast(
-            variables._meta.originalMetadata.fullname,
-            "."
-        );
-        param variables._meta.mapping = variables._meta.originalMetadata.mapping;
         variables._mapping = variables._meta.mapping;
-        param variables._meta.originalMetadata.entityName = listLast(
-            variables._meta.originalMetadata.name,
-            "."
-        );
-        param variables._meta.entityName = variables._meta.originalMetadata.entityName;
         variables._entityName = variables._meta.entityName;
-        param variables._meta.originalMetadata.table = variables._str.plural(
-            variables._str.snake( variables._entityName )
-        );
-        param variables._meta.table = variables._meta.originalMetadata.table;
         variables._table = variables._meta.table;
         param variables._queryOptions = {};
         if (
@@ -3008,33 +3036,8 @@ component accessors="true" {
                 datasource: variables._meta.originalMetadata.datasource
             };
         }
-        param variables._meta.originalMetadata.grammar = "AutoDiscover";
-        param variables._meta.grammar = variables._meta.originalMetadata.grammar;
-        variables._builder.setGrammar(
-            variables._wirebox.getInstance( variables._meta.grammar & "@qb" )
-        );
-        param variables._meta.originalMetadata.readonly = false;
-        param variables._meta.readonly = variables._meta.originalMetadata.readonly;
         variables._readonly = variables._meta.readonly;
-        param variables._meta.originalMetadata.functions = [];
-        param variables._meta.functionNames = generateFunctionNameArray(
-            variables._meta.originalMetadata.functions
-        );
-        param variables._meta.originalMetadata.properties = [];
-        param variables._meta.attributes = generateAttributesFromProperties(
-            variables._meta.originalMetadata.properties
-        );
-        if (
-            !variables._meta.attributes.keyExists(
-                variables._key
-            )
-        ) {
-            var keyProp = paramAttribute( { "name": variables._key } );
-            variables._meta.attributes[ keyProp.name ] = keyProp;
-        }
-        guardKeyHasNoDefaultValue();
         explodeAttributesMetadata( variables._meta.attributes );
-        resetQuery();
     }
 
     /**
@@ -3258,13 +3261,11 @@ component accessors="true" {
      *
      * @throws  QuickEntityDefaultedKey
      */
-    private void function guardKeyHasNoDefaultValue() {
-        if (
-            variables._meta.attributes.keyExists(
-                keyName()
-            )
-        ) {
-            if ( variables._meta.attributes[ keyName() ].keyExists( "default" ) ) {
+    private void function guardKeyHasNoDefaultValue(
+        required struct attributes
+    ) {
+        if ( arguments.attributes.keyExists( keyName() ) ) {
+            if ( arguments.attributes[ keyName() ].keyExists( "default" ) ) {
                 throw(
                     type = "QuickEntityDefaultedKey",
                     message = "The key value [#keyName()#] has a default value.  Default values on keys prevents Quick from working as expected.  Remove the default value to continue."

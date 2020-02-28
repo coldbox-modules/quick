@@ -775,6 +775,18 @@ component accessors="true" {
         return tableName() & "." & retrieveColumnForAlias( arguments.column );
     }
 
+    /**
+     * Retrieve an array of qualified column names.
+     *
+     * @doc_generic  string
+     * @return       [string]
+     */
+    public array function retrieveQualifiedColumns() {
+        return structValueArray( variables._attributes ).map( function( column ) {
+            return qualifyColumn( column );
+        } );
+    }
+
     /*=====================================
     =            Query Methods            =
     =====================================*/
@@ -1379,7 +1391,10 @@ component accessors="true" {
      *
      * @return  quick.models.BaseEntity;
      */
-    public any function loadRelationship( required any name, boolean force = false ) {
+    public any function loadRelationship(
+        required any name,
+        boolean force = false
+    ) {
         arrayWrap( arguments.name ).each( function( n ) {
             if ( force || !isRelationshipLoaded( arguments.n ) ) {
                 var relationship = invoke( this, arguments.n );
@@ -2371,7 +2386,8 @@ component accessors="true" {
                 return retrieveColumnForAlias( column );
             } )
             .setParentQuery( this )
-            .from( tableName() );
+            .from( tableName() )
+            .select( retrieveQualifiedColumns() );
     }
 
     /**
@@ -3013,6 +3029,7 @@ component accessors="true" {
         }
         guardKeyHasNoDefaultValue();
         explodeAttributesMetadata( variables._meta.attributes );
+        resetQuery();
     }
 
     /**
@@ -3448,6 +3465,22 @@ component accessors="true" {
         return isArray( arguments.value ) ? arguments.value : [
             arguments.value
         ];
+    }
+
+
+    /**
+     * Returns an array of a struct's values.
+     *
+     * @s            A struct to return an array of its values.
+     *
+     * @doc_generic  any
+     * @return       [any]
+     */
+    private array function structValueArray( required struct s ) {
+        return s.reduce( function( arr, key, value ) {
+            arr.append( value );
+            return arr;
+        }, [] );
     }
 
 }

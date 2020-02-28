@@ -17,9 +17,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         expect( users ).toBeArray();
                         expect( users ).toHaveLength( 1 );
 
-                        var users = getInstance( "User" ).has( "posts", "=", 1 ).get();
-                        expect( users ).toBeArray();
-                        expect( users ).toHaveLength( 1 );
+                        // var users = getInstance( "User" ).has( "posts", "=", 1 ).get();
+                        // expect( users ).toBeArray();
+                        // expect( users ).toHaveLength( 1 );
                     } );
 
                     it( "can constrain a has query using whereHas", function() {

@@ -80,6 +80,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  void
      */
     public void function addConstraints() {
+        variables.related.select(); // clear select
         performJoin();
         addWhereConstraints();
     }
@@ -93,6 +94,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     public void function addEagerConstraints( required array entities ) {
         variables.related
+            .select() // clear select
             .from( variables.table )
             .whereIn(
                 getQualifiedForeignPivotKeyName(),
@@ -362,9 +364,9 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  qb.models.Query.QueryBuilder
      */
     public QueryBuilder function getRelationExistenceQuery( required any base ) {
-        return variables.parent
-            .newQuery()
-            .selectRaw( 1 )
+        var q = variables.parent.newQuery();
+        return q
+            .select( q.raw( 1 ) )
             .from( variables.table )
             .whereColumn(
                 getQualifiedForeignKeyName(),

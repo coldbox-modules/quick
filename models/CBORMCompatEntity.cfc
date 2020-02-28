@@ -1,8 +1,30 @@
-component extends="quick.models.BaseEntity" {
+component extends="quick.models.BaseEntity" accessors="true" {
 
     property
         name="CBORMCriteriaBuilderCompat"
-        inject="provider:CBORMCriteriaBuilderCompat@quick";
+        inject="provider:CBORMCriteriaBuilderCompat@quick"
+        persistent="false";
+
+    /**
+     * Creates an internal attribute struct for each persistent property
+     * on the entity.
+     *
+     * @properties  The array of properties on the entity.
+     *
+     * @return      A struct of attributes for the entity.
+     */
+    private struct function generateAttributesFromProperties(
+        required array properties
+    ) {
+        return arguments.properties.reduce( function( acc, prop ) {
+            var newProp = paramAttribute( arguments.prop );
+            if ( !newProp.persistent || newProp.keyExists( "fieldtype" ) ) {
+                return arguments.acc;
+            }
+            arguments.acc[ newProp.name ] = newProp;
+            return arguments.acc;
+        }, {} );
+    }
 
     function list(
         struct criteria = {},

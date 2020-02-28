@@ -259,7 +259,7 @@ component accessors="true" {
      * @return  String
      */
     public string function retrieveQualifiedKeyName() {
-        return variables._table & "." & variables._key;
+        return qualifyColumn( keyName() );
     }
 
     /**
@@ -269,6 +269,15 @@ component accessors="true" {
      */
     public string function keyName() {
         return variables._key;
+    }
+
+    /**
+     * Returns the column name for the primary key.
+     *
+     * @return  String
+     */
+    public string function keyColumn() {
+        return retrieveColumnForAlias( variables._key );
     }
 
     /**
@@ -763,7 +772,7 @@ component accessors="true" {
         if ( findNoCase( ".", arguments.column ) != 0 ) {
             return arguments.column;
         }
-        return tableName() & "." & arguments.column;
+        return tableName() & "." & retrieveColumnForAlias( arguments.column );
     }
 
     /*=====================================

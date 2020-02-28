@@ -1371,19 +1371,38 @@ component accessors="true" {
     /**
      * Loads a single relationship or an array of relationships by name.
      * Use this method if you need to load the relationship, but don't
-     * need the relationship value returned.
+     * need the relationship value returned.  If the relationship is already
+     * loaded, it is not reloaded unless the `force` parameter is true.
+     *
+     * @name    A single relationship name or an array of relationship names.
+     * @force   Always load the relationship, even if it is already loaded.
+     *
+     * @return  quick.models.BaseEntity;
+     */
+    public any function loadRelationship( required any name, boolean force = false ) {
+        arrayWrap( arguments.name ).each( function( n ) {
+            if ( force || !isRelationshipLoaded( arguments.n ) ) {
+                var relationship = invoke( this, arguments.n );
+                relationship.setRelationMethodName( arguments.n );
+                assignRelationship( arguments.n, relationship.get() );
+            }
+        } );
+        return this;
+    }
+
+    /**
+     * Loads a single relationship or an array of relationships by name.
+     * Use this method if you need to load the relationship, but don't
+     * need the relationship value returned. This method will load each
+     * relationship, even if it is already loaded.
      *
      * @name    A single relationship name or an array of relationship names.
      *
      * @return  quick.models.BaseEntity;
      */
-    public any function loadRelationship( required any name ) {
-        arrayWrap( arguments.name ).each( function( n ) {
-            var relationship = invoke( this, arguments.n );
-            relationship.setRelationMethodName( arguments.n );
-            assignRelationship( arguments.n, relationship.get() );
-        } );
-        return this;
+    public any function forceLoadRelationship( required any name ) {
+        arguments.force = true;
+        return loadRelationship( argumentCollection = arguments );
     }
 
     /**

@@ -287,6 +287,15 @@ component
             getParentKey()
         );
     }
+        
+     /**
+     * Returns the fully-qualified local key.
+     *
+     * @return  String
+     */
+    public string function getQualifiedLocalKey() {
+        return variables.related.qualifyColumn( variables.localKey );
+    }
 
     /**
      * Returns the fully-qualified column name of foreign key.

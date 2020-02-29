@@ -2454,9 +2454,11 @@ component accessors="true" {
         }
 
         var subselectQuery = arguments.subselect;
-        if ( isClosure( subselectQuery ) ) {
+        if ( isClosure( subselectQuery ) || isCustomFunction( subselectQuery ) ) {
             subselectQuery = retrieveQuery().newQuery();
             subselectQuery = arguments.subselect( subselectQuery );
+        } else {
+            subselectQuery = subselectQuery.retrieveQuery();
         }
 
         retrieveQuery().subselect(

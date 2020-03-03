@@ -1386,10 +1386,12 @@ component accessors="true" {
      * @return  Boolean
      */
     public boolean function hasRelationship( required string name ) {
-        return arrayContainsNoCase(
-            variables._meta.functionNames,
-            arguments.name
-        );
+        for ( var functionName in variables._meta.functionNames ) {
+            if ( compareNoCase( functionName, arguments.name ) == 0 ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -5,6 +5,7 @@ component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
     property name="body";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
+    property name="publishedDate" column="published_date";
 
     variables._key = "post_pk";
 

@@ -56,6 +56,10 @@ component quick {
         return hasMany( "Post", "user_id" );
     }
 
+    function publishedPosts() {
+        return hasMany( "Post", "user_id" ).whereNotNull( "published_date" );
+    }
+
     function latestPost() {
         return hasOne( "Post", "user_id" ).latest();
     }

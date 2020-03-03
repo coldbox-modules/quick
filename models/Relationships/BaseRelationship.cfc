@@ -35,7 +35,8 @@ component {
         required any related,
         required string relationName,
         required string relationMethodName,
-        required any parent
+        required any parent,
+        boolean withConstraints = true
     ) {
         variables.returnDefaultEntity = false;
         variables.defaultAttributes = {};
@@ -44,6 +45,10 @@ component {
         variables.relationName = arguments.relationName;
         variables.relationMethodName = arguments.relationMethodName;
         variables.parent = arguments.parent;
+
+        if ( arguments.withConstraints ) {
+            variables.addConstraints();
+        }
 
         return this;
     }
@@ -79,7 +84,6 @@ component {
      * @return   quick.models.BaseEntity
      */
     public any function first() {
-        variables.addConstraints();
         return variables.related.first();
     }
 
@@ -92,7 +96,6 @@ component {
      * @return   quick.models.BaseEntity
      */
     public any function firstOrFail() {
-        variables.addConstraints();
         return variables.related.firstOrFail();
     }
 
@@ -105,7 +108,6 @@ component {
      * @return   quick.models.BaseEntity
      */
     public any function find( required any id ) {
-        variables.addConstraints();
         return variables.related.find( arguments.id );
     }
 
@@ -120,7 +122,6 @@ component {
      * @return   quick.models.BaseEntity
      */
     public any function findOrFail( required any id ) {
-        variables.addConstraints();
         return variables.related.findOrFail( arguments.id );
     }
 
@@ -132,7 +133,6 @@ component {
      * @return       [quick.models.BaseEntity]
      */
     public array function all() {
-        variables.addConstraints();
         return variables.related.all();
     }
 

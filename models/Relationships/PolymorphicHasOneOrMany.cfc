@@ -31,7 +31,8 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         required any parent,
         required string type,
         required string id,
-        required string localKey
+        required string localKey,
+        boolean withConstraints = true
     ) {
         variables.morphType = arguments.type;
         variables.morphClass = arguments.parent.entityName();
@@ -42,7 +43,8 @@ component extends="quick.models.Relationships.HasOneOrMany" {
             relationMethodName = arguments.relationMethodName,
             parent = arguments.parent,
             foreignKey = arguments.id,
-            localKey = arguments.localKey
+            localKey = arguments.localKey,
+            withConstraints = arguments.withConstraints
         );
     }
 

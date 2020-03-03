@@ -48,7 +48,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
         required string foreignPivotKey,
         required string relatedPivotKey,
         required string parentKey,
-        required string relatedKey
+        required string relatedKey,
+        boolean withConstraints = true
     ) {
         variables.table = arguments.table;
         variables.parentKey = arguments.parentKey;
@@ -60,7 +61,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
             related = arguments.related,
             relationName = arguments.relationName,
             relationMethodName = arguments.relationMethodName,
-            parent = arguments.parent
+            parent = arguments.parent,
+            withConstraints = arguments.withConstraints
         );
     }
 
@@ -71,7 +73,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return       [quick.models.BaseEntity]
      */
     public array function getResults() {
-        variables.addConstraints();
+
         return variables.related.get();
     }
 

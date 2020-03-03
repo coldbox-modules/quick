@@ -27,16 +27,18 @@ component
         required string relationMethodName,
         required any parent,
         required string foreignKey,
-        required string localKey
+        required string localKey,
+        boolean withConstraints = true
     ) {
         variables.localKey = arguments.localKey;
         variables.foreignKey = arguments.foreignKey;
 
         return super.init(
-            related = related,
-            relationName = relationName,
-            relationMethodName = relationMethodName,
-            parent = parent
+            related = arguments.related,
+            relationName = arguments.relationName,
+            relationMethodName = arguments.relationMethodName,
+            parent = arguments.parent,
+            withConstraints = arguments.withConstraints
         );
     }
 

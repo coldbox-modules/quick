@@ -70,6 +70,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var newPost = getInstance( "Post" );
                 newPost.setBody( "A new post by me!" );
                 var user = getInstance( "User" ).find( 1 );
+                expect( user.posts().count() ).toBe( 2 );
                 newPost
                     .author()
                     .associate( user )

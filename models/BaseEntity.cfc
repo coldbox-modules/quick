@@ -154,6 +154,12 @@ component accessors="true" {
     property name="_eagerLoad" persistent="false";
 
     /**
+     * A boolean flag representing that the entity is currently
+     * eager loading relationships.
+     */
+    property name="_isEagerLoading" persistent="false";
+
+    /**
      * A boolean flag indicating that the entity has been loaded from the database.
      */
     property name="_loaded" persistent="false" default="false";
@@ -190,6 +196,7 @@ component accessors="true" {
         param variables._relationshipsData = {};
         param variables._relationshipsLoaded = {};
         param variables._eagerLoad = [];
+        variables._isEagerLoading = false;
         param variables._nullValues = {};
         param variables._casts = {};
         param variables._loaded = false;
@@ -1850,7 +1857,8 @@ component accessors="true" {
                 relationMethodName: arguments.relationMethodName,
                 parent: this,
                 foreignKey: arguments.foreignKey,
-                ownerKey: arguments.ownerKey
+                ownerKey: arguments.ownerKey,
+                withConstraints: !variables._isEagerLoading
             }
         );
     }
@@ -1898,7 +1906,8 @@ component accessors="true" {
                 relationMethodName: arguments.relationMethodName,
                 parent: this,
                 foreignKey: arguments.foreignKey,
-                localKey: arguments.localKey
+                localKey: arguments.localKey,
+                withConstraints: !variables._isEagerLoading
             }
         );
     }
@@ -1946,7 +1955,8 @@ component accessors="true" {
                 relationMethodName: arguments.relationMethodName,
                 parent: this,
                 foreignKey: arguments.foreignKey,
-                localKey: arguments.localKey
+                localKey: arguments.localKey,
+                withConstraints: !variables._isEagerLoading
             }
         );
     }
@@ -2020,7 +2030,8 @@ component accessors="true" {
                 foreignPivotKey: arguments.foreignPivotKey,
                 relatedPivotKey: arguments.relatedPivotKey,
                 parentKey: arguments.parentKey,
-                relatedKey: arguments.relatedKey
+                relatedKey: arguments.relatedKey,
+                withConstraints: !variables._isEagerLoading
             }
         );
     }
@@ -2105,7 +2116,8 @@ component accessors="true" {
                 firstKey: arguments.firstKey,
                 secondKey: arguments.secondKey,
                 localKey: arguments.localKey,
-                secondLocalKey: arguments.secondLocalKey
+                secondLocalKey: arguments.secondLocalKey,
+                withConstraints: !variables._isEagerLoading
             }
         );
     }
@@ -2163,7 +2175,8 @@ component accessors="true" {
                 parent: this,
                 type: arguments.type,
                 id: arguments.id,
-                localKey: arguments.localKey
+                localKey: arguments.localKey,
+                withConstraints: !variables._isEagerLoading
             }
         );
     }
@@ -2217,7 +2230,8 @@ component accessors="true" {
                     parent: this,
                     foreignKey: arguments.id,
                     ownerKey: "",
-                    type: arguments.type
+                    type: arguments.type,
+                    withConstraints: !variables._isEagerLoading
                 }
             );
         }
@@ -2234,7 +2248,8 @@ component accessors="true" {
                 parent: this,
                 foreignKey: arguments.id,
                 ownerKey: arguments.ownerKey,
-                type: arguments.type
+                type: arguments.type,
+                withConstraints: !variables._isEagerLoading
             }
         );
     }
@@ -2341,7 +2356,9 @@ component accessors="true" {
             }
         }
         var currentRelationship = listFirst( arguments.relationName, "." );
+        variables._isEagerLoading = true;
         var relation = invoke( this, currentRelationship );
+        variables._isEagerLoading = false;
         callback( relation );
         relation.addEagerConstraints( arguments.entities );
         relation.with( listRest( arguments.relationName, "." ) );

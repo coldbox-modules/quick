@@ -48,7 +48,8 @@ component
         required string firstKey,
         required string secondKey,
         required string localKey,
-        required string secondLocalKey
+        required string secondLocalKey,
+        boolean withConstraints = true
     ) {
         variables.throughParent = arguments.intermediate;
         variables.farParent = arguments.parent;
@@ -62,7 +63,8 @@ component
             related = arguments.related,
             relationName = arguments.relationName,
             relationMethodName = arguments.relationMethodName,
-            parent = arguments.intermediate
+            parent = arguments.intermediate,
+            withConstraints = arguments.withConstraints
         );
     }
 
@@ -155,7 +157,6 @@ component
      * @return       [quick.models.BaseEntity]
      */
     public array function getResults() {
-        variables.addConstraints();
         return this.get();
     }
 

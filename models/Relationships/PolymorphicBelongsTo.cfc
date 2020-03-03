@@ -46,7 +46,8 @@ component extends="quick.models.Relationships.BelongsTo" {
         required any parent,
         required string foreignKey,
         required string ownerKey,
-        required string type
+        required string type,
+        boolean withConstraints = true
     ) {
         variables.morphType = arguments.type;
 
@@ -56,7 +57,8 @@ component extends="quick.models.Relationships.BelongsTo" {
             relationMethodName = arguments.relationMethodName,
             parent = arguments.parent,
             foreignKey = arguments.foreignKey,
-            ownerKey = arguments.ownerKey
+            ownerKey = arguments.ownerKey,
+            withConstraints = arguments.withConstraints
         );
     }
 

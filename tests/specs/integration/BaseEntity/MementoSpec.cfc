@@ -39,6 +39,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "body": "My awesome post body",
                     "createdDate": "2017-07-28 02:07:00.0",
                     "modifiedDate": "2017-07-28 02:07:00.0",
+                    "publishedDate": "2017-07-28 02:07:00.0",
                     "user_id": "1",
                     "author": {
                         "id": "1",

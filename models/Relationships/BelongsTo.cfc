@@ -39,7 +39,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
         required string relationMethodName,
         required any parent,
         required string foreignKey,
-        required string ownerKey
+        required string ownerKey,
+        boolean withConstraints = true
     ) {
         variables.ownerKey = arguments.ownerKey;
         variables.foreignKey = arguments.foreignKey;
@@ -49,7 +50,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
             related = arguments.related,
             relationName = arguments.relationName,
             relationMethodName = arguments.relationMethodName,
-            parent = arguments.parent
+            parent = arguments.parent,
+            withConstraints = arguments.withConstraints
         );
     }
 
@@ -61,8 +63,6 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.BaseEntity | null
      */
     public any function getResults() {
-        variables.addConstraints();
-
         var result = variables.related.first();
 
         if ( !isNull( result ) ) {

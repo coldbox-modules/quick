@@ -115,6 +115,56 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 );
             } );
 
+            it( "respects other filters on a relationship when eager loading", function() {
+                var users = getInstance( "User" )
+                    .with( "publishedPosts" )
+                    .latest()
+                    .get();
+
+                expect( users ).toBeArray();
+                expect( users ).toHaveLength(
+                    4,
+                    "Four users should be returned"
+                );
+
+                var elpete2 = users[ 1 ];
+                expect( elpete2.getUsername() ).toBe( "elpete2" );
+                expect( elpete2.getPublishedPosts() ).toBeArray();
+                expect( elpete2.getPublishedPosts() ).toHaveLength(
+                    1,
+                    "One post should belong to elpete2. Instead got #elpete2.getPublishedPosts().len()#."
+                );
+
+                var janedoe = users[ 2 ];
+                expect( janedoe.getUsername() ).toBe( "janedoe" );
+                expect( janedoe.getPublishedPosts() ).toBeArray();
+                expect( janedoe.getPublishedPosts() ).toHaveLength(
+                    0,
+                    "No posts should belong to janedoe. Instead got #janedoe.getPublishedPosts().len()#."
+                );
+
+                var johndoe = users[ 3 ];
+                expect( johndoe.getUsername() ).toBe( "johndoe" );
+                expect( johndoe.getPublishedPosts() ).toBeArray();
+                expect( johndoe.getPublishedPosts() ).toHaveLength(
+                    0,
+                    "No posts should belong to johndoe. Instead got #johndoe.getPublishedPosts().len()#."
+                );
+
+                var elpete = users[ 4 ];
+                expect( elpete.getUsername() ).toBe( "elpete" );
+                expect( elpete.getPublishedPosts() ).toBeArray();
+                expect( elpete.getPublishedPosts() ).toHaveLength(
+                    1,
+                    "One post should belong to elpete. Instead got #elpete.getPublishedPosts().len()#."
+                );
+
+                expect( variables.queries ).toHaveLength(
+                    2,
+                    "Only two queries should have been executed. Instead got #variables.queries.len()#."
+                );
+            } );
+
             it( "can eager load a hasOne relationship", function() {
                 var users = getInstance( "User" )
                     .with( "latestPost" )

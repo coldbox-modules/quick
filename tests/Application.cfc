@@ -87,20 +87,21 @@ component {
               `body` text NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `published_date` timestamp(0) NULL,
               PRIMARY KEY (`post_pk`)
             )
         " );
         queryExecute( "
-            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (1245, 1, 'My awesome post body', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`, `published_date`) VALUES (1245, 1, 'My awesome post body', '2017-07-28 02:07:00', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
         " );
         queryExecute( "
-            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (523526, 1, 'My second awesome post body', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`, `published_date`) VALUES (523526, 1, 'My second awesome post body', '2017-07-28 02:07:36', '2017-07-28 02:07:36', NULL)
         " );
         queryExecute( "
-            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (7777, NULL, 'My post with no author', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`, `published_date`) VALUES (7777, NULL, 'My post with no author', '2017-07-28 02:07:36', '2017-07-28 02:07:36', NULL)
         " );
         queryExecute( "
-            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`) VALUES (321, 4, 'My post with a different author', '2017-07-28 02:07:36', '2017-07-28 02:07:36')
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`, `published_date`) VALUES (321, 4, 'My post with a different author', '2017-07-28 02:07:36', '2017-07-28 02:07:36', '2017-07-28 02:07:00')
         " );
         queryExecute( "
             CREATE TABLE `videos` (

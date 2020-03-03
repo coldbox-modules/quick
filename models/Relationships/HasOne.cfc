@@ -23,8 +23,6 @@ component extends="quick.models.Relationships.HasOneOrMany" {
      * @return  quick.models.BaseEntity
      */
     public any function getResults() {
-        variables.addConstraints();
-
         var result = variables.related.first();
 
         if ( !isNull( result ) ) {

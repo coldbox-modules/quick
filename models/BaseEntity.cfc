@@ -324,7 +324,7 @@ component accessors="true" {
                 }
             } );
         return variables._data.reduce( function( acc, key, value ) {
-            if ( withoutKey && key == keyName() ) {
+            if ( withoutKey && key == keyColumn() ) {
                 return acc;
             }
             if ( isNull( value ) || ( isNullValue( key, value ) && withNulls ) ) {

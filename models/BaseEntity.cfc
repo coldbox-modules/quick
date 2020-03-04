@@ -846,6 +846,7 @@ component accessors="true" {
      * @return   A Pagination Collection object of the entities.
      */
     public any function paginate( numeric page = 1, numeric maxRows = 25 ) {
+        applyGlobalScopes();
         return tap( retrieveQuery().paginate( page, maxRows, variables._queryOptions ), function( p ) {
             p.results = eagerLoadRelations(
                 p.results.map( variables.loadEntity )

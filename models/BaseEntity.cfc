@@ -871,18 +871,26 @@ component accessors="true" {
      * Returns the first matching entity for the configured query.
      * If no records are found, it throws an `EntityNotFound` exception.
      *
-     * @throws  EntityNotFound
+     * @errorMessage  An optional string error message or callback to produce
+     *                a string error message.  If a callback is used, it is
+     *                passed the unloaded entity as the only argument.
      *
-     * @return  quick.models.BaseEntity
+     * @throws        EntityNotFound
+     *
+     * @return        quick.models.BaseEntity
      */
-    public any function firstOrFail() {
+    public any function firstOrFail( any errorMessage ) {
         applyGlobalScopes();
         var attrs = retrieveQuery().first( options = variables._queryOptions );
         if ( structIsEmpty( attrs ) ) {
+            param arguments.errorMessage =  "No [#entityName()#] found with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
+            if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
+                arguments.errorMessage = arguments.errorMessage( this );
+            }
+
             throw(
                 type = "EntityNotFound",
-                message = "No [#entityName()#] found with constraints " &
-                "[#serializeJSON( retrieveQuery().getBindings() )#]"
+                message = arguments.errorMessage
             );
         }
         return loadEntity( attrs );
@@ -981,18 +989,26 @@ component accessors="true" {
      * Returns the entity with the id value as the primary key.
      * If no record is found, it throws an `EntityNotFound` exception.
      *
-     * @id      The id value to find.
+     * @id            The id value to find.
+     * @errorMessage  An optional string error message or callback to produce
+     *                a string error message.  If a callback is used, it is
+     *                passed the unloaded entity as the only argument.
      *
-     * @throws  EntityNotFound
+     * @throws        EntityNotFound
      *
-     * @return  quick.models.BaseEntity
+     * @return        quick.models.BaseEntity
      */
-    public any function findOrFail( required any id ) {
+    public any function findOrFail( required any id, any errorMessage ) {
         var entity = variables.find( arguments.id );
         if ( isNull( entity ) ) {
+            param arguments.errorMessage =  "No [#entityName()#] found with id [#arguments.id#]";
+            if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
+                arguments.errorMessage = arguments.errorMessage( this, arguments.id );
+            }
+
             throw(
                 type = "EntityNotFound",
-                message = "No [#entityName()#] found with id [#arguments.id#]"
+                message = arguments.errorMessage
             );
         }
         return entity;
@@ -1065,17 +1081,25 @@ component accessors="true" {
      * Returns true if any entities exist with the configured query.
      * If no entities exist, it throws an EntityNotFound exception.
      *
-     * @throws  EntityNotFound
+     * @errorMessage  An optional string error message or callback to produce
+     *                a string error message.  If a callback is used, it is
+     *                passed the unloaded entity as the only argument.
      *
-     * @return  Boolean
+     * @throws        EntityNotFound
+     *
+     * @return        Boolean
      */
-    public boolean function existsOrFail() {
+    public boolean function existsOrFail( any errorMessage ) {
         applyGlobalScopes();
         if ( !retrieveQuery().exists() ) {
+            param arguments.errorMessage =  "No [#entityName()#] exists with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
+            if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
+                arguments.errorMessage = arguments.errorMessage( this );
+            }
+
             throw(
                 type = "EntityNotFound",
-                message = "No [#entityName()#] found with constraints " &
-                "[#serializeJSON( retrieveQuery().getBindings() )#]"
+                message = arguments.errorMessage
             );
         }
         return true;

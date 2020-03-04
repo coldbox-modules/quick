@@ -64,6 +64,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( function() {
                     getInstance( "User" ).findOrFail( 999 );
                 } ).toThrow( type = "EntityNotFound" );
+
+                expect( function() {
+                    getInstance( "User" ).findOrFail( 999, "Custom Message" );
+                } ).toThrow( type = "EntityNotFound", regex = "Custom Message" );
+
+                expect( function() {
+                    getInstance( "User" ).findOrFail( 999, function( entity, id ) {
+                        return "#entity.entityName()# ###id# Not Found";
+                    } );
+                } ).toThrow( type = "EntityNotFound", regex = "User \##999 Not Found" );
             } );
 
             it( "throws an exception if no entity is found using first or fail", function() {
@@ -74,12 +84,23 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( function() {
                     getInstance( "User" ).whereUsername( "doesnt-exist" ).firstOrFail();
                 } ).toThrow( type = "EntityNotFound" );
+
+                expect( function() {
+                    getInstance( "User" ).whereUsername( "doesnt-exist" ).firstOrFail( "Custom Message" );
+                } ).toThrow( type = "EntityNotFound", regex = "Custom Message" );
+
+                expect( function() {
+                    getInstance( "User" ).whereUsername( "doesnt-exist" ).firstOrFail( function( entity ) {
+                        return "No #entity.entityName()# found with that criteria";
+                    } );
+                } ).toThrow( type = "EntityNotFound", regex = "No User found with that criteria" );
             } );
 
             it( "can return if an entity exists", function() {
                 expect(
                     getInstance( "User" ).whereUsername( "johndoe" ).exists()
                 ).toBeTrue();
+
                 expect(
                     getInstance( "User" ).whereUsername( "doesnt-exist" ).exists()
                 ).toBeFalse();
@@ -93,6 +114,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( function() {
                     getInstance( "User" ).whereUsername( "doesnt-exist" ).existsOrFail();
                 } ).toThrow( type = "EntityNotFound" );
+
+                expect( function() {
+                    getInstance( "User" ).whereUsername( "doesnt-exist" ).existsOrFail( "Custom Message" );
+                } ).toThrow( type = "EntityNotFound", regex = "Custom Message" );
+
+                expect( function() {
+                    getInstance( "User" ).whereUsername( "doesnt-exist" ).existsOrFail( function( entity ) {
+                        return "No #entity.entityName()# exists with that criteria";
+                    } );
+                } ).toThrow( type = "EntityNotFound", regex = "No User exists with that criteria" );
             } );
 
             it( "can paginate a Quick query", function() {

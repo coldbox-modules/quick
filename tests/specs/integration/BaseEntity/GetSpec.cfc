@@ -104,6 +104,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect(
                     getInstance( "User" ).whereUsername( "doesnt-exist" ).exists()
                 ).toBeFalse();
+
+                expect(
+                    getInstance( "User" ).exists( id = 1 )
+                ).toBeTrue();
+
+                expect(
+                    getInstance( "User" ).exists( id = -999 )
+                ).toBeFalse();
             } );
 
             it( "throws an exception if an entity does not exist when calling existsOrFail", function() {
@@ -116,11 +124,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } ).toThrow( type = "EntityNotFound" );
 
                 expect( function() {
-                    getInstance( "User" ).whereUsername( "doesnt-exist" ).existsOrFail( "Custom Message" );
+                    getInstance( "User" ).whereUsername( "doesnt-exist" ).existsOrFail( errorMessage = "Custom Message" );
                 } ).toThrow( type = "EntityNotFound", regex = "Custom Message" );
 
                 expect( function() {
-                    getInstance( "User" ).whereUsername( "doesnt-exist" ).existsOrFail( function( entity ) {
+                    getInstance( "User" ).existsOrFail( id = 1 );
+                } ).notToThrow();
+
+                expect( function() {
+                    getInstance( "User" ).existsOrFail( id = -999, errorMessage = "Custom Message" );
+                } ).toThrow( type = "EntityNotFound", regex = "Custom Message" );
+
+                expect( function() {
+                    getInstance( "User" ).whereUsername( "doesnt-exist" ).existsOrFail( errorMessage = function( entity ) {
                         return "No #entity.entityName()# exists with that criteria";
                     } );
                 } ).toThrow( type = "EntityNotFound", regex = "No User exists with that criteria" );

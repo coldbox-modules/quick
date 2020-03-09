@@ -46,9 +46,13 @@
 		};
 
 		moduleSettings = {
-			quick = {
-				defaultGrammar = "MySQLGrammar@qb"
-			}
+			"quick" = {
+				"defaultGrammar" = "MySQLGrammar@qb"
+            },
+            "mementifier" = {
+                "trustedGetters" = true,
+                "ormAutoIncludes" = false
+            }
 		};
 
 		// custom settings

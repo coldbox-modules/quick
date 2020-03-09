@@ -24,7 +24,8 @@
     "dependencies":{
         "qb":"^7.3.0",
         "str":"^1.0.0",
-        "testbox":"^3.1.0+339"
+        "testbox":"^3.1.0+339",
+        "mementifier":"^2.0.0+93"
     },
     "devDependencies":{
         "coldbox":"be",
@@ -37,7 +38,8 @@
         "qb":"modules/qb/",
         "str":"modules/str/",
         "cbvalidation":"modules/cbvalidation/",
-        "cfcollection":"modules/cfcollection/"
+        "cfcollection":"modules/cfcollection/",
+        "mementifier":"modules/mementifier/"
     },
     "testbox":{
         "reporter":"json",

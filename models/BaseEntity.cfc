@@ -1071,10 +1071,15 @@ component accessors="true" {
     /**
      * Returns if any entities exist with the configured query.
      *
+     * @id      An optional id to check if it exists.
+     *
      * @return  Boolean
      */
-    public boolean function exists() {
+    public boolean function exists( any id ) {
         applyGlobalScopes();
+        if ( !isNull( arguments.id ) ) {
+            retrieveQuery().where( keyColumn(), arguments.id );
+        }
         return retrieveQuery().exists();
     }
 
@@ -1082,6 +1087,7 @@ component accessors="true" {
      * Returns true if any entities exist with the configured query.
      * If no entities exist, it throws an EntityNotFound exception.
      *
+     * @id            An optional id to check if it exists.
      * @errorMessage  An optional string error message or callback to produce
      *                a string error message.  If a callback is used, it is
      *                passed the unloaded entity as the only argument.
@@ -1090,8 +1096,11 @@ component accessors="true" {
      *
      * @return        Boolean
      */
-    public boolean function existsOrFail( any errorMessage ) {
+    public boolean function existsOrFail( any id, any errorMessage ) {
         applyGlobalScopes();
+        if ( !isNull( arguments.id ) ) {
+            retrieveQuery().where( keyColumn(), arguments.id );
+        }
         if ( !retrieveQuery().exists() ) {
             param arguments.errorMessage =  "No [#entityName()#] exists with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
             if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
@@ -2950,38 +2959,16 @@ component accessors="true" {
         return arguments.entities;
     }
 
-    /**
-     * Returns a serializable representation of the entity.
-     * The default getMemento implementation returns all
-     * attributes as well as any loaded relationships.
-     *
-     * @return  struct of data representing the entity.
-     */
-    public struct function getMemento() {
-        var data = variables._attributes
-            .keyArray()
-            .reduce( function( acc, key ) {
-                acc[ key ] = retrieveAttribute(
-                    name = key,
-                    bypassGetters = false
-                );
-                return acc;
-            }, {} );
-        var loadedRelations = variables._relationshipsData.reduce( function( acc, relationshipName, relation ) {
-            if ( isArray( relation ) ) {
-                var mementos = relation.map( function( r ) {
-                    return r.getMemento();
-                } );
-                // ACF 2016 doesn't let use directly assign the result of map
-                // to a dynamic struct key. ¯\_(ツ)_/¯
-                acc[ relationshipName ] = mementos;
-            } else {
-                acc[ relationshipName ] = relation.getMemento();
-            }
-            return acc;
-        }, {} );
-        structAppend( data, loadedRelations );
-        return data;
+    function instanceReady() {
+        if ( entityName() != "BaseEntity" && !structKeyExists( this, "memento" ) ) {
+            this.memento = {
+                defaultIncludes = retrieveAttributeNames(),
+                defaultExcludes = [],
+                neverInclude = [],
+                defaults = {},
+                mappers = {}
+            };
+        }
     }
 
     /**

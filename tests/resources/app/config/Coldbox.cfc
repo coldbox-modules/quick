@@ -48,10 +48,6 @@
 		moduleSettings = {
 			"quick" = {
 				"defaultGrammar" = "MySQLGrammar@qb"
-            },
-            "mementifier" = {
-                "trustedGetters" = true,
-                "ormAutoIncludes" = false
             }
 		};
 

@@ -884,15 +884,16 @@ component accessors="true" {
         applyGlobalScopes();
         var attrs = retrieveQuery().first( options = variables._queryOptions );
         if ( structIsEmpty( attrs ) ) {
-            param arguments.errorMessage =  "No [#entityName()#] found with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
-            if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
+            param arguments.errorMessage = "No [#entityName()#] found with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
+            if (
+                isClosure( arguments.errorMessage ) || isCustomFunction(
+                    arguments.errorMessage
+                )
+            ) {
                 arguments.errorMessage = arguments.errorMessage( this );
             }
 
-            throw(
-                type = "EntityNotFound",
-                message = arguments.errorMessage
-            );
+            throw( type = "EntityNotFound", message = arguments.errorMessage );
         }
         return loadEntity( attrs );
     }
@@ -1002,15 +1003,19 @@ component accessors="true" {
     public any function findOrFail( required any id, any errorMessage ) {
         var entity = variables.find( arguments.id );
         if ( isNull( entity ) ) {
-            param arguments.errorMessage =  "No [#entityName()#] found with id [#arguments.id#]";
-            if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
-                arguments.errorMessage = arguments.errorMessage( this, arguments.id );
+            param arguments.errorMessage = "No [#entityName()#] found with id [#arguments.id#]";
+            if (
+                isClosure( arguments.errorMessage ) || isCustomFunction(
+                    arguments.errorMessage
+                )
+            ) {
+                arguments.errorMessage = arguments.errorMessage(
+                    this,
+                    arguments.id
+                );
             }
 
-            throw(
-                type = "EntityNotFound",
-                message = arguments.errorMessage
-            );
+            throw( type = "EntityNotFound", message = arguments.errorMessage );
         }
         return entity;
     }
@@ -1102,15 +1107,16 @@ component accessors="true" {
             retrieveQuery().where( keyColumn(), arguments.id );
         }
         if ( !retrieveQuery().exists() ) {
-            param arguments.errorMessage =  "No [#entityName()#] exists with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
-            if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
+            param arguments.errorMessage = "No [#entityName()#] exists with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
+            if (
+                isClosure( arguments.errorMessage ) || isCustomFunction(
+                    arguments.errorMessage
+                )
+            ) {
                 arguments.errorMessage = arguments.errorMessage( this );
             }
 
-            throw(
-                type = "EntityNotFound",
-                message = arguments.errorMessage
-            );
+            throw( type = "EntityNotFound", message = arguments.errorMessage );
         }
         return true;
     }
@@ -2514,10 +2520,7 @@ component accessors="true" {
             subselectQuery = subselectQuery.retrieveQuery();
         }
 
-        retrieveQuery().subselect(
-            name,
-            subselectQuery.limit( 1 )
-        );
+        retrieveQuery().subselect( name, subselectQuery.limit( 1 ) );
         return this;
     }
 
@@ -2960,14 +2963,17 @@ component accessors="true" {
     }
 
     function instanceReady() {
-        if ( entityName() != "BaseEntity" && !structKeyExists( this, "memento" ) ) {
-            this.memento = {
-                defaultIncludes = retrieveAttributeNames(),
-                defaultExcludes = [],
-                neverInclude = [],
-                defaults = {},
-                mappers = {}
-            };
+        if ( entityName() != "BaseEntity" ) {
+            param this.memento = {};
+            structAppend( this.memento, {
+                defaultIncludes: retrieveAttributeNames(),
+                defaultExcludes: [],
+                neverInclude: [],
+                defaults: {},
+                mappers: {},
+                trustedGetters: true,
+                ormAutoIncludes: false
+            } );
         }
     }
 

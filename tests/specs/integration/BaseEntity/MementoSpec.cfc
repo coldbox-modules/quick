@@ -32,7 +32,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "returns retrieved relationships", function() {
-                var post = getInstance( "Post" ).with( "author" ).findOrFail( 1245 );
+                var post = getInstance( "Post" )
+                    .with( "author" )
+                    .findOrFail( 1245 );
                 expect( post.getMemento( includes = "author" ) ).toBe( {
                     "post_pk": "1245",
                     "body": "My awesome post body",

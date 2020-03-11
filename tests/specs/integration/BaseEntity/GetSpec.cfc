@@ -173,25 +173,41 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can paginate a Quick query", function() {
+                queryExecute( "TRUNCATE TABLE `a`" );
                 for ( var i = 1; i <= 45; i++ ) {
                     // create A
                     var a = getInstance( "A" ).create( { "name": "Instance #i#" } );
                 }
 
-                var p = getInstance( "A" ).paginate();
-                expect( p.pagination.page ).toBe( 1 );
+                var p = getInstance( "A" ).orderBy( "id" ).paginate();
+                expect( p.pagination.page ).toBe(
+                    1,
+                    "Page number should be 1"
+                );
                 expect( p.results ).toHaveLength( 25 );
-                expect( p.results[ 1 ].getId() ).toBe( 1 );
+                expect( p.results[ 1 ].getId() ).toBe(
+                    1,
+                    "First entity id should be 1"
+                );
                 expect( p.results[ p.results.len() ].getId() ).toBe( 25 );
 
-                p = getInstance( "A" ).paginate( 2 );
-                expect( p.pagination.page ).toBe( 2 );
+                p = getInstance( "A" ).orderBy( "id" ).paginate( 2 );
+                expect( p.pagination.page ).toBe(
+                    2,
+                    "Page number should be 2"
+                );
                 expect( p.results ).toHaveLength( 20 );
-                expect( p.results[ 1 ].getId() ).toBe( 26 );
+                expect( p.results[ 1 ].getId() ).toBe(
+                    26,
+                    "First entity id should be 26"
+                );
                 expect( p.results[ p.results.len() ].getId() ).toBe( 45 );
             } );
 
             it( "can eager load and paginate a Quick query", function() {
+                queryExecute( "TRUNCATE TABLE `a`" );
+                queryExecute( "TRUNCATE TABLE `b`" );
+
                 var as = [];
                 var bs = [];
                 for ( var i = 1; i < 10; i++ ) {
@@ -204,11 +220,20 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 getInstance( "A" ).insert( as );
                 getInstance( "B" ).insert( bs );
 
-                var p = getInstance( "B" ).with( "a" ).paginate();
-                expect( p.pagination.page ).toBe( 1 );
+                var p = getInstance( "B" )
+                    .with( "a" )
+                    .orderBy( "id" )
+                    .paginate();
+                expect( p.pagination.page ).toBe(
+                    1,
+                    "Page number should be 1"
+                );
                 expect( p.results ).toHaveLength( 25 );
                 var firstB = p.results[ 1 ];
-                expect( firstB.getId() ).toBe( 1 );
+                expect( firstB.getId() ).toBe(
+                    1,
+                    "First entity id should be 1"
+                );
                 expect( firstB.isRelationshipLoaded( "a" ) ).toBeTrue();
             } );
 

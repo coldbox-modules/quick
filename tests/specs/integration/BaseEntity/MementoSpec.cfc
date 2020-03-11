@@ -38,9 +38,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( post.getMemento( includes = "author" ) ).toBe( {
                     "post_pk": "1245",
                     "body": "My awesome post body",
-                    "createdDate": "2017-07-28 02:07:00.0",
-                    "modifiedDate": "2017-07-28 02:07:00.0",
-                    "publishedDate": "2017-07-28 02:07:00.0",
+                    "createdDate": "2017-07-28 02:07:00",
+                    "modifiedDate": "2017-07-28 02:07:00",
+                    "publishedDate": "2017-07-28 02:07:00",
                     "user_id": "1",
                     "author": {
                         "id": "1",
@@ -51,8 +51,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         "password": "5F4DCC3B5AA765D61D8327DEB882CF99",
                         "type": "admin",
                         "countryId": "02B84D66-0AA0-F7FB-1F71AFC954843861",
-                        "createdDate": "2017-07-28 02:06:36.0",
-                        "modifiedDate": "2017-07-28 02:06:36.0",
+                        "createdDate": "2017-07-28 02:06:36",
+                        "modifiedDate": "2017-07-28 02:06:36",
                         "externalID": "1234"
                     }
                 } );

@@ -47,5 +47,11 @@ component {
             .initArg( name = "grammar", dsl = settings.defaultGrammar )
             .initArg( name = "utils", dsl = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = "array" );
+
+        binder.map( alias = "QuickBuilder@quick", force = true )
+            .to( "#moduleMapping#.models.QuickBuilder" )
+            .initArg( name = "grammar", dsl = settings.defaultGrammar )
+            .initArg( name = "utils", dsl = "QueryUtils@qb" )
+            .initArg( name = "returnFormat", value = "array" );
     }
 }

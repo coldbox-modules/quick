@@ -25,7 +25,7 @@
         "qb": "^7.3.0",
         "str": "^1.0.0",
         "testbox": "^3.1.0+339",
-        "mementifier": "github:coldbox-modules/mementifier#trusted_getters_and_better_mappers"
+        "mementifier": "be"
     },
     "devDependencies": {
         "coldbox": "be",

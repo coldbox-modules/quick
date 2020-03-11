@@ -210,7 +210,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .between( "created_date", rightNow, lastWeek )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `created_date` BETWEEN ? AND ?"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `created_date` BETWEEN ? AND ?"
                     );
                 } );
 
@@ -220,7 +220,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .eqProperty( "created_date", "modified_date" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `created_date` = `modified_date`"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `created_date` = `modified_date`"
                     );
                 } );
 
@@ -230,7 +230,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .isEQ( "username", "elpete" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `username` = ?"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `username` = ?"
                     );
                 } );
 
@@ -240,7 +240,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .isGT( "created_date", now() )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `created_date` > ?"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `created_date` > ?"
                     );
                 } );
 
@@ -250,7 +250,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .gtProperty( "modified_date", "created_date" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `modified_date` > `created_date`"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `modified_date` > `created_date`"
                     );
                 } );
 
@@ -260,7 +260,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .isGE( "created_date", now() )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `created_date` >= ?"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `created_date` >= ?"
                     );
                 } );
 
@@ -270,7 +270,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .geProperty( "modified_date", "created_date" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `modified_date` >= `created_date`"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `modified_date` >= `created_date`"
                     );
                 } );
 
@@ -280,7 +280,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .idEQ( 1 )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `id` = ?"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `id` = ?"
                     );
                 } );
 
@@ -290,7 +290,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .like( "username", "e%" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `username` LIKE ?"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `username` LIKE ?"
                     );
                 } );
 
@@ -300,7 +300,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .ilike( "username", "e%" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `username` ILIKE ?"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `username` ILIKE ?"
                     );
                 } );
 
@@ -310,7 +310,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .isIn( "id", [ 2, 3 ] )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `id` IN (?, ?)"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `id` IN (?, ?)"
                     );
                 } );
 
@@ -320,7 +320,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .isNull( "country_id" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `country_id` IS NULL"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `country_id` IS NULL"
                     );
                 } );
 
@@ -330,7 +330,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .isNotNull( "country_id" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `country_id` IS NOT NULL"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `country_id` IS NOT NULL"
                     );
                 } );
 
@@ -340,7 +340,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .isLT( "created_date", now() )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `created_date` < ?"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `created_date` < ?"
                     );
                 } );
 
@@ -350,7 +350,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .ltProperty( "created_date", "modified_date" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `created_date` < `modified_date`"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `created_date` < `modified_date`"
                     );
                 } );
 
@@ -360,7 +360,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .isLE( "created_date", now() )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `created_date` <= ?"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `created_date` <= ?"
                     );
                 } );
 
@@ -370,7 +370,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .leProperty( "created_date", "modified_date" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `created_date` <= `modified_date`"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `created_date` <= `modified_date`"
                     );
                 } );
 
@@ -380,7 +380,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .neProperty( "created_date", "modified_date" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` WHERE `created_date` <> `modified_date`"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` WHERE `created_date` <> `modified_date`"
                     );
                 } );
 
@@ -390,7 +390,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .maxResults( 10 )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` LIMIT 10"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` LIMIT 10"
                     );
                 } );
 
@@ -400,7 +400,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .firstResult( 10 )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` OFFSET 10"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` OFFSET 10"
                     );
                 } );
 
@@ -410,7 +410,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .order( "username" )
                         .getSQL();
                     expect( actual ).toBe(
-                        "SELECT `users`.`created_date`, `users`.`password`, `users`.`last_name`, `users`.`country_id`, `users`.`username`, `users`.`first_name`, `users`.`modified_date`, `users`.`id`, `users`.`email`, `users`.`type` FROM `users` ORDER BY `username` ASC"
+                        "SELECT `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`type`, `users`.`username` FROM `users` ORDER BY `username` ASC"
                     );
                 } );
 

@@ -53,18 +53,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                             .has( "posts.comments" )
                             .get();
                         expect( users ).toBeArray();
-                        expect( users ).toHaveLength( 1 );
+                        expect( users ).toHaveLength( 2 );
                     } );
 
                     it( "applies count constraints to the final relationship in a nested relationsihp existence check", function() {
                         var users = getInstance( "User" )
-                            .has( "posts.comments", "=", 2 )
+                            .has( "posts.comments", "=", 1 )
                             .get();
                         expect( users ).toBeArray();
-                        expect( users ).toHaveLength( 1 );
+                        expect( users ).toHaveLength( 2 );
 
                         var users = getInstance( "User" )
-                            .has( "posts.comments", ">", 2 )
+                            .has( "posts.comments", ">", 1 )
                             .get();
                         expect( users ).toBeArray();
                         expect( users ).toBeEmpty();
@@ -133,7 +133,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     it( "can find only entities that have a related belongsToMany entity", function() {
                         var countries = getInstance( "Country" ).has( "posts" ).get();
                         expect( countries ).toBeArray();
-                        expect( countries ).toHaveLength( 1 );
+                        expect( countries ).toHaveLength( 2 );
                     } );
                 } );
 
@@ -196,18 +196,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                             .doesntHave( "posts.comments" )
                             .get();
                         expect( users ).toBeArray();
-                        expect( users ).toHaveLength( 3 );
+                        expect( users ).toHaveLength( 2 );
                     } );
 
                     it( "applies count constraints to the final relationship in a nested relationsihp absence check", function() {
                         var users = getInstance( "User" )
-                            .doesntHave( "posts.comments", "=", 2 )
+                            .doesntHave( "posts.comments", "=", 1 )
                             .get();
                         expect( users ).toBeArray();
-                        expect( users ).toHaveLength( 3 );
+                        expect( users ).toHaveLength( 2 );
 
                         var users = getInstance( "User" )
-                            .doesntHave( "posts.comments", ">", 2 )
+                            .doesntHave( "posts.comments", ">", 1 )
                             .get();
                         expect( users ).toBeArray();
                         expect( users ).toHaveLength( 4 );
@@ -278,7 +278,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                             .doesntHave( "posts" )
                             .get();
                         expect( countries ).toBeArray();
-                        expect( countries ).toHaveLength( 1 );
+                        expect( countries ).toBeEmpty();
                     } );
                 } );
 

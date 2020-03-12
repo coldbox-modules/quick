@@ -4,7 +4,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         describe( "Ordering By Relationships Spec", function() {
             it( "can order by a belongs to relationship", function() {
                 var posts = getInstance( "Post" )
-                    .whereHas( "author" )
+                    .has( "author" )
                     .orderBy( "author.firstName" )
                     .orderBy( "post_pk" )
                     .get();
@@ -18,7 +18,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "can order by a belongs to relationship descending", function() {
                 var posts = getInstance( "Post" )
-                    .whereHas( "author" )
+                    .has( "author" )
                     .orderBy( "author.firstName", "desc" )
                     .orderBy( "post_pk" )
                     .get();
@@ -28,6 +28,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( posts[ 1 ].keyValue() ).toBe( 1245 );
                 expect( posts[ 2 ].keyValue() ).toBe( 523526 );
                 expect( posts[ 3 ].keyValue() ).toBe( 321 );
+            } );
+
+            xit( "can order by a nested belongs to relationship descending", function() {
+                var postsQuery = getInstance( "Post" )
+                    .has( "author.country" )
+                    .orderBy( "author.country.name" );
+
+                writeDump( var = postsQuery.toSQL() );
+
+                var posts = postsQuery.get();
+
+                expect( posts ).toBeArray();
+                expect( posts ).toHaveLength( 2 );
+                expect( posts[ 1 ].keyValue() ).toBe( 2 );
+                expect( posts[ 2 ].keyValue() ).toBe( 1 );
             } );
         } );
     }

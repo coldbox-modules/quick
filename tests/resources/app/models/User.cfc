@@ -52,6 +52,10 @@ component quick {
         */
     }
 
+    function country() {
+        return belongsTo( "Country", "country_id" );
+    }
+
     function posts() {
         return hasMany( "Post", "user_id" );
     }

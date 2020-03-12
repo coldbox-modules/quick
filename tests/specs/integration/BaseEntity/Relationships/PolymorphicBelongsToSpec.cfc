@@ -16,7 +16,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "app.models.Post"
                 );
                 expect( commentB.getCommentable().getBody() ).toBe(
-                    "My awesome post body"
+                    "My post with a different author"
                 );
 
                 var commentC = getInstance( "Comment" ).find( 3 );

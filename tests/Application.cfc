@@ -78,7 +78,7 @@ component {
             INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `externalId`) VALUES (3, 'janedoe', 'Jane', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', NULL, '2017-07-28 02:08:16', '2017-07-28 02:08:16', '5555');
         " );
         queryExecute( "
-             INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `type`, `externalId`) VALUES (4, 'elpete2', 'Another', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2019-06-15 12:29:36', '2017-07-28 02:06:36', 'admin', '1234')
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `type`, `externalId`) VALUES (4, 'elpete2', 'Another', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02BA2DB0-EB1E-3F85-5F283AB5E45608C6', '2019-06-15 12:29:36', '2017-07-28 02:06:36', 'admin', '1234')
         " );
         queryExecute( "
             CREATE TABLE `my_posts` (
@@ -135,7 +135,7 @@ component {
             INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (1, 'I thought this post was great', 1245, 'Post', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
         " );
         queryExecute( "
-            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (2, 'I thought this post was not so good', 1245, 'Post', '2017-07-04 04:14:22', '2017-07-04 04:14:22')
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (2, 'I thought this post was not so good', 321, 'Post', '2017-07-04 04:14:22', '2017-07-04 04:14:22')
         " );
         queryExecute( "
             INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (3, 'What a great video! So fun!', 2, 'Video', '2017-07-02 04:14:22', '2017-07-02 04:14:22')

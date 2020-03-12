@@ -85,6 +85,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "Four users should be returned"
                 );
 
+                var elpete2 = users[ 1 ];
+                expect( elpete2.getUsername() ).toBe( "elpete2" );
+                expect( elpete2.getPosts() ).toBeArray();
+                expect( elpete2.getPosts() ).toHaveLength(
+                    1,
+                    "One post should belong to elpete2"
+                );
+
                 var janedoe = users[ 2 ];
                 expect( janedoe.getUsername() ).toBe( "janedoe" );
                 expect( janedoe.getPosts() ).toBeArray();
@@ -223,19 +231,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( countries ).toHaveLength( 2 );
 
                 expect( countries[ 1 ].getPosts() ).toBeArray();
-                expect( countries[ 1 ].getPosts() ).toHaveLength( 3 );
+                expect( countries[ 1 ].getPosts() ).toHaveLength( 2 );
                 expect( countries[ 1 ].getPosts()[ 1 ].getBody() ).toBe(
-                    "My post with a different author"
-                );
-                expect( countries[ 1 ].getPosts()[ 2 ].getBody() ).toBe(
                     "My awesome post body"
                 );
-                expect( countries[ 1 ].getPosts()[ 3 ].getBody() ).toBe(
+                expect( countries[ 1 ].getPosts()[ 2 ].getBody() ).toBe(
                     "My second awesome post body"
                 );
 
                 expect( countries[ 2 ].getPosts() ).toBeArray();
-                expect( countries[ 2 ].getPosts() ).toBeEmpty();
+                expect( countries[ 2 ].getPosts() ).toHaveLength( 1 );
+                expect( countries[ 2 ].getPosts()[ 1 ].getBody() ).toBe(
+                    "My post with a different author"
+                );
 
                 expect( variables.queries ).toHaveLength(
                     2,
@@ -262,7 +270,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "Post"
                 );
                 expect( comments[ 2 ].getCommentable().getPost_Pk() ).toBe(
-                    1245
+                    321
                 );
 
                 expect( comments[ 3 ].getId() ).toBe( 3 );
@@ -284,10 +292,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( posts ).toHaveLength( 4 );
 
                 expect( posts[ 1 ].getComments() ).toBeArray();
-                expect( posts[ 1 ].getComments() ).toBeEmpty();
+                expect( posts[ 1 ].getComments() ).toHaveLength( 1 );
 
                 expect( posts[ 2 ].getComments() ).toBeArray();
-                expect( posts[ 2 ].getComments() ).toHaveLength( 2 );
+                expect( posts[ 2 ].getComments() ).toHaveLength( 1 );
 
                 expect( posts[ 3 ].getComments() ).toBeArray();
                 expect( posts[ 3 ].getComments() ).toBeEmpty();
@@ -301,23 +309,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 );
             } );
 
-            it( "can eager load a large relationship quickly", function() {
-                for ( var i = 1; i < 20; i++ ) {
-                    // create A
-                    var a = getInstance( "A" ).create( { "name": "Instance #i#" } );
-                    for ( var j = 1; j < 5; j++ ) {
-                        getInstance( "B" ).create( { "name": "Instance #j#", "a_id": a.getId() } );
-                    }
-                }
-
-                var startTick = getTickCount();
-                var a = getInstance( "B" ).with( "a" ).get();
-                expect( getTickCount() - startTick ).toBeLT(
-                    5000,
-                    "Query is taking too long"
-                );
-            } );
-
             it( "can eager load a nested relationship", function() {
                 var users = getInstance( "User" )
                     .with( "posts.comments" )
@@ -327,6 +318,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( users ).toHaveLength(
                     4,
                     "Four users should be returned"
+                );
+
+                var elpete2 = users[ 1 ];
+                expect( elpete2.getUsername() ).toBe( "elpete2" );
+                expect( elpete2.getPosts() ).toBeArray();
+                expect( elpete2.getPosts() ).toHaveLength(
+                    1,
+                    "One post should belong to elpete2"
+                );
+
+                expect( elpete2.getPosts()[ 1 ].getComments() ).toBeArray();
+                expect( elpete2.getPosts()[ 1 ].getComments() ).toHaveLength( 1 );
+                expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getId() ).toBe( 2 );
+                expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getBody() ).toBe(
+                    "I thought this post was not so good"
                 );
 
                 var janedoe = users[ 2 ];
@@ -348,28 +354,23 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var elpete = users[ 4 ];
                 expect( elpete.getUsername() ).toBe( "elpete" );
 
-                var posts = elpete.getPosts();
-                expect( posts ).toBeArray();
-                expect( posts ).toHaveLength(
+                expect( elpete.getPosts() ).toBeArray();
+                expect( elpete.getPosts() ).toHaveLength(
                     2,
                     "Two posts should belong to elpete"
                 );
 
-                expect( posts[ 1 ].getPost_Pk() ).toBe( 1245 );
-                expect( posts[ 1 ].getComments() ).toBeArray();
-                expect( posts[ 1 ].getComments() ).toHaveLength( 2 );
-                expect( posts[ 1 ].getComments()[ 1 ].getId() ).toBe( 1 );
-                expect( posts[ 1 ].getComments()[ 1 ].getBody() ).toBe(
+                expect( elpete.getPosts()[ 1 ].getPost_Pk() ).toBe( 1245 );
+                expect( elpete.getPosts()[ 1 ].getComments() ).toBeArray();
+                expect( elpete.getPosts()[ 1 ].getComments() ).toHaveLength( 1 );
+                expect( elpete.getPosts()[ 1 ].getComments()[ 1 ].getId() ).toBe( 1 );
+                expect( elpete.getPosts()[ 1 ].getComments()[ 1 ].getBody() ).toBe(
                     "I thought this post was great"
                 );
-                expect( posts[ 1 ].getComments()[ 2 ].getId() ).toBe( 2 );
-                expect( posts[ 1 ].getComments()[ 2 ].getBody() ).toBe(
-                    "I thought this post was not so good"
-                );
 
-                expect( posts[ 2 ].getPost_Pk() ).toBe( 523526 );
-                expect( posts[ 2 ].getComments() ).toBeArray();
-                expect( posts[ 2 ].getComments() ).toHaveLength( 0 );
+                expect( elpete.getPosts()[ 2 ].getPost_Pk() ).toBe( 523526 );
+                expect( elpete.getPosts()[ 2 ].getComments() ).toBeArray();
+                expect( elpete.getPosts()[ 2 ].getComments() ).toBeEmpty();
 
                 expect( variables.queries ).toHaveLength(
                     3,
@@ -442,6 +443,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "Four users should be returned"
                 );
 
+                var elpete2 = users[ 1 ];
+                expect( elpete2.getUsername() ).toBe( "elpete2" );
+                expect( elpete2.getPosts() ).toBeArray();
+                expect( elpete2.getPosts() ).toHaveLength(
+                    1,
+                    "One post should belong to elpete2"
+                );
+
+                expect( elpete2.getPosts()[ 1 ].getComments() ).toBeArray();
+                expect( elpete2.getPosts()[ 1 ].getComments() ).toHaveLength( 1 );
+                expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getId() ).toBe( 2 );
+                expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getBody() ).toBe(
+                    "I thought this post was not so good"
+                );
+
                 var janedoe = users[ 2 ];
                 expect( janedoe.getUsername() ).toBe( "janedoe" );
                 expect( janedoe.getPosts() ).toBeArray();
@@ -460,28 +476,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 var elpete = users[ 4 ];
                 expect( elpete.getUsername() ).toBe( "elpete" );
-
-                var posts = elpete.getPosts();
-                expect( posts ).toBeArray();
-                expect( posts ).toHaveLength(
+                expect( elpete.getPosts() ).toBeArray();
+                expect( elpete.getPosts() ).toHaveLength(
                     2,
                     "Two posts should belong to elpete"
                 );
 
-                expect( posts[ 1 ].getPost_Pk() ).toBe( 1245 );
-                expect( posts[ 1 ].getComments() ).toBeArray();
-                expect( posts[ 1 ].getComments() ).toHaveLength(
-                    1,
-                    "One comment should belong to Post 1245"
-                );
-                expect( posts[ 1 ].getComments()[ 1 ].getId() ).toBe( 2 );
-                expect( posts[ 1 ].getComments()[ 1 ].getBody() ).toBe(
-                    "I thought this post was not so good"
-                );
+                expect( elpete.getPosts()[ 1 ].getPost_Pk() ).toBe( 1245 );
+                expect( elpete.getPosts()[ 1 ].getComments() ).toBeArray();
+                expect( elpete.getPosts()[ 1 ].getComments() ).toBeEmpty();
 
-                expect( posts[ 2 ].getPost_Pk() ).toBe( 523526 );
-                expect( posts[ 2 ].getComments() ).toBeArray();
-                expect( posts[ 2 ].getComments() ).toHaveLength( 0 );
+
+
+                expect( elpete.getPosts()[ 2 ].getPost_Pk() ).toBe( 523526 );
+                expect( elpete.getPosts()[ 2 ].getComments() ).toBeArray();
+                expect( elpete.getPosts()[ 2 ].getComments() ).toHaveLength( 0 );
 
                 expect( variables.queries ).toHaveLength(
                     3,

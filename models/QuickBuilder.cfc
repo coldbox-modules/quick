@@ -12,9 +12,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      * @operator          An optional operator to constrain the check.
      * @count             An optional count to constrain the check.
      *
-     * @return            quick.models.BaseEntity
+     * @return            quick.models.QuickBuilder
      */
-    public any function has(
+    public QuickBuilder function has(
         required string relationshipName,
         string operator,
         numeric count,
@@ -63,9 +63,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      * @operator          An optional operator to constrain the check.
      * @count             An optional count to constrain the check.
      *
-     * @return            quick.models.BaseEntity
+     * @return            quick.models.QuickBuilder
      */
-    public any function doesntHave(
+    public QuickBuilder function doesntHave(
         required string relationshipName,
         string operator,
         numeric count
@@ -74,6 +74,17 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         return has( argumentCollection = arguments );
     }
 
+    /**
+     * Checks for the existence of a nested relationship when executing the query.
+     *
+     * @relationQuery     The currently configured existence check query.
+     * @relationshipName  The relationship to check.  Can be a dot-delimited
+     *                    list of nested relationships.
+     * @operator          An optional operator to constrain the check.
+     * @count             An optional count to constrain the check.
+     *
+     * @return            quick.models.QuickBuilder
+     */
     private any function hasNested(
         required any relationQuery,
         required string relationshipName,
@@ -129,9 +140,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      *                    Default: "and"
      * @negate            If true, use `whereNotExists` instead of `whereExists`.
      *
-     * @return            quick.models.BaseEntity
+     * @return            quick.models.QuickBuilder
      */
-    public any function whereHas(
+    public QuickBuilder function whereHas(
         required string relationshipName,
         any callback,
         any operator,
@@ -196,9 +207,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      * @combinator        The boolean combinator for the clause (e.g. "and" or "or").
      *                    Default: "and"
      *
-     * @return            quick.models.BaseEntity
+     * @return            quick.models.QuickBuilder
      */
-    public any function whereDoesntHave(
+    public QuickBuilder function whereDoesntHave(
         required string relationshipName,
         any callback,
         any operator,
@@ -218,9 +229,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      * @operator          An optional operator to constrain the check.
      * @count             An optional count to constrain the check.
      *
-     * @return            qb.models.Query.QueryBuilder
+     * @return            quick.models.QuickBuilder
      */
-    private any function whereHasNested(
+    private QuickBuilder function whereHasNested(
         required any relationQuery,
         required string relationshipName,
         any callback,
@@ -277,9 +288,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      * @operator          An optional operator to constrain the check.
      * @count             An optional count to constrain the check.
      *
-     * @return            quick.models.BaseEntity
+     * @return            quick.models.QuickBuilder
      */
-    public any function orWhereHas(
+    public QuickBuilder function orWhereHas(
         required string relationshipName,
         any callback,
         any operator,
@@ -299,9 +310,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      * @operator          An optional operator to constrain the check.
      * @count             An optional count to constrain the check.
      *
-     * @return            quick.models.BaseEntity
+     * @return            quick.models.QuickBuilder
      */
-    public any function orWhereDoesntHave(
+    public QuickBuilder function orWhereDoesntHave(
         required string relationshipName,
         any callback,
         any operator,
@@ -309,6 +320,60 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
     ) {
         arguments.combinator = "or";
         return whereDoesntHave( argumentCollection = arguments );
+    }
+
+    /**
+     * Orders the query by a field in a relationship.
+     * Uses subquery ordering to accomplish this.
+     *
+     * @relationshipName  The relationship name to order.  This can be a
+     *                    dot-delimited list of nested relationships.
+     * @columnName        The column name in the final relationship to order by.
+     * @direction         The direction to sort, `asc` or `desc`.
+     *
+     * @return            quick.models.QuickBuilder
+     */
+    public QuickBuilder function orderByRelated(
+        required string relationshipName,
+        required string columnName,
+        string direction = "asc"
+    ) {
+        var relation = invoke( getEntity(), arguments.relationshipName );
+        return orderBy(
+            relation
+                .getRelationExistenceQuery( relation.getRelated().newQuery() )
+                .select( arguments.columnName ),
+            arguments.direction
+        );
+    }
+
+    /**
+     * Adds a single order by clause to the query.
+     * Overloaded to proxy to `orderByRelated` when a relationship is found.
+     *
+     * @column     The name of the column(s) to order by.
+     * @direction  The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc".
+     *
+     * @return     quick.models.QuickBuilder
+     */
+    private QuickBuilder function orderBySingle( required any column, string direction = "asc" ) {
+        if ( !isSimpleValue( arguments.column ) ) {
+            return super.orderBySingle( argumentCollection = arguments );
+        }
+
+        if ( listLen( arguments.column, "." ) <= 1 ) {
+            return super.orderBySingle( argumentCollection = arguments );
+        }
+
+        if ( !getEntity().hasRelationship( listFirst( arguments.column, "." ) ) ) {
+            return super.orderBySingle( argumentCollection = arguments );
+        }
+
+        return orderByRelated(
+            listSlice( arguments.column, 1, -1, "." ),
+            listLast( arguments.column, "." ),
+            arguments.direction
+        );
     }
 
     /**
@@ -332,6 +397,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
             defaultOptions = getDefaultOptions()
         );
         builder.setEntity( getEntity() );
+        builder.setFrom( getEntity().tableName() );
         return builder;
     }
 
@@ -372,6 +438,30 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
             arguments.missingMethodName,
             arguments.missingMethodArguments
         );
+    }
+
+    /**
+     * Slices an array from an offset for a given length.
+     * Similar to arraySlice
+     *
+     * @list        The list to slice.
+     * @offset      Start position in the original list to slice.
+     * @length      Number of elements to slice from offset.
+     * @delimiters  Characters that separate list elements. The default value is comma.
+     */
+    private string function listSlice(
+        required string list,
+        numeric offset = 1,
+        numeric length = listLen( list ),
+        string delimiters  = ","
+    ) {
+        if ( arguments.length < 0 ) {
+            arguments.length = listLen( arguments.list, arguments.delimiters ) + arguments.length;
+        }
+
+        return arguments.list.listToArray( arguments.delimiters )
+            .slice( arguments.offset, arguments.length )
+            .toList( arguments.delimiters );
     }
 
 }

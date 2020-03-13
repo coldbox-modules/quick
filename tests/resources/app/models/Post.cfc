@@ -38,8 +38,8 @@ component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
         return polymorphicHasMany( "Comment", "commentable" );
     }
 
-    function scopeLatest( query ) {
-        return query.orderBy( "created_date", "desc" );
+    function scopeLatest( qb ) {
+        return qb.orderBy( "created_date", "desc" );
     }
 
 }

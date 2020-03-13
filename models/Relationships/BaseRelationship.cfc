@@ -173,10 +173,9 @@ component {
      *
      * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
      */
-    public any function getRelationExistenceQuery( required any base ) {
-        var q = arguments.base.newQuery();
-        return q
-            .select( q.raw( 1 ) )
+    public any function addCompareConstraints() {
+        return variables.related
+            .select( variables.related.raw( 1 ) )
             .whereColumn( getQualifiedLocalKey(), getExistenceCompareKey() );
     }
 
@@ -230,11 +229,20 @@ component {
             missingMethodName,
             missingMethodArguments
         );
-        if ( isSimpleValue( result ) ) {
-            return result;
+
+        if (
+            isStruct( result ) &&
+            (
+                structKeyExists( result, "retrieveQuery" ) || structKeyExists(
+                    result,
+                    "isBuilder"
+                )
+            )
+        ) {
+            return this;
         }
 
-        return this;
+        return result;
     }
 
     /**

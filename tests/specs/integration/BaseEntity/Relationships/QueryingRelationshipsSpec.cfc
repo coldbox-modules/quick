@@ -130,7 +130,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 describe( "hasManyThrough", function() {
-                    it( "can find only entities that have a related belongsToMany entity", function() {
+                    it( "can find only entities that have a related hasManyThrough entity", function() {
                         var countries = getInstance( "Country" ).has( "posts" ).get();
                         expect( countries ).toBeArray();
                         expect( countries ).toHaveLength( 2 );
@@ -273,7 +273,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 } );
 
                 describe( "hasManyThrough", function() {
-                    it( "can find only entities that do not have a related belongsToMany entity", function() {
+                    it( "can find only entities that do not have a related hasManyThrough entity", function() {
                         var countries = getInstance( "Country" )
                             .doesntHave( "posts" )
                             .get();

@@ -329,8 +329,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 );
 
                 expect( elpete2.getPosts()[ 1 ].getComments() ).toBeArray();
-                expect( elpete2.getPosts()[ 1 ].getComments() ).toHaveLength( 1 );
-                expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getId() ).toBe( 2 );
+                expect( elpete2.getPosts()[ 1 ].getComments() ).toHaveLength(
+                    1
+                );
+                expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getId() ).toBe(
+                    2
+                );
                 expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getBody() ).toBe(
                     "I thought this post was not so good"
                 );
@@ -360,17 +364,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "Two posts should belong to elpete"
                 );
 
-                expect( elpete.getPosts()[ 1 ].getPost_Pk() ).toBe( 1245 );
+                expect( elpete.getPosts()[ 1 ].getPost_Pk() ).toBe( 523526 );
                 expect( elpete.getPosts()[ 1 ].getComments() ).toBeArray();
-                expect( elpete.getPosts()[ 1 ].getComments() ).toHaveLength( 1 );
-                expect( elpete.getPosts()[ 1 ].getComments()[ 1 ].getId() ).toBe( 1 );
-                expect( elpete.getPosts()[ 1 ].getComments()[ 1 ].getBody() ).toBe(
+                expect( elpete.getPosts()[ 1 ].getComments() ).toBeEmpty();
+
+                expect( elpete.getPosts()[ 2 ].getPost_Pk() ).toBe( 1245 );
+                expect( elpete.getPosts()[ 2 ].getComments() ).toBeArray();
+                expect( elpete.getPosts()[ 2 ].getComments() ).toHaveLength(
+                    1
+                );
+                expect( elpete.getPosts()[ 2 ].getComments()[ 1 ].getId() ).toBe(
+                    1
+                );
+                expect( elpete.getPosts()[ 2 ].getComments()[ 1 ].getBody() ).toBe(
                     "I thought this post was great"
                 );
-
-                expect( elpete.getPosts()[ 2 ].getPost_Pk() ).toBe( 523526 );
-                expect( elpete.getPosts()[ 2 ].getComments() ).toBeArray();
-                expect( elpete.getPosts()[ 2 ].getComments() ).toBeEmpty();
 
                 expect( variables.queries ).toHaveLength(
                     3,
@@ -452,8 +460,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 );
 
                 expect( elpete2.getPosts()[ 1 ].getComments() ).toBeArray();
-                expect( elpete2.getPosts()[ 1 ].getComments() ).toHaveLength( 1 );
-                expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getId() ).toBe( 2 );
+                expect( elpete2.getPosts()[ 1 ].getComments() ).toHaveLength(
+                    1
+                );
+                expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getId() ).toBe(
+                    2
+                );
                 expect( elpete2.getPosts()[ 1 ].getComments()[ 1 ].getBody() ).toBe(
                     "I thought this post was not so good"
                 );
@@ -482,15 +494,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "Two posts should belong to elpete"
                 );
 
-                expect( elpete.getPosts()[ 1 ].getPost_Pk() ).toBe( 1245 );
+                expect( elpete.getPosts()[ 1 ].getPost_Pk() ).toBe( 523526 );
                 expect( elpete.getPosts()[ 1 ].getComments() ).toBeArray();
                 expect( elpete.getPosts()[ 1 ].getComments() ).toBeEmpty();
 
 
 
-                expect( elpete.getPosts()[ 2 ].getPost_Pk() ).toBe( 523526 );
+                expect( elpete.getPosts()[ 2 ].getPost_Pk() ).toBe( 1245 );
                 expect( elpete.getPosts()[ 2 ].getComments() ).toBeArray();
-                expect( elpete.getPosts()[ 2 ].getComments() ).toHaveLength( 0 );
+                expect( elpete.getPosts()[ 2 ].getComments() ).toBeEmpty();
 
                 expect( variables.queries ).toHaveLength(
                     3,

@@ -14,25 +14,25 @@ component quick {
 
     function externalThings() { return hasMany( relationName = "externalThing", foreignKey = "externalID", localKey = "externalID" ); }
 
-    function scopeLatest( query ) {
-        return query.orderBy( "created_date", "desc" );
+    function scopeLatest( qb ) {
+        return qb.orderBy( "created_date", "desc" );
     }
 
-    function scopeOfType( query, type = "limited" ) {
-        return query.where( "type", type );
+    function scopeOfType( qb, type = "limited" ) {
+        return qb.where( "type", type );
     }
 
-    function scopeOfTypeWithWhen( query, type ) {
-        return query.when( ! isNull( type ) && len( type ), function( q ) {
+    function scopeOfTypeWithWhen( qb, type ) {
+        return qb.when( ! isNull( type ) && len( type ), function( q ) {
             q.ofType( type );
         } );
     }
 
-    function scopeResetPasswords( query ) {
-        return query.updateAll( { "password" = "" } ).result.recordcount;
+    function scopeResetPasswords( qb ) {
+        return qb.updateAll( { "password" = "" } ).result.recordcount;
     }
 
-    function scopeWithLatestPostId( query ) {
+    function scopeWithLatestPostId() {
         addSubselect( "latestPostId", newEntity( "Post" )
             .select( "post_pk" )
             .whereColumn( "users.id", "user_id" )
@@ -52,12 +52,31 @@ component quick {
         */
     }
 
+    function scopeWithLatestPostIdRelationship() {
+        addSubselect(
+            "latestPostId",
+            this.withoutRelationshipConstraints( function() {
+                return this.posts()
+                    .addCompareConstraints()
+                    .latest()
+                    .select( "post_pk" );
+            } )
+        );
+    }
+
+    function withLatestPostIdRelationshipShortcut() {
+        addSubselect(
+            "latestPostId",
+            "posts.posk_pk"
+        );
+    }
+
     function country() {
         return belongsTo( "Country", "country_id" );
     }
 
     function posts() {
-        return hasMany( "Post", "user_id" );
+        return hasMany( "Post", "user_id" ).latest();
     }
 
     function publishedPosts() {

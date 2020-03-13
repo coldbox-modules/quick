@@ -48,9 +48,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
             retrieveQuery().limit( max );
         }
         if ( asQuery ) {
-            return retrieveQuery()
-                .setReturnFormat( "query" )
-                .get( options = variables._queryOptions );
+            return retrieveQuery().setReturnFormat( "query" ).get();
         } else {
             return super.get();
         }
@@ -63,14 +61,12 @@ component extends="quick.models.BaseEntity" accessors="true" {
                 arguments[ key ]
             );
         }
-        return retrieveQuery().count( options = variables._queryOptions );
+        return retrieveQuery().count();
     }
 
     function deleteById( id ) {
         arguments.id = isArray( arguments.id ) ? arguments.id : [ arguments.id ];
-        retrieveQuery()
-            .whereIn( keyName(), arguments.id )
-            .delete( options = variables._queryOptions );
+        retrieveQuery().whereIn( keyName(), arguments.id ).delete();
         return this;
     }
 
@@ -81,14 +77,14 @@ component extends="quick.models.BaseEntity" accessors="true" {
                 arguments[ key ]
             );
         }
-        return deleteAll( options = variables._queryOptions );
+        return this.deleteAll();
     }
 
     function exists( id ) {
         if ( !isNull( id ) ) {
             retrieveQuery().where( keyName(), arguments.id );
         }
-        return retrieveQuery().exists( options = variables._queryOptions );
+        return retrieveQuery().exists();
     }
 
     function findAllWhere( criteria = {}, sortOrder ) {

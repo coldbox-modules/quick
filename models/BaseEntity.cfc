@@ -157,7 +157,7 @@ component accessors="true" {
      * A boolean flag representing that the entity is currently
      * eager loading relationships.
      */
-    property name="_isEagerLoading" persistent="false";
+    property name="_withoutRelationshipConstraints" persistent="false";
 
     /**
      * A boolean flag indicating that the entity has been loaded from the database.
@@ -196,7 +196,7 @@ component accessors="true" {
         param variables._relationshipsData = {};
         param variables._relationshipsLoaded = {};
         param variables._eagerLoad = [];
-        variables._isEagerLoading = false;
+        variables._withoutRelationshipConstraints = false;
         param variables._nullValues = {};
         param variables._casts = {};
         param variables._loaded = false;
@@ -813,9 +813,7 @@ component accessors="true" {
      */
     private array function getEntities() {
         applyGlobalScopes();
-        return retrieveQuery()
-            .get( options = variables._queryOptions )
-            .map( variables.loadEntity );
+        return retrieveQuery().get().map( variables.loadEntity );
     }
 
     /**
@@ -849,7 +847,7 @@ component accessors="true" {
      */
     public any function paginate( numeric page = 1, numeric maxRows = 25 ) {
         applyGlobalScopes();
-        return tap( retrieveQuery().paginate( page, maxRows, variables._queryOptions ), function( p ) {
+        return tap( retrieveQuery().paginate( page, maxRows ), function( p ) {
             p.results = eagerLoadRelations(
                 p.results.map( variables.loadEntity )
             );
@@ -864,7 +862,7 @@ component accessors="true" {
      */
     public any function first() {
         applyGlobalScopes();
-        var attrs = retrieveQuery().first( options = variables._queryOptions );
+        var attrs = retrieveQuery().first();
         return structIsEmpty( attrs ) ? javacast( "null", "" ) : loadEntity(
             attrs
         );
@@ -884,7 +882,7 @@ component accessors="true" {
      */
     public any function firstOrFail( any errorMessage ) {
         applyGlobalScopes();
-        var attrs = retrieveQuery().first( options = variables._queryOptions );
+        var attrs = retrieveQuery().first();
         if ( structIsEmpty( attrs ) ) {
             param arguments.errorMessage = "No [#entityName()#] found with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
             if (
@@ -961,7 +959,7 @@ component accessors="true" {
         applyGlobalScopes();
         var data = retrieveQuery()
             .from( tableName() )
-            .find( arguments.id, keyName(), variables._queryOptions );
+            .find( arguments.id, keyName() );
         if ( structIsEmpty( data ) ) {
             return javacast( "null", "" );
         }
@@ -1183,9 +1181,7 @@ component accessors="true" {
      * @return  quick.models.BaseEntity
      */
     public any function fresh() {
-        return variables
-            .resetQuery()
-            .find( keyValue(), keyName(), variables._queryOptions );
+        return variables.resetQuery().find( keyValue(), keyName() );
     }
 
     /**
@@ -1198,9 +1194,7 @@ component accessors="true" {
         variables._relationshipsData = {};
         variables._relationshipsLoaded = {};
         assignAttributesData(
-            newQuery()
-                .from( tableName() )
-                .find( keyValue(), keyName(), variables._queryOptions )
+            newQuery().from( tableName() ).find( keyValue(), keyName() )
         );
         return this;
     }
@@ -1238,8 +1232,7 @@ component accessors="true" {
                                 };
                             }
                             return value;
-                        } ),
-                    variables._queryOptions
+                        } )
                 );
             assignOriginalAttributes( retrieveAttributesData() );
             markLoaded();
@@ -1266,10 +1259,7 @@ component accessors="true" {
                     return value;
                 } );
             guardEmptyAttributeData( attrs );
-            var result = retrieveQuery().insert(
-                attrs,
-                variables._queryOptions
-            );
+            var result = retrieveQuery().insert( attrs );
             retrieveKeyType().postInsert( this, result );
             assignOriginalAttributes( retrieveAttributesData() );
             markLoaded();
@@ -1297,7 +1287,7 @@ component accessors="true" {
             "This instance is not loaded so it cannot be deleted. " &
             "Did you maybe mean to use `deleteAll`?"
         );
-        newQuery().delete( keyValue(), keyName(), variables._queryOptions );
+        newQuery().delete( keyValue(), keyName() );
         variables._loaded = false;
         fireEvent( "postDelete", { entity: this } );
         return this;
@@ -1372,50 +1362,6 @@ component accessors="true" {
             .save();
     }
 
-    /**
-     * Updates matching entities with the given attributes
-     * according to the configured query.
-     *
-     * @attributes  The attributes to update on the matching records.
-     * @force       If true, skips read-only entity and read-only attribute checks.
-     *
-     * @throws      QuickReadOnlyException
-     *
-     * @return      { "query": QueryBuilder Return Format, "result": struct }
-     */
-    public struct function updateAll(
-        struct attributes = {},
-        boolean force = false
-    ) {
-        if ( !arguments.force ) {
-            guardReadOnly();
-            guardAgainstReadOnlyAttributes( arguments.attributes );
-        }
-        return retrieveQuery().update(
-            arguments.attributes,
-            variables._queryOptions
-        );
-    }
-
-    /**
-     * Deletes matching entities according to the configured query.
-     *
-     * @ids     An optional array of ids to add to the previously configured
-     *          query.  The ids will be added to a WHERE IN statement on the
-     *          primary key column.
-     *
-     * @throws  QuickReadOnlyException
-     *
-     * @return  { "query": QueryBuilder Return Format, "result": struct }
-     */
-    public struct function deleteAll( array ids = [] ) {
-        guardReadOnly();
-        if ( !arrayIsEmpty( arguments.ids ) ) {
-            retrieveQuery().whereIn( keyName(), arguments.ids );
-        }
-        return retrieveQuery().delete( options = variables._queryOptions );
-    }
-
     /*=====================================
     =            Relationships            =
     =====================================*/
@@ -1434,6 +1380,19 @@ component accessors="true" {
             }
         }
         return false;
+    }
+
+    /**
+     * Sets automatic relationships constraints to false for the
+     * duration of the callback.
+     *
+     * @callback  The callback to run without any automatic relationship constraints.
+     */
+    public any function withoutRelationshipConstraints( required any callback ) {
+        variables._withoutRelationshipConstraints = true;
+        var result = arguments.callback();
+        variables._withoutRelationshipConstraints = false;
+        return isNull( result ) ? javacast( "null", "" ) : result;
     }
 
     /**
@@ -1596,7 +1555,7 @@ component accessors="true" {
                 parent: this,
                 foreignKey: arguments.foreignKey,
                 ownerKey: arguments.ownerKey,
-                withConstraints: !variables._isEagerLoading
+                withConstraints: !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1645,7 +1604,7 @@ component accessors="true" {
                 parent: this,
                 foreignKey: arguments.foreignKey,
                 localKey: arguments.localKey,
-                withConstraints: !variables._isEagerLoading
+                withConstraints: !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1694,7 +1653,7 @@ component accessors="true" {
                 parent: this,
                 foreignKey: arguments.foreignKey,
                 localKey: arguments.localKey,
-                withConstraints: !variables._isEagerLoading
+                withConstraints: !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1769,7 +1728,7 @@ component accessors="true" {
                 relatedPivotKey: arguments.relatedPivotKey,
                 parentKey: arguments.parentKey,
                 relatedKey: arguments.relatedKey,
-                withConstraints: !variables._isEagerLoading
+                withConstraints: !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1855,7 +1814,7 @@ component accessors="true" {
                 secondKey: arguments.secondKey,
                 localKey: arguments.localKey,
                 secondLocalKey: arguments.secondLocalKey,
-                withConstraints: !variables._isEagerLoading
+                withConstraints: !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1914,7 +1873,7 @@ component accessors="true" {
                 type: arguments.type,
                 id: arguments.id,
                 localKey: arguments.localKey,
-                withConstraints: !variables._isEagerLoading
+                withConstraints: !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1969,7 +1928,7 @@ component accessors="true" {
                     foreignKey: arguments.id,
                     ownerKey: "",
                     type: arguments.type,
-                    withConstraints: !variables._isEagerLoading
+                    withConstraints: !variables._withoutRelationshipConstraints
                 }
             );
         }
@@ -1987,7 +1946,7 @@ component accessors="true" {
                 foreignKey: arguments.id,
                 ownerKey: arguments.ownerKey,
                 type: arguments.type,
-                withConstraints: !variables._isEagerLoading
+                withConstraints: !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -2094,9 +2053,9 @@ component accessors="true" {
             }
         }
         var currentRelationship = listFirst( arguments.relationName, "." );
-        variables._isEagerLoading = true;
-        var relation = invoke( this, currentRelationship );
-        variables._isEagerLoading = false;
+        var relation = withoutRelationshipConstraints( function() {
+            return invoke( this, currentRelationship );
+        } );
         callback( relation );
         relation.addEagerConstraints( arguments.entities );
         relation.with( listRest( arguments.relationName, "." ) );
@@ -2146,6 +2105,7 @@ component accessors="true" {
             .setColumnFormatter( function( column ) {
                 return retrieveColumnForAlias( column );
             } )
+            .setDefaultOptions( variables._queryOptions )
             .from( tableName() )
             .select( retrieveQualifiedColumns() );
     }
@@ -2212,8 +2172,6 @@ component accessors="true" {
         if ( isClosure( subselectQuery ) || isCustomFunction( subselectQuery ) ) {
             subselectQuery = retrieveQuery().newQuery();
             subselectQuery = arguments.subselect( subselectQuery );
-        } else {
-            subselectQuery = subselectQuery.retrieveQuery();
         }
 
         retrieveQuery().subselect( name, subselectQuery.limit( 1 ) );
@@ -2336,11 +2294,13 @@ component accessors="true" {
                 message = arrayToList(
                     [
                         "Quick couldn't figure out what to do with [#arguments.missingMethodName#].",
+                        "The error returned was: #e.message#",
                         "We tried checking columns, aliases, scopes, and relationships locally.",
                         "We also forwarded the call on to qb to see if it could do anything with it, but it couldn't."
                     ],
                     " "
-                )
+                ),
+                detail = serializeJSON( e )
             )
         }
     }
@@ -2547,7 +2507,8 @@ component accessors="true" {
      */
     public any function tryScopes(
         required string missingMethodName,
-        struct missingMethodArguments = {}
+        struct missingMethodArguments = {},
+        any builder = this
     ) {
         if ( structKeyExists( variables, "scope#arguments.missingMethodName#" ) ) {
             if (
@@ -2558,7 +2519,7 @@ component accessors="true" {
             ) {
                 return this;
             }
-            var scopeArgs = { "1": this };
+            var scopeArgs = { "1": arguments.builder };
             // this is to allow default arguments to be set for scopes
             if ( !structIsEmpty( arguments.missingMethodArguments ) ) {
                 for (
@@ -2624,11 +2585,19 @@ component accessors="true" {
             arguments.missingMethodArguments
         );
 
-        if ( isSimpleValue( result ) ) {
-            return result;
+        if (
+            isStruct( result ) &&
+            (
+                structKeyExists( result, "retrieveQuery" ) || structKeyExists(
+                    result,
+                    "isBuilder"
+                )
+            )
+        ) {
+            return this;
         }
 
-        return this;
+        return result;
     }
 
     /**
@@ -2853,7 +2822,7 @@ component accessors="true" {
      *
      * @throws  QuickReadOnlyException
      */
-    private void function guardReadOnly() {
+    public void function guardReadOnly() {
         if ( isReadOnly() ) {
             throw(
                 type = "QuickReadOnlyException",
@@ -2878,7 +2847,7 @@ component accessors="true" {
      *
      * @throws      QuickReadOnlyException
      */
-    private void function guardAgainstReadOnlyAttributes(
+    public void function guardAgainstReadOnlyAttributes(
         required struct attributes
     ) {
         for ( var name in arguments.attributes ) {

@@ -35,8 +35,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     .has( "author.country" )
                     .orderBy( "author.country.name" );
 
-                writeDump( var = postsQuery.toSQL() );
-
                 var posts = postsQuery.get();
 
                 expect( posts ).toBeArray();

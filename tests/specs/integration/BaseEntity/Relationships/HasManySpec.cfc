@@ -121,7 +121,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can first off of the relationship", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var post = user.posts().first();
-                expect( post.keyValue() ).toBe( 1245 );
+                expect( post.keyValue() ).toBe( 523526 );
             } );
 
             it( "can firstOrFail off of the relationship", function() {

@@ -365,10 +365,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
      *
      * @return  qb.models.Query.QueryBuilder
      */
-    public QueryBuilder function getRelationExistenceQuery( required any base ) {
-        var q = variables.parent.newQuery();
-        return q
-            .select( q.raw( 1 ) )
+    public QueryBuilder function addCompareConstraints() {
+        return variables.parent
+            .newQuery()
+            .select( variables.parent.raw( 1 ) )
             .from( variables.table )
             .whereColumn(
                 getQualifiedForeignKeyName(),

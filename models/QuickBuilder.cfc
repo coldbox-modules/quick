@@ -6,6 +6,47 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
     property name="entity";
 
     /**
+     * Updates matching entities with the given attributes
+     * according to the configured query.
+     *
+     * @attributes  The attributes to update on the matching records.
+     * @force       If true, skips read-only entity and read-only attribute checks.
+     *
+     * @throws      QuickReadOnlyException
+     *
+     * @return      { "query": QueryBuilder Return Format, "result": struct }
+     */
+    public struct function updateAll(
+        struct attributes = {},
+        boolean force = false
+    ) {
+        if ( !arguments.force ) {
+            getEntity().guardReadOnly();
+            getEntity().guardAgainstReadOnlyAttributes( arguments.attributes );
+        }
+        return update( arguments.attributes );
+    }
+
+    /**
+     * Deletes matching entities according to the configured query.
+     *
+     * @ids     An optional array of ids to add to the previously configured
+     *          query.  The ids will be added to a WHERE IN statement on the
+     *          primary key column.
+     *
+     * @throws  QuickReadOnlyException
+     *
+     * @return  { "query": QueryBuilder Return Format, "result": struct }
+     */
+    public struct function deleteAll( array ids = [] ) {
+        getEntity().guardReadOnly();
+        if ( !arrayIsEmpty( arguments.ids ) ) {
+            whereIn( getEntity().keyName(), arguments.ids );
+        }
+        return delete();
+    }
+
+    /**
      * Checks for the existence of a relationship when executing the query.
      *
      * @relationshipName  The relationship to check.
@@ -21,19 +62,23 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         boolean negate = false
     ) {
         var methodName = arguments.negate ? "whereNotExists" : "whereExists";
-        var relation = invoke(
-            getEntity(),
-            listFirst( arguments.relationshipName, "." )
-        );
-        arguments.relationQuery = relation.getRelationExistenceQuery(
-            relation.getRelated()
-        );
+        var relation = getEntity().withoutRelationshipConstraints( function() {
+            return invoke( getEntity(), listFirst( relationshipName, "." ) );
+        } );
+
+        arguments.relationQuery = relation
+            .addCompareConstraints()
+            .select( relation.raw( 1 ) );
 
         if ( listLen( arguments.relationshipName, "." ) > 1 ) {
             arguments.relationshipName = listRest(
                 arguments.relationshipName,
                 "."
             );
+
+            if ( structKeyExists( arguments.relationQuery, "retrieveQuery" ) ) {
+                arguments.relationQuery = arguments.relationQuery.retrieveQuery();
+            }
 
             invoke(
                 this,
@@ -44,15 +89,16 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
             return this;
         }
 
-        invoke(
-            this,
-            methodName,
-            {
-                "query": arguments.relationQuery.when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
-                    q.having( q.raw( "COUNT(*)" ), operator, count );
-                } )
-            }
-        );
+        arguments.relationQuery.when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
+            q.having( q.raw( "COUNT(*)" ), operator, count );
+        } );
+
+        if ( structKeyExists( arguments.relationQuery, "retrieveQuery" ) ) {
+            arguments.relationQuery = arguments.relationQuery.retrieveQuery();
+        }
+
+        invoke( this, methodName, { "query": arguments.relationQuery } );
+
         return this;
     }
 
@@ -91,38 +137,42 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         string operator,
         numeric count
     ) {
-        var relation = invoke(
-            arguments.relationQuery.getEntity(),
-            listFirst( arguments.relationshipName, "." )
-        );
+        var relation = relationQuery
+            .getEntity()
+            .withoutRelationshipConstraints( function() {
+                return invoke(
+                    relationQuery.getEntity(),
+                    listFirst( relationshipName, "." )
+                );
+            } );
 
         if ( listLen( arguments.relationshipName, "." ) == 1 ) {
+            var q = relation
+                .addCompareConstraints()
+                .when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
+                    q.having( q.raw( "COUNT(*)" ), operator, count );
+                } );
+
+            if ( structKeyExists( q, "retrieveQuery" ) ) {
+                q = q.retrieveQuery();
+            }
             return invoke(
                 arguments.relationQuery,
                 "whereExists",
-                {
-                    "query": relation
-                        .getRelationExistenceQuery( relation.getRelated() )
-                        .when(
-                            !isNull( arguments.operator ) && !isNull(
-                                arguments.count
-                            ),
-                            function( q ) {
-                                q.having( q.raw( "COUNT(*)" ), operator, count );
-                            }
-                        )
-                }
+                { "query": q }
             );
+        }
+
+        var q = relation.addCompareConstraints();
+
+        if ( structKeyExists( q, "retrieveQuery" ) ) {
+            q = q.retrieveQuery();
         }
 
         arguments.relationQuery = invoke(
             arguments.relationQuery,
             "whereExists",
-            {
-                "query": relation.getRelationExistenceQuery(
-                    relation.getRelated()
-                )
-            }
+            { "query": q }
         );
 
         return hasNested( argumentCollection = arguments );
@@ -151,19 +201,21 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         boolean negate = false
     ) {
         var methodName = arguments.negate ? "whereNotExists" : "whereExists";
-        var relation = invoke(
-            getEntity(),
-            listFirst( arguments.relationshipName, "." )
-        );
-        arguments.relationQuery = relation.getRelationExistenceQuery(
-            relation.getRelated()
-        );
+        var relation = getEntity().withoutRelationshipConstraints( function() {
+            return invoke( getEntity(), listFirst( relationshipName, "." ) );
+        } );
+
+        arguments.relationQuery = relation.addCompareConstraints();
 
         if ( listLen( arguments.relationshipName, "." ) > 1 ) {
             arguments.relationshipName = listRest(
                 arguments.relationshipName,
                 "."
             );
+
+            if ( structKeyExists( arguments.relationQuery, "retrieveQuery" ) ) {
+                arguments.relationQuery = arguments.relationQuery.retrieveQuery();
+            }
 
             invoke(
                 this,
@@ -174,24 +226,22 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
             return this;
         }
 
+        var q = arguments.relationQuery
+            .when( !isNull( callback ), function( q ) {
+                callback( q );
+            } )
+            .when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
+                q.having( q.raw( "COUNT(*)" ), operator, count );
+            } );
+
+        if ( structKeyExists( q, "retrieveQuery" ) ) {
+            q = q.retrieveQuery();
+        }
+
         invoke(
             this,
             methodName,
-            {
-                "query": arguments.relationQuery
-                    .when( !isNull( callback ), function( q ) {
-                        callback( q );
-                    } )
-                    .when(
-                        !isNull( arguments.operator ) && !isNull(
-                            arguments.count
-                        ),
-                        function( q ) {
-                            q.having( q.raw( "COUNT(*)" ), operator, count );
-                        }
-                    ),
-                "combinator": arguments.combinator
-            }
+            { "query": q, "combinator": arguments.combinator }
         );
         return this;
     }
@@ -238,41 +288,45 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         string operator,
         numeric count
     ) {
-        var relation = invoke(
-            arguments.relationQuery.getEntity(),
-            listFirst( arguments.relationshipName, "." )
-        );
+        var relation = arguments.relationQuery
+            .getEntity()
+            .withoutRelationshipConstraints( function() {
+                return invoke(
+                    relationQuery.getEntity(),
+                    listFirst( relationshipName, "." )
+                );
+            } );
 
         if ( listLen( arguments.relationshipName, "." ) == 1 ) {
+            var q = relation
+                .addCompareConstraints()
+                .when( !isNull( callback ), function( q ) {
+                    callback( q );
+                } )
+                .when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
+                    q.having( q.raw( "COUNT(*)" ), operator, count );
+                } );
+
+            if ( structKeyExists( q, "retrieveQuery" ) ) {
+                q = q.retrieveQuery();
+            }
             return invoke(
                 arguments.relationQuery,
                 "whereExists",
-                {
-                    "query": relation
-                        .getRelationExistenceQuery( relation.getRelated() )
-                        .when( !isNull( callback ), function( q ) {
-                            callback( q );
-                        } )
-                        .when(
-                            !isNull( arguments.operator ) && !isNull(
-                                arguments.count
-                            ),
-                            function( q ) {
-                                q.having( q.raw( "COUNT(*)" ), operator, count );
-                            }
-                        )
-                }
+                { "query": q }
             );
+        }
+
+        var q = relation.addCompareConstraints();
+
+        if ( structKeyExists( q, "retrieveQuery" ) ) {
+            q = q.retrieveQuery();
         }
 
         arguments.relationQuery = invoke(
             arguments.relationQuery,
             "whereExists",
-            {
-                "query": relation.getRelationExistenceQuery(
-                    relation.getRelated()
-                )
-            }
+            { "query": q }
         );
 
         return whereHasNested( argumentCollection = arguments );
@@ -338,13 +392,17 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         required string columnName,
         string direction = "asc"
     ) {
-        var relation = invoke( getEntity(), arguments.relationshipName );
-        return orderBy(
-            relation
-                .getRelationExistenceQuery( relation.getRelated().newQuery() )
-                .select( arguments.columnName ),
-            arguments.direction
-        );
+        var relation = getEntity().withoutRelationshipConstraints( function() {
+            return invoke( getEntity(), relationshipName );
+        } );
+        var q = relation
+            .addCompareConstraints()
+            .select( arguments.columnName );
+
+        if ( structKeyExists( q, "retrieveQuery" ) ) {
+            q = q.retrieveQuery();
+        }
+        return orderBy( q, arguments.direction );
     }
 
     /**
@@ -356,7 +414,10 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      *
      * @return     quick.models.QuickBuilder
      */
-    private QuickBuilder function orderBySingle( required any column, string direction = "asc" ) {
+    private QuickBuilder function orderBySingle(
+        required any column,
+        string direction = "asc"
+    ) {
         if ( !isSimpleValue( arguments.column ) ) {
             return super.orderBySingle( argumentCollection = arguments );
         }
@@ -421,17 +482,26 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         required string missingMethodName,
         struct missingMethodArguments = {}
     ) {
-        var q = getEntity().tryScopes(
+        var result = getEntity().tryScopes(
             arguments.missingMethodName,
-            arguments.missingMethodArguments
+            arguments.missingMethodArguments,
+            this
         );
-        if ( !isNull( q ) ) {
+        if ( !isNull( result ) ) {
             // If a query is returned, set it as the current query and return
             // the entity. Otherwise return whatever came back from the scope.
-            if ( isStruct( q ) && structKeyExists( q, "retrieveQuery" ) ) {
+            if (
+                isStruct( result ) &&
+                (
+                    structKeyExists( result, "retrieveQuery" ) || structKeyExists(
+                        result,
+                        "isBuilder"
+                    )
+                )
+            ) {
                 return this;
             }
-            return q;
+            return result;
         }
 
         return super.onMissingMethod(
@@ -453,13 +523,14 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         required string list,
         numeric offset = 1,
         numeric length = listLen( list ),
-        string delimiters  = ","
+        string delimiters = ","
     ) {
         if ( arguments.length < 0 ) {
             arguments.length = listLen( arguments.list, arguments.delimiters ) + arguments.length;
         }
 
-        return arguments.list.listToArray( arguments.delimiters )
+        return arguments.list
+            .listToArray( arguments.delimiters )
             .slice( arguments.offset, arguments.length )
             .toList( arguments.delimiters );
     }

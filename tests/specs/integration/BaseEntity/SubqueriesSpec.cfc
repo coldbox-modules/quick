@@ -37,7 +37,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 );
             } );
 
-            xit( "can add a subquery to an entity using a relationship shortcut", function() {
+            it( "can add a subquery to an entity using a relationship shortcut", function() {
                 var elpete = getInstance( "User" )
                     .withLatestPostIdRelationshipShortcut()
                     .findOrFail( 1 );

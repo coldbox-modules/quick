@@ -64,10 +64,10 @@ component quick {
         );
     }
 
-    function withLatestPostIdRelationshipShortcut() {
+    function scopeWithLatestPostIdRelationshipShortcut() {
         addSubselect(
             "latestPostId",
-            "posts.posk_pk"
+            "posts.post_pk"
         );
     }
 

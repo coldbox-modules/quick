@@ -438,6 +438,23 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
     }
 
     /**
+     * Adds a subselect query with the given name to the entity.
+     * Useful for computed properties and computed relationship keys.
+     *
+     * @name       The name to use for the subselect result on the entity.
+     * @subselect  The subselect query builder instance or closure to configure
+     *             the subselect.
+     *
+     * @return     quick.models.BaseEntity
+     */
+    public any function addSubselect(
+        required string name,
+        required any subselect
+    ) {
+        return getEntity().addSubselect( argumentCollection = arguments );
+    }
+
+    /**
      * Creates a new query using the same Grammar and QueryUtils.
      *
      * @return quick.models.QuickBuilder

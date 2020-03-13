@@ -2172,6 +2172,15 @@ component accessors="true" {
         if ( isClosure( subselectQuery ) || isCustomFunction( subselectQuery ) ) {
             subselectQuery = retrieveQuery().newQuery();
             subselectQuery = arguments.subselect( subselectQuery );
+        } else if (
+            isSimpleValue( subselectQuery ) && listLen( subselectQuery, "." ) == 2
+        ) {
+            subselectQuery = withoutRelationshipConstraints( function() {
+                return invoke( this, listFirst( subselectQuery, "." ) )
+                    .addCompareConstraints()
+                    .select( listLast( subselectQuery, "." ) )
+                    .retrieveQuery();
+            } );
         }
 
         retrieveQuery().subselect( name, subselectQuery.limit( 1 ) );

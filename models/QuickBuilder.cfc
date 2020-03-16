@@ -394,7 +394,10 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
     ) {
         var q = javacast( "null", "" );
         while ( listLen( arguments.relationshipName, "." ) > 0 ) {
-            var thisRelationshipName = listFirst( arguments.relationshipName, "." );
+            var thisRelationshipName = listFirst(
+                arguments.relationshipName,
+                "."
+            );
             if ( isNull( q ) ) {
                 q = getEntity().withoutRelationshipConstraints( function() {
                     return invoke( getEntity(), thisRelationshipName ).addCompareConstraints();
@@ -404,15 +407,19 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
                     return invoke( q, thisRelationshipName );
                 } );
                 q = relationship.whereExists(
-                    relationship
-                        .addCompareConstraints( q.select( q.raw( 1 ) ) )
-                        .retrieveQuery()
+                    relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).retrieveQuery()
                 );
             }
-            arguments.relationshipName = listRest( arguments.relationshipName, "." );
+            arguments.relationshipName = listRest(
+                arguments.relationshipName,
+                "."
+            );
         }
 
-        return orderBy( q.select( arguments.columnName ).retrieveQuery(), arguments.direction );
+        return orderBy(
+            q.select( arguments.columnName ).retrieveQuery(),
+            arguments.direction
+        );
     }
 
     /**
@@ -428,8 +435,29 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         required any column,
         string direction = "asc"
     ) {
-        if ( !isSimpleValue( arguments.column ) ) {
+        if (
+            // if this isn't a normal struct with a column key...
+            (
+                isStruct( arguments.column ) &&
+                (
+                    isObject( arguments.column ) ||
+                    !structKeyExists( arguments.column, "column" )
+                )
+            ) &&
+            // or a simple value...
+            !isSimpleValue( arguments.column )
+        ) {
+            // then delegate to qb
             return super.orderBySingle( argumentCollection = arguments );
+        }
+
+        // if this is a struct, destructure it to our arguments
+        if ( isStruct( arguments.column ) ) {
+            if ( arguments.column.keyExists( "direction" ) ) {
+                arguments.direction = arguments.column.direction;
+            }
+
+            arguments.column = arguments.column.column;
         }
 
         if ( listLen( arguments.column, "." ) <= 1 ) {

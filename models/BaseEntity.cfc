@@ -1390,9 +1390,11 @@ component accessors="true" {
      */
     public any function withoutRelationshipConstraints( required any callback ) {
         variables._withoutRelationshipConstraints = true;
-        var result = arguments.callback();
-        variables._withoutRelationshipConstraints = false;
-        return isNull( result ) ? javacast( "null", "" ) : result;
+        try {
+            return arguments.callback();
+        } finally {
+            variables._withoutRelationshipConstraints = false;
+        }
     }
 
     /**

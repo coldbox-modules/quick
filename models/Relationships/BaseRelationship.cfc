@@ -216,6 +216,15 @@ component {
     }
 
     /**
+     * Retrieves the current query builder instance.
+     *
+     * @return  qb.models.Query.QueryBuilder
+     */
+    public QuickBuilder function retrieveQuery() {
+        return variables.related.retrieveQuery();
+    }
+
+    /**
      * Forwards missing method calls on to the related entity.
      *
      * @missingMethodName       The missing method name.

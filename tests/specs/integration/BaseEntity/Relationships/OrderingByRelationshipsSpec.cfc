@@ -30,17 +30,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( posts[ 3 ].keyValue() ).toBe( 321 );
             } );
 
-            xit( "can order by a nested belongs to relationship descending", function() {
+            it( "can order by a nested belongs to relationship descending", function() {
                 var postsQuery = getInstance( "Post" )
                     .has( "author.country" )
-                    .orderBy( "author.country.name" );
+                    .orderBy( "author.country.name" )
+                    .orderBy( "post_pk" );
 
                 var posts = postsQuery.get();
 
                 expect( posts ).toBeArray();
-                expect( posts ).toHaveLength( 2 );
-                expect( posts[ 1 ].keyValue() ).toBe( 2 );
-                expect( posts[ 2 ].keyValue() ).toBe( 1 );
+                expect( posts ).toHaveLength( 3 );
+                expect( posts[ 1 ].keyValue() ).toBe( 321 );
+                expect( posts[ 2 ].keyValue() ).toBe( 1245 );
+                expect( posts[ 3 ].keyValue() ).toBe( 523526 );
             } );
         } );
     }

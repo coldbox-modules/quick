@@ -392,17 +392,27 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
         required string columnName,
         string direction = "asc"
     ) {
-        var relation = getEntity().withoutRelationshipConstraints( function() {
-            return invoke( getEntity(), relationshipName );
-        } );
-        var q = relation
-            .addCompareConstraints()
-            .select( arguments.columnName );
-
-        if ( structKeyExists( q, "retrieveQuery" ) ) {
-            q = q.retrieveQuery();
+        var q = javacast( "null", "" );
+        while ( listLen( arguments.relationshipName, "." ) > 0 ) {
+            var thisRelationshipName = listFirst( arguments.relationshipName, "." );
+            if ( isNull( q ) ) {
+                q = getEntity().withoutRelationshipConstraints( function() {
+                    return invoke( getEntity(), thisRelationshipName ).addCompareConstraints();
+                } );
+            } else {
+                var relationship = q.withoutRelationshipConstraints( function() {
+                    return invoke( q, thisRelationshipName );
+                } );
+                q = relationship.whereExists(
+                    relationship
+                        .addCompareConstraints( q.select( q.raw( 1 ) ) )
+                        .retrieveQuery()
+                );
+            }
+            arguments.relationshipName = listRest( arguments.relationshipName, "." );
         }
-        return orderBy( q, arguments.direction );
+
+        return orderBy( q.select( arguments.columnName ).retrieveQuery(), arguments.direction );
     }
 
     /**

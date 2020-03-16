@@ -2173,14 +2173,29 @@ component accessors="true" {
             subselectQuery = retrieveQuery().newQuery();
             subselectQuery = arguments.subselect( subselectQuery );
         } else if (
-            isSimpleValue( subselectQuery ) && listLen( subselectQuery, "." ) == 2
+            isSimpleValue( subselectQuery ) && listLen( subselectQuery, "." ) > 1
         ) {
-            subselectQuery = withoutRelationshipConstraints( function() {
-                return invoke( this, listFirst( subselectQuery, "." ) )
-                    .addCompareConstraints()
-                    .select( listLast( subselectQuery, "." ) )
-                    .retrieveQuery();
-            } );
+            var column = subselectQuery;
+            var q = javacast( "null", "" );
+            while ( listLen( column, "." ) > 1 ) {
+                var relationshipName = listFirst( column, "." );
+                if ( isNull( q ) ) {
+                    q = withoutRelationshipConstraints( function() {
+                        return invoke( this, relationshipName ).addCompareConstraints();
+                    } );
+                } else {
+                    var relationship = q.withoutRelationshipConstraints( function() {
+                        return invoke( q, relationshipName );
+                    } );
+                    q = relationship.whereExists(
+                        relationship
+                            .addCompareConstraints( q.select( q.raw( 1 ) ) )
+                            .retrieveQuery()
+                    );
+                }
+                column = listRest( column, "." );
+            }
+            subselectQuery = q.select( column ).retrieveQuery();
         }
 
         retrieveQuery().subselect( name, subselectQuery.limit( 1 ) );

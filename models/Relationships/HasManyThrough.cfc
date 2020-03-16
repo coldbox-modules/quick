@@ -261,8 +261,8 @@ component
      *
      * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
      */
-    public any function addCompareConstraints() {
-        return tap( variables.related.select(), function( q ) {
+    public any function addCompareConstraints( any base = variables.related ) {
+        return tap( arguments.base.select(), function( q ) {
             performJoin( arguments.q );
             arguments.q.whereColumn(
                 variables.farParent.qualifyColumn(

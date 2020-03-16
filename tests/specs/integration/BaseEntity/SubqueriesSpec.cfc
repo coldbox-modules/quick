@@ -48,6 +48,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "Only one query should have been executed. #arrayLen( variables.queries )# were instead."
                 );
             } );
+
+            it( "can add a subquery to an entity using a relationship shortcut and a nested relationship", function() {
+                var post = getInstance( "Post" )
+                    .addSubselect( "countryName", "author.country.name" )
+                    .findOrFail( 523526 );
+                expect( post.getCountryName() ).notToBeNull();
+                expect( post.getCountryName() ).toBe( "United States" );
+                expect( variables.queries ).toHaveLength(
+                    1,
+                    "Only one query should have been executed. #arrayLen( variables.queries )# were instead."
+                );
+            } );
         } );
     }
 

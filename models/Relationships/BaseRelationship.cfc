@@ -173,8 +173,8 @@ component {
      *
      * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
      */
-    public any function addCompareConstraints() {
-        return variables.related
+    public any function addCompareConstraints( any base = variables.related ) {
+        return arguments.base
             .select( variables.related.raw( 1 ) )
             .whereColumn( getQualifiedLocalKey(), getExistenceCompareKey() );
     }

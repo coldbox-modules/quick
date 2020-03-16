@@ -365,8 +365,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
      *
      * @return  qb.models.Query.QueryBuilder
      */
-    public QueryBuilder function addCompareConstraints() {
-        return variables.parent
+    public QueryBuilder function addCompareConstraints(
+        any base = variables.parent
+    ) {
+        return arguments.base
             .newQuery()
             .select( variables.parent.raw( 1 ) )
             .from( variables.table )

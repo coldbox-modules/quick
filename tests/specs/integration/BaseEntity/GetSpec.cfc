@@ -35,7 +35,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
             it( "can get a fresh instance from the database", function() {
                 var user = getInstance( "User" ).find( 1 );
-                expect( user.getUsername() ).toBe( "elpete" );
+                expect( user.getUsername() ).toBe( 'elpete' );
                 queryExecute(
                     "UPDATE `users` SET `username` = ? WHERE `id` = ?",
                     [ "new_username", 1 ]

@@ -6,6 +6,62 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
     property name="entity";
 
     /**
+     * Runs the current select query.
+     *
+     * @columns     An optional column, list of columns, or array of columns to select.
+     *              The selected columns before calling get will be restored after running the query.
+     * @options     Any options to pass to `queryExecute`. Default: {}.
+     *
+     * @return      any
+     */
+    public any function get( any columns, struct options = {} ) {
+        getEntity().activateGlobalScopes();
+        return super.get( argumentCollection = arguments );
+    }
+
+    /**
+     * Updates a table with a struct of column and value pairs.
+     * This call must come after setting the query's table using `from` or `table`.
+     * Any constraining of the update query should be done using the appropriate WHERE statement before calling `update`.
+     *
+     * @values A struct of column and value pairs to update.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+     *
+     * @return query
+     */
+    public any function update(
+        struct values = {},
+        struct options = {},
+        boolean toSql = false
+    ) {
+        getEntity().activateGlobalScopes();
+        return super.update( argumentCollection = arguments );
+    }
+
+    /**
+     * Deletes a record set.
+     * This call must come after setting the query's table using `from` or `table`.
+     * Any constraining of the update query should be done using the appropriate WHERE statement before calling `update`.
+     *
+     * @id A convenience argument for `where( "id", "=", arguments.id ).  The query can be constrained by normal WHERE methods if you have more complex needs.
+     * @idColumnName The name of the id column for the delete shorthand. Default: "id".
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public any function delete(
+        any id,
+        string idColumnName = "id",
+        struct options = {},
+        boolean toSql = false
+    ) {
+        getEntity().activateGlobalScopes();
+        return super.delete( argumentCollection = arguments );
+    }
+
+    /**
      * Updates matching entities with the given attributes
      * according to the configured query.
      *

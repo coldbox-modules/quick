@@ -26,7 +26,7 @@ component accessors="true" {
     }
 
     function isEQ( column, value ) {
-        getEntity().retrieveQuery().where( column, "=", value );
+        getEntity().retrieveQuery().where( column, '=', value );
         return this;
     }
 

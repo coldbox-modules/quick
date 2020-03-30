@@ -154,10 +154,16 @@ component accessors="true" {
     property name="_eagerLoad" persistent="false";
 
     /**
-     * A boolean flag representing that the entity is currently
-     * eager loading relationships.
+     * A boolean flag representing that the entity does not
+     * want automatic relatinoship constraints.
      */
     property name="_withoutRelationshipConstraints" persistent="false";
+
+    /**
+     * A boolean flag representing that the entity is currently
+     * applying global scopes.
+     */
+    property name="_applyingGlobalScopes" persistent="false";
 
     /**
      * A boolean flag indicating that the entity has been loaded from the database.
@@ -197,6 +203,7 @@ component accessors="true" {
         param variables._relationshipsLoaded = {};
         param variables._eagerLoad = [];
         variables._withoutRelationshipConstraints = false;
+        variables._applyingGlobalScopes = false;
         param variables._nullValues = {};
         param variables._casts = {};
         param variables._loaded = false;
@@ -812,7 +819,7 @@ component accessors="true" {
      * @return       [quick.models.BaseEntity]
      */
     private array function getEntities() {
-        applyGlobalScopes();
+        activateGlobalScopes();
         return retrieveQuery().get().map( variables.loadEntity );
     }
 
@@ -846,7 +853,7 @@ component accessors="true" {
      * @return   A Pagination Collection object of the entities.
      */
     public any function paginate( numeric page = 1, numeric maxRows = 25 ) {
-        applyGlobalScopes();
+        activateGlobalScopes();
         return tap( retrieveQuery().paginate( page, maxRows ), function( p ) {
             p.results = eagerLoadRelations(
                 p.results.map( variables.loadEntity )
@@ -861,7 +868,7 @@ component accessors="true" {
      * @return  quick.models.BaseEntity || null
      */
     public any function first() {
-        applyGlobalScopes();
+        activateGlobalScopes();
         var attrs = retrieveQuery().first();
         return structIsEmpty( attrs ) ? javacast( "null", "" ) : loadEntity(
             attrs
@@ -881,7 +888,7 @@ component accessors="true" {
      * @return        quick.models.BaseEntity
      */
     public any function firstOrFail( any errorMessage ) {
-        applyGlobalScopes();
+        activateGlobalScopes();
         var attrs = retrieveQuery().first();
         if ( structIsEmpty( attrs ) ) {
             param arguments.errorMessage = "No [#entityName()#] found with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
@@ -956,7 +963,7 @@ component accessors="true" {
      */
     public any function find( required any id ) {
         fireEvent( "preLoad", { id: arguments.id, metadata: variables._meta } );
-        applyGlobalScopes();
+        activateGlobalScopes();
         var data = retrieveQuery()
             .from( tableName() )
             .find( arguments.id, keyName() );
@@ -1081,7 +1088,7 @@ component accessors="true" {
      * @return  Boolean
      */
     public boolean function exists( any id ) {
-        applyGlobalScopes();
+        activateGlobalScopes();
         if ( !isNull( arguments.id ) ) {
             retrieveQuery().where( keyColumn(), arguments.id );
         }
@@ -1102,7 +1109,7 @@ component accessors="true" {
      * @return        Boolean
      */
     public boolean function existsOrFail( any id, any errorMessage ) {
-        applyGlobalScopes();
+        activateGlobalScopes();
         if ( !isNull( arguments.id ) ) {
             retrieveQuery().where( keyColumn(), arguments.id );
         }
@@ -2538,6 +2545,7 @@ component accessors="true" {
     ) {
         if ( structKeyExists( variables, "scope#arguments.missingMethodName#" ) ) {
             if (
+                variables._applyingGlobalScopes &&
                 arrayContains(
                     variables._globalScopeExclusions,
                     lCase( arguments.missingMethodName )
@@ -2575,6 +2583,12 @@ component accessors="true" {
      */
     public any function applyGlobalScopes() {
         return this;
+    }
+
+    public any function activateGlobalScopes() {
+        variables._applyingGlobalScopes = true;
+        applyGlobalScopes();
+        variables._applyingGlobalScopes = false;
     }
 
     /**

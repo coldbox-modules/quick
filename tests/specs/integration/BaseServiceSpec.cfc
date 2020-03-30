@@ -9,7 +9,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         name = "BaseService@quick",
                         initArguments = { entity: user }
                     );
-                    expect( service.entityName() ).toBe( "User" );
+                    expect( service.entityName() ).toBe( 'User' );
                 } );
 
                 it( "can be instantiated with a wirebox mapping", function() {

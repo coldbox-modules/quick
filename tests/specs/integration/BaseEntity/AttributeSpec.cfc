@@ -94,7 +94,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "modifiedDate": "",
                     "type": "",
                     "email": "",
-                    "externalId": ""
+                    "externalId": "",
+                    "streetOne": "",
+                    "streetTwo": "",
+                    "city": "",
+                    "state": "",
+                    "zip": ""
                 } );
             } );
 
@@ -110,7 +115,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "modifiedDate": "2017-07-28 02:06:36",
                     "type": "admin",
                     "email": "",
-                    "externalId": "1234"
+                    "externalId": "1234",
+                    "streetOne": "123 Elm Street",
+                    "streetTwo": "",
+                    "city": "Salt Lake City",
+                    "state": "UT",
+                    "zip": "84123"
                 } );
             } );
         } );

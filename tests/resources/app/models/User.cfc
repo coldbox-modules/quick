@@ -12,6 +12,13 @@ component quick {
     property name="type";
     property name="externalID";
 
+    property name="address" casts="AddressCast" persistent="false";
+    property name="streetOne";
+    property name="streetTwo";
+    property name="city";
+    property name="state";
+    property name="zip";
+
     function externalThings() { return hasMany( relationName = "externalThing", foreignKey = "externalID", localKey = "externalID" ); }
 
     function scopeLatest( qb ) {

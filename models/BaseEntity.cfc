@@ -117,6 +117,16 @@ component accessors="true" {
      */
     property name="_casts" persistent="false";
 
+    /**
+     * A cache of resolved cast components.
+     */
+    property name="_casterCache" persistent="false";
+
+    /**
+     * A cache of casted attributes.
+     */
+    property name="_castCache" persistent="false";
+
     /*=====================================
     =            Instance Data            =
     =====================================*/
@@ -206,6 +216,8 @@ component accessors="true" {
         variables._applyingGlobalScopes = false;
         param variables._nullValues = {};
         param variables._casts = {};
+        param variables._castCache = {};
+        param variables._casterCache = {};
         param variables._loaded = false;
         return this;
     }
@@ -1220,6 +1232,7 @@ component accessors="true" {
     public any function save() {
         guardNoAttributes();
         guardReadOnly();
+        mergeAttributesFromCastCache();
         fireEvent( "preSave", { entity: this } );
         if ( variables._loaded ) {
             fireEvent( "preUpdate", { entity: this } );
@@ -2392,7 +2405,11 @@ component accessors="true" {
             4
         );
 
-        if ( hasAttribute( columnName ) ) {
+        if (
+            hasAttribute( columnName ) || variables._casts.keyExists(
+                columnName
+            )
+        ) {
             return retrieveAttribute( retrieveColumnForAlias( columnName ) );
         }
 
@@ -2422,7 +2439,11 @@ component accessors="true" {
             arguments.missingMethodName,
             4
         );
-        if ( !hasAttribute( columnName ) ) {
+        if (
+            !hasAttribute( columnName ) && !variables._casts.keyExists(
+                columnName
+            )
+        ) {
             return;
         }
         assignAttribute( columnName, arguments.missingMethodArguments[ 1 ] );
@@ -2587,10 +2608,16 @@ component accessors="true" {
         return this;
     }
 
+    /**
+     * Activates the global scopes while checking for excluded global scopes.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function activateGlobalScopes() {
         variables._applyingGlobalScopes = true;
         applyGlobalScopes();
         variables._applyingGlobalScopes = false;
+        return this;
     }
 
     /**
@@ -2752,6 +2779,9 @@ component accessors="true" {
                         var keyProp = paramAttribute( { "name": variables._key } );
                         meta.attributes[ keyProp.name ] = keyProp;
                     }
+                    meta[ "casts" ] = generateCastsFromProperties(
+                        meta.originalMetadata.properties
+                    );
                     guardKeyHasNoDefaultValue( meta.attributes );
                     return meta;
                 } )
@@ -2774,6 +2804,7 @@ component accessors="true" {
         }
         variables._readonly = variables._meta.readonly;
         explodeAttributesMetadata( variables._meta.attributes );
+        variables._casts = variables._meta.casts;
     }
 
     /**
@@ -2813,6 +2844,20 @@ component accessors="true" {
         }, {} );
     }
 
+    private struct function generateCastsFromProperties(
+        required array properties
+    ) {
+        return arguments.properties.reduce( function( acc, prop ) {
+            if (
+                !arguments.prop.keyExists( "casts" ) || arguments.prop.casts == ""
+            ) {
+                return arguments.acc;
+            }
+            arguments.acc[ arguments.prop.name ] = arguments.prop.casts;
+            return arguments.acc;
+        }, {} );
+    }
+
     /**
      * Creates the internal attribute struct from an existing struct.
      * The only required field on the passed in struct is `name`.
@@ -2847,9 +2892,6 @@ component accessors="true" {
             variables._attributes[ alias ] = options.column;
             if ( options.convertToNull ) {
                 variables._nullValues[ alias ] = options.nullValue;
-            }
-            if ( options.casts != "" ) {
-                variables._casts[ alias ] = options.casts;
             }
         }
         return this;
@@ -3171,12 +3213,19 @@ component accessors="true" {
         if ( !structKeyExists( variables._casts, arguments.key ) ) {
             return arguments.value;
         }
-        switch ( variables._casts[ arguments.key ] ) {
-            case "boolean":
-                return javacast( "boolean", arguments.value );
-            default:
-                return arguments.value;
+        var castMapping = variables._casts[ arguments.key ];
+        if ( !variables._casterCache.keyExists( arguments.key ) ) {
+            variables._casterCache[ arguments.key ] = variables._wirebox.getInstance(
+                dsl = castMapping
+            );
         }
+        var caster = variables._casterCache[ arguments.key ];
+        variables._castCache[ arguments.key ] = caster.get(
+            entity = this,
+            key = arguments.key,
+            value = isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
+        );
+        return variables._castCache[ arguments.key ];
     }
 
     /**
@@ -3199,12 +3248,45 @@ component accessors="true" {
         if ( !structKeyExists( variables._casts, arguments.key ) ) {
             return arguments.value;
         }
-        switch ( variables._casts[ arguments.key ] ) {
-            case "boolean":
-                return arguments.value ? 1 : 0;
-            default:
-                return arguments.value;
+        var castMapping = variables._casts[ arguments.key ];
+        if ( !variables._casterCache.keyExists( arguments.key ) ) {
+            variables._casterCache[ arguments.key ] = variables._wirebox.getInstance(
+                dsl = castMapping
+            );
         }
+        var caster = variables._casterCache[ arguments.key ];
+        return variables._wirebox
+            .getInstance( dsl = castMapping )
+            .set( entity = this, key = arguments.key, value = arguments.value );
+    }
+
+    /**
+     * Merges the attributes from the cast cache into the attributes.
+     *
+     * @return  quick.models.BaseEntity
+     */
+    private any function mergeAttributesFromCastCache() {
+        variables._castCache.each( function( key, castedValue ) {
+            var castMapping = variables._casts[ arguments.key ];
+            if ( !variables._casterCache.keyExists( arguments.key ) ) {
+                variables._casterCache[ arguments.key ] = variables._wirebox.getInstance(
+                    dsl = castMapping
+                );
+            }
+            var caster = variables._casterCache[ arguments.key ];
+            var attrs = caster.set(
+                this,
+                arguments.key,
+                arguments.castedValue
+            );
+            if ( !isStruct( attrs ) ) {
+                attrs = { "#arguments.key#": attrs };
+            }
+            attrs.each( function( column, value ) {
+                assignAttribute( column, value );
+            } );
+        } );
+        return this;
     }
 
     /**

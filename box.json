@@ -22,7 +22,7 @@
     },
     "type":"modules",
     "dependencies":{
-        "qb":"^7.4.0",
+        "qb":"^7.6.0",
         "str":"^1.0.0",
         "testbox":"^3.1.0+339",
         "mementifier":"be"

@@ -1235,7 +1235,9 @@ component accessors="true" {
                             if ( attributeHasSqlType( key ) ) {
                                 return {
                                     value: value,
-                                    cfsqltype: getSqlTypeForAttribute( key )
+                                    cfsqltype: retrieveSqlTypeForAttribute(
+                                        key
+                                    )
                                 };
                             }
                             return value;
@@ -1260,7 +1262,7 @@ component accessors="true" {
                     if ( attributeHasSqlType( key ) ) {
                         return {
                             value: value,
-                            cfsqltype: getSqlTypeForAttribute( key )
+                            cfsqltype: retrieveSqlTypeForAttribute( key )
                         };
                     }
                     return value;
@@ -3074,9 +3076,52 @@ component accessors="true" {
      *
      * @return  String
      */
-    private string function getSqlTypeForAttribute( required string name ) {
+    private string function retrieveSqlTypeForAttribute( required string name ) {
         var alias = retrieveAliasForColumn( arguments.name );
         return variables._meta.attributes[ alias ].sqltype;
+    }
+
+    /**
+     * Returns a query param struct for the column and value.
+     * This ensures that custom sql types on columns are honored.
+     *
+     * @column  The column or alias name.
+     * @value   The value being bound to the column.
+     *
+     * @return  { "value": any, "cfsqltype": string, "null": boolean, "nulls": boolean }
+     */
+    public struct function generateQueryParamStruct(
+        required string column,
+        any value
+    ) {
+        // If that value is already a struct, pass it back unchanged.
+        if ( !isNull( arguments.value ) && isStruct( arguments.value ) ) {
+            return arguments.value;
+        }
+
+        return {
+            "value": (
+                isNull( arguments.value ) || isNullValue(
+                    arguments.column,
+                    arguments.value
+                )
+            ) ? "" : arguments.value,
+            "cfsqltype": attributeHasSqlType( arguments.column ) ? retrieveSqlTypeForAttribute(
+                arguments.column
+            ) : (
+                isNull( arguments.value ) ? "CF_SQL_VARCHAR" : retrieveQuery()
+                    .getUtils()
+                    .inferSqlType( arguments.value )
+            ),
+            "null": isNull( arguments.value ) || isNullValue(
+                arguments.column,
+                arguments.value
+            ),
+            "nulls": isNull( arguments.value ) || isNullValue(
+                arguments.column,
+                arguments.value
+            )
+        };
     }
 
     /**

@@ -35,6 +35,27 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( inactiveNumbers ).toHaveLength( 1 );
                 expect( inactiveNumbers[ 1 ].getId() ).toBe( 2 );
             } );
+
+            it( "can use multiple attributes for casting", function() {
+                var user = getInstance( "User" ).findOrFail( 1 );
+                var address = user.getAddress();
+                expect( address.fullStreet() ).toBe( "123 Elm Street" );
+                expect( address.formatted() ).toBe(
+                    arrayToList(
+                        [ "123 Elm Street", "Salt Lake City, UT 84123" ],
+                        chr( 10 )
+                    )
+                );
+            } );
+
+            it( "can assign multiple attributes from a cast when saving to the database", function() {
+                var user = getInstance( "User" ).findOrFail( 1 );
+                var address = user.getAddress();
+                address.setState( "TX" );
+                user.save();
+                user.refresh();
+                expect( user.getState() ).toBe( "TX" );
+            } );
         } );
     }
 

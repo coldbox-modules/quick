@@ -6,13 +6,46 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
     property name="entity";
 
     /**
+     * Adds a basic WHERE clause to the query.
+     * If the column is an attribute on the entity, a query param struct is
+     * generated using the column's sql type, if set.
+     *
+     * @column      The name of the column with which to constrain the query.
+     *              A closure can be passed to begin a nested where statement.
+     * @operator    The operator to use for the constraint (i.e. "=", "<", ">=", etc.).
+     *              A value can be passed as the `operator` and the `value` left
+     *              null as a shortcut for equals
+     *              (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+     * @value       The value with which to constrain the column.
+     *              An expression (`builder.raw()`) can be passed as well.
+     * @combinator  The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+     *
+     * @return      quick.models.QuickBuilder
+     */
+    private QuickBuilder function whereBasic(
+        required string column,
+        required string operator,
+        any value,
+        string combinator = "and"
+    ) {
+        if ( getEntity().hasAttribute( arguments.column ) ) {
+            arguments.value = getEntity().generateQueryParamStruct(
+                arguments.column,
+                isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
+            );
+        }
+        super.whereBasic( argumentCollection = arguments );
+        return this;
+    }
+
+    /**
      * Runs the current select query.
      *
-     * @columns     An optional column, list of columns, or array of columns to select.
-     *              The selected columns before calling get will be restored after running the query.
-     * @options     Any options to pass to `queryExecute`. Default: {}.
+     * @columns  An optional column, list of columns, or array of columns to select.
+     *           The selected columns before calling get will be restored after running the query.
+     * @options  Any options to pass to `queryExecute`. Default: {}.
      *
-     * @return      any
+     * @return   any
      */
     public any function get( any columns, struct options = {} ) {
         getEntity().activateGlobalScopes();
@@ -24,11 +57,12 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      * This call must come after setting the query's table using `from` or `table`.
      * Any constraining of the update query should be done using the appropriate WHERE statement before calling `update`.
      *
-     * @values A struct of column and value pairs to update.
-     * @options Any options to pass to `queryExecute`. Default: {}.
-     * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+     * @values   A struct of column and value pairs to update.
+     * @options  Any options to pass to `queryExecute`. Default: {}.
+     * @toSql    If true, returns the raw sql string instead of running the query.
+     *           Useful for debugging. Default: false.
      *
-     * @return query
+     * @return   query
      */
     public any function update(
         struct values = {},
@@ -44,12 +78,15 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
      * This call must come after setting the query's table using `from` or `table`.
      * Any constraining of the update query should be done using the appropriate WHERE statement before calling `update`.
      *
-     * @id A convenience argument for `where( "id", "=", arguments.id ).  The query can be constrained by normal WHERE methods if you have more complex needs.
-     * @idColumnName The name of the id column for the delete shorthand. Default: "id".
-     * @options Any options to pass to `queryExecute`. Default: {}.
-     * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+     * @id            A convenience argument for `where( "id", "=", arguments.id ).
+     *                The query can be constrained by normal WHERE methods
+     *                if you have more complex needs.
+     * @idColumnName  The name of the id column for the delete shorthand. Default: "id".
+     * @options       Any options to pass to `queryExecute`. Default: {}.
+     * @toSql         If true, returns the raw sql string instead of running
+     *                the query. Useful for debugging. Default: false.
      *
-     * @return qb.models.Query.QueryBuilder
+     * @return        any
      */
     public any function delete(
         any id,

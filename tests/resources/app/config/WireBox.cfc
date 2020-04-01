@@ -40,7 +40,9 @@
 			]
 		};
 
-		// Map Bindings below
+        // Map Bindings below
+        map( "Country@something" )
+            .to( "app.models.Country" );
 	}
 
 }

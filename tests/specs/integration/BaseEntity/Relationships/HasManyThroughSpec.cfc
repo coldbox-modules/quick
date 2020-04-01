@@ -7,7 +7,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             } );
 
             it( "can get the related entities through another entity", function() {
-                var countryA = getInstance( "Country" ).find(
+                var countryA = getInstance( "Country@something" ).find(
                     "02B84D66-0AA0-F7FB-1F71AFC954843861"
                 );
                 expect( arrayLen( countryA.getPosts() ) ).toBe( 2 );

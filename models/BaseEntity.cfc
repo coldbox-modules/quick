@@ -58,6 +58,7 @@ component accessors="true" {
 
     /**
      * The WireBox mapping for the entity.
+     * This is added by an afterInstanceAutowire interception point.
      */
     property name="_mapping" persistent="false";
 
@@ -175,6 +176,12 @@ component accessors="true" {
      * Added using the `withoutGlobalScope` method.
      */
     property name="_globalScopeExclusions" persistent="false";
+
+    /**
+     * Used to determine if a component is a Quick entity
+     * without resorting to isInstanceOf
+     */
+    this.isQuickEntity = true;
 
     /**
      * Initializes the entity with default properties and optional metadata.
@@ -2902,7 +2909,6 @@ component accessors="true" {
         }
 
         variables._fullName = variables._meta.fullName;
-        variables._mapping = variables._meta.mapping;
         variables._entityName = variables._meta.entityName;
         variables._table = variables._meta.table;
         param variables._queryOptions = {};

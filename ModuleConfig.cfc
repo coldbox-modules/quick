@@ -50,4 +50,10 @@ component {
             .initArg( name = "utils", dsl = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = "array" );
     }
+
+    function afterInstanceAutowire( event, interceptData ) {
+        if ( structKeyExists( interceptData.target, "isQuickEntity" ) ) {
+            interceptData.target.set_mapping( interceptData.targetID );
+        }
+    }
 }

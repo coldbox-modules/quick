@@ -1283,18 +1283,10 @@ component accessors="true" {
                     retrieveAttributesData( withoutKey = true )
                         .filter( canUpdateAttribute )
                         .map( function( key, value, attributes ) {
-                            if ( isNull( value ) || isNullValue( key, value ) ) {
-                                return { value: "", nulls: true, null: true };
-                            }
-                            if ( attributeHasSqlType( key ) ) {
-                                return {
-                                    value: value,
-                                    cfsqltype: retrieveSqlTypeForAttribute(
-                                        key
-                                    )
-                                };
-                            }
-                            return value;
+                            return generateQueryParamStruct(
+                                key,
+                                isNull( value ) ? javacast( "null", "" ) : value
+                            );
                         } )
                 );
             assignOriginalAttributes( retrieveAttributesData() );
@@ -1310,16 +1302,10 @@ component accessors="true" {
             var attrs = retrieveAttributesData()
                 .filter( canInsertAttribute )
                 .map( function( key, value, attributes ) {
-                    if ( isNull( value ) || isNullValue( key, value ) ) {
-                        return { value: "", nulls: true, null: true };
-                    }
-                    if ( attributeHasSqlType( key ) ) {
-                        return {
-                            value: value,
-                            cfsqltype: retrieveSqlTypeForAttribute( key )
-                        };
-                    }
-                    return value;
+                    return generateQueryParamStruct(
+                        key,
+                        isNull( value ) ? javacast( "null", "" ) : value
+                    );
                 } );
             guardEmptyAttributeData( attrs );
             var result = retrieveQuery().insert( attrs );
@@ -3289,36 +3275,52 @@ component accessors="true" {
      */
     public struct function generateQueryParamStruct(
         required string column,
-        any value
+        any value,
+        boolean checkNullValues = true
     ) {
         // If that value is already a struct, pass it back unchanged.
         if ( !isNull( arguments.value ) && isStruct( arguments.value ) ) {
             return arguments.value;
         }
 
-        return {
-            "value": (
-                isNull( arguments.value ) || isNullValue(
+        if ( arguments.checkNullValues ) {
+            return {
+                "value": (
+                    isNull( arguments.value ) || isNullValue(
+                        arguments.column,
+                        arguments.value
+                    )
+                ) ? "" : arguments.value,
+                "cfsqltype": attributeHasSqlType( arguments.column ) ? retrieveSqlTypeForAttribute(
+                    arguments.column
+                ) : (
+                    isNull( arguments.value ) ? "CF_SQL_VARCHAR" : retrieveQuery()
+                        .getUtils()
+                        .inferSqlType( arguments.value )
+                ),
+                "null": isNull( arguments.value ) || isNullValue(
+                    arguments.column,
+                    arguments.value
+                ),
+                "nulls": isNull( arguments.value ) || isNullValue(
                     arguments.column,
                     arguments.value
                 )
-            ) ? "" : arguments.value,
-            "cfsqltype": attributeHasSqlType( arguments.column ) ? retrieveSqlTypeForAttribute(
-                arguments.column
-            ) : (
-                isNull( arguments.value ) ? "CF_SQL_VARCHAR" : retrieveQuery()
-                    .getUtils()
-                    .inferSqlType( arguments.value )
-            ),
-            "null": isNull( arguments.value ) || isNullValue(
-                arguments.column,
-                arguments.value
-            ),
-            "nulls": isNull( arguments.value ) || isNullValue(
-                arguments.column,
-                arguments.value
-            )
-        };
+            };
+        } else {
+            return {
+                "value": isNull( arguments.value ) ? "" : arguments.value,
+                "cfsqltype": attributeHasSqlType( arguments.column ) ? retrieveSqlTypeForAttribute(
+                    arguments.column
+                ) : (
+                    isNull( arguments.value ) ? "CF_SQL_VARCHAR" : retrieveQuery()
+                        .getUtils()
+                        .inferSqlType( arguments.value )
+                ),
+                "null": isNull( arguments.value ),
+                "nulls": isNull( arguments.value )
+            };
+        }
     }
 
     /**

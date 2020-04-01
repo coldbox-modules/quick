@@ -30,8 +30,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
     ) {
         if ( getEntity().hasAttribute( arguments.column ) ) {
             arguments.value = getEntity().generateQueryParamStruct(
-                arguments.column,
-                isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
+                column = arguments.column,
+                value = isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
+                checkNullValues = false // where's should not be null.  `WHERE foo = NULL` will return nothing.
             );
         }
         super.whereBasic( argumentCollection = arguments );
@@ -117,7 +118,14 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
             getEntity().guardReadOnly();
             getEntity().guardAgainstReadOnlyAttributes( arguments.attributes );
         }
-        return update( arguments.attributes );
+        return update(
+            arguments.attributes.map( function( key, value ) {
+                return getEntity().generateQueryParamStruct(
+                    column = key,
+                    value = isNull( value ) ? javacast( "null", "" ) : value
+                );
+            } )
+        );
     }
 
     /**

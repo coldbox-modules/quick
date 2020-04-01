@@ -50,7 +50,7 @@ component {
               `first_name` varchar(50) NOT NULL,
               `last_name` varchar(50) NOT NULL,
               `email` varchar(50),
-              `password` varchar(100) NOT NULL,
+              `password` varchar(100),
               `country_id` char(35),
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,

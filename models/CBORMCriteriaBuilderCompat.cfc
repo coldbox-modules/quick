@@ -55,9 +55,10 @@ component accessors="true" {
     }
 
     function idEQ( id ) {
+        guardAgainstCompositePrimaryKeys();
         getEntity()
             .retrieveQuery()
-            .where( getEntity().keyName(), id );
+            .where( getEntity().keyNames()[ 1 ], id );
         return this;
     }
 
@@ -159,6 +160,15 @@ component accessors="true" {
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
         invoke( variables._builder, missingMethodName, missingMethodArguments );
         return this;
+    }
+
+    private void function guardAgainstCompositePrimaryKeys() {
+        if ( getEntity().keyNames().len() > 1 ) {
+            throw(
+                type = "InvalidKeyLength",
+                message = "The CBORMCompatEntity cannot be used with composite primary keys."
+            );
+        }
     }
 
 }

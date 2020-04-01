@@ -134,7 +134,19 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
     public struct function deleteAll( array ids = [] ) {
         getEntity().guardReadOnly();
         if ( !arrayIsEmpty( arguments.ids ) ) {
-            whereIn( getEntity().keyName(), arguments.ids );
+            where( function( q1 ) {
+                ids.each( function( id ) {
+                    var values = arrayWrap( id );
+                    getEntity().guardAgainstKeyLengthMismatch( values );
+                    q1.orWhere( function( q2 ) {
+                        getEntity()
+                            .keyNames()
+                            .each( function( keyName, i ) {
+                                q2.where( keyName, values[ i ] );
+                            } );
+                    } );
+                } );
+            } );
         }
         return delete();
     }

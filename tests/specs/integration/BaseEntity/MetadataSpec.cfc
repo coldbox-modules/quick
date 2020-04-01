@@ -53,12 +53,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             describe( "primary key", function() {
                 it( "uses the `variables._key` value if set", function() {
                     var post = getInstance( "Post" );
-                    expect( post.keyName() ).toBe( "post_pk" );
+                    expect( post.keyNames()[ 1 ] ).toBe( "post_pk" );
                 } );
 
                 it( "uses the `id` as the `variables._key` value by default", function() {
                     var user = getInstance( "User" );
-                    expect( user.keyName() ).toBe( "id" );
+                    expect( user.keyNames()[ 1 ] ).toBe( "id" );
+                } );
+
+                it( "can set a composite primary key", function() {
+                    var composite = getInstance( "Composite" );
+                    expect( composite.keyNames() ).toBe( [ "a", "b" ] );
                 } );
             } );
         } );

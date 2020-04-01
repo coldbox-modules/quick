@@ -41,12 +41,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 it( "can find a specific record", function() {
                     var user = variables.service.find( 1 );
-                    expect( user.keyValue() ).toBe( 1 );
+                    expect( user.keyValues() ).toBe( [ 1 ] );
                 } );
 
                 it( "can find or fail a specific record", function() {
                     var user = variables.service.findOrFail( 1 );
-                    expect( user.keyValue() ).toBe( 1 );
+                    expect( user.keyValues() ).toBe( [ 1 ] );
                 } );
 
                 it( "can handle any qb methods", function() {

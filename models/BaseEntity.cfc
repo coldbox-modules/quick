@@ -287,40 +287,50 @@ component accessors="true" {
     /**
      * Returns the qualified key name for this entity.
      *
-     * @return  String
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function retrieveQualifiedKeyName() {
-        return qualifyColumn( keyName() );
+    public array function retrieveQualifiedKeyNames() {
+        return keyNames().map( function( keyName ) {
+            return qualifyColumn( keyName );
+        } );
     }
 
     /**
      * Returns the aliased name for the primary key column.
      *
-     * @return  String
+     * @doc_generic String
+     * @return      [String]
      */
-    public string function keyName() {
-        return variables._key;
+    public array function keyNames() {
+        return arrayWrap( variables._key );
     }
 
     /**
      * Returns the column name for the primary key.
      *
-     * @return  String
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function keyColumn() {
-        return retrieveColumnForAlias( variables._key );
+    public array function keyColumns() {
+        return keyNames().map( function( keyName ) {
+            return retrieveColumnForAlias( keyName );
+        } );
     }
 
     /**
      * Returns the value of the primary key for this entity.
      *
-     * @return  any
+     * @doc_generic  any
+     * @return       [any]
      */
-    public any function keyValue() {
+    public array function keyValues() {
         guardAgainstNotLoaded(
-            "This instance is not loaded so the `keyValue` cannot be retrieved."
+            "This instance is not loaded so the `keyValues` cannot be retrieved."
         );
-        return retrieveAttribute( keyName() );
+        return keyNames().map( function( keyName ) {
+            return retrieveAttribute( keyName );
+        } );
     }
 
     /**
@@ -343,7 +353,7 @@ component accessors="true" {
                 }
             } );
         return variables._data.reduce( function( acc, key, value ) {
-            if ( withoutKey && key == keyColumn() ) {
+            if ( withoutKey && arrayContainsNoCase( keyColumns(), key ) ) {
                 return acc;
             }
             if ( isNull( value ) || ( isNullValue( key, value ) && withNulls ) ) {
@@ -553,7 +563,7 @@ component accessors="true" {
         return structKeyExists(
             variables._attributes,
             retrieveAliasForColumn( arguments.name )
-        ) || keyName() == name;
+        ) || arrayContainsNoCase( keyNames(), name );
     }
 
     /**
@@ -774,9 +784,10 @@ component accessors="true" {
                     detail = getMetadata( arguments.value ).fullname
                 );
             }
+            guardAgainstKeyLengthMismatch( arguments.value.keyValues(), 1 );
             arguments.value = castValueForSetter(
                 arguments.name,
-                arguments.value.keyValue()
+                arguments.value.keyValues()[ 1 ]
             );
         }
 
@@ -974,11 +985,18 @@ component accessors="true" {
      * @return  quick.models.BaseEntity || null
      */
     public any function find( required any id ) {
+        arguments.id = arrayWrap( arguments.id );
+        guardAgainstKeyLengthMismatch( arguments.id );
         fireEvent( "preLoad", { id: arguments.id, metadata: variables._meta } );
         activateGlobalScopes();
         var data = retrieveQuery()
             .from( tableName() )
-            .find( arguments.id, keyName() );
+            .where( function( q ) {
+                keyNames().each( function( keyName, i ) {
+                    q.where( keyName, id[ i ] );
+                } );
+            } )
+            .first();
         if ( structIsEmpty( data ) ) {
             return javacast( "null", "" );
         }
@@ -1102,7 +1120,13 @@ component accessors="true" {
     public boolean function exists( any id ) {
         activateGlobalScopes();
         if ( !isNull( arguments.id ) ) {
-            retrieveQuery().where( keyColumn(), arguments.id );
+            arguments.id = arrayWrap( arguments.id );
+            guardAgainstKeyLengthMismatch( arguments.id );
+            retrieveQuery().where( function( q ) {
+                keyColumns().each( function( keyColumn, i ) {
+                    q.where( keyColumn, id[ 1 ] );
+                } );
+            } );
         }
         return retrieveQuery().exists();
     }
@@ -1123,7 +1147,13 @@ component accessors="true" {
     public boolean function existsOrFail( any id, any errorMessage ) {
         activateGlobalScopes();
         if ( !isNull( arguments.id ) ) {
-            retrieveQuery().where( keyColumn(), arguments.id );
+            arguments.id = arrayWrap( arguments.id );
+            guardAgainstKeyLengthMismatch( arguments.id );
+            retrieveQuery().where( function( q ) {
+                keyColumns().each( function( keyColumn, i ) {
+                    q.where( keyColumn, id[ i ] );
+                } );
+            } );
         }
         if ( !retrieveQuery().exists() ) {
             param arguments.errorMessage = "No [#entityName()#] exists with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
@@ -1200,7 +1230,14 @@ component accessors="true" {
      * @return  quick.models.BaseEntity
      */
     public any function fresh() {
-        return variables.resetQuery().find( keyValue(), keyName() );
+        return variables
+            .resetQuery()
+            .where( function( q ) {
+                keyNames().each( function( keyName, i ) {
+                    q.where( keyName, keyValues()[ i ] );
+                } );
+            } )
+            .first();
     }
 
     /**
@@ -1213,7 +1250,14 @@ component accessors="true" {
         variables._relationshipsData = {};
         variables._relationshipsLoaded = {};
         assignAttributesData(
-            newQuery().from( tableName() ).find( keyValue(), keyName() )
+            newQuery()
+                .from( tableName() )
+                .where( function( q ) {
+                    keyNames().each( function( keyName, i ) {
+                        q.where( keyName, keyValues()[ i ] );
+                    } );
+                } )
+                .first()
         );
         return this;
     }
@@ -1237,7 +1281,11 @@ component accessors="true" {
         if ( variables._loaded ) {
             fireEvent( "preUpdate", { entity: this } );
             newQuery()
-                .where( keyName(), keyValue() )
+                .where( function( q ) {
+                    keyNames().each( function( keyName, i ) {
+                        q.where( keyName, keyValues()[ i ] );
+                    } );
+                } )
                 .update(
                     retrieveAttributesData( withoutKey = true )
                         .filter( canUpdateAttribute )
@@ -1309,7 +1357,13 @@ component accessors="true" {
             "This instance is not loaded so it cannot be deleted. " &
             "Did you maybe mean to use `deleteAll`?"
         );
-        newQuery().delete( keyValue(), keyName() );
+        newQuery()
+            .where( function( q ) {
+                keyNames().each( function( keyName, i ) {
+                    q.where( keyName, keyValues()[ i ] );
+                } );
+            } )
+            .delete();
         variables._loaded = false;
         fireEvent( "postDelete", { entity: this } );
         return this;
@@ -1564,22 +1618,36 @@ component accessors="true" {
             arguments.relationName
         );
 
-        param arguments.foreignKey = related.entityName() & related.keyName();
-        param arguments.ownerKey = related.keyName();
+        // ACF doesn't let us use param with functions. ¯\_(ツ)_/¯
+        if ( isNull( arguments.foreignKey ) ) {
+            arguments.foreignKey = related
+                .keyNames()
+                .map( function( keyName ) {
+                    return related.entityName() & keyName;
+                } );
+        }
+        arguments.foreignKey = arrayWrap( arguments.foreignKey );
+        param arguments.ownerKey = related.keyNames();
+        arguments.ownerKey = arrayWrap( arguments.ownerKey );
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
+        );
+
+        guardAgainstKeyLengthMismatch(
+            arguments.foreignKey,
+            arguments.ownerKey
         );
 
         return variables._wirebox.getInstance(
             name = "BelongsTo@quick",
             initArguments = {
-                related: related,
-                relationName: arguments.relationName,
-                relationMethodName: arguments.relationMethodName,
-                parent: this,
-                foreignKey: arguments.foreignKey,
-                ownerKey: arguments.ownerKey,
-                withConstraints: !variables._withoutRelationshipConstraints
+                "related": related,
+                "relationName": arguments.relationName,
+                "relationMethodName": arguments.relationMethodName,
+                "parent": this,
+                "foreignKeys": arguments.foreignKey,
+                "ownerKeys": arguments.ownerKey,
+                "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1613,8 +1681,14 @@ component accessors="true" {
             arguments.relationName
         );
 
-        param arguments.foreignKey = entityName() & keyName();
-        param arguments.localKey = keyName();
+        if ( isNull( arguments.foreignKey ) ) {
+            arguments.foreignKey = keyNames().map( function( keyName ) {
+                return entityName() & keyName;
+            } );
+        }
+        arguments.foreignKey = arrayWrap( arguments.foreignKey );
+        param arguments.localKey = keyNames();
+        arguments.localKey = arrayWrap( arguments.localKey );
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
@@ -1622,13 +1696,13 @@ component accessors="true" {
         return variables._wirebox.getInstance(
             name = "HasOne@quick",
             initArguments = {
-                related: related,
-                relationName: arguments.relationName,
-                relationMethodName: arguments.relationMethodName,
-                parent: this,
-                foreignKey: arguments.foreignKey,
-                localKey: arguments.localKey,
-                withConstraints: !variables._withoutRelationshipConstraints
+                "related": related,
+                "relationName": arguments.relationName,
+                "relationMethodName": arguments.relationMethodName,
+                "parent": this,
+                "foreignKeys": arguments.foreignKey,
+                "localKeys": arguments.localKey,
+                "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1662,8 +1736,14 @@ component accessors="true" {
             arguments.relationName
         );
 
-        param arguments.foreignKey = entityName() & keyName();
-        param arguments.localKey = keyName();
+        if ( isNull( arguments.foreignKey ) ) {
+            arguments.foreignKey = keyNames().map( function( keyName ) {
+                return entityName() & keyName;
+            } );
+        }
+        arguments.foreignKey = arrayWrap( arguments.foreignKey );
+        param arguments.localKey = keyNames();
+        arguments.localKey = arrayWrap( arguments.localKey );
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
@@ -1671,13 +1751,13 @@ component accessors="true" {
         return variables._wirebox.getInstance(
             name = "HasMany@quick",
             initArguments = {
-                related: related,
-                relationName: arguments.relationName,
-                relationMethodName: arguments.relationMethodName,
-                parent: this,
-                foreignKey: arguments.foreignKey,
-                localKey: arguments.localKey,
-                withConstraints: !variables._withoutRelationshipConstraints
+                "related": related,
+                "relationName": arguments.relationName,
+                "relationMethodName": arguments.relationMethodName,
+                "parent": this,
+                "foreignKeys": arguments.foreignKey,
+                "localKeys": arguments.localKey,
+                "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1732,27 +1812,46 @@ component accessors="true" {
             related.tableName(),
             tableName()
         );
-        param arguments.foreignPivotKey = entityName() & keyName();
-        param arguments.relatedPivotKey = related.entityName() & related.keyName();
+
+        if ( isNull( arguments.foreignPivotKey ) ) {
+            arguments.foreignPivotKey = keyNames().map( function( keyName ) {
+                return entityName() & keyName;
+            } );
+        }
+        arguments.foreignPivotKey = arrayWrap( arguments.foreignPivotKey );
+
+        if ( isNull( arguments.relatedPivotKey ) ) {
+            arguments.relatedPivotKey = related
+                .keyNames()
+                .map( function( keyName ) {
+                    return related.entityName() & keyName;
+                } );
+        }
+        arguments.relatedPivotKey = arrayWrap( arguments.relatedPivotKey );
+
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
-        param arguments.parentKey = keyName();
-        param arguments.relatedKey = related.keyName();
+
+        param arguments.parentKey = keyNames();
+        arguments.parentKey = arrayWrap( arguments.parentKey );
+
+        param arguments.relatedKey = related.keyNames();
+        arguments.relatedKey = arrayWrap( arguments.relatedKey );
 
         return variables._wirebox.getInstance(
             name = "BelongsToMany@quick",
             initArguments = {
-                related: related,
-                relationName: arguments.relationName,
-                relationMethodName: arguments.relationMethodName,
-                parent: this,
-                table: arguments.table,
-                foreignPivotKey: arguments.foreignPivotKey,
-                relatedPivotKey: arguments.relatedPivotKey,
-                parentKey: arguments.parentKey,
-                relatedKey: arguments.relatedKey,
-                withConstraints: !variables._withoutRelationshipConstraints
+                "related": related,
+                "relationName": arguments.relationName,
+                "relationMethodName": arguments.relationMethodName,
+                "parent": this,
+                "table": arguments.table,
+                "foreignPivotKeys": arguments.foreignPivotKey,
+                "relatedPivotKeys": arguments.relatedPivotKey,
+                "parentKeys": arguments.parentKey,
+                "relatedKeys": arguments.relatedKey,
+                "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1818,10 +1917,28 @@ component accessors="true" {
             arguments.intermediateName
         );
 
-        param arguments.firstKey = entityName() & keyName();
-        param arguments.secondKey = intermediate.entityName() & intermediate.keyName();
-        param arguments.localKey = keyName();
-        param arguments.secondLocalKey = intermediate.keyName();
+        if ( isNull( arguments.firstKey ) ) {
+            arguments.firstKey = keyNames().map( function( keyName ) {
+                return entityName() & keyName;
+            } );
+        }
+        arguments.firstKey = arrayWrap( arguments.firstKey );
+
+        if ( isNull( arguments.secondKey ) ) {
+            arguments.secondKey = intermediate
+                .keyNames()
+                .map( function( keyName ) {
+                    return intermediate.entityName() & keyName;
+                } );
+        }
+        arguments.secondKey = arrayWrap( arguments.secondKey );
+
+        param arguments.localKey = keyNames();
+        arguments.localKey = arrayWrap( arguments.localKey );
+
+        param arguments.secondLocalKey = intermediate.keyNames();
+        arguments.secondLocalKey = arrayWrap( arguments.secondLocalKey );
+
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
@@ -1829,16 +1946,16 @@ component accessors="true" {
         return variables._wirebox.getInstance(
             name = "HasManyThrough@quick",
             initArguments = {
-                related: related,
-                relationName: arguments.relationName,
-                relationMethodName: arguments.relationMethodName,
-                parent: this,
-                intermediate: intermediate,
-                firstKey: arguments.firstKey,
-                secondKey: arguments.secondKey,
-                localKey: arguments.localKey,
-                secondLocalKey: arguments.secondLocalKey,
-                withConstraints: !variables._withoutRelationshipConstraints
+                "related": related,
+                "relationName": arguments.relationName,
+                "relationMethodName": arguments.relationMethodName,
+                "parent": this,
+                "intermediate": intermediate,
+                "firstKeys": arguments.firstKey,
+                "secondKeys": arguments.secondKey,
+                "localKeys": arguments.localKey,
+                "secondLocalKeys": arguments.secondLocalKey,
+                "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1882,7 +1999,9 @@ component accessors="true" {
 
         param arguments.type = arguments.name & "_type";
         param arguments.id = arguments.name & "_id";
-        param arguments.localKey = keyName();
+        arguments.id = arrayWrap( arguments.id );
+        param arguments.localKey = keyNames();
+        arguments.localKey = arrayWrap( arguments.localKey );
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
@@ -1890,14 +2009,14 @@ component accessors="true" {
         return variables._wirebox.getInstance(
             name = "PolymorphicHasMany@quick",
             initArguments = {
-                related: related,
-                relationName: arguments.relationName,
-                relationMethodName: arguments.relationMethodName,
-                parent: this,
-                type: arguments.type,
-                id: arguments.id,
-                localKey: arguments.localKey,
-                withConstraints: !variables._withoutRelationshipConstraints
+                "related": related,
+                "relationName": arguments.relationName,
+                "relationMethodName": arguments.relationMethodName,
+                "parent": this,
+                "type": arguments.type,
+                "ids": arguments.id,
+                "localKeys": arguments.localKey,
+                "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -1929,8 +2048,8 @@ component accessors="true" {
     private PolymorphicBelongsTo function polymorphicBelongsTo(
         required string name,
         string type,
-        string id,
-        string ownerKey,
+        any id,
+        any ownerKey,
         string relationMethodName
     ) {
         param arguments.relationMethodName = lCase(
@@ -1939,38 +2058,40 @@ component accessors="true" {
         param arguments.name = arguments.relationMethodName;
         param arguments.type = arguments.name & "_type";
         param arguments.id = arguments.name & "_id";
+        arguments.id = arrayWrap( arguments.id );
 
         var relationName = retrieveAttribute( arguments.type, "" );
         if ( relationName == "" ) {
             return variables._wirebox.getInstance(
                 name = "PolymorphicBelongsTo@quick",
                 initArguments = {
-                    related: this.set_EagerLoad( [] ).resetQuery(),
-                    relationName: relationName,
-                    relationMethodName: arguments.relationMethodName,
-                    parent: this,
-                    foreignKey: arguments.id,
-                    ownerKey: "",
-                    type: arguments.type,
-                    withConstraints: !variables._withoutRelationshipConstraints
+                    "related": this.set_EagerLoad( [] ).resetQuery(),
+                    "relationName": relationName,
+                    "relationMethodName": arguments.relationMethodName,
+                    "parent": this,
+                    "foreignKeys": arguments.id,
+                    "ownerKeys": [],
+                    "type": arguments.type,
+                    "withConstraints": !variables._withoutRelationshipConstraints
                 }
             );
         }
 
         var related = variables._wirebox.getInstance( relationName );
-        param arguments.ownerKey = related.keyName();
+        param arguments.ownerKey = related.keyNames();
+        arguments.ownerKey = arrayWrap( arguments.ownerKey );
 
         return variables._wirebox.getInstance(
             name = "PolymorphicBelongsTo@quick",
             initArguments = {
-                related: related,
-                relationName: relationName,
-                relationMethodName: arguments.name,
-                parent: this,
-                foreignKey: arguments.id,
-                ownerKey: arguments.ownerKey,
-                type: arguments.type,
-                withConstraints: !variables._withoutRelationshipConstraints
+                "related": related,
+                "relationName": relationName,
+                "relationMethodName": arguments.name,
+                "parent": this,
+                "foreignKeys": arguments.id,
+                "ownerKeys": arguments.ownerKey,
+                "type": arguments.type,
+                "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
     }
@@ -2254,9 +2375,20 @@ component accessors="true" {
      * @return       Boolean
      */
     private boolean function handleIs( required any otherEntity ) {
-        return keyValue() == arguments.otherEntity.keyValue() &&
-        entityName() == arguments.otherEntity.entityName() &&
-        tableName() == arguments.otherEntity.tableName();
+        if ( entityName() != arguments.otherEntity.entityName() ) {
+            return false;
+        }
+
+        if ( tableName() != arguments.otherEntity.tableName() ) {
+            return false;
+        }
+
+        return keyValues().reduce( function( same, value, i ) {
+            if ( !same ) {
+                return false;
+            }
+            return value == otherEntity.keyValues()[ i ];
+        }, true );
     }
 
     /**
@@ -2776,8 +2908,10 @@ component accessors="true" {
                         meta.originalMetadata.properties
                     );
                     if ( !meta.attributes.keyExists( variables._key ) ) {
-                        var keyProp = paramAttribute( { "name": variables._key } );
-                        meta.attributes[ keyProp.name ] = keyProp;
+                        arrayWrap( variables._key ).each( function( key ) {
+                            var keyProp = paramAttribute( { "name": key } );
+                            meta.attributes[ keyProp.name ] = keyProp;
+                        } );
                     }
                     meta[ "casts" ] = generateCastsFromProperties(
                         meta.originalMetadata.properties
@@ -3042,13 +3176,41 @@ component accessors="true" {
     private void function guardKeyHasNoDefaultValue(
         required struct attributes
     ) {
-        if ( arguments.attributes.keyExists( keyName() ) ) {
-            if ( arguments.attributes[ keyName() ].keyExists( "default" ) ) {
-                throw(
-                    type = "QuickEntityDefaultedKey",
-                    message = "The key value [#keyName()#] has a default value.  Default values on keys prevents Quick from working as expected.  Remove the default value to continue."
-                );
+        keyNames().each( function( keyName ) {
+            if ( attributes.keyExists( keyName ) ) {
+                if ( attributes[ keyName ].keyExists( "default" ) ) {
+                    throw(
+                        type = "QuickEntityDefaultedKey",
+                        message = "The key value [#keyName#] has a default value.  Default values on keys prevents Quick from working as expected.  Remove the default value to continue."
+                    );
+                }
             }
+        } );
+    }
+
+    /**
+     * Throws an exception if the number of values passed in does not
+     * match the number of keys passed in.
+     *
+     * @values  An array of values to check the length matches
+     *
+     * @throws  KeyLengthMismatch
+     *
+     * @return  void
+     */
+    public void function guardAgainstKeyLengthMismatch(
+        required array actual,
+        any expectedLength = keyNames().len()
+    ) {
+        if ( isArray( arguments.expectedLength ) ) {
+            arguments.expectedLength = arguments.expectedLength.len();
+        }
+
+        if ( arguments.actual.len() != expectedLength ) {
+            throw(
+                type = "KeyLengthMismatch",
+                message = "The number of values passed in [#arguments.actual.len()#] does not match the number expected [#expectedLength#]."
+            );
         }
     }
 

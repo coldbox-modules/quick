@@ -19,7 +19,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( variables ).toHaveKey( "quickPreLoadCalled" );
                 expect( variables.quickPreLoadCalled ).toBeStruct();
                 expect( variables.quickPreLoadCalled ).toHaveKey( "id" );
-                expect( variables.quickPreLoadCalled.id ).toBe( 1 );
+                expect( variables.quickPreLoadCalled.id ).toBe( [ 1 ] );
                 expect( variables.quickPreLoadCalled ).toHaveKey( "metadata" );
                 structDelete( variables, "quickPreLoadCalled" );
             } );
@@ -29,7 +29,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( request ).toHaveKey( "preLoadCalled" );
                 expect( request.preLoadCalled ).toBeStruct();
                 expect( request.preLoadCalled ).toHaveKey( "id" );
-                expect( request.preLoadCalled.id ).toBe( 1 );
+                expect( request.preLoadCalled.id ).toBe( [ 1 ] );
                 expect( request.preLoadCalled ).toHaveKey( "metadata" );
                 structDelete( request, "preLoadCalled" );
             } );

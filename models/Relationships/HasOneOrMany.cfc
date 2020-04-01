@@ -26,12 +26,12 @@ component
         required string relationName,
         required string relationMethodName,
         required any parent,
-        required string foreignKey,
-        required string localKey,
+        required array foreignKeys,
+        required array localKeys,
         boolean withConstraints = true
     ) {
-        variables.localKey = arguments.localKey;
-        variables.foreignKey = arguments.foreignKey;
+        variables.localKeys = arguments.localKeys;
+        variables.foreignKeys = arguments.foreignKeys;
 
         return super.init(
             related = arguments.related,
@@ -48,10 +48,11 @@ component
      * @return  quick.models.Relationships.HasOneOrMany
      */
     public HasOneOrMany function addConstraints() {
-        variables.related
-            .retrieveQuery()
-            .where( getQualifiedForeignKeyName(), getParentKey() )
-            .whereNotNull( getQualifiedForeignKeyName() );
+        variables.related.where( function( q ) {
+            arrayZipEach( [ getQualifiedForeignKeyNames(), getParentKeys() ], function( keyName, parentKey ) {
+                q.where( keyName, parentKey ).whereNotNull( keyName );
+            } );
+        } );
         return this;
     }
 
@@ -65,10 +66,15 @@ component
     public HasOneOrMany function addEagerConstraints( required array entities ) {
         variables.related
             .retrieveQuery()
-            .whereIn(
-                variables.foreignKey,
-                getKeys( arguments.entities, variables.localKey )
-            );
+            .where( function( q ) {
+                getKeys( entities, variables.localKeys ).each( function( keys ) {
+                    q.orWhere( function( q2 ) {
+                        arrayZipEach( [ variables.foreignKeys, keys ], function( foreignKey, keyValue ) {
+                            q2.where( foreignKey, keyValue );
+                        } );
+                    } );
+                } );
+            } );
         return this;
     }
 
@@ -133,9 +139,11 @@ component
     ) {
         var dictionary = buildDictionary( arguments.results );
         arguments.entities.each( function( entity ) {
-            var key = arguments.entity.retrieveAttribute(
-                variables.localKey
-            );
+            var key = variables.localKeys
+                .map( function( localKey ) {
+                    return entity.retrieveAttribute( localKey );
+                } )
+                .toList();
             if ( structKeyExists( dictionary, key ) ) {
                 arguments.entity.assignRelationship(
                     relation,
@@ -156,9 +164,11 @@ component
      */
     public struct function buildDictionary( required array results ) {
         return arguments.results.reduce( function( dict, result ) {
-            var key = arguments.result.retrieveAttribute(
-                variables.foreignKey
-            );
+            var key = variables.foreignKeys
+                .map( function( foreignKey ) {
+                    return result.retrieveAttribute( foreignKey );
+                } )
+                .toList();
             if ( !structKeyExists( arguments.dict, key ) ) {
                 arguments.dict[ key ] = [];
             }
@@ -192,8 +202,10 @@ component
      *
      * @return   any
      */
-    public any function getParentKey() {
-        return variables.parent.retrieveAttribute( variables.localKey );
+    public any function getParentKeys() {
+        return variables.localKeys.map( function( localKey ) {
+            return variables.parent.retrieveAttribute( localKey );
+        } );
     }
 
     /**
@@ -209,14 +221,15 @@ component
      */
     public array function applySetter() {
         variables.related.updateAll(
-            attributes = {
-                "#variables.foreignKey#": {
+            attributes = variables.foreignKeys.reduce( function( acc, foreignKey ) {
+                acc[ foreignKey ] = {
                     "value": "",
                     "cfsqltype": "varchar",
                     "null": true,
                     "nulls": true
-                }
-            },
+                };
+                return acc;
+            }, {} ),
             force = true
         );
         return saveMany( argumentCollection = arguments );
@@ -248,14 +261,18 @@ component
      * @return   quick.models.BaseEntity
      */
     public any function save( required any entity ) {
-        if ( isSimpleValue( arguments.entity ) ) {
-            arguments.entity = variables.related
-                .newEntity()
-                .set_loaded( true )
-                .forceAssignAttribute(
-                    variables.related.keyName(),
-                    arguments.entity
-                );
+        if ( !isObject( arguments.entity ) ) {
+            arguments.entity = arrayWrap( arguments.entity );
+            guardAgainstKeyLengthMismatch(
+                arguments.entity,
+                variables.related.keyNames()
+            );
+            arguments.entity = tap( variables.related.newEntity(), function( e ) {
+                e.set_loaded( true );
+                arrayZipEach( [ variables.related.keyNames(), entity ], function( keyName, value ) {
+                    e.forceAssignAttribute( keyName, value );
+                } );
+            } );
         }
         setForeignAttributesForCreate( arguments.entity );
         return arguments.entity.save();
@@ -284,29 +301,36 @@ component
      * @return   quick.models.BaseEntity
      */
     public any function setForeignAttributesForCreate( required any entity ) {
-        return arguments.entity.forceAssignAttribute(
-            variables.foreignKey,
-            getParentKey()
-        );
+        return tap( arguments.entity, function( e ) {
+            arrayZipEach( [ variables.foreignKeys, getParentKeys() ], function( foreignKey, parentKey ) {
+                e.forceAssignAttribute( foreignKey, parentKey );
+            } );
+        } );
     }
 
 
     /**
      * Returns the fully-qualified local key.
      *
-     * @return  String
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function getQualifiedLocalKey() {
-        return variables.parent.qualifyColumn( variables.localKey );
+    public array function getQualifiedLocalKeys() {
+        return variables.localKeys.map( function( localKey ) {
+            return variables.parent.qualifyColumn( localKey );
+        } );
     }
 
     /**
      * Returns the fully-qualified column name of foreign key.
      *
-     * @return   string
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function getQualifiedForeignKeyName() {
-        return variables.related.qualifyColumn( variables.foreignKey );
+    public array function getQualifiedForeignKeyNames() {
+        return variables.foreignKeys.map( function( foreignKey ) {
+            return variables.related.qualifyColumn( foreignKey );
+        } );
     }
 
     /**

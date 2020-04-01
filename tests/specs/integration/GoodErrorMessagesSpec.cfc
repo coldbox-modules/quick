@@ -4,10 +4,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
         describe( "good error messages", function() {
             it( "throws about unloaded entities when trying to retrieve the `keyValue`", function() {
                 expect( function() {
-                    getInstance( "User" ).keyValue();
+                    getInstance( "User" ).keyValues();
                 } ).toThrow(
                     type = "QuickEntityNotLoaded",
-                    regex = "This instance is not loaded so the \`keyValue\` cannot be retrieved\."
+                    regex = "This instance is not loaded so the \`keyValues\` cannot be retrieved\."
                 );
             } );
 

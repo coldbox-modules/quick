@@ -11,8 +11,15 @@ component implements="KeyType" {
      * @return   void
      */
     public void function preInsert( required any entity ) {
+        if ( arguments.entity.keyNames().len() > 1 ) {
+            throw(
+                type = "InvalidKeyLength",
+                message = "AutoIncrementingKeyType cannot be used with composite primary keys."
+            );
+        }
+
         arguments.entity.assignAttribute(
-            arguments.entity.keyName(),
+            arguments.entity.keyNames()[ 1 ],
             createUUID()
         );
     }

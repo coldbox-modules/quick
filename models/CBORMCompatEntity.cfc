@@ -65,8 +65,11 @@ component extends="quick.models.BaseEntity" accessors="true" {
     }
 
     function deleteById( id ) {
-        arguments.id = isArray( arguments.id ) ? arguments.id : [ arguments.id ];
-        retrieveQuery().whereIn( keyName(), arguments.id ).delete();
+        guardAgainstCompositePrimaryKeys();
+        arguments.id = isArray( arguments.id ) ? arguments.id : [
+            arguments.id
+        ];
+        retrieveQuery().whereIn( keyNames()[ 1 ], arguments.id ).delete();
         return this;
     }
 
@@ -82,7 +85,8 @@ component extends="quick.models.BaseEntity" accessors="true" {
 
     function exists( id ) {
         if ( !isNull( id ) ) {
-            retrieveQuery().where( keyName(), arguments.id );
+            guardAgainstCompositePrimaryKeys();
+            retrieveQuery().where( keyNames()[ 1 ], arguments.id );
         }
         return retrieveQuery().exists();
     }
@@ -127,8 +131,9 @@ component extends="quick.models.BaseEntity" accessors="true" {
             }
             return super.get();
         }
+        guardAgainstCompositePrimaryKeys();
         var ids = isArray( id ) ? id : listToArray( id, "," );
-        retrieveQuery().whereIn( keyName(), ids );
+        retrieveQuery().whereIn( keyNames()[ 1 ], ids );
         return super.get();
     }
 
@@ -157,6 +162,15 @@ component extends="quick.models.BaseEntity" accessors="true" {
 
     function newCriteria() {
         return CBORMCriteriaBuilderCompat.get().setEntity( this );
+    }
+
+    private void function guardAgainstCompositePrimaryKeys() {
+        if ( keyNames().len() > 1 ) {
+            throw(
+                type = "InvalidKeyLength",
+                message = "The CBORMCompatEntity cannot be used with composite primary keys."
+            );
+        }
     }
 
 }

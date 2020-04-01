@@ -5,4 +5,8 @@ component table="composites" extends="quick.models.BaseEntity" {
 
     variables._key = [ "a", "b" ];
 
+    function keyType() {
+        return variables._wirebox.getInstance( "NullKeyType@quick" );
+    }
+
 }

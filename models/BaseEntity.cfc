@@ -1610,8 +1610,8 @@ component accessors="true" {
      */
     private BelongsTo function belongsTo(
         required string relationName,
-        string foreignKey,
-        string ownerKey,
+        any foreignKey,
+        any ownerKey,
         string relationMethodName
     ) {
         var related = variables._wirebox.getInstance(
@@ -1673,8 +1673,8 @@ component accessors="true" {
      */
     private HasOne function hasOne(
         required string relationName,
-        string foreignKey,
-        string localKey,
+        any foreignKey,
+        any localKey,
         string relationMethodName
     ) {
         var related = variables._wirebox.getInstance(
@@ -1728,8 +1728,8 @@ component accessors="true" {
      */
     private HasMany function hasMany(
         required string relationName,
-        string foreignKey,
-        string localKey,
+        any foreignKey,
+        any localKey,
         string relationMethodName
     ) {
         var related = variables._wirebox.getInstance(
@@ -1798,10 +1798,10 @@ component accessors="true" {
     private BelongsToMany function belongsToMany(
         required string relationName,
         string table,
-        string foreignPivotKey,
-        string relatedPivotKey,
-        string parentKey,
-        string relatedKey,
+        any foreignPivotKey,
+        any relatedPivotKey,
+        any parentKey,
+        any relatedKey,
         string relationMethodName
     ) {
         var related = variables._wirebox.getInstance(
@@ -1904,10 +1904,10 @@ component accessors="true" {
     private HasManyThrough function hasManyThrough(
         required string relationName,
         required string intermediateName,
-        string firstKey,
-        string secondKey,
-        string localKey,
-        string secondLocalKey,
+        any firstKey,
+        any secondKey,
+        any localKey,
+        any secondLocalKey,
         string relationMethodName
     ) {
         var related = variables._wirebox.getInstance(
@@ -1989,8 +1989,8 @@ component accessors="true" {
         required string relationName,
         required string name,
         string type,
-        string id,
-        string localKey,
+        any id,
+        any localKey,
         string relationMethodName
     ) {
         var related = variables._wirebox.getInstance(

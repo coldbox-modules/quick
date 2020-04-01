@@ -154,6 +154,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .count()
                 ).toBe( 1 );
             } );
+
+            it( "can have a relationship with a composite foreign key", function() {
+                var compositeChild = getInstance( "CompositeChild" ).findOrFail(
+                    1
+                );
+                expect( compositeChild.getParent() ).toBeInstanceOf(
+                    "Composite"
+                );
+                expect( compositeChild.getParent().keyValues() ).toBe( [ 1, 2 ] );
+            } );
         } );
     }
 

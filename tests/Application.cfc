@@ -244,5 +244,37 @@ component {
             )
         "
         );
+        queryExecute(
+            "
+            CREATE TABLE `composites` (
+                `a` int(11) NOT NULL,
+                `b` int(11) NOT NULL,
+                PRIMARY KEY (`a`, `b`)
+            )
+            "
+        );
+        queryExecute( "
+            INSERT INTO `composites` (`a`, `b`) VALUES (1, 1)
+        " );
+        queryExecute( "
+            INSERT INTO `composites` (`a`, `b`) VALUES (1, 2)
+        " );
+        queryExecute(
+            "
+            CREATE TABLE `composite_children` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `composite_a` int(11) NOT NULL,
+                `composite_b` int(11) NOT NULL,
+                PRIMARY KEY (`id`)
+            )
+            "
+        );
+        queryExecute( "
+            INSERT INTO `composite_children` (`id`, `composite_a`, `composite_b`) VALUES (1, 1, 2)
+        " );
+        queryExecute( "
+            INSERT INTO `composite_children` (`id`, `composite_a`, `composite_b`) VALUES (2, 2, 2)
+        " );
+
     }
 }

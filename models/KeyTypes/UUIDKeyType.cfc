@@ -4,24 +4,18 @@
 component implements="KeyType" {
 
     /**
-     * Sets the primary key to a random UUID.
+     * Sets the primary keys to random UUIDs.
      *
      * @entity   The entity that is being inserted.
      *
      * @return   void
      */
     public void function preInsert( required any entity ) {
-        if ( arguments.entity.keyNames().len() > 1 ) {
-            throw(
-                type = "InvalidKeyLength",
-                message = "AutoIncrementingKeyType cannot be used with composite primary keys."
-            );
-        }
-
-        arguments.entity.assignAttribute(
-            arguments.entity.keyNames()[ 1 ],
-            createUUID()
-        );
+        arguments.entity
+            .keyNames()
+            .each( function( keyName ) {
+                entity.assignAttribute( keyName, createUUID() );
+            } );
     }
 
     /**

@@ -15,7 +15,7 @@
     "description":"A ColdBox ORM Engine",
     "scripts":{
         "format":"cfformat run dsl/**/*.cfc,extras/**/*.cfc,interceptors/**/*.cfc,models/**/*.cfc,tests/specs/**/*.cfc --overwrite",
-        "format:check":"cfformat check dsl/**/*.cfc,extras/**/*.cfc,interceptors/**/*.cfc,models/**/*.cfc,tests/specs/**/*.cfc",
+        "format:check":"cfformat check dsl/**/*.cfc,extras/**/*.cfc,interceptors/**/*.cfc,models/**/*.cfc,tests/specs/**/*.cfc --verbose",
         "format:watch":"cfformat watch dsl/**/*.cfc,extras/**/*.cfc,interceptors/**/*.cfc,models/**/*.cfc,tests/specs/**/*.cfc",
         "postVersion":"package set location='coldbox-modules/quick#v`package version`'",
         "generateAPIDocs":"rm .tmp --recurse --force && docbox generate mapping=quick excludes=test|module|QuickCollection strategy-outputDir=.tmp/apidocs strategy-projectTitle=Quick"

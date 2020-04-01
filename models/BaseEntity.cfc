@@ -47,16 +47,6 @@ component accessors="true" {
         inject="coldbox:interceptorService"
         persistent="false";
 
-    /**
-     * An component used to create new instances of this entity.
-     * This is split off in to a separate component so we can use Lucee
-     * only features to speed up entity creation time.
-     */
-    property
-        name="_entityCreator"
-        inject="EntityCreator@quick"
-        persistent="false";
-
     /*===========================================
     =            Metadata Properties            =
     ===========================================*/
@@ -1180,7 +1170,10 @@ component accessors="true" {
      */
     public any function newEntity( string name ) {
         if ( isNull( arguments.name ) ) {
-            return variables._entityCreator.new( this );
+            return variables._wirebox.getInstance(
+                name = variables._fullName,
+                initArguments = { meta: variables._meta }
+            );
         }
         return variables._wirebox.getInstance( arguments.name );
     }

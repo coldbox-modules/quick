@@ -55,7 +55,7 @@ component {
         struct missingMethodArguments = {}
     ) {
         return invoke(
-            variables.entity.resetQuery(),
+            variables.entity.newEntity(),
             missingMethodName,
             missingMethodArguments
         );

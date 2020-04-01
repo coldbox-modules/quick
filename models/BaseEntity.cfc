@@ -2907,12 +2907,12 @@ component accessors="true" {
                     meta[ "attributes" ] = generateAttributesFromProperties(
                         meta.originalMetadata.properties
                     );
-                    if ( !meta.attributes.keyExists( variables._key ) ) {
-                        arrayWrap( variables._key ).each( function( key ) {
+                    arrayWrap( variables._key ).each( function( key ) {
+                        if ( !meta.attributes.keyExists( key ) ) {
                             var keyProp = paramAttribute( { "name": key } );
                             meta.attributes[ keyProp.name ] = keyProp;
-                        } );
-                    }
+                        }
+                    } );
                     meta[ "casts" ] = generateCastsFromProperties(
                         meta.originalMetadata.properties
                     );

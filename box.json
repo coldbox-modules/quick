@@ -1,8 +1,8 @@
 {
     "name":"quick",
-    "version":"2.5.4",
+    "version":"3.0.0-beta.1",
     "author":"Ortus Solutions",
-    "location":"coldbox-modules/quick#v2.5.4",
+    "location":"forgeboxStorage",
     "homepage":"https://github.com/coldbox-modules/quick",
     "documentation":"https://github.com/coldbox-modules/quick",
     "repository":{
@@ -25,7 +25,7 @@
         "qb":"^7.6.0",
         "str":"^1.0.0",
         "testbox":"^3.1.0+339",
-        "mementifier":"be"
+        "mementifier":"^2.1.0+100"
     },
     "devDependencies":{
         "coldbox":"be",

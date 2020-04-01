@@ -28,13 +28,13 @@ component extends="quick.models.Relationships.BaseRelationship" {
      *                      relationship.  A pivot table is a table that stores,
      *                      at a minimum, the primary key values of each side
      *                      of the relationship as foreign keys.
-     * @foreignPivotKey     The name of the column on the pivot `table` that holds
+     * @foreignPivotKeys    The name of the column on the pivot `table` that holds
      *                      the value of the `parentKey` of the `parent` entity.
-     * @relatedPivotKey     The name of the column on the pivot `table` that holds
+     * @relatedPivotKeys    The name of the column on the pivot `table` that holds
      *                      the value of the `relatedKey` of the `ralated` entity.
-     * @parentKey           The name of the column on the `parent` entity that is
+     * @parentKeys          The name of the column on the `parent` entity that is
      *                      stored in the `foreignPivotKey` column on `table`.
-     * @relatedKey          The name of the column on the `related` entity that is
+     * @relatedKeys         The name of the column on the `related` entity that is
      *                      stored in the `relatedPivotKey` column on `table`.
      *
      * @return              quick.models.Relationships.BelongsToMany
@@ -45,17 +45,17 @@ component extends="quick.models.Relationships.BaseRelationship" {
         required string relationMethodName,
         required any parent,
         required string table,
-        required string foreignPivotKey,
-        required string relatedPivotKey,
-        required string parentKey,
-        required string relatedKey,
+        required array foreignPivotKeys,
+        required array relatedPivotKeys,
+        required array parentKeys,
+        required array relatedKeys,
         boolean withConstraints = true
     ) {
         variables.table = arguments.table;
-        variables.parentKey = arguments.parentKey;
-        variables.relatedKey = arguments.relatedKey;
-        variables.relatedPivotKey = arguments.relatedPivotKey;
-        variables.foreignPivotKey = arguments.foreignPivotKey;
+        variables.parentKeys = arguments.parentKeys;
+        variables.relatedKeys = arguments.relatedKeys;
+        variables.relatedPivotKeys = arguments.relatedPivotKeys;
+        variables.foreignPivotKeys = arguments.foreignPivotKeys;
 
         return super.init(
             related = arguments.related,
@@ -98,10 +98,15 @@ component extends="quick.models.Relationships.BaseRelationship" {
         variables.related
             .select() // clear select
             .from( variables.table )
-            .whereIn(
-                getQualifiedForeignPivotKeyName(),
-                getKeys( arguments.entities, variables.parentKey )
-            );
+            .where( function( q1 ) {
+                getKeys( entities, variables.parentKeys ).each( function( keys ) {
+                    q1.orWhere( function( q2 ) {
+                        arrayZipEach( [ getQualifiedForeignPivotKeyNames(), keys ], function( foreignPivotKeyName, keyValue ) {
+                            q2.where( foreignPivotKeyName, keyValue );
+                        } );
+                    } );
+                } );
+            } );
     }
 
     /**
@@ -140,13 +145,16 @@ component extends="quick.models.Relationships.BaseRelationship" {
     ) {
         var dictionary = variables.buildDictionary( arguments.results );
         arguments.entities.each( function( entity ) {
-            var parentKeyValue = arguments.entity.retrieveAttribute(
-                variables.parentKey
-            );
-            if ( structKeyExists( dictionary, parentKeyValue ) ) {
+            var parentDictionaryKey = variables.parentKeys
+                .map( function( parentKey ) {
+                    return entity.retrieveAttribute( parentKey );
+                } )
+                .toList();
+
+            if ( structKeyExists( dictionary, parentDictionaryKey ) ) {
                 arguments.entity.assignRelationship(
                     relation,
-                    dictionary[ parentKeyValue ]
+                    dictionary[ parentDictionaryKey ]
                 );
             }
         } );
@@ -163,9 +171,11 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     public struct function buildDictionary( required array results ) {
         return arguments.results.reduce( function( dict, result ) {
-            var key = arguments.result.retrieveAttribute(
-                variables.foreignPivotKey
-            );
+            var key = variables.foreignPivotKeys
+                .map( function( foreignPivotKey ) {
+                    return result.retrieveAttribute( foreignPivotKey );
+                } )
+                .toList();
             if ( !structKeyExists( arguments.dict, key ) ) {
                 arguments.dict[ key ] = [];
             }
@@ -180,11 +190,11 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.Relationships.BelongsToMany
      */
     public BelongsToMany function performJoin() {
-        variables.related.join(
-            variables.table,
-            variables.related.qualifyColumn( variables.relatedKey ),
-            getQualifiedRelatedPivotKeyName()
-        );
+        variables.related.join( variables.table, function( j ) {
+            arrayZipEach( [ variables.relatedKeys, getQualifiedRelatedPivotKeyNames() ], function( relatedKey, pivotKey ) {
+                j.on( variables.related.qualifyColumn( relatedKey ), pivotKey );
+            } );
+        } );
         return this;
     }
 
@@ -194,10 +204,14 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.Relationships.BelongsToMany
      */
     public BelongsToMany function addWhereConstraints() {
-        variables.related.where(
-            getQualifiedForeignPivotKeyName(),
-            variables.parent.retrieveAttribute( variables.parentKey )
-        );
+        variables.related.where( function( q ) {
+            arrayZipEach( [ getQualifiedForeignPivotKeyNames(), variables.parentKeys ], function( pivotKey, parentKey ) {
+                q.where(
+                    pivotKey,
+                    variables.parent.retrieveAttribute( parentKey )
+                );
+            } );
+        } );
         return this;
     }
 
@@ -205,20 +219,26 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * Get's the qualified related pivot key column name.
      * Qualified columns are "table.column".
      *
-     * @return  string
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function getQualifiedRelatedPivotKeyName() {
-        return variables.table & "." & variables.relatedPivotKey;
+    public array function getQualifiedRelatedPivotKeyNames() {
+        return variables.relatedPivotKeys.map( function( relatedPivotKey ) {
+            return variables.table & "." & relatedPivotKey;
+        } );
     }
 
     /**
      * Get's the qualified foreign pivot key column name.
      * Qualified columns are "table.column".
      *
-     * @return  string
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function getQualifiedForeignPivotKeyName() {
-        return variables.table & "." & variables.foreignPivotKey;
+    public array function getQualifiedForeignPivotKeyNames() {
+        return variables.foreignPivotKeys.map( function( foreignPivotKey ) {
+            return variables.table & "." & foreignPivotKey;
+        } );
     }
 
     /**
@@ -231,7 +251,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
     public any function attach( required any id ) {
         variables
             .newPivotStatement()
-            .insert( variables.parseIdsForInsert( arguments.id ) );
+            .insert( parseIdsForInsert( arguments.id ) );
         return variables.parent;
     }
 
@@ -244,16 +264,25 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.BaseEntity
      */
     public any function detach( required any id ) {
-        var foreignPivotKeyValue = variables.parent.retrieveAttribute(
-            variables.parentKey
-        );
+        var foreignPivotKeyValues = variables.parentKeys.map( function( parentKey ) {
+            return variables.parent.retrieveAttribute( parentKey );
+        } );
         variables
             .newPivotStatement()
-            .where( variables.foreignPivotKey, foreignPivotKeyValue )
-            .whereIn(
-                variables.relatedPivotKey,
-                variables.parseIds( arguments.id )
-            )
+            .where( function( q ) {
+                arrayZipEach( [ variables.foreignPivotKeys, foreignPivotKeyValues ], function( foreignPivotKey, foreignPivotKeyValue ) {
+                    q.where( foreignPivotKey, foreignPivotKeyValue );
+                } );
+            } )
+            .where( function( q1 ) {
+                parseIds( arrayWrap( id ) ).each( function( ids ) {
+                    q1.orWhere( function( q2 ) {
+                        arrayZipEach( [ variables.relatedPivotKeys, ids ], function( relatedPivotKey, id ) {
+                            q2.where( relatedPivotKey, id );
+                        } );
+                    } );
+                } );
+            } )
             .delete();
         return variables.parent;
     }
@@ -285,12 +314,16 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.BaseEntity
      */
     public any function sync( required any id ) {
-        var foreignPivotKeyValue = variables.parent.retrieveAttribute(
-            variables.parentKey
-        );
+        var foreignPivotKeyValues = variables.parentKeys.map( function( parentKey ) {
+            return variables.parent.retrieveAttribute( parentKey );
+        } );
         variables
             .newPivotStatement()
-            .where( variables.foreignPivotKey, foreignPivotKeyValue )
+            .where( function( q ) {
+                arrayZipEach( [ variables.foreignPivotKeys, foreignPivotKeyValues ], function( foreignPivotKey, foreignPivotKeyValue ) {
+                    q.where( foreignPivotKey, foreignPivotKeyValue );
+                } );
+            } )
             .delete();
         return variables.attach( arguments.id );
     }
@@ -316,16 +349,13 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return       [any]
      */
     public array function parseIds( required any value ) {
-        arguments.value = isArray( arguments.value ) ? arguments.value : [
-            arguments.value
-        ];
-        return arguments.value.map( function( val ) {
+        return arrayWrap( arguments.value ).map( function( val ) {
             // If the value is not a simple value, we will assume
             // it is an entity and return its key value.
-            if ( !isSimpleValue( arguments.val ) ) {
-                return arguments.val.keyValue();
+            if ( isObject( arguments.val ) ) {
+                return arguments.val.keyValues();
             }
-            return arguments.val;
+            return arrayWrap( arguments.val );
         } );
     }
 
@@ -339,21 +369,35 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return       [{any: any}]
      */
     public array function parseIdsForInsert( required any value ) {
-        var foreignPivotKeyValue = variables.parent.retrieveAttribute(
-            variables.parentKey
-        );
-        arguments.value = isArray( arguments.value ) ? arguments.value : [
-            arguments.value
-        ];
-        return arguments.value.map( function( val ) {
+        var foreignPivotKeyValues = variables.parentKeys.map( function( parentKey ) {
+            return variables.parent.retrieveAttribute( parentKey );
+        } );
+        return arrayWrap( arguments.value ).map( function( values ) {
             // If the value is not a simple value, we will assume
             // it is an entity and return its key value.
-            if ( !isSimpleValue( arguments.val ) ) {
-                arguments.val = arguments.val.keyValue();
+            if ( isObject( arguments.values ) ) {
+                arguments.values = arguments.values.keyValues();
+            } else {
+                arguments.values = arrayWrap( arguments.values );
             }
             var insertRecord = {};
-            insertRecord[ variables.foreignPivotKey ] = foreignPivotKeyValue;
-            insertRecord[ variables.relatedPivotKey ] = arguments.val;
+            arrayZipEach(
+                [
+                    variables.foreignPivotKeys,
+                    foreignPivotKeyValues,
+                    variables.relatedPivotKeys,
+                    arguments.values
+                ],
+                function(
+                    foreignPivotKey,
+                    foreignPivotKeyValue,
+                    relatedPivotKey,
+                    val
+                ) {
+                    insertRecord[ foreignPivotKey ] = foreignPivotKeyValue;
+                    insertRecord[ relatedPivotKey ] = val;
+                }
+            );
             return insertRecord;
         } );
     }
@@ -372,19 +416,27 @@ component extends="quick.models.Relationships.BaseRelationship" {
             .newQuery()
             .select( variables.parent.raw( 1 ) )
             .from( variables.table )
-            .whereColumn(
-                getQualifiedForeignKeyName(),
-                variables.parent.retrieveQualifiedKeyName()
-            );
+            .where( function( q ) {
+                arrayZipEach(
+                    [
+                        getQualifiedForeignKeyNames(),
+                        variables.parent.retrieveQualifiedKeyNames()
+                    ],
+                    function( foreignKeyName, keyName ) {
+                        q.whereColumn( foreignKeyName, keyName );
+                    }
+                );
+            } );
     }
 
     /**
      * Returns the fully-qualified column name of foreign key.
      *
-     * @return   string
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function getQualifiedForeignKeyName() {
-        return getQualifiedForeignPivotKeyName();
+    public array function getQualifiedForeignKeyNames() {
+        return getQualifiedForeignPivotKeyNames();
     }
 
 }

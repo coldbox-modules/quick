@@ -19,8 +19,8 @@ component extends="quick.models.Relationships.HasOneOrMany" {
      * @parent              The parent entity instance for the relationship.
      * @type                The name of the column that contains the entity type
      *                      of the polymorphic relationship.
-     * @id                  The foreign key on the parent entity.
-     * @localKey            The local primary key on the parent entity.
+     * @ids                 The foreign key on the parent entity.
+     * @localKeys           The local primary key on the parent entity.
      *
      * @return              quick.models.Relationships.PolymorphicHasOneOrMany
      */
@@ -30,8 +30,8 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         required string relationMethodName,
         required any parent,
         required string type,
-        required string id,
-        required string localKey,
+        required array ids,
+        required array localKeys,
         boolean withConstraints = true
     ) {
         variables.morphType = arguments.type;
@@ -42,8 +42,8 @@ component extends="quick.models.Relationships.HasOneOrMany" {
             relationName = arguments.relationName,
             relationMethodName = arguments.relationMethodName,
             parent = arguments.parent,
-            foreignKey = arguments.id,
-            localKey = arguments.localKey,
+            foreignKeys = arguments.ids,
+            localKeys = arguments.localKeys,
             withConstraints = arguments.withConstraints
         );
     }

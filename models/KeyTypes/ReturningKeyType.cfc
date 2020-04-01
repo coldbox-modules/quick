@@ -14,7 +14,7 @@ component implements="KeyType" {
     public void function preInsert( required any entity ) {
         arguments.entity
             .retrieveQuery()
-            .returning( arguments.entity.keyName() );
+            .returning( arguments.entity.keyNames() );
     }
 
     /**
@@ -29,10 +29,11 @@ component implements="KeyType" {
         required any entity,
         required struct result
     ) {
-        arguments.entity.assignAttribute(
-            arguments.entity.keyName(),
-            arguments.result.query[ arguments.entity.keyName() ]
-        );
+        arguments.entity
+            .keyNames()
+            .each( function( keyName ) {
+                entity.assignAttribute( keyName, result.query[ keyName ] );
+            } );
     }
 
 }

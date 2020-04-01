@@ -157,13 +157,19 @@ component {
      */
     public array function getKeys(
         required array entities,
-        required string key
+        required array keys
     ) {
         return unique(
             arguments.entities.map( function( entity ) {
-                return arguments.entity.retrieveAttribute( key );
+                return keys
+                    .map( function( key ) {
+                        return entity.retrieveAttribute( key );
+                    } )
+                    .toList();
             } )
-        );
+        ).map( function( key ) {
+            return key.listToArray();
+        } );
     }
 
     /**
@@ -176,25 +182,31 @@ component {
     public any function addCompareConstraints( any base = variables.related ) {
         return arguments.base
             .select( variables.related.raw( 1 ) )
-            .whereColumn( getQualifiedLocalKey(), getExistenceCompareKey() );
+            .where( function( q ) {
+                arrayZipEach( [ getQualifiedLocalKeys(), getExistenceCompareKeys() ], function( qualifiedLocalKey, existenceCompareKey ) {
+                    q.whereColumn( qualifiedLocalKey, existenceCompareKey );
+                } );
+            } );
     }
 
     /**
      * Returns the fully-qualified local key.
      *
-     * @return  String
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function getQualifiedLocalKey() {
-        return variables.parent.retrieveQualifiedKeyName();
+    public array function getQualifiedLocalKeys() {
+        return variables.parent.retrieveQualifiedKeyNames();
     }
 
     /**
      * Get the key to compare in the existence query.
      *
-     * @return  String
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function getExistenceCompareKey() {
-        return getQualifiedForeignKeyName();
+    public array function getExistenceCompareKeys() {
+        return getQualifiedForeignKeyNames();
     }
 
     /**
@@ -281,6 +293,76 @@ component {
     private any function tap( required any value, required any callback ) {
         arguments.callback( arguments.value );
         return arguments.value;
+    }
+
+    /**
+     * Ensures the return value is an array, either by returning an array
+     * or by returning the value wrapped in an array.
+     *
+     * @value        The value to ensure is an array.
+     *
+     * @doc_generic  any
+     * @return       [any]
+     */
+    private array function arrayWrap( required any value ) {
+        return isArray( arguments.value ) ? arguments.value : [
+            arguments.value
+        ];
+    }
+
+    private array function arrayZipEach(
+        required array arrays,
+        required any callback
+    ) {
+        if ( arguments.arrays.isEmpty() ) {
+            return arguments.arrays;
+        }
+
+        var lengths = arguments.arrays.map( function( arr ) {
+            return arr.len();
+        } );
+        if ( unique( lengths ).len() > 1 ) {
+            throw(
+                type = "ArrayZipLengthMismatch",
+                message = "The arrays do not have the same length. Lengths: [#serializeJSON( lengths )#]"
+            );
+        }
+
+        for ( var i = 1; i <= arguments.arrays[ 1 ].len(); i++ ) {
+            var args = {};
+            for ( var j = 1; j <= arguments.arrays.len(); j++ ) {
+                args[ j ] = arguments.arrays[ j ][ i ];
+            }
+            callback( argumentCollection = args );
+        }
+
+        return arguments.arrays;
+    }
+
+    /**
+     * Throws an exception if the number of values passed in does not
+     * match the number of keys passed in.
+     *
+     * @values  An array of values to check the length matches
+     *
+     * @throws  KeyLengthMismatch
+     *
+     * @return  void
+     */
+    public void function guardAgainstKeyLengthMismatch(
+        required array actual,
+        required any expectedLength
+    ) {
+        if ( isArray( arguments.expectedLength ) ) {
+            arguments.expectedLength = arguments.expectedLength.len();
+        }
+
+        if ( arguments.actual.len() != expectedLength ) {
+            throw(
+                type = "KeyLengthMismatch",
+                message = "The number of values passed in [#arguments.actual.len()#] does not match the number expected [#expectedLength#]."
+            );
+        }
     }
 
 }

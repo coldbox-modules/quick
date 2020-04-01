@@ -114,7 +114,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var newPost = getInstance( "Post" );
                 newPost.setBody( "A new post by me!" );
                 var user = getInstance( "User" ).find( 1 );
-                newPost.setAuthor( user.keyValue() ).save();
+                newPost.setAuthor( user.keyValues() ).save();
                 expect( newPost.retrieveAttribute( "user_id" ) ).toBe(
                     user.getId()
                 );
@@ -153,6 +153,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         .posts()
                         .count()
                 ).toBe( 1 );
+            } );
+
+            it( "can have a relationship with a composite foreign key", function() {
+                var compositeChild = getInstance( "CompositeChild" ).findOrFail(
+                    1
+                );
+                expect( compositeChild.getParent() ).toBeInstanceOf(
+                    "Composite"
+                );
+                expect( compositeChild.getParent().keyValues() ).toBe( [ 1, 2 ] );
             } );
         } );
     }

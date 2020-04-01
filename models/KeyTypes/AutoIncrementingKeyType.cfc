@@ -12,6 +12,12 @@ component implements="KeyType" {
      * @return   void
      */
     public void function preInsert( required any entity ) {
+        if ( arguments.entity.keyNames().len() > 1 ) {
+            throw(
+                type = "InvalidKeyLength",
+                message = "AutoIncrementingKeyType cannot be used with composite primary keys."
+            );
+        }
         return;
     }
 
@@ -27,17 +33,15 @@ component implements="KeyType" {
         required any entity,
         required struct result
     ) {
+        var keyName = arguments.entity.keyNames()[ 1 ];
         var generatedKey = arguments.result.result.keyExists(
-            arguments.entity.keyName()
-        ) ? arguments.result.result[ arguments.entity.keyName() ] : arguments.result.result.keyExists(
+            keyName
+        ) ? arguments.result.result[ keyName ] : arguments.result.result.keyExists(
             "generated_key"
         ) ? arguments.result.result[ "generated_key" ] : arguments.result.result[
             "generatedKey"
         ];
-        arguments.entity.assignAttribute(
-            arguments.entity.keyName(),
-            generatedKey
-        );
+        arguments.entity.assignAttribute( keyName, generatedKey );
     }
 
 }

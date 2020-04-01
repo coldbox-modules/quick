@@ -242,9 +242,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
                 var tagIds = [
-                    existingTags[ 1 ].keyValue(),
-                    newTagA.keyValue(),
-                    newTagB.keyValue()
+                    existingTags[ 1 ].keyValues(),
+                    newTagA.keyValues(),
+                    newTagB.keyValues()
                 ];
 
                 post.tags().sync( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
@@ -256,7 +256,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect(
                     post.getTags()
                         .map( function( tag ) {
-                            return tag.keyValue();
+                            return tag.keyValues();
                         } )
                         .toArray()
                 ).toBe( tagIds );
@@ -279,9 +279,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
                 var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
                 var tagIds = [
-                    existingTags[ 1 ].keyValue(),
-                    newTagA.keyValue(),
-                    newTagB.keyValue()
+                    existingTags[ 1 ].keyValues(),
+                    newTagA.keyValues(),
+                    newTagB.keyValues()
                 ];
 
                 post.setTags( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
@@ -293,7 +293,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect(
                     post.getTags()
                         .map( function( tag ) {
-                            return tag.keyValue();
+                            return tag.keyValues();
                         } )
                         .toArray()
                 ).toBe( tagIds );

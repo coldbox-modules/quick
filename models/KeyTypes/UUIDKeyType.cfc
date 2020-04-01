@@ -4,17 +4,18 @@
 component implements="KeyType" {
 
     /**
-     * Sets the primary key to a random UUID.
+     * Sets the primary keys to random UUIDs.
      *
      * @entity   The entity that is being inserted.
      *
      * @return   void
      */
     public void function preInsert( required any entity ) {
-        arguments.entity.assignAttribute(
-            arguments.entity.keyName(),
-            createUUID()
-        );
+        arguments.entity
+            .keyNames()
+            .each( function( keyName ) {
+                entity.assignAttribute( keyName, createUUID() );
+            } );
     }
 
     /**

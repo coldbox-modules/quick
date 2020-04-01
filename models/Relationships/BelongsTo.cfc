@@ -38,12 +38,12 @@ component extends="quick.models.Relationships.BaseRelationship" {
         required string relationName,
         required string relationMethodName,
         required any parent,
-        required string foreignKey,
-        required string ownerKey,
+        required array foreignKeys,
+        required array ownerKeys,
         boolean withConstraints = true
     ) {
-        variables.ownerKey = arguments.ownerKey;
-        variables.foreignKey = arguments.foreignKey;
+        variables.ownerKeys = arguments.ownerKeys;
+        variables.foreignKeys = arguments.foreignKeys;
         variables.child = arguments.parent;
 
         return super.init(
@@ -94,10 +94,14 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  void
      */
     public void function addConstraints() {
-        variables.related.where(
-            variables.related.qualifyColumn( variables.ownerKey ),
-            variables.child.retrieveAttribute( variables.foreignKey )
-        );
+        variables.related.where( function( q ) {
+            arrayZipEach( [ variables.ownerKeys, variables.foreignKeys ], function( ownerKey, foreignKey ) {
+                q.where(
+                    variables.related.qualifyColumn( ownerKey ),
+                    variables.child.retrieveAttribute( foreignKey )
+                );
+            } );
+        } );
     }
 
     /**
@@ -108,10 +112,18 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return    quick.models.Relationships.BelongsTo
      */
     public BelongsTo function addEagerConstraints( required array entities ) {
-        variables.related.whereIn(
-            variables.related.qualifyColumn( variables.ownerKey ),
-            getEagerEntityKeys( arguments.entities )
-        );
+        variables.related.where( function( q1 ) {
+            getEagerEntityKeys( entities ).each( function( keys ) {
+                q1.orWhere( function( q2 ) {
+                    arrayZipEach( [ variables.ownerKeys, keys ], function( ownerKey, key ) {
+                        q2.where(
+                            variables.related.qualifyColumn( ownerKey ),
+                            key
+                        );
+                    } );
+                } );
+            } );
+        } );
         return this;
     }
 
@@ -126,23 +138,46 @@ component extends="quick.models.Relationships.BaseRelationship" {
     public array function getEagerEntityKeys( required array entities ) {
         return arguments.entities
             .reduce( function( keys, entity ) {
-                if (
-                    !isNull(
-                        arguments.entity.retrieveAttribute(
-                            variables.foreignKey
-                        )
-                    )
-                ) {
-                    var key = arguments.entity.retrieveAttribute(
-                        variables.foreignKey
-                    );
-                    if ( key != "" ) {
-                        arguments.keys[ key ] = {};
-                    }
+                var values = variables.foreignKeys
+                    .map( function( foreignKey ) {
+                        return {
+                            "foreignKey": foreignKey,
+                            "value": entity.retrieveAttribute( foreignKey )
+                        };
+                    } )
+                    .filter( function( map ) {
+                        if ( !structKeyExists( map, "value" ) ) {
+                            return false;
+                        }
+
+                        if ( isNull( map.value ) ) {
+                            return false;
+                        }
+
+                        if ( !entity.hasAttribute( map.foreignKey ) ) {
+                            return false;
+                        }
+
+                        if ( entity.isNullValue( map.foreignKey, map.value ) ) {
+                            return false;
+                        }
+
+                        return true;
+                    } )
+                    .map( function( map ) {
+                        return map.value;
+                    } );
+
+                if ( values.len() == variables.foreignKeys.len() ) {
+                    arguments.keys[ values.toList() ] = {};
                 }
+
                 return arguments.keys;
             }, {} )
-            .keyArray();
+            .keyArray()
+            .map( function( key ) {
+                return key.listToArray();
+            } );
     }
 
     /**
@@ -184,17 +219,21 @@ component extends="quick.models.Relationships.BaseRelationship" {
         required string relation
     ) {
         var dictionary = arguments.results.reduce( function( dict, result ) {
-            var key = arguments.result.retrieveAttribute(
-                variables.ownerKey
-            );
+            var key = variables.ownerKeys
+                .map( function( ownerKey ) {
+                    return result.retrieveAttribute( ownerKey );
+                } )
+                .toList();
             arguments.dict[ key ] = arguments.result;
             return arguments.dict;
         }, {} );
 
         arguments.entities.each( function( entity ) {
-            var foreignKeyValue = arguments.entity.retrieveAttribute(
-                variables.foreignKey
-            );
+            var foreignKeyValue = variables.foreignKeys
+                .map( function( foreignKey ) {
+                    return entity.retrieveAttribute( foreignKey );
+                } )
+                .toList();
             if ( structKeyExists( dictionary, foreignKeyValue ) ) {
                 arguments.entity.assignRelationship(
                     relation,
@@ -218,7 +257,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
      *
      * @return  quick.models.BaseEntity
      */
-    function applySetter() {
+    public any function applySetter() {
         return associate( argumentCollection = arguments );
     }
 
@@ -234,19 +273,28 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.BaseEntity
      */
     public any function associate( required any entity ) {
-        var ownerKeyValue = isSimpleValue( arguments.entity ) ? arguments.entity : arguments.entity.retrieveAttribute(
-            variables.ownerKey
-        );
-        variables.child.forceAssignAttribute(
-            variables.foreignKey,
-            ownerKeyValue
-        );
-        if ( !isSimpleValue( arguments.entity ) ) {
+        var ownerKeyValues = !isObject( arguments.entity ) ? arrayWrap(
+            arguments.entity
+        ) : variables.ownerKeys.map( function( ownerKey ) {
+            return entity.retrieveAttribute( ownerKey );
+        } );
+
+        guardAgainstKeyLengthMismatch( ownerKeyValues, variables.foreignKeys );
+
+        arrayZipEach( [ variables.foreignKeys, ownerKeyValues ], function( foreignKey, ownerKeyValue ) {
+            variables.child.forceAssignAttribute(
+                foreignKey,
+                ownerKeyValue
+            );
+        } );
+
+        if ( isObject( arguments.entity ) ) {
             variables.child.assignRelationship(
                 variables.relationMethodName,
                 arguments.entity
             );
         }
+
         return variables.child;
     }
 
@@ -257,31 +305,42 @@ component extends="quick.models.Relationships.BaseRelationship" {
      *
      * @return  quick.models.BaseEntity
      */
-    function dissociate() {
-        return variables.child
-            .forceClearAttribute(
-                name = variables.foreignKey,
-                setToNull = true
-            )
-            .clearRelationship( variables.relationMethodName );
+    public any function dissociate() {
+        return tap(
+            variables.child.clearRelationship(
+                variables.relationMethodName
+            ),
+            function( entity ) {
+                variables.foreignKeys.each( function( foreignKey ) {
+                    entity.forceClearAttribute(
+                        name = foreignKey,
+                        setToNull = true
+                    );
+                } );
+            }
+        );
     }
 
     /**
      * Returns the fully-qualified local key.
      *
-     * @return  String
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function getQualifiedLocalKey() {
-        return variables.related.retrieveQualifiedKeyName();
+    public array function getQualifiedLocalKeys() {
+        return variables.related.retrieveQualifiedKeyNames();
     }
 
     /**
      * Get the key to compare in the existence query.
      *
-     * @return  String
+     * @doc_generic  String
+     * @return       [String]
      */
-    public string function getExistenceCompareKey() {
-        return variables.parent.qualifyColumn( variables.foreignKey );
+    public array function getExistenceCompareKeys() {
+        return variables.foreignKeys.map( function( foreignKey ) {
+            return variables.parent.qualifyColumn( foreignKey );
+        } );
     }
 
 }

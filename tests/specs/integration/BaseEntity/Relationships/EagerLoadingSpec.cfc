@@ -38,6 +38,30 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 }
             } );
 
+            it( "can eager load a belongs to relationship using a composite key", function() {
+                var compositeChildren = getInstance( "CompositeChild" )
+                    .with( "parent" )
+                    .get();
+                expect( compositeChildren ).toBeArray();
+                expect( compositeChildren ).toHaveLength(
+                    2,
+                    "2 entities should have been loaded"
+                );
+                expect( compositeChildren[ 1 ].getParent() ).notToBeNull();
+                expect( compositeChildren[ 1 ].getParent() ).toBeInstanceOf(
+                    "Composite"
+                );
+                expect( compositeChildren[ 1 ].getParent().keyValues() ).toBe( [ 1, 2 ] );
+                expect( compositeChildren[ 2 ].getParent() ).toBeNull();
+
+                if ( arrayLen( variables.queries ) != 2 ) {
+                    expect( variables.queries ).toHaveLength(
+                        2,
+                        "Only two queries should have been executed. #arrayLen( variables.queries )# were instead."
+                    );
+                }
+            } );
+
             it( "does not eager load a belongs to empty record set", function() {
                 var posts = getInstance( "Post" )
                     .whereNull( "createdDate" )

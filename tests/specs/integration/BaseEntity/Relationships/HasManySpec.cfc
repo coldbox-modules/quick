@@ -41,7 +41,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( newPost.isLoaded() ).toBeTrue();
 
                 var user = getInstance( "User" ).find( 1 );
-                newPost = user.posts().save( newPost.keyValue() );
+                newPost = user.posts().save( newPost.keyValues() );
                 expect( newPost.isLoaded() ).toBeTrue();
                 expect( newPost.getAuthor().getId() ).toBe( user.getId() );
             } );
@@ -78,7 +78,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 ;
 
                 var user = getInstance( "User" ).find( 1 );
-                var posts = user.posts().saveMany( [ newPostA.keyValue(), newPostB ] );
+                var posts = user.posts().saveMany( [ newPostA.keyValues(), newPostB ] );
 
                 expect( posts[ 1 ].isLoaded() ).toBeTrue();
                 expect( posts[ 1 ].getAuthor().getId() ).toBe( user.getId() );
@@ -101,7 +101,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 var posts = user.fresh().getPosts();
                 expect( posts ).toBeArray();
                 expect( posts ).toHaveLength( 1 );
-                expect( posts[ 1 ].keyValue() ).toBe( newPost.keyValue() );
+                expect( posts[ 1 ].keyValues() ).toBe( newPost.keyValues() );
             } );
 
             it( "can create new related entities directly", function() {
@@ -121,7 +121,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can first off of the relationship", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var post = user.posts().first();
-                expect( post.keyValue() ).toBe( 523526 );
+                expect( post.keyValues() ).toBe( [ 523526 ] );
             } );
 
             it( "can firstOrFail off of the relationship", function() {
@@ -134,7 +134,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             it( "can find off of the relationship", function() {
                 var user = getInstance( "User" ).find( 1 );
                 var post = user.posts().find( 523526 );
-                expect( post.keyValue() ).toBe( 523526 );
+                expect( post.keyValues() ).toBe( [ 523526 ] );
             } );
 
             it( "can findOrFail off of the relationship", function() {

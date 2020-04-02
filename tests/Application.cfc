@@ -123,7 +123,7 @@ component {
             INSERT INTO `videos` (`id`, `url`, `title`, `description`, `created_date`, `modified_date`) VALUES (1, 'https://www.youtube.com/watch?v=JDzIypmP0eo', 'Building KiteTail with Adam Wathan', 'Awesome live coding experience', '2017-06-28 02:07:36', '2017-06-30 12:17:24')
         " );
         queryExecute( "
-            INSERT INTO `videos` (`id`, `url`, `title`, `description`, `created_date`, `modified_date`) VALUES (2, 'https://www.youtube.com/watch?v=BgAlQuqzl8o', 'Cello Wars', 'Star Wars Cello Parody', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
+            INSERT INTO `videos` (`id`, `url`, `title`, `description`, `created_date`, `modified_date`) VALUES (1245, 'https://www.youtube.com/watch?v=BgAlQuqzl8o', 'Cello Wars', 'Star Wars Cello Parody', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
         " );
         queryExecute( "
             CREATE TABLE `comments` (
@@ -143,7 +143,7 @@ component {
             INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (2, 'I thought this post was not so good', 321, 'Post', '2017-07-04 04:14:22', '2017-07-04 04:14:22')
         " );
         queryExecute( "
-            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (3, 'What a great video! So fun!', 2, 'Video', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (3, 'What a great video! So fun!', 1245, 'Video', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
         " );
         queryExecute( "
             CREATE TABLE `tags` (

@@ -80,6 +80,22 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         return this;
     }
 
+    /**
+     * Gets the query used to check for relation existance.
+     *
+     * @base    The base entity for the query.
+     *
+     * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
+     */
+    public any function addCompareConstraints( any base = variables.related ) {
+        return tap( super.addCompareConstraints( arguments.base ), function( q ) {
+            q.where(
+                variables.related.qualifyColumn( variables.morphType ),
+                variables.morphClass
+            );
+        } );
+    }
+
     public void function applyThroughJoin( required any base ) {
         arguments.base.join( variables.parent.tableName(), function( j ) {
             arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
@@ -88,7 +104,9 @@ component extends="quick.models.Relationships.HasOneOrMany" {
                     variables.parent.qualifyColumn( localKey )
                 );
                 j.where(
-                    variables.related.qualifyColumn( variables.morphType ),
+                    variables.related.qualifyColumn(
+                        variables.morphType
+                    ),
                     variables.morphClass
                 );
             } );

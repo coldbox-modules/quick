@@ -1897,77 +1897,18 @@ component accessors="true" {
      * @return              quick.models.Relationships.HasManyThrough
      */
     private HasManyThrough function hasManyThrough(
-        required string relationName,
-        required any intermediates,
-        struct foreignKeys = {},
-        struct localKeys = {},
+        required any relationships,
         string relationMethodName
     ) {
-        var related = variables._wirebox.getInstance(
-            arguments.relationName
-        );
+        arguments.relationships = arrayWrap( arguments.relationships );
 
-        arguments.intermediates = arrayWrap( arguments.intermediates );
-
-        var intermediatesMap = arguments.intermediates.reduce( function( map, intermediate ) {
-            var entity = !isSimpleValue( intermediate ) ? intermediate : variables._wirebox.getInstance(
-                intermediate
-            );
-            map[ entity.mappingName() ] = entity;
+        var previousEntity = this;
+        var relationshipsMap = arguments.relationships.reduce( function( map, relation ) {
+            var relationship = invoke( previousEntity, relation );
+            map[ relation ] = relationship;
+            previousEntity = relationship.getRelated();
             return map;
         }, structNew( "ordered" ) );
-
-        // param local key for parent
-        if ( !arguments.localKeys.keyExists( mappingName() ) ) {
-            arguments.localKeys[ mappingName() ] = keyNames();
-        }
-        arguments.localKeys[ mappingName() ] = arrayWrap(
-            arguments.localKeys[ mappingName() ]
-        );
-
-        // param foreign and local keys for intermediates
-        arguments.intermediates.each( function( mapping, index ) {
-            var entity = intermediatesMap[ mapping ];
-            if ( !foreignKeys.keyExists( mapping ) ) {
-                var previousEntity = index == 1 ? this : intermediatesMap[
-                    intermediates[ index - 1 ]
-                ];
-                var foreignKeyNames = entity
-                    .keyNames()
-                    .map( function( keyName ) {
-                        return previousEntity.entityName() & keyName;
-                    } );
-                foreignKeys[ mapping ] = foreignKeyNames;
-            }
-
-            if ( !localKeys.keyExists( mapping ) ) {
-                localKeys[ mapping ] = entity.keyNames();
-            }
-
-
-            foreignKeys[ mapping ] = arrayWrap( foreignKeys[ mapping ] );
-            localKeys[ mapping ] = arrayWrap( localKeys[ mapping ] );
-        } );
-
-        // param foreign key for related
-        if (
-            !arguments.foreignKeys.keyExists(
-                related.mappingName()
-            )
-        ) {
-            var previousEntity = intermediatesMap[
-                arguments.intermediates[ arguments.intermediates.len() ]
-            ];
-            var foreignKeyNames = related
-                .keyNames()
-                .map( function( keyName ) {
-                    return previousEntity.entityName() & keyName;
-                } );
-            arguments.foreignKeys[ related.mappingName() ] = foreignKeyNames;
-        }
-        arguments.foreignKeys[ related.mappingName() ] = arrayWrap(
-            arguments.foreignKeys[ related.mappingName() ]
-        );
 
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
@@ -1976,14 +1917,12 @@ component accessors="true" {
         return variables._wirebox.getInstance(
             name = "HasManyThrough@quick",
             initArguments = {
-                "related": related,
-                "relationName": arguments.relationName,
+                "related": relationshipsMap[ relationships[ relationships.len() ] ].getRelated(),
+                "relationName": relationships[ relationships.len() ],
                 "relationMethodName": arguments.relationMethodName,
                 "parent": this,
-                "intermediates": arguments.intermediates,
-                "intermediatesMap": intermediatesMap,
-                "foreignKeys": arguments.foreignKeys,
-                "localKeys": arguments.localKeys,
+                "relationships": arguments.relationships,
+                "relationshipsMap": relationshipsMap,
                 "withConstraints": !variables._withoutRelationshipConstraints
             }
         );

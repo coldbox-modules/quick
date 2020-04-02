@@ -9,6 +9,9 @@ component
     accessors="true"
 {
 
+    property name="foreignKeys";
+    property name="localKeys";
+
     /**
      * Creates a HasOneOrMany relationship.
      *

@@ -5,17 +5,44 @@ component extends="quick.models.BaseEntity" {
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
 
+    function users() {
+        return hasMany( "User" );
+    }
+
     function posts() {
+        return hasManyThrough( [ "users", "posts" ] );
+    }
+
+    function tags() {
         return hasManyThrough(
-            relationName = "Post",
-            intermediates = "User",
-            foreignKeys = {
-                "Post": "user_id"
-                // `User` is left out here to show the defaults working
+            "Tag",
+            [ "User", "Post" ],
+            {
+                "User": "countryId",
+                "Post": "user_id",
+                "Tag": "custom_post_pk"
             },
-            localKeys = {
+            {
                 "User": "id",
-                "Post": "post_pk"
+                "Post": "post_pk",
+                "Country": "id"
+            }
+        );
+    }
+
+    function comments() {
+        return hasManyThrough(
+            "Comment",
+            [ "User", "Post" ],
+            {
+                "User": "countryId",
+                "Post": "user_id",
+                "Comment": "commentable_id"
+            },
+            {
+                "User": "id",
+                "Post": "post_pk",
+                "Comment": "id"
             }
         );
     }

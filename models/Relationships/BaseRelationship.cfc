@@ -4,7 +4,7 @@
  *
  * @doc_abstract true
  */
-component {
+component accessors="true" {
 
     /**
      * The WireBox Injector.
@@ -20,6 +20,11 @@ component {
      * Flag to return a default model if the relation returns null.
      */
     property name="defaultAttributes";
+
+    property name="related";
+    property name="relationName";
+    property name="relationMethodName";
+    property name="parent";
 
     /**
      * Creates a new relationship component to query and retrieve results.

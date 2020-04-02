@@ -14,7 +14,7 @@
  * }
  * ```
  */
-component extends="quick.models.Relationships.HasOneOrMany" {
+component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 
     /**
      * Returns the result of the relationship.
@@ -61,6 +61,28 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         required string relation
     ) {
         return matchMany( argumentCollection = arguments );
+    }
+
+    public void function applyThroughJoin( required any base ) {
+        arguments.base.join( variables.parent.tableName(), function( j ) {
+            arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
+                j.on(
+                    variables.related.qualifyColumn( foreignKey ),
+                    variables.parent.qualifyColumn( localKey )
+                );
+            } );
+        } );
+    }
+
+    public void function applyThroughConstraints( required any base ) {
+        arguments.base.where( function( q ) {
+            arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
+                q.where(
+                    variables.related.qualifyColumn( foreignKey ),
+                    variables.parent.retrieveAttribute( localKey )
+                );
+            } );
+        } );
     }
 
 }

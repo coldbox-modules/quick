@@ -30,7 +30,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 );
             } );
 
-            xit( "can get the related entities through any number of intermediate entities including a belongsToMany relationship", function() {
+            it( "can get the related entities through any number of intermediate entities including a belongsToMany relationship", function() {
                 var country = getInstance( "Country" ).findOrFail(
                     "02B84D66-0AA0-F7FB-1F71AFC954843861"
                 );
@@ -43,7 +43,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( tags[ 2 ].getName() ).toBe( "music" );
             } );
 
-            xit( "can get the related entities through any number of intermediate entities including a polymorphic relationship", function() {
+            it( "can get the related entities through any number of intermediate entities including a polymorphic relationship", function() {
                 var country = getInstance( "Country" ).findOrFail(
                     "02B84D66-0AA0-F7FB-1F71AFC954843861"
                 );

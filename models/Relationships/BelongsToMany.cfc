@@ -189,8 +189,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
      *
      * @return  quick.models.Relationships.BelongsToMany
      */
-    public BelongsToMany function performJoin() {
-        variables.related.join( variables.table, function( j ) {
+    public BelongsToMany function performJoin( any base = variables.related ) {
+        arguments.base.join( variables.table, function( j ) {
             arrayZipEach( [ variables.relatedKeys, getQualifiedRelatedPivotKeyNames() ], function( relatedKey, pivotKey ) {
                 j.on( variables.related.qualifyColumn( relatedKey ), pivotKey );
             } );
@@ -437,6 +437,16 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     public array function getQualifiedForeignKeyNames() {
         return getQualifiedForeignPivotKeyNames();
+    }
+
+    public void function applyThroughJoin( required any base ) {
+        arguments.base.distinct();
+        performJoin( arguments.base );
+        arguments.base.join( variables.parent.tableName(), function( j ) {
+            arrayZipEach( [ variables.parentKeys, getQualifiedForeignPivotKeyNames() ], function( parentKey, pivotKey ) {
+                j.on( variables.parent.qualifyColumn( parentKey ), pivotKey );
+            } );
+        } );
     }
 
 }

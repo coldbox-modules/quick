@@ -14,37 +14,11 @@ component extends="quick.models.BaseEntity" {
     }
 
     function tags() {
-        return hasManyThrough(
-            "Tag",
-            [ "User", "Post" ],
-            {
-                "User": "countryId",
-                "Post": "user_id",
-                "Tag": "custom_post_pk"
-            },
-            {
-                "User": "id",
-                "Post": "post_pk",
-                "Country": "id"
-            }
-        );
+        return hasManyThrough( [ "users", "posts", "tags" ] );
     }
 
     function comments() {
-        return hasManyThrough(
-            "Comment",
-            [ "User", "Post" ],
-            {
-                "User": "countryId",
-                "Post": "user_id",
-                "Comment": "commentable_id"
-            },
-            {
-                "User": "id",
-                "Post": "post_pk",
-                "Comment": "id"
-            }
-        );
+        return hasManyThrough( [ "users", "posts", "comments" ] );
     }
 
     function keyType() {

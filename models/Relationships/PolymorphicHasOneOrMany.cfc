@@ -80,4 +80,19 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         return this;
     }
 
+    public void function applyThroughJoin( required any base ) {
+        arguments.base.join( variables.parent.tableName(), function( j ) {
+            arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
+                j.on(
+                    variables.related.qualifyColumn( foreignKey ),
+                    variables.parent.qualifyColumn( localKey )
+                );
+                j.where(
+                    variables.related.qualifyColumn( variables.morphType ),
+                    variables.morphClass
+                );
+            } );
+        } );
+    }
+
 }

@@ -29,7 +29,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
             describe( "mapping name", function() {
                 it( "takes the mapping name from the file name", function() {
                     var post = getInstance( "Post" );
-                    expect( post.get_Mapping() ).toBe( "Post" );
+                    expect( post.mappingName() ).toBe( "Post" );
                 } );
             } );
 

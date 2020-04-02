@@ -29,13 +29,10 @@ component
      * @relationName        The WireBox mapping for the related entity.
      * @relationMethodName  The method name called to retrieve this relationship.
      * @parent              The parent entity instance for the relationship.
-     * @intermediate        The intermediate entity instance for the relationship.
-     * @firstKeys           The key on the intermediate table linking it to the
-     *                      parent entity.
-     * @secondKeys          The key on the related entity linking it to the
-     *                      intermediate entity.
-     * @localKeys           The local primary key on the parent entity.
-     * @secondLocalKeys     The local primary key on the intermediate entity.
+     * @intermediates       An array of intermediate entity mappings.
+     * @intermediatesMap    A dictionary of entity mappings to entity component.
+     * @foreignKeys         A dictionary of entity mappings to foreign keys.
+     * @localKeys           A dictionary of entity mappings to local keys.
      *
      * @returns             quick.models.Relationships.HasManyThrough
      */
@@ -44,26 +41,25 @@ component
         required string relationName,
         required string relationMethodName,
         required any parent,
-        required any intermediate,
-        required array firstKeys,
-        required array secondKeys,
-        required array localKeys,
-        required array secondLocalKeys,
+        required array intermediates,
+        required struct intermediatesMap,
+        required struct foreignKeys,
+        required struct localKeys,
         boolean withConstraints = true
     ) {
-        variables.throughParent = arguments.intermediate;
-        variables.farParent = arguments.parent;
-
-        variables.firstKeys = arguments.firstKeys;
-        variables.secondKeys = arguments.secondKeys;
+        variables.intermediates = arguments.intermediates;
+        variables.intermediatesMap = arguments.intermediatesMap;
+        variables.foreignKeys = arguments.foreignKeys;
         variables.localKeys = arguments.localKeys;
-        variables.secondLocalKeys = arguments.secondLocalKeys;
+        variables.closestToParent = variables.intermediatesMap[
+            variables.intermediates[ 1 ]
+        ];
 
         return super.init(
             related = arguments.related,
             relationName = arguments.relationName,
             relationMethodName = arguments.relationMethodName,
-            parent = arguments.intermediate,
+            parent = arguments.parent,
             withConstraints = arguments.withConstraints
         );
     }
@@ -76,12 +72,20 @@ component
     public HasManyThrough function addConstraints() {
         performJoin();
         variables.related.where( function( q ) {
-            arrayZipEach( [ getQualifiedFirstKeyNames(), variables.localKeys ], function( firstKeyName, localKey ) {
-                q.where(
-                    firstKeyName,
-                    variables.farParent.retrieveAttribute( localKey )
-                );
-            } );
+            arrayZipEach(
+                [
+                    variables.foreignKeys[ variables.closestToParent.mappingName() ],
+                    variables.localKeys[ variables.parent.mappingName() ]
+                ],
+                function( foreignKey, localKey ) {
+                    q.where(
+                        variables.closestToParent.qualifyColumn(
+                            foreignKey
+                        ),
+                        variables.parent.retrieveAttribute( localKey )
+                    );
+                }
+            );
         } );
         return this;
     }
@@ -92,21 +96,31 @@ component
      * @return  quick.models.Relationships.HasManyThrough
      */
     public HasManyThrough function performJoin( any base = variables.related ) {
-        arguments.base
-            .join( variables.throughParent.tableName(), function( j ) {
-                arrayZipEach( [ getQualifiedParentKeyNames(), getQualifiedFarKeyNames() ], function( parentKeyName, farKeyName ) {
-                    j.on( parentKeyName, farKeyName );
-                } );
-            } )
-            .when( true, function( q ) {
-                variables.firstKeys.each( function( firstKey ) {
-                    q.addSelect(
-                        variables.throughParent.qualifyColumn(
-                            firstKey
-                        )
-                    );
-                } );
+        // no arrayReverse in ACF means for loops. :-(
+        for ( var index = variables.intermediates.len(); index > 0; index-- ) {
+            var intermediateMapping = variables.intermediates[ index ];
+            var intermediateEntity = variables.intermediatesMap[
+                intermediateMapping
+            ];
+            var previousEntity = index == variables.intermediates.len() ? variables.related : variables.intermediatesMap[
+                variables.intermediates[ index + 1 ]
+            ];
+            var previousEntityMapping = previousEntity.mappingName();
+            arguments.base.join( intermediateEntity.tableName(), function( j ) {
+                arrayZipEach(
+                    [
+                        variables.localKeys[ intermediateMapping ],
+                        variables.foreignKeys[ previousEntityMapping ]
+                    ],
+                    function( localKey, foreignKey ) {
+                        j.on(
+                            intermediateEntity.qualifyColumn( localKey ),
+                            previousEntity.qualifyColumn( foreignKey )
+                        );
+                    }
+                );
             } );
+        }
         return this;
     }
 
@@ -196,15 +210,43 @@ component
         required array entities
     ) {
         performJoin();
-        variables.related.where( function( q1 ) {
-            getKeys( entities, variables.localKeys ).each( function( keys ) {
-                q1.orWhere( function( q2 ) {
-                    arrayZipEach( [ getQualifiedFirstKeyNames(), keys ], function( firstKeyName, keyValue ) {
-                        q2.where( firstKeyName, keyValue );
+        var qualifiedForeignKeyNames = variables.foreignKeys[
+            variables.closestToParent.mappingName()
+        ].map( function( foreignKey, i ) {
+            return ( i != 1 ? "," : "" ) & variables.closestToParent.qualifyColumn(
+                foreignKey
+            );
+        } );
+        variables.related
+            .selectRaw(
+                "CONCAT(#qualifiedForeignKeyNames.toList()#) AS __QuickThroughKey__"
+            )
+            .appendReadOnlyAttribute( "__QuickThroughKey__" )
+            .where( function( q1 ) {
+                getKeys(
+                    entities,
+                    variables.localKeys[ variables.parent.mappingName() ]
+                ).each( function( keys ) {
+                    q1.orWhere( function( q2 ) {
+                        arrayZipEach(
+                            [
+                                variables.foreignKeys[
+                                    variables.closestToParent.mappingName()
+                                ],
+                                keys
+                            ],
+                            function( foreignKey, keyValue ) {
+                                q2.where(
+                                    variables.closestToParent.qualifyColumn(
+                                        foreignKey
+                                    ),
+                                    keyValue
+                                );
+                            }
+                        );
                     } );
                 } );
             } );
-        } );
         return this;
     }
 
@@ -244,7 +286,7 @@ component
     ) {
         var dictionary = buildDictionary( arguments.results );
         arguments.entities.each( function( entity ) {
-            var key = variables.localKeys
+            var key = variables.localKeys[ variables.parent.mappingName() ]
                 .map( function( localKey ) {
                     return entity.retrieveAttribute( localKey );
                 } )
@@ -266,11 +308,7 @@ component
      */
     public struct function buildDictionary( required array results ) {
         return arguments.results.reduce( function( dict, result ) {
-            var key = variables.firstKeys
-                .map( function( firstKey ) {
-                    return result.retrieveAttribute( firstKey );
-                } )
-                .toList();
+            var key = result.retrieveAttribute( "__QuickThroughKey__" );
             if ( !structKeyExists( arguments.dict, key ) ) {
                 arguments.dict[ key ] = [];
             }
@@ -290,14 +328,22 @@ component
         return tap( arguments.base.select(), function( q ) {
             performJoin( q );
             q.where( function( q2 ) {
-                arrayZipEach( [ variables.localKeys, variables.firstKeys ], function( localKey, firstKey ) {
-                    q2.whereColumn(
-                        variables.farParent.qualifyColumn( localKey ),
-                        variables.throughParent.qualifyColumn(
-                            firstKey
-                        )
-                    );
-                } );
+                arrayZipEach(
+                    [
+                        variables.localKeys[ variables.parent.mappingName() ],
+                        variables.foreignKeys[
+                            variables.closestToParent.mappingName()
+                        ]
+                    ],
+                    function( localKey, foreignKey ) {
+                        q2.whereColumn(
+                            variables.parent.qualifyColumn( localKey ),
+                            variables.closestToParent.qualifyColumn(
+                                foreignKey
+                            )
+                        );
+                    }
+                );
             } );
         } );
     }

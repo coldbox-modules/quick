@@ -273,6 +273,15 @@ component accessors="true" {
     }
 
     /**
+     * Returns the WireBox mapping for this entity.
+     *
+     * @return  String
+     */
+    public string function mappingName() {
+        return variables._mapping;
+    }
+
+    /**
      * Returns the table name for this entity.
      *
      * @return  String
@@ -1889,41 +1898,76 @@ component accessors="true" {
      */
     private HasManyThrough function hasManyThrough(
         required string relationName,
-        required string intermediateName,
-        any firstKey,
-        any secondKey,
-        any localKey,
-        any secondLocalKey,
+        required any intermediates,
+        struct foreignKeys = {},
+        struct localKeys = {},
         string relationMethodName
     ) {
         var related = variables._wirebox.getInstance(
             arguments.relationName
         );
-        var intermediate = variables._wirebox.getInstance(
-            arguments.intermediateName
+
+        arguments.intermediates = arrayWrap( arguments.intermediates );
+
+        var intermediatesMap = arguments.intermediates.reduce( function( map, intermediate ) {
+            var entity = !isSimpleValue( intermediate ) ? intermediate : variables._wirebox.getInstance(
+                intermediate
+            );
+            map[ entity.mappingName() ] = entity;
+            return map;
+        }, structNew( "ordered" ) );
+
+        // param local key for parent
+        if ( !arguments.localKeys.keyExists( mappingName() ) ) {
+            arguments.localKeys[ mappingName() ] = keyNames();
+        }
+        arguments.localKeys[ mappingName() ] = arrayWrap(
+            arguments.localKeys[ mappingName() ]
         );
 
-        if ( isNull( arguments.firstKey ) ) {
-            arguments.firstKey = keyNames().map( function( keyName ) {
-                return entityName() & keyName;
-            } );
-        }
-        arguments.firstKey = arrayWrap( arguments.firstKey );
+        // param foreign and local keys for intermediates
+        arguments.intermediates.each( function( mapping, index ) {
+            var entity = intermediatesMap[ mapping ];
+            if ( !foreignKeys.keyExists( mapping ) ) {
+                var previousEntity = index == 1 ? this : intermediatesMap[
+                    intermediates[ index - 1 ]
+                ];
+                var foreignKeyNames = entity
+                    .keyNames()
+                    .map( function( keyName ) {
+                        return previousEntity.entityName() & keyName;
+                    } );
+                foreignKeys[ mapping ] = foreignKeyNames;
+            }
 
-        if ( isNull( arguments.secondKey ) ) {
-            arguments.secondKey = intermediate
+            if ( !localKeys.keyExists( mapping ) ) {
+                localKeys[ mapping ] = entity.keyNames();
+            }
+
+
+            foreignKeys[ mapping ] = arrayWrap( foreignKeys[ mapping ] );
+            localKeys[ mapping ] = arrayWrap( localKeys[ mapping ] );
+        } );
+
+        // param foreign key for related
+        if (
+            !arguments.foreignKeys.keyExists(
+                related.mappingName()
+            )
+        ) {
+            var previousEntity = intermediatesMap[
+                arguments.intermediates[ arguments.intermediates.len() ]
+            ];
+            var foreignKeyNames = related
                 .keyNames()
                 .map( function( keyName ) {
-                    return intermediate.entityName() & keyName;
+                    return previousEntity.entityName() & keyName;
                 } );
+            arguments.foreignKeys[ related.mappingName() ] = foreignKeyNames;
         }
-        arguments.secondKey = arrayWrap( arguments.secondKey );
-
-        param arguments.localKey = keyNames();
-        arguments.localKey = arrayWrap( arguments.localKey );
-
-        param arguments.secondLocalKey = intermediate.keyNames();
-        arguments.secondLocalKey = arrayWrap( arguments.secondLocalKey );
+        arguments.foreignKeys[ related.mappingName() ] = arrayWrap(
+            arguments.foreignKeys[ related.mappingName() ]
+        );
 
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
@@ -1936,11 +1980,10 @@ component accessors="true" {
                 "relationName": arguments.relationName,
                 "relationMethodName": arguments.relationMethodName,
                 "parent": this,
-                "intermediate": intermediate,
-                "firstKeys": arguments.firstKey,
-                "secondKeys": arguments.secondKey,
-                "localKeys": arguments.localKey,
-                "secondLocalKeys": arguments.secondLocalKey,
+                "intermediates": arguments.intermediates,
+                "intermediatesMap": intermediatesMap,
+                "foreignKeys": arguments.foreignKeys,
+                "localKeys": arguments.localKeys,
                 "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
@@ -2276,17 +2319,11 @@ component accessors="true" {
         required string name,
         required any subselect
     ) {
-        if (
-            !variables._attributes.keyExists(
-                retrieveAliasForColumn( arguments.name )
-            )
-        ) {
-            variables._attributes[ arguments.name ] = arguments.name;
-            variables._meta.attributes[ arguments.name ] = paramAttribute( { "name": arguments.name, "update": false, "insert": false } );
-            variables._meta.originalMetadata.properties.append(
-                variables._meta.attributes[ arguments.name ]
-            );
-        }
+        appendReadOnlyAttribute(
+            name = arguments.name,
+            update = false,
+            insert = false
+        );
 
         if (
             retrieveQuery().getColumns().isEmpty() ||
@@ -2975,6 +3012,29 @@ component accessors="true" {
             arguments.acc[ arguments.prop.name ] = arguments.prop.casts;
             return arguments.acc;
         }, {} );
+    }
+
+    /**
+     * Creates the internal attribute struct from an existing struct.
+     * The only required field on the passed in struct is `name`.
+     *
+     * @prop    The attribute struct to param.
+     *
+     * @return  An attribute struct with all the keys needed.
+     */
+    public any function appendReadOnlyAttribute( required string name ) {
+        if (
+            !variables._attributes.keyExists(
+                retrieveAliasForColumn( arguments.name )
+            )
+        ) {
+            variables._attributes[ arguments.name ] = arguments.name;
+            variables._meta.attributes[ arguments.name ] = paramAttribute( { "name": arguments.name, "update": false, "insert": false } );
+            variables._meta.originalMetadata.properties.append(
+                variables._meta.attributes[ arguments.name ]
+            );
+        }
+        return this;
     }
 
     /**

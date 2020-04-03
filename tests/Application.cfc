@@ -74,6 +74,62 @@ component {
         " );
 
         queryExecute( "
+            CREATE TABLE `permissions` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `name` varchar(50) NOT NULL,
+                PRIMARY KEY (`id`)
+            )
+        " );
+
+        queryExecute( "
+            INSERT INTO `permissions` VALUES (1, 'MANAGE_USERS')
+        " );
+
+        queryExecute( "
+            INSERT INTO `permissions` VALUES (2, 'APPROVE_POSTS')
+        " );
+
+        queryExecute( "
+            CREATE TABLE `roles` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `name` varchar(50) NOT NULL,
+                PRIMARY KEY (`id`)
+            )
+        " );
+
+        queryExecute( "
+            INSERT INTO `roles` VALUES (1, 'ADMIN')
+        " );
+
+        queryExecute( "
+            INSERT INTO `roles` VALUES (2, 'MODERATOR')
+        " );
+
+        queryExecute( "
+            INSERT INTO `roles` VALUES (3, 'USER')
+        " );
+
+        queryExecute( "
+            CREATE TABLE `permissions_roles` (
+                `permissionId` int(11) NOT NULL,
+                `roleId` int(11) NOT NULL,
+                PRIMARY KEY (`permissionId`, `roleId`)
+            )
+        " );
+
+        queryExecute( "
+            INSERT INTO `permissions_roles` VALUES (1, 1)
+        " );
+
+        queryExecute( "
+            INSERT INTO `permissions_roles` VALUES (2, 1)
+        " );
+
+        queryExecute( "
+            INSERT INTO `permissions_roles` VALUES (2, 2)
+        " );
+
+        queryExecute( "
             CREATE TABLE `users` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `username` varchar(50) NOT NULL,
@@ -95,6 +151,7 @@ component {
               PRIMARY KEY (`id`)
             )
         " );
+
         queryExecute( "
           CREATE TABLE `externalThings` (
             `thingId` int(11) NOT NULL AUTO_INCREMENT,
@@ -116,6 +173,37 @@ component {
         queryExecute( "
             INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `type`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (4, 'elpete2', 'Another', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02BA2DB0-EB1E-3F85-5F283AB5E45608C6', 2, '2019-06-15 12:29:36', '2017-07-28 02:06:36', 'admin', '1234', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123')
         " );
+
+        queryExecute( "
+            CREATE TABLE `roles_users` (
+                `roleId` int(11) NOT NULL,
+                `userId` int(11) NOT NULL,
+                PRIMARY KEY (`roleId`, `userId`)
+            )
+        " );
+
+        queryExecute( "
+            INSERT INTO `roles_users` VALUES (1, 1)
+        " );
+        queryExecute( "
+            INSERT INTO `roles_users` VALUES (3, 1)
+        " );
+
+        queryExecute( "
+            INSERT INTO `roles_users` VALUES (3, 2)
+        " );
+
+        queryExecute( "
+            INSERT INTO `roles_users` VALUES (3, 3)
+        " );
+
+        queryExecute( "
+            INSERT INTO `roles_users` VALUES (2, 4)
+        " );
+        queryExecute( "
+            INSERT INTO `roles_users` VALUES (3, 4)
+        " );
+
         queryExecute( "
             CREATE TABLE `my_posts` (
               `post_pk` int(11) NOT NULL AUTO_INCREMENT,
@@ -162,19 +250,20 @@ component {
               `body` text NOT NULL,
               `commentable_id` int(11) NOT NULL,
               `commentable_type` varchar(50) NOT NULL,
+              `user_id` int(11) NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (`id`)
             )
         " );
         queryExecute( "
-            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (1, 'I thought this post was great', 1245, 'Post', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `user_id`, `created_date`, `modified_date`) VALUES (1, 'I thought this post was great', 1245, 'Post', 1, '2017-07-02 04:14:22', '2017-07-02 04:14:22')
         " );
         queryExecute( "
-            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (2, 'I thought this post was not so good', 321, 'Post', '2017-07-04 04:14:22', '2017-07-04 04:14:22')
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `user_id`, `created_date`, `modified_date`) VALUES (2, 'I thought this post was not so good', 321, 'Post', 2, '2017-07-04 04:14:22', '2017-07-04 04:14:22')
         " );
         queryExecute( "
-            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `created_date`, `modified_date`) VALUES (3, 'What a great video! So fun!', 1245, 'Video', '2017-07-02 04:14:22', '2017-07-02 04:14:22')
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `user_id`, `created_date`, `modified_date`) VALUES (3, 'What a great video! So fun!', 1245, 'Video', 1, '2017-07-02 04:14:22', '2017-07-02 04:14:22')
         " );
         queryExecute( "
             CREATE TABLE `tags` (

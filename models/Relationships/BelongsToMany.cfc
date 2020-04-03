@@ -46,6 +46,11 @@ component
     property name="foreignPivotKeys" type="array";
 
     /**
+     * The table suffix. Stored in case this is the `applyThroughConstraints` is called.
+     */
+    property name="tableSuffix" type="string";
+
+    /**
      * Creates a BelongsToMany relationship.
      *
      * @related             The related entity instance.
@@ -82,6 +87,7 @@ component
         variables.relatedKeys = arguments.relatedKeys;
         variables.relatedPivotKeys = arguments.relatedPivotKeys;
         variables.foreignPivotKeys = arguments.foreignPivotKeys;
+        variables.tablePrefix = "";
 
         return super.init(
             related = arguments.related,
@@ -250,7 +256,7 @@ component
      */
     public array function getQualifiedRelatedPivotKeyNames() {
         return variables.relatedPivotKeys.map( function( relatedPivotKey ) {
-            return variables.table & "." & relatedPivotKey;
+            return listLast( variables.table, " " ) & "." & relatedPivotKey;
         } );
     }
 
@@ -263,7 +269,7 @@ component
      */
     public array function getQualifiedForeignPivotKeyNames() {
         return variables.foreignPivotKeys.map( function( foreignPivotKey ) {
-            return variables.table & "." & foreignPivotKey;
+            return listLast( variables.table, " " ) & "." & foreignPivotKey;
         } );
     }
 
@@ -466,6 +472,22 @@ component
     }
 
     /**
+     * Applies a suffix to an alias for the relationship.
+     * This is ignored for `hasManyThrough` because each of the relationship
+     * components inside `relationshipsMap` will already be aliased.
+     *
+     * @suffix   The suffix to use.
+     *
+     * @return  quick.models.Relationships.HasManyThrough
+     */
+    public BelongsToMany function applyAliasSuffix( required string suffix ) {
+        variables.tableSuffix = arguments.suffix;
+        variables.table = "#variables.table# #variables.table##suffix#";
+        super.applyAliasSuffix( argumentCollection = arguments );
+        return this;
+    }
+
+    /**
      * Applies the join for relationship in a `hasManyThrough` chain.
      *
      * @base    The query to apply the join to.
@@ -478,6 +500,28 @@ component
         arguments.base.join( variables.parent.tableName(), function( j ) {
             arrayZipEach( [ variables.parentKeys, getQualifiedForeignPivotKeyNames() ], function( parentKey, pivotKey ) {
                 j.on( variables.parent.qualifyColumn( parentKey ), pivotKey );
+            } );
+        } );
+    }
+
+    /**
+     * Applies the constraints for the final relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the constraints to.
+     *
+     * @return  void
+     */
+    public void function applyThroughConstraints( required any base ) {
+        variables.parent.withAlias(
+            variables.parent.tableName() & variables.tableSuffix
+        );
+        performJoin( arguments.base );
+        arguments.base.where( function( q ) {
+            arrayZipEach( [ getQualifiedForeignPivotKeyNames(), variables.parentKeys ], function( localKey, parentKey ) {
+                q.where(
+                    variables.related.qualifyColumn( localKey ),
+                    variables.parent.retrieveAttribute( parentKey )
+                );
             } );
         } );
     }

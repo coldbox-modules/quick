@@ -253,14 +253,16 @@ component accessors="true" {
     }
 
     /**
-     * Sets an alias for the relationship.
+     * Applies a suffix to an alias for the relationship.
      *
-     * @alias   The alias to use.
+     * @suffix   The suffix to append.
      *
      * @return  quick.models.Relationships.BaseRelationship
      */
-    public BaseRelationship function applyAlias( required string alias ) {
-        variables.related.withAlias( arguments.alias );
+    public BaseRelationship function applyAliasSuffix( required string suffix ) {
+        variables.related.withAlias(
+            variables.related.tableName() & arguments.suffix
+        );
         return this;
     }
 

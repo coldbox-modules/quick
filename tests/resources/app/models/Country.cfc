@@ -21,6 +21,14 @@ component extends="quick.models.BaseEntity" {
         return hasManyThrough( [ "users", "posts", "comments" ] );
     }
 
+    function roles() {
+        return hasManyThrough( [ "users", "roles" ] );
+    }
+
+    function permissions() {
+        return hasManyThrough( [ "roles", "permissions" ] );
+    }
+
     function keyType() {
         return variables._wirebox.getInstance( "UUIDKeyType@quick" );
     }

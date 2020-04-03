@@ -1885,6 +1885,8 @@ component accessors="true" {
         required string tableA,
         required string tableB
     ) {
+        arguments.tableA = listFirst( arguments.tableA, " " );
+        arguments.tableB = listFirst( arguments.tableB, " " );
         return compareNoCase( arguments.tableA, arguments.tableB ) < 0 ? lCase(
             "#arguments.tableA#_#arguments.tableB#"
         ) : lCase( "#arguments.tableB#_#arguments.tableA#" );
@@ -1940,15 +1942,13 @@ component accessors="true" {
         var aliasPrefix = variables._aliasPrefix;
         var previousEntity = this;
         var relationshipsMap = arguments.relationships.reduce( function( map, relation, index ) {
-            var mirroredIndex = ( index + ( relationships.len() - 1 ) ) % (
-                relationships.len() + 1
-            );
+            var mirroredIndex = relationships.len() == 2 ? ( index == 1 ? 2 : 1 ) : (
+                index + ( relationships.len() - 1 )
+            ) % ( relationships.len() + 1 );
             mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
             previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
             var relationship = invoke( previousEntity, relation );
-            relationship.applyAlias(
-                relationship.tableName() & "_" & aliasPrefix & mirroredIndex
-            );
+            relationship.applyAliasSuffix( "_" & aliasPrefix & mirroredIndex );
             map[ relation ] = relationship;
             previousEntity = relationship.getRelated();
             return map;

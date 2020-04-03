@@ -269,15 +269,15 @@ component
     }
 
     /**
-     * Sets an alias for the relationship.
+     * Applies a suffix to an alias for the relationship.
      * This is ignored for `hasManyThrough` because each of the relationship
      * components inside `relationshipsMap` will already be aliased.
      *
-     * @alias   The alias to use.
+     * @suffix   The suffix to use.
      *
      * @return  quick.models.Relationships.HasManyThrough
      */
-    public HasManyThrough function applyAlias( required string alias ) {
+    public HasManyThrough function applyAliasSuffix( required string suffix ) {
         return this;
     }
 
@@ -291,6 +291,20 @@ component
     public void function applyThroughJoin( required any base ) {
         performJoin( arguments.base );
         variables.closestToParent.applyThroughJoin(
+            arguments.base
+        );
+    }
+
+    /**
+     * Applies the constraints for the final relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the constraints to.
+     *
+     * @return  void
+     */
+    public void function applyThroughConstraints( required any base ) {
+        performJoin( arguments.base );
+        variables.closestToParent.applyThroughConstraints(
             arguments.base
         );
     }

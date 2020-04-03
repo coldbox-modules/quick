@@ -105,6 +105,14 @@ component quick {
         } );
     }
 
+    function roles() {
+        return belongsToMany( "Role" );
+    }
+
+    function permissions() {
+        return hasManyThrough( [ "roles", "permissions" ] );
+    }
+
     function posts() {
         return hasMany( "Post", "user_id" ).latest();
     }

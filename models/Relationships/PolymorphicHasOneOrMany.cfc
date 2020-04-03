@@ -107,6 +107,13 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
         } );
     }
 
+    /**
+     * Applies the join for relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the join to.
+     *
+     * @return  void
+     */
     public void function applyThroughJoin( required any base ) {
         arguments.base.join( variables.parent.tableName(), function( j ) {
             arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {

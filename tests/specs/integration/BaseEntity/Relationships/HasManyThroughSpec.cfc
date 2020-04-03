@@ -43,7 +43,27 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( tags[ 2 ].getName() ).toBe( "music" );
             } );
 
-            it( "can get the related entities through any number of intermediate entities including a polymorphic relationship", function() {
+            xit( "can get the related entities starting with a belongsToMany relationship", function() {
+                fail( "test not implemented yet" );
+            } );
+
+            xit( "can get the related entities starting with a hasManyThrough relationship", function() {
+                fail( "test not implemented yet" );
+            } );
+
+            xit( "can get the related entities starting with a polymorphicHasMany relationship", function() {
+                fail( "test not implemented yet" );
+            } );
+
+            xit( "can get the related entities through a polymorphicBelongsTo relationship", function() {
+                fail( "test not implemented yet" );
+            } );
+
+            xit( "can get the related entities starting with a polymorphicBelongsTo relationship", function() {
+                fail( "test not implemented yet" );
+            } );
+
+            it( "can get the related entities through any number of intermediate entities including a polymorphicHasMany relationship", function() {
                 var country = getInstance( "Country" ).findOrFail(
                     "02B84D66-0AA0-F7FB-1F71AFC954843861"
                 );

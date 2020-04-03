@@ -19,7 +19,13 @@
  * }
  * ```
  */
-component extends="quick.models.Relationships.BelongsTo" {
+component extends="quick.models.Relationships.BelongsTo" accessors="true" {
+
+    /**
+     * The name of the column that contains the entity type
+     * of the polymorphic relationship.
+     */
+    property name="morphType" type="string";
 
     /**
      * Creates a belongsTo relationship.
@@ -30,10 +36,10 @@ component extends="quick.models.Relationships.BelongsTo" {
      * @parent              The parent entity instance for the relationship.
      *                      In a `BelongsTo` relationship, this is also referred
      *                      to internally as `child`.
-     * @foreignKeys         The column name on the `parent` entity that refers to
-     *                      the `localKey` on the `related` entity.
-     * @localKeys           The column name on the `realted` entity that is referred
-     *                      to by the `foreignKey` of the `parent` entity.
+     * @foreignKeys         The column names on the `parent` entity that refers to
+     *                      the `localKeys` on the `related` entity.
+     * @localKeys           The column names on the `realted` entity that is referred
+     *                      to by the `foreignKeys` of the `parent` entity.
      * @type                The name of the column that contains the entity type
      *                      of the polymorphic relationship.
      *

@@ -15,7 +15,35 @@
  * }
  * ```
  */
-component extends="quick.models.Relationships.BaseRelationship" {
+component
+    extends="quick.models.Relationships.BaseRelationship"
+    accessors="true"
+{
+
+    /**
+     * The pivot table name between relationships.
+     */
+    property name="table" type="string";
+
+    /**
+     * The primary keys for the parent entity.
+     */
+    property name="parentKeys" type="array";
+
+    /**
+     * The primary keys for the related entity.
+     */
+    property name="relatedKeys" type="array";
+
+    /**
+     * The keys on the pivot `table` that correspond to the `relatedKeys`.
+     */
+    property name="relatedPivotKeys" type="array";
+
+    /**
+     * The keys on the pivot `table` that correspond to the `parentKeys`.
+     */
+    property name="foreignPivotKeys" type="array";
 
     /**
      * Creates a BelongsToMany relationship.
@@ -28,14 +56,12 @@ component extends="quick.models.Relationships.BaseRelationship" {
      *                      relationship.  A pivot table is a table that stores,
      *                      at a minimum, the primary key values of each side
      *                      of the relationship as foreign keys.
-     * @foreignPivotKeys    The name of the column on the pivot `table` that holds
-     *                      the value of the `parentKey` of the `parent` entity.
-     * @relatedPivotKeys    The name of the column on the pivot `table` that holds
-     *                      the value of the `relatedKey` of the `ralated` entity.
-     * @parentKeys          The name of the column on the `parent` entity that is
-     *                      stored in the `foreignPivotKey` column on `table`.
-     * @relatedKeys         The name of the column on the `related` entity that is
-     *                      stored in the `relatedPivotKey` column on `table`.
+     * @foreignPivotKeys    The keys on the pivot `table` that correspond to the `parentKeys`.
+     * @relatedPivotKeys    The keys on the pivot `table` that correspond to the `relatedKeys`.
+     * @parentKeys          The name of the columns on the `parent` entity that is
+     *                      stored in the `foreignPivotKey` columns on `table`.
+     * @relatedKeys         The name of the columns on the `related` entity that is
+     *                      stored in the `relatedPivotKey` columns on `table`.
      *
      * @return              quick.models.Relationships.BelongsToMany
      */
@@ -439,6 +465,13 @@ component extends="quick.models.Relationships.BaseRelationship" {
         return getQualifiedForeignPivotKeyNames();
     }
 
+    /**
+     * Applies the join for relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the join to.
+     *
+     * @return  void
+     */
     public void function applyThroughJoin( required any base ) {
         arguments.base.distinct();
         performJoin( arguments.base );

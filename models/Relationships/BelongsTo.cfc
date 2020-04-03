@@ -15,7 +15,27 @@
  * }
  * ```
  */
-component extends="quick.models.Relationships.BaseRelationship" {
+component
+    extends="quick.models.Relationships.BaseRelationship"
+    accessors="true"
+{
+
+    /**
+     * An alias for the parent entity.
+     */
+    property name="child";
+
+    /**
+     * The column names on the `parent` entity that refers to
+     * the `localKeys` on the `related` entity.
+     */
+    property name="foreignKeys" type="array";
+
+    /**
+     * The column names on the `realted` entity that is referred
+     * to by the `foreignKeys` of the `parent` entity.
+     */
+    property name="localKeys" type="array";
 
     /**
      * Creates a belongsTo relationship.
@@ -26,10 +46,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @parent              The parent entity instance for the relationship.
      *                      In a `BelongsTo` relationship, this is also referred
      *                      to internally as `child`.
-     * @foreignKeys         The column name on the `parent` entity that refers to
-     *                      the `localKey` on the `related` entity.
-     * @localKeys           The column name on the `realted` entity that is referred
-     *                      to by the `foreignKey` of the `parent` entity.
+     * @foreignKeys         The column names on the `parent` entity that refers to
+     *                      the `localKeys` on the `related` entity.
+     * @localKeys           The column names on the `realted` entity that is referred
+     *                      to by the `foreignKeys` of the `parent` entity.
      *
      * @return              quick.models.Relationships.BelongsTo
      */
@@ -79,7 +99,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
             )
         ) {
             return tap( variables.related.newEntity(), function( newEntity ) {
-                variables.defaultAttributes( newEntity, variables.parent );
+                variables.defaultAttributes( newEntity, variables.child );
             } );
         }
 
@@ -339,27 +359,41 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     public array function getExistenceCompareKeys() {
         return variables.foreignKeys.map( function( foreignKey ) {
-            return variables.parent.qualifyColumn( foreignKey );
+            return variables.child.qualifyColumn( foreignKey );
         } );
     }
 
+    /**
+     * Applies the join for relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the join to.
+     *
+     * @return  void
+     */
     public void function applyThroughJoin( required any base ) {
-        arguments.base.join( variables.parent.tableName(), function( j ) {
+        arguments.base.join( variables.child.tableName(), function( j ) {
             arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
                 j.on(
-                    variables.parent.qualifyColumn( foreignKey ),
+                    variables.child.qualifyColumn( foreignKey ),
                     variables.related.qualifyColumn( localKey )
                 );
             } );
         } );
     }
 
+    /**
+     * Applies the constraints for the final relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the constraints to.
+     *
+     * @return  void
+     */
     public void function applyThroughConstraints( required any base ) {
         arguments.base.where( function( q ) {
             arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
                 q.where(
                     variables.related.qualifyColumn( localKey ),
-                    variables.parent.retrieveAttribute( foreignKey )
+                    variables.child.retrieveAttribute( foreignKey )
                 );
             } );
         } );

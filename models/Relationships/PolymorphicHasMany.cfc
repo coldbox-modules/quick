@@ -18,7 +18,10 @@
  * }
  * ```
  */
-component extends="quick.models.Relationships.PolymorphicHasOneOrMany" {
+component
+    extends="quick.models.Relationships.PolymorphicHasOneOrMany"
+    accessors="true"
+{
 
     /**
      * Returns the result of the relationship.

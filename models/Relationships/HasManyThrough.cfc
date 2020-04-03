@@ -18,9 +18,25 @@
  * ```
  */
 component
-    accessors="true"
     extends="quick.models.Relationships.BaseRelationship"
+    accessors="true"
 {
+
+    /**
+     * An array of relationships between the parent entity and the related entity.
+     */
+    property name="relationships" type="array";
+
+    /**
+     * A dictionary of relationship name to relationship component.
+     */
+    property name="relationshipsMap" type="struct";
+
+    /**
+     * A shortcut to access the entity closest to the parent entity.
+     * This is the result of the first relationship in the `relationships` chain.
+     */
+    property name="closestToParent";
 
     /**
      * Creates a HasManyThrough relationship.
@@ -29,10 +45,9 @@ component
      * @relationName        The WireBox mapping for the related entity.
      * @relationMethodName  The method name called to retrieve this relationship.
      * @parent              The parent entity instance for the relationship.
-     * @intermediates       An array of intermediate entity mappings.
-     * @intermediatesMap    A dictionary of entity mappings to entity component.
-     * @foreignKeys         A dictionary of entity mappings to foreign keys.
-     * @localKeys           A dictionary of entity mappings to local keys.
+     * @relationships       An array of relationships between the parent entity
+     *                      and the related entity.
+     * @relationshipsMap    A dictionary of relationship name to relationship component.
      *
      * @returns             quick.models.Relationships.HasManyThrough
      */
@@ -74,7 +89,7 @@ component
     }
 
     /**
-     * Adds a join to the intermediate table for the relationship.
+     * Adds a join to the intermediate tables for the relationship.
      *
      * @return  quick.models.Relationships.HasManyThrough
      */
@@ -253,10 +268,26 @@ component
         } );
     }
 
+    /**
+     * Sets an alias for the relationship.
+     * This is ignored for `hasManyThrough` because each of the relationship
+     * components inside `relationshipsMap` will already be aliased.
+     *
+     * @alias   The alias to use.
+     *
+     * @return  quick.models.Relationships.HasManyThrough
+     */
     public HasManyThrough function applyAlias( required string alias ) {
         return this;
     }
 
+    /**
+     * Applies the join for relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the join to.
+     *
+     * @return  void
+     */
     public void function applyThroughJoin( required any base ) {
         performJoin( arguments.base );
         variables.closestToParent.applyThroughJoin(

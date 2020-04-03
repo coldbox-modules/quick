@@ -21,9 +21,28 @@ component accessors="true" {
      */
     property name="defaultAttributes";
 
+    /**
+     * The related model we are ultimately fetching with this relationship.
+     * If a User `hasMany` Posts then Post is the related entity.
+     * s
+     */
     property name="related";
+
+    /**
+     * The WireBox mapping used for the related entity.
+     */
     property name="relationName";
+
+    /**
+     * The name used to define the relationship.  Usually the name of the method
+     * called that returns the relationship.
+     */
     property name="relationMethodName";
+
+    /**
+     * The entity that the relationships is starting from.
+     * If a User `hasMany` Posts then User is the parent entity.
+     */
     property name="parent";
 
     /**
@@ -33,6 +52,7 @@ component accessors="true" {
      * @relationName        The WireBox mapping for the related entity.
      * @relationMethodName  The method name called to retrieve this relationship.
      * @parent              The parent entity instance for the relationship.
+     * @withConstraints     Flag to automatically add the query constraints.  Default: true.
      *
      * @return              BaseRelationship
      */
@@ -232,6 +252,13 @@ component accessors="true" {
         return this;
     }
 
+    /**
+     * Sets an alias for the relationship.
+     *
+     * @alias   The alias to use.
+     *
+     * @return  quick.models.Relationships.BaseRelationship
+     */
     public BaseRelationship function applyAlias( required string alias ) {
         variables.related.withAlias( arguments.alias );
         return this;
@@ -320,6 +347,18 @@ component accessors="true" {
         ];
     }
 
+    /**
+     * Accepts an array of arrays and calls a callback passing each item of
+     * the same index from each of the arrays.
+     *
+     * @arrays    An array of arrays.  All arrays must have the same length.
+     * @callback  The callback to call.  It will be passed an item from each
+     *            array passed in at the same index.
+     *
+     * @throws    ArrayZipLengthMismatch
+     *
+     * @return    The original array of arrays passed in.
+     */
     private array function arrayZipEach(
         required array arrays,
         required any callback

@@ -296,6 +296,13 @@ component accessors="true" {
         return variables._table;
     }
 
+    /**
+     * Sets an alias for the current table name.
+     *
+     * @alias   The alias to use.
+     *
+     * @return  quick.models.BaseEntity
+     */
     public any function withAlias( required string alias ) {
         variables._table = "#variables._table# #alias#";
         retrieveQuery().from( variables._table );
@@ -1201,7 +1208,7 @@ component accessors="true" {
     public any function newEntity( string name ) {
         if ( isNull( arguments.name ) ) {
             return variables._wirebox.getInstance(
-                name = variables._fullName,
+                name = mappingName(),
                 initArguments = { meta: variables._meta }
             );
         }
@@ -1613,7 +1620,7 @@ component accessors="true" {
      * @localKey            The column name on the `realted` entity that is referred
      *                      to by the `foreignKey` of the `parent` entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.BelongsTo
      */
@@ -1676,7 +1683,7 @@ component accessors="true" {
      * @foreignKey          The foreign key on the parent entity.
      * @localKey            The local primary key on the parent entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.HasOne
      */
@@ -1731,7 +1738,7 @@ component accessors="true" {
      * @foreignKey          The foreign key on the parent entity.
      * @localKey            The local primary key on the parent entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.HasMany
      */
@@ -1800,7 +1807,7 @@ component accessors="true" {
      * @relatedKey          The name of the column on the `related` entity that is
      *                      stored in the `relatedPivotKey` column on `table`.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.BelongsToMany
      */
@@ -1884,8 +1891,8 @@ component accessors="true" {
     }
 
     /**
-     * Returns a HasManyThrough relationship between this entity and the entity
-     * defined by `relationName` through the entity defined by `intermediateName`.
+     * Returns a HasManyThrough relationship between this entity and the entities
+     * in the `relationships` array as a chain from left to right.
      *
      * Given a User `hasMany` Permissions `Through` Roles and using the defaults,
      * the SQL would be:
@@ -1897,31 +1904,40 @@ component accessors="true" {
      * WHERE roles.userId [firstKey] = 'users.id' [localKey]
      * ```
      *
-     * @relationName        The WireBox mapping for the related entity.
-     * @intermediate        The WireBox mapping for the intermediate entity
-     * @firstKey            The key on the intermediate table linking it to the
-     *                      parent entity.
-     * @secondKey           The key on the related entity linking it to the
-     *                      intermediate entity.
-     * @localKey            The local primary key on the parent entity.
-     * @secondLocalKey      The local primary key on the intermediate entity.
+     * @relationships       An array of relationships names.  The relationships
+     *                      are resolved from left to right.  Each relationship
+     *                      will be resolved from the previously resolved relationship,
+     *                      starting with the current entity.
+     *
+     *                      For example, if the entity is a `Country` entity and
+     *                      the relationships array is `[ "users", "posts" ]`
+     *                      then it would call `users()` on Country and `posts`
+     *                      on the result on `Country.users()`.
+     *
+     *                      There must be at least two relationships in the array
+     *                      to use `hasManyThrough`.  Otherwise, just use `hasMany`
+     *                      or `belongsToMany`.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
+     *
+     * @throw               RelationshipsLengthMismatch
      *
      * @return              quick.models.Relationships.HasManyThrough
      */
     private HasManyThrough function hasManyThrough(
         required array relationships,
-        string relationMethodName,
-        string aliasPrefix = variables._aliasPrefix
+        string relationMethodName
     ) {
         if ( arguments.relationships.len() <= 1 ) {
             throw(
-                type = "RelationshipsLengthException",
-                message = "A hasManyThrough relationships must have at least two relationships"
+                type = "RelationshipsLengthMismatch",
+                message = "A hasManyThrough relationships must have at least two relationships.  If you only need one, use `hasMany` or `belongsToMany` instead."
             );
         }
 
+        // this is set here for the first case where the previousEntity is
+        // `this` entity and we don't want to double prefix
+        var aliasPrefix = variables._aliasPrefix;
         var previousEntity = this;
         var relationshipsMap = arguments.relationships.reduce( function( map, relation, index ) {
             var mirroredIndex = ( index + ( relationships.len() - 1 ) ) % (
@@ -1977,7 +1993,7 @@ component accessors="true" {
      *                      polymorphic relationship. Defaults to `#name#_id`.
      * @localKey            The local primary key on the parent entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.PolymorphicHasMany
      */
@@ -2034,10 +2050,10 @@ component accessors="true" {
      *                      polymorphic relationship. Defaults to `#name#_type`.
      * @id                  The column name that defines the id of the
      *                      polymorphic relationship. Defaults to `#name#_id`.
-     * @ownerKey            The column name on the `realted` entity that is referred
+     * @localKey            The column name on the `realted` entity that is referred
      *                      to by the `foreignKey` of the `parent` entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.PolymorphicBelongsTo
      */

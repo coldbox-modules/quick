@@ -8,7 +8,18 @@
  *
  * @doc_abstract true
  */
-component extends="quick.models.Relationships.HasOneOrMany" {
+component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
+
+    /**
+     * The name of the column that contains the entity type
+     * of the polymorphic relationship.
+     */
+    property name="morphType" type="string";
+
+    /**
+     * The mapping for the morphed entity.
+     */
+    property name="morphMapping" type="string";
 
     /**
      * Creates a Polymorphic HasOneOrMany relationship.
@@ -35,7 +46,7 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         boolean withConstraints = true
     ) {
         variables.morphType = arguments.type;
-        variables.morphClass = arguments.parent.entityName();
+        variables.morphMapping = arguments.parent.mappingName();
 
         return super.init(
             related = arguments.related,
@@ -57,7 +68,7 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         super.addConstraints();
         variables.related.where(
             variables.morphType,
-            variables.morphClass
+            variables.morphMapping
         );
         return this;
     }
@@ -75,7 +86,7 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         super.addEagerConstraints( arguments.entities );
         variables.related.where(
             variables.morphType,
-            variables.morphClass
+            variables.morphMapping
         );
         return this;
     }
@@ -91,7 +102,7 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         return tap( super.addCompareConstraints( arguments.base ), function( q ) {
             q.where(
                 variables.related.qualifyColumn( variables.morphType ),
-                variables.morphClass
+                variables.morphMapping
             );
         } );
     }
@@ -107,7 +118,7 @@ component extends="quick.models.Relationships.HasOneOrMany" {
                     variables.related.qualifyColumn(
                         variables.morphType
                     ),
-                    variables.morphClass
+                    variables.morphMapping
                 );
             } );
         } );

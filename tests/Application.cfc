@@ -43,6 +43,36 @@ component {
         queryExecute( "
             INSERT INTO `countries` (`id`, `name`, `created_date`, `modified_date`) VALUES ('02BA2DB0-EB1E-3F85-5F283AB5E45608C6', 'Argentina', '2017-07-29 03:07:00', '2017-07-29 03:07:00')
         " );
+
+        queryExecute( "
+            CREATE TABLE `companies` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `name` varchar(50) NOT NULL,
+                PRIMARY KEY (`id`)
+            )
+        " );
+
+        queryExecute( "
+            INSERT INTO `companies` VALUES (1, 'Acme')
+        " );
+
+        queryExecute( "
+            CREATE TABLE `teams` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `name` varchar(50) NOT NULL,
+                `companyId` int(11) NOT NULL,
+                PRIMARY KEY (`id`)
+            )
+        " );
+
+        queryExecute( "
+            INSERT INTO `teams` VALUES (1, 'Engineering', 1)
+        " );
+
+        queryExecute( "
+            INSERT INTO `teams` VALUES (2, 'Management', 1)
+        " );
+
         queryExecute( "
             CREATE TABLE `users` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -52,6 +82,7 @@ component {
               `email` varchar(50),
               `password` varchar(100),
               `country_id` char(35),
+              `team_id` int(11),
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `type` varchar(50) NOT NULL DEFAULT 'limited',
@@ -74,16 +105,16 @@ component {
             )
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `type`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (1, 'elpete', 'Eric', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:06:36', '2017-07-28 02:06:36', 'admin', '1234', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123')
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `type`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (1, 'elpete', 'Eric', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', 1, '2017-07-28 02:06:36', '2017-07-28 02:06:36', 'admin', '1234', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123')
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (2, 'johndoe', 'John', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', '2017-07-28 02:07:16', '2017-07-28 02:07:16', '6789', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123');
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (2, 'johndoe', 'John', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', 1, '2017-07-28 02:07:16', '2017-07-28 02:07:16', '6789', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123');
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (3, 'janedoe', 'Jane', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', NULL, '2017-07-28 02:08:16', '2017-07-28 02:08:16', '5555', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123');
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (3, 'janedoe', 'Jane', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', NULL, 1, '2017-07-28 02:08:16', '2017-07-28 02:08:16', '5555', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123');
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `created_date`, `modified_date`, `type`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (4, 'elpete2', 'Another', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02BA2DB0-EB1E-3F85-5F283AB5E45608C6', '2019-06-15 12:29:36', '2017-07-28 02:06:36', 'admin', '1234', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123')
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `type`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (4, 'elpete2', 'Another', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02BA2DB0-EB1E-3F85-5F283AB5E45608C6', 2, '2019-06-15 12:29:36', '2017-07-28 02:06:36', 'admin', '1234', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123')
         " );
         queryExecute( "
             CREATE TABLE `my_posts` (

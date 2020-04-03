@@ -6,6 +6,7 @@ component quick {
     property name="lastName" column="last_name";
     property name="password";
     property name="countryId" column="country_id";
+    property name="teamId" column="team_id";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
     property name="email" column="email" update="false" insert="true";
@@ -80,6 +81,10 @@ component quick {
 
     function country() {
         return belongsTo( "Country", "country_id" );
+    }
+
+    function team() {
+        return belongsTo( "Team", "teamId" );
     }
 
     function posts() {

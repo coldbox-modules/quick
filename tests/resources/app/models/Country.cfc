@@ -5,8 +5,28 @@ component extends="quick.models.BaseEntity" {
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
 
+    function users() {
+        return hasMany( "User" );
+    }
+
     function posts() {
-        return hasManyThrough( "Post", "User", "country_id", "user_id" );
+        return hasManyThrough( [ "users", "posts" ] );
+    }
+
+    function tags() {
+        return hasManyThrough( [ "users", "posts", "tags" ] );
+    }
+
+    function comments() {
+        return hasManyThrough( [ "users", "posts", "comments" ] );
+    }
+
+    function roles() {
+        return hasManyThrough( [ "users", "roles" ] );
+    }
+
+    function permissions() {
+        return hasManyThrough( [ "roles", "permissions" ] );
     }
 
     function keyType() {

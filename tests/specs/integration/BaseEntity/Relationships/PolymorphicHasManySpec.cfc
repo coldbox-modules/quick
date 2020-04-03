@@ -23,7 +23,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( videoAComments ).toBeArray();
                 expect( videoAComments ).toBeEmpty();
 
-                var videoB = getInstance( "Video" ).find( 2 );
+                var videoB = getInstance( "Video" ).find( 1245 );
                 var videoBComments = videoB.getComments();
                 expect( videoBComments ).toBeArray();
                 expect( videoBComments ).toHaveLength( 1 );

@@ -50,4 +50,18 @@ component {
             .initArg( name = "utils", dsl = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = "array" );
     }
+
+    /**
+     * This interceptor ensures that the `_mapping` property for a Quick entity
+     * is correctly set to the mapping used in WireBox.
+     *
+     * @event          The current request context
+     * @interceptData  The intercept data for `afterInstanceAutowire`.
+     *                 { mapping, target, targetID, injector }
+     */
+    function afterInstanceAutowire( event, interceptData ) {
+        if ( structKeyExists( interceptData.target, "isQuickEntity" ) ) {
+            interceptData.target.set_mapping( interceptData.targetID );
+        }
+    }
 }

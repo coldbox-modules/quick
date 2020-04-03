@@ -15,7 +15,40 @@
  * }
  * ```
  */
-component extends="quick.models.Relationships.BaseRelationship" {
+component
+    extends="quick.models.Relationships.BaseRelationship"
+    accessors="true"
+{
+
+    /**
+     * The pivot table name between relationships.
+     */
+    property name="table" type="string";
+
+    /**
+     * The primary keys for the parent entity.
+     */
+    property name="parentKeys" type="array";
+
+    /**
+     * The primary keys for the related entity.
+     */
+    property name="relatedKeys" type="array";
+
+    /**
+     * The keys on the pivot `table` that correspond to the `relatedKeys`.
+     */
+    property name="relatedPivotKeys" type="array";
+
+    /**
+     * The keys on the pivot `table` that correspond to the `parentKeys`.
+     */
+    property name="foreignPivotKeys" type="array";
+
+    /**
+     * The table suffix. Stored in case this is the `applyThroughConstraints` is called.
+     */
+    property name="tableSuffix" type="string";
 
     /**
      * Creates a BelongsToMany relationship.
@@ -28,14 +61,12 @@ component extends="quick.models.Relationships.BaseRelationship" {
      *                      relationship.  A pivot table is a table that stores,
      *                      at a minimum, the primary key values of each side
      *                      of the relationship as foreign keys.
-     * @foreignPivotKeys    The name of the column on the pivot `table` that holds
-     *                      the value of the `parentKey` of the `parent` entity.
-     * @relatedPivotKeys    The name of the column on the pivot `table` that holds
-     *                      the value of the `relatedKey` of the `ralated` entity.
-     * @parentKeys          The name of the column on the `parent` entity that is
-     *                      stored in the `foreignPivotKey` column on `table`.
-     * @relatedKeys         The name of the column on the `related` entity that is
-     *                      stored in the `relatedPivotKey` column on `table`.
+     * @foreignPivotKeys    The keys on the pivot `table` that correspond to the `parentKeys`.
+     * @relatedPivotKeys    The keys on the pivot `table` that correspond to the `relatedKeys`.
+     * @parentKeys          The name of the columns on the `parent` entity that is
+     *                      stored in the `foreignPivotKey` columns on `table`.
+     * @relatedKeys         The name of the columns on the `related` entity that is
+     *                      stored in the `relatedPivotKey` columns on `table`.
      *
      * @return              quick.models.Relationships.BelongsToMany
      */
@@ -56,6 +87,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
         variables.relatedKeys = arguments.relatedKeys;
         variables.relatedPivotKeys = arguments.relatedPivotKeys;
         variables.foreignPivotKeys = arguments.foreignPivotKeys;
+        variables.tablePrefix = "";
 
         return super.init(
             related = arguments.related,
@@ -189,8 +221,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
      *
      * @return  quick.models.Relationships.BelongsToMany
      */
-    public BelongsToMany function performJoin() {
-        variables.related.join( variables.table, function( j ) {
+    public BelongsToMany function performJoin( any base = variables.related ) {
+        arguments.base.join( variables.table, function( j ) {
             arrayZipEach( [ variables.relatedKeys, getQualifiedRelatedPivotKeyNames() ], function( relatedKey, pivotKey ) {
                 j.on( variables.related.qualifyColumn( relatedKey ), pivotKey );
             } );
@@ -224,7 +256,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     public array function getQualifiedRelatedPivotKeyNames() {
         return variables.relatedPivotKeys.map( function( relatedPivotKey ) {
-            return variables.table & "." & relatedPivotKey;
+            return listLast( variables.table, " " ) & "." & relatedPivotKey;
         } );
     }
 
@@ -237,7 +269,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     public array function getQualifiedForeignPivotKeyNames() {
         return variables.foreignPivotKeys.map( function( foreignPivotKey ) {
-            return variables.table & "." & foreignPivotKey;
+            return listLast( variables.table, " " ) & "." & foreignPivotKey;
         } );
     }
 
@@ -437,6 +469,61 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     public array function getQualifiedForeignKeyNames() {
         return getQualifiedForeignPivotKeyNames();
+    }
+
+    /**
+     * Applies a suffix to an alias for the relationship.
+     * This is ignored for `hasManyThrough` because each of the relationship
+     * components inside `relationshipsMap` will already be aliased.
+     *
+     * @suffix   The suffix to use.
+     *
+     * @return  quick.models.Relationships.HasManyThrough
+     */
+    public BelongsToMany function applyAliasSuffix( required string suffix ) {
+        variables.tableSuffix = arguments.suffix;
+        variables.table = "#variables.table# #variables.table##suffix#";
+        super.applyAliasSuffix( argumentCollection = arguments );
+        return this;
+    }
+
+    /**
+     * Applies the join for relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the join to.
+     *
+     * @return  void
+     */
+    public void function applyThroughJoin( required any base ) {
+        arguments.base.distinct();
+        performJoin( arguments.base );
+        arguments.base.join( variables.parent.tableName(), function( j ) {
+            arrayZipEach( [ variables.parentKeys, getQualifiedForeignPivotKeyNames() ], function( parentKey, pivotKey ) {
+                j.on( variables.parent.qualifyColumn( parentKey ), pivotKey );
+            } );
+        } );
+    }
+
+    /**
+     * Applies the constraints for the final relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the constraints to.
+     *
+     * @return  void
+     */
+    public void function applyThroughConstraints( required any base ) {
+        variables.parent.withAlias(
+            variables.parent.tableName() & variables.tableSuffix
+        );
+        performJoin( arguments.base );
+        arguments.base.where( function( q ) {
+            arrayZipEach( [ getQualifiedForeignPivotKeyNames(), variables.parentKeys ], function( localKey, parentKey ) {
+                q.where(
+                    variables.related.qualifyColumn( localKey ),
+                    variables.parent.retrieveAttribute( parentKey )
+                );
+            } );
+        } );
     }
 
 }

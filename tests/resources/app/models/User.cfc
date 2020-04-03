@@ -6,6 +6,7 @@ component quick {
     property name="lastName" column="last_name";
     property name="password";
     property name="countryId" column="country_id";
+    property name="teamId" column="team_id";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
     property name="email" column="email" update="false" insert="true";
@@ -80,6 +81,36 @@ component quick {
 
     function country() {
         return belongsTo( "Country", "country_id" );
+    }
+
+    function team() {
+        return belongsTo( "Team", "team_id" );
+    }
+
+    function teammates() {
+        return tap( hasManyThrough( [ "team", "users" ] ), function( r ) {
+            r.where( r.qualifyColumn( "id" ), "<>", this.getId() );
+        } );
+    }
+
+    function officemates() {
+        return tap( hasManyThrough( [ "team", "office", "teams", "users" ] ), function( r ) {
+            r.where( r.qualifyColumn( "id" ), "<>", this.getId() );
+        } );
+    }
+
+    function officematesAlternate() {
+        return tap( hasManyThrough( [ "team", "office", "users" ] ), function( r ) {
+            r.where( r.qualifyColumn( "id" ), "<>", this.getId() );
+        } );
+    }
+
+    function roles() {
+        return belongsToMany( "Role" );
+    }
+
+    function permissions() {
+        return hasManyThrough( [ "roles", "permissions" ] );
     }
 
     function posts() {

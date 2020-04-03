@@ -301,7 +301,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( comments[ 3 ].getCommentable().entityName() ).toBe(
                     "Video"
                 );
-                expect( comments[ 3 ].getCommentable().getId() ).toBe( 2 );
+                expect( comments[ 3 ].getCommentable().getId() ).toBe( 1245 );
 
                 expect( variables.queries ).toHaveLength(
                     3,

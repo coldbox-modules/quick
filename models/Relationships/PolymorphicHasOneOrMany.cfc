@@ -8,7 +8,18 @@
  *
  * @doc_abstract true
  */
-component extends="quick.models.Relationships.HasOneOrMany" {
+component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
+
+    /**
+     * The name of the column that contains the entity type
+     * of the polymorphic relationship.
+     */
+    property name="morphType" type="string";
+
+    /**
+     * The mapping for the morphed entity.
+     */
+    property name="morphMapping" type="string";
 
     /**
      * Creates a Polymorphic HasOneOrMany relationship.
@@ -35,7 +46,7 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         boolean withConstraints = true
     ) {
         variables.morphType = arguments.type;
-        variables.morphClass = arguments.parent.entityName();
+        variables.morphMapping = arguments.parent.mappingName();
 
         return super.init(
             related = arguments.related,
@@ -57,7 +68,7 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         super.addConstraints();
         variables.related.where(
             variables.morphType,
-            variables.morphClass
+            variables.morphMapping
         );
         return this;
     }
@@ -75,9 +86,49 @@ component extends="quick.models.Relationships.HasOneOrMany" {
         super.addEagerConstraints( arguments.entities );
         variables.related.where(
             variables.morphType,
-            variables.morphClass
+            variables.morphMapping
         );
         return this;
+    }
+
+    /**
+     * Gets the query used to check for relation existance.
+     *
+     * @base    The base entity for the query.
+     *
+     * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
+     */
+    public any function addCompareConstraints( any base = variables.related ) {
+        return tap( super.addCompareConstraints( arguments.base ), function( q ) {
+            q.where(
+                variables.related.qualifyColumn( variables.morphType ),
+                variables.morphMapping
+            );
+        } );
+    }
+
+    /**
+     * Applies the join for relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the join to.
+     *
+     * @return  void
+     */
+    public void function applyThroughJoin( required any base ) {
+        arguments.base.join( variables.parent.tableName(), function( j ) {
+            arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
+                j.on(
+                    variables.related.qualifyColumn( foreignKey ),
+                    variables.parent.qualifyColumn( localKey )
+                );
+                j.where(
+                    variables.related.qualifyColumn(
+                        variables.morphType
+                    ),
+                    variables.morphMapping
+                );
+            } );
+        } );
     }
 
 }

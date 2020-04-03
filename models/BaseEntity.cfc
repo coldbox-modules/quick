@@ -58,6 +58,7 @@ component accessors="true" {
 
     /**
      * The WireBox mapping for the entity.
+     * This is added by an afterInstanceAutowire interception point.
      */
     property name="_mapping" persistent="false";
 
@@ -177,6 +178,17 @@ component accessors="true" {
     property name="_globalScopeExclusions" persistent="false";
 
     /**
+     * The current alias version used for hasManyThrough aliases
+     */
+    property name="_aliasPrefix" persistent="false" default="";
+
+    /**
+     * Used to determine if a component is a Quick entity
+     * without resorting to isInstanceOf
+     */
+    this.isQuickEntity = true;
+
+    /**
      * Initializes the entity with default properties and optional metadata.
      *
      * @meta    An optional struct of metadata.  Used to avoid processing
@@ -209,6 +221,7 @@ component accessors="true" {
         param variables._castCache = {};
         param variables._casterCache = {};
         param variables._loaded = false;
+        param variables._aliasPrefix = "";
         return this;
     }
 
@@ -266,12 +279,34 @@ component accessors="true" {
     }
 
     /**
+     * Returns the WireBox mapping for this entity.
+     *
+     * @return  String
+     */
+    public string function mappingName() {
+        return variables._mapping;
+    }
+
+    /**
      * Returns the table name for this entity.
      *
      * @return  String
      */
     public string function tableName() {
         return variables._table;
+    }
+
+    /**
+     * Sets an alias for the current table name.
+     *
+     * @alias   The alias to use.
+     *
+     * @return  quick.models.BaseEntity
+     */
+    public any function withAlias( required string alias ) {
+        variables._table = "#variables._table# #alias#";
+        retrieveQuery().from( variables._table );
+        return this;
     }
 
     /**
@@ -804,7 +839,9 @@ component accessors="true" {
         if ( findNoCase( ".", arguments.column ) != 0 ) {
             return arguments.column;
         }
-        return tableName() & "." & retrieveColumnForAlias( arguments.column );
+        return listLast( tableName(), " " ) & "." & retrieveColumnForAlias(
+            arguments.column
+        );
     }
 
     /**
@@ -1171,7 +1208,7 @@ component accessors="true" {
     public any function newEntity( string name ) {
         if ( isNull( arguments.name ) ) {
             return variables._wirebox.getInstance(
-                name = variables._fullName,
+                name = mappingName(),
                 initArguments = { meta: variables._meta }
             );
         }
@@ -1574,23 +1611,23 @@ component accessors="true" {
      * ```sql
      * SELECT *
      * FROM users [relationName.tableName()]
-     * WHERE users.id [ownerKey] = 'posts.userId' [foreignKey]
+     * WHERE users.id [localKey] = 'posts.userId' [foreignKey]
      * ```
      *
      * @relationName        The WireBox mapping for the related entity.
      * @foreignKey          The column name on the `parent` entity that refers to
-     *                      the `ownerKey` on the `related` entity.
-     * @ownerKey            The column name on the `realted` entity that is referred
+     *                      the `localKey` on the `related` entity.
+     * @localKey            The column name on the `realted` entity that is referred
      *                      to by the `foreignKey` of the `parent` entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.BelongsTo
      */
     private BelongsTo function belongsTo(
         required string relationName,
         any foreignKey,
-        any ownerKey,
+        any localKey,
         string relationMethodName
     ) {
         var related = variables._wirebox.getInstance(
@@ -1606,15 +1643,15 @@ component accessors="true" {
                 } );
         }
         arguments.foreignKey = arrayWrap( arguments.foreignKey );
-        param arguments.ownerKey = related.keyNames();
-        arguments.ownerKey = arrayWrap( arguments.ownerKey );
+        param arguments.localKey = related.keyNames();
+        arguments.localKey = arrayWrap( arguments.localKey );
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
 
         guardAgainstKeyLengthMismatch(
             arguments.foreignKey,
-            arguments.ownerKey
+            arguments.localKey
         );
 
         return variables._wirebox.getInstance(
@@ -1625,7 +1662,7 @@ component accessors="true" {
                 "relationMethodName": arguments.relationMethodName,
                 "parent": this,
                 "foreignKeys": arguments.foreignKey,
-                "ownerKeys": arguments.ownerKey,
+                "localKeys": arguments.localKey,
                 "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
@@ -1646,7 +1683,7 @@ component accessors="true" {
      * @foreignKey          The foreign key on the parent entity.
      * @localKey            The local primary key on the parent entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.HasOne
      */
@@ -1701,7 +1738,7 @@ component accessors="true" {
      * @foreignKey          The foreign key on the parent entity.
      * @localKey            The local primary key on the parent entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.HasMany
      */
@@ -1770,7 +1807,7 @@ component accessors="true" {
      * @relatedKey          The name of the column on the `related` entity that is
      *                      stored in the `relatedPivotKey` column on `table`.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.BelongsToMany
      */
@@ -1848,14 +1885,16 @@ component accessors="true" {
         required string tableA,
         required string tableB
     ) {
+        arguments.tableA = listFirst( arguments.tableA, " " );
+        arguments.tableB = listFirst( arguments.tableB, " " );
         return compareNoCase( arguments.tableA, arguments.tableB ) < 0 ? lCase(
             "#arguments.tableA#_#arguments.tableB#"
         ) : lCase( "#arguments.tableB#_#arguments.tableA#" );
     }
 
     /**
-     * Returns a HasManyThrough relationship between this entity and the entity
-     * defined by `relationName` through the entity defined by `intermediateName`.
+     * Returns a HasManyThrough relationship between this entity and the entities
+     * in the `relationships` array as a chain from left to right.
      *
      * Given a User `hasMany` Permissions `Through` Roles and using the defaults,
      * the SQL would be:
@@ -1867,56 +1906,53 @@ component accessors="true" {
      * WHERE roles.userId [firstKey] = 'users.id' [localKey]
      * ```
      *
-     * @relationName        The WireBox mapping for the related entity.
-     * @intermediate        The WireBox mapping for the intermediate entity
-     * @firstKey            The key on the intermediate table linking it to the
-     *                      parent entity.
-     * @secondKey           The key on the related entity linking it to the
-     *                      intermediate entity.
-     * @localKey            The local primary key on the parent entity.
-     * @secondLocalKey      The local primary key on the intermediate entity.
+     * @relationships       An array of relationships names.  The relationships
+     *                      are resolved from left to right.  Each relationship
+     *                      will be resolved from the previously resolved relationship,
+     *                      starting with the current entity.
+     *
+     *                      For example, if the entity is a `Country` entity and
+     *                      the relationships array is `[ "users", "posts" ]`
+     *                      then it would call `users()` on Country and `posts`
+     *                      on the result on `Country.users()`.
+     *
+     *                      There must be at least two relationships in the array
+     *                      to use `hasManyThrough`.  Otherwise, just use `hasMany`
+     *                      or `belongsToMany`.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
+     *
+     * @throw               RelationshipsLengthMismatch
      *
      * @return              quick.models.Relationships.HasManyThrough
      */
     private HasManyThrough function hasManyThrough(
-        required string relationName,
-        required string intermediateName,
-        any firstKey,
-        any secondKey,
-        any localKey,
-        any secondLocalKey,
+        required array relationships,
         string relationMethodName
     ) {
-        var related = variables._wirebox.getInstance(
-            arguments.relationName
-        );
-        var intermediate = variables._wirebox.getInstance(
-            arguments.intermediateName
-        );
-
-        if ( isNull( arguments.firstKey ) ) {
-            arguments.firstKey = keyNames().map( function( keyName ) {
-                return entityName() & keyName;
-            } );
+        if ( arguments.relationships.len() <= 1 ) {
+            throw(
+                type = "RelationshipsLengthMismatch",
+                message = "A hasManyThrough relationships must have at least two relationships.  If you only need one, use `hasMany` or `belongsToMany` instead."
+            );
         }
-        arguments.firstKey = arrayWrap( arguments.firstKey );
 
-        if ( isNull( arguments.secondKey ) ) {
-            arguments.secondKey = intermediate
-                .keyNames()
-                .map( function( keyName ) {
-                    return intermediate.entityName() & keyName;
-                } );
-        }
-        arguments.secondKey = arrayWrap( arguments.secondKey );
-
-        param arguments.localKey = keyNames();
-        arguments.localKey = arrayWrap( arguments.localKey );
-
-        param arguments.secondLocalKey = intermediate.keyNames();
-        arguments.secondLocalKey = arrayWrap( arguments.secondLocalKey );
+        // this is set here for the first case where the previousEntity is
+        // `this` entity and we don't want to double prefix
+        var aliasPrefix = variables._aliasPrefix;
+        var previousEntity = this;
+        var relationshipsMap = arguments.relationships.reduce( function( map, relation, index ) {
+            var mirroredIndex = relationships.len() == 2 ? ( index == 1 ? 2 : 1 ) : (
+                index + ( relationships.len() - 1 )
+            ) % ( relationships.len() + 1 );
+            mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
+            previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
+            var relationship = invoke( previousEntity, relation );
+            relationship.applyAliasSuffix( "_" & aliasPrefix & mirroredIndex );
+            map[ relation ] = relationship;
+            previousEntity = relationship.getRelated();
+            return map;
+        }, structNew( "ordered" ) );
 
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
@@ -1925,15 +1961,12 @@ component accessors="true" {
         return variables._wirebox.getInstance(
             name = "HasManyThrough@quick",
             initArguments = {
-                "related": related,
-                "relationName": arguments.relationName,
+                "related": relationshipsMap[ relationships[ relationships.len() ] ].getRelated(),
+                "relationName": relationships[ relationships.len() ],
                 "relationMethodName": arguments.relationMethodName,
                 "parent": this,
-                "intermediate": intermediate,
-                "firstKeys": arguments.firstKey,
-                "secondKeys": arguments.secondKey,
-                "localKeys": arguments.localKey,
-                "secondLocalKeys": arguments.secondLocalKey,
+                "relationships": arguments.relationships,
+                "relationshipsMap": relationshipsMap,
                 "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
@@ -1960,7 +1993,7 @@ component accessors="true" {
      *                      polymorphic relationship. Defaults to `#name#_id`.
      * @localKey            The local primary key on the parent entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.PolymorphicHasMany
      */
@@ -2017,10 +2050,10 @@ component accessors="true" {
      *                      polymorphic relationship. Defaults to `#name#_type`.
      * @id                  The column name that defines the id of the
      *                      polymorphic relationship. Defaults to `#name#_id`.
-     * @ownerKey            The column name on the `realted` entity that is referred
+     * @localKey            The column name on the `realted` entity that is referred
      *                      to by the `foreignKey` of the `parent` entity.
      * @relationMethodName  The method name called to retrieve this relationship.
-     *                      Uses a stack backtrace to determine by default,
+     *                      Uses a stack backtrace to determine by default.
      *
      * @return              quick.models.Relationships.PolymorphicBelongsTo
      */
@@ -2028,7 +2061,7 @@ component accessors="true" {
         required string name,
         string type,
         any id,
-        any ownerKey,
+        any localKey,
         string relationMethodName
     ) {
         param arguments.relationMethodName = lCase(
@@ -2049,7 +2082,7 @@ component accessors="true" {
                     "relationMethodName": arguments.relationMethodName,
                     "parent": this,
                     "foreignKeys": arguments.id,
-                    "ownerKeys": [],
+                    "localKeys": [],
                     "type": arguments.type,
                     "withConstraints": !variables._withoutRelationshipConstraints
                 }
@@ -2057,8 +2090,8 @@ component accessors="true" {
         }
 
         var related = variables._wirebox.getInstance( relationName );
-        param arguments.ownerKey = related.keyNames();
-        arguments.ownerKey = arrayWrap( arguments.ownerKey );
+        param arguments.localKey = related.keyNames();
+        arguments.localKey = arrayWrap( arguments.localKey );
 
         return variables._wirebox.getInstance(
             name = "PolymorphicBelongsTo@quick",
@@ -2068,7 +2101,7 @@ component accessors="true" {
                 "relationMethodName": arguments.name,
                 "parent": this,
                 "foreignKeys": arguments.id,
-                "ownerKeys": arguments.ownerKey,
+                "localKeys": arguments.localKey,
                 "type": arguments.type,
                 "withConstraints": !variables._withoutRelationshipConstraints
             }
@@ -2269,17 +2302,11 @@ component accessors="true" {
         required string name,
         required any subselect
     ) {
-        if (
-            !variables._attributes.keyExists(
-                retrieveAliasForColumn( arguments.name )
-            )
-        ) {
-            variables._attributes[ arguments.name ] = arguments.name;
-            variables._meta.attributes[ arguments.name ] = paramAttribute( { "name": arguments.name, "update": false, "insert": false } );
-            variables._meta.originalMetadata.properties.append(
-                variables._meta.attributes[ arguments.name ]
-            );
-        }
+        appendReadOnlyAttribute(
+            name = arguments.name,
+            update = false,
+            insert = false
+        );
 
         if (
             retrieveQuery().getColumns().isEmpty() ||
@@ -2902,7 +2929,6 @@ component accessors="true" {
         }
 
         variables._fullName = variables._meta.fullName;
-        variables._mapping = variables._meta.mapping;
         variables._entityName = variables._meta.entityName;
         variables._table = variables._meta.table;
         param variables._queryOptions = {};
@@ -2969,6 +2995,29 @@ component accessors="true" {
             arguments.acc[ arguments.prop.name ] = arguments.prop.casts;
             return arguments.acc;
         }, {} );
+    }
+
+    /**
+     * Creates the internal attribute struct from an existing struct.
+     * The only required field on the passed in struct is `name`.
+     *
+     * @prop    The attribute struct to param.
+     *
+     * @return  An attribute struct with all the keys needed.
+     */
+    public any function appendReadOnlyAttribute( required string name ) {
+        if (
+            !variables._attributes.keyExists(
+                retrieveAliasForColumn( arguments.name )
+            )
+        ) {
+            variables._attributes[ arguments.name ] = arguments.name;
+            variables._meta.attributes[ arguments.name ] = paramAttribute( { "name": arguments.name, "update": false, "insert": false } );
+            variables._meta.originalMetadata.properties.append(
+                variables._meta.attributes[ arguments.name ]
+            );
+        }
+        return this;
     }
 
     /**

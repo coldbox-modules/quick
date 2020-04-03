@@ -10,14 +10,24 @@ component
 {
 
     /**
+     * The foreign keys on the parent entity.
+     */
+    property name="foreignKeys";
+
+    /**
+     * The local primary keys on the parent entity.
+     */
+    property name="localKeys";
+
+    /**
      * Creates a HasOneOrMany relationship.
      *
      * @related             The related entity instance.
      * @relationName        The WireBox mapping for the related entity.
      * @relationMethodName  The method name called to retrieve this relationship.
      * @parent              The parent entity instance for the relationship.
-     * @foreignKey          The foreign key on the parent entity.
-     * @localKey            The local primary key on the parent entity.
+     * @foreignKeys         The foreign keys on the parent entity.
+     * @localKeys           The local primary keys on the parent entity.
      *
      * @return              quick.models.Relationships.HasOneOrMany
      */
@@ -334,16 +344,21 @@ component
     }
 
     /**
-     * Returns the last value in an array or null if the array is empty.
+     * Applies the join for relationship in a `hasManyThrough` chain.
      *
-     * @arr      An array of items.
+     * @base    The query to apply the join to.
      *
-     * @return   any
+     * @return  void
      */
-    private any function arrayLast( required array arr ) {
-        return arguments.arr.isEmpty() ? javacast( "null", "" ) : arguments.arr[
-            arguments.arr.len()
-        ];
+    public void function applyThroughJoin( required any base ) {
+        arguments.base.join( variables.parent.tableName(), function( j ) {
+            arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
+                j.on(
+                    variables.related.qualifyColumn( foreignKey ),
+                    variables.parent.qualifyColumn( localKey )
+                );
+            } );
+        } );
     }
 
 }

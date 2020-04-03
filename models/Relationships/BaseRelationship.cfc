@@ -4,7 +4,7 @@
  *
  * @doc_abstract true
  */
-component {
+component accessors="true" {
 
     /**
      * The WireBox Injector.
@@ -22,12 +22,37 @@ component {
     property name="defaultAttributes";
 
     /**
+     * The related model we are ultimately fetching with this relationship.
+     * If a User `hasMany` Posts then Post is the related entity.
+     * s
+     */
+    property name="related";
+
+    /**
+     * The WireBox mapping used for the related entity.
+     */
+    property name="relationName";
+
+    /**
+     * The name used to define the relationship.  Usually the name of the method
+     * called that returns the relationship.
+     */
+    property name="relationMethodName";
+
+    /**
+     * The entity that the relationships is starting from.
+     * If a User `hasMany` Posts then User is the parent entity.
+     */
+    property name="parent";
+
+    /**
      * Creates a new relationship component to query and retrieve results.
      *
      * @related             The related entity instance.
      * @relationName        The WireBox mapping for the related entity.
      * @relationMethodName  The method name called to retrieve this relationship.
      * @parent              The parent entity instance for the relationship.
+     * @withConstraints     Flag to automatically add the query constraints.  Default: true.
      *
      * @return              BaseRelationship
      */
@@ -228,6 +253,20 @@ component {
     }
 
     /**
+     * Applies a suffix to an alias for the relationship.
+     *
+     * @suffix   The suffix to append.
+     *
+     * @return  quick.models.Relationships.BaseRelationship
+     */
+    public BaseRelationship function applyAliasSuffix( required string suffix ) {
+        variables.related.withAlias(
+            variables.related.tableName() & arguments.suffix
+        );
+        return this;
+    }
+
+    /**
      * Retrieves the current query builder instance.
      *
      * @return  qb.models.Query.QueryBuilder
@@ -310,6 +349,18 @@ component {
         ];
     }
 
+    /**
+     * Accepts an array of arrays and calls a callback passing each item of
+     * the same index from each of the arrays.
+     *
+     * @arrays    An array of arrays.  All arrays must have the same length.
+     * @callback  The callback to call.  It will be passed an item from each
+     *            array passed in at the same index.
+     *
+     * @throws    ArrayZipLengthMismatch
+     *
+     * @return    The original array of arrays passed in.
+     */
     private array function arrayZipEach(
         required array arrays,
         required any callback

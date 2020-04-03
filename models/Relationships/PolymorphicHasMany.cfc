@@ -18,7 +18,10 @@
  * }
  * ```
  */
-component extends="quick.models.Relationships.PolymorphicHasOneOrMany" {
+component
+    extends="quick.models.Relationships.PolymorphicHasOneOrMany"
+    accessors="true"
+{
 
     /**
      * Returns the result of the relationship.
@@ -61,6 +64,30 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" {
      */
     function match( entities, results, relation ) {
         return matchMany( argumentCollection = arguments );
+    }
+
+    /**
+     * Applies the constraints for the final relationship in a `hasManyThrough` chain.
+     *
+     * @base    The query to apply the constraints to.
+     *
+     * @return  void
+     */
+    public void function applyThroughConstraints( required any base ) {
+        arguments.base
+            .where(
+                variables.related.qualifyColumn( variables.morphType ),
+                variables.morphMapping
+            )
+            .where( function( q ) {
+                arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
+                    q.where(
+                        variables.related.qualifyColumn( foreignKey ),
+                        variables.parent.retrieveAttribute( localKey )
+                    );
+                } );
+            } );
+        // abort;
     }
 
 }

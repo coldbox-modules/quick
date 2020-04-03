@@ -56,7 +56,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         expect( users ).toHaveLength( 2 );
                     } );
 
-                    it( "applies count constraints to the final relationship in a nested relationsihp existence check", function() {
+                    it( "applies count constraints to the final relationship in a nested relationship existence check", function() {
                         var users = getInstance( "User" )
                             .has( "posts.comments", "=", 1 )
                             .get();
@@ -199,7 +199,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                         expect( users ).toHaveLength( 2 );
                     } );
 
-                    it( "applies count constraints to the final relationship in a nested relationsihp absence check", function() {
+                    it( "applies count constraints to the final relationship in a nested relationship absence check", function() {
                         var users = getInstance( "User" )
                             .doesntHave( "posts.comments", "=", 1 )
                             .get();

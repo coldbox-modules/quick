@@ -45,7 +45,7 @@ component {
         " );
 
         queryExecute( "
-            CREATE TABLE `companies` (
+            CREATE TABLE `offices` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `name` varchar(50) NOT NULL,
                 PRIMARY KEY (`id`)
@@ -53,14 +53,14 @@ component {
         " );
 
         queryExecute( "
-            INSERT INTO `companies` VALUES (1, 'Acme')
+            INSERT INTO `offices` VALUES (1, 'Acme')
         " );
 
         queryExecute( "
             CREATE TABLE `teams` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `name` varchar(50) NOT NULL,
-                `companyId` int(11) NOT NULL,
+                `officeId` int(11) NOT NULL,
                 PRIMARY KEY (`id`)
             )
         " );

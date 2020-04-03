@@ -31,8 +31,8 @@ component extends="quick.models.Relationships.BelongsTo" {
      *                      In a `BelongsTo` relationship, this is also referred
      *                      to internally as `child`.
      * @foreignKeys         The column name on the `parent` entity that refers to
-     *                      the `ownerKey` on the `related` entity.
-     * @ownerKeys           The column name on the `realted` entity that is referred
+     *                      the `localKey` on the `related` entity.
+     * @localKeys           The column name on the `realted` entity that is referred
      *                      to by the `foreignKey` of the `parent` entity.
      * @type                The name of the column that contains the entity type
      *                      of the polymorphic relationship.
@@ -45,7 +45,7 @@ component extends="quick.models.Relationships.BelongsTo" {
         required string relationMethodName,
         required any parent,
         required array foreignKeys,
-        required array ownerKeys,
+        required array localKeys,
         required string type,
         boolean withConstraints = true
     ) {
@@ -57,7 +57,7 @@ component extends="quick.models.Relationships.BelongsTo" {
             relationMethodName = arguments.relationMethodName,
             parent = arguments.parent,
             foreignKeys = arguments.foreignKeys,
-            ownerKeys = arguments.ownerKeys,
+            localKeys = arguments.localKeys,
             withConstraints = arguments.withConstraints
         );
     }
@@ -112,7 +112,7 @@ component extends="quick.models.Relationships.BelongsTo" {
      * @return  quick.models.BaseEntity | null
      */
     public any function getResults() {
-        return variables.ownerKeys.isEmpty() ? javacast( "null", "" ) : super.getResults();
+        return variables.localKeys.isEmpty() ? javacast( "null", "" ) : super.getResults();
     }
 
     /**
@@ -145,14 +145,14 @@ component extends="quick.models.Relationships.BelongsTo" {
             variables.related.get_eagerLoad()
         );
 
-        var localOwnerKeys = variables.ownerKeys.isEmpty() ? instance.keyNames() : variables.ownerKeys;
+        var localKeys = variables.localKeys.isEmpty() ? instance.keyNames() : variables.localKeys;
 
         return instance
             .where( function( q1 ) {
                 gatherKeysByType( type ).each( function( keys ) {
                     q1.orWhere( function( q2 ) {
-                        arrayZipEach( [ localOwnerKeys, keys ], function( localOwnerKey, keyValue ) {
-                            q2.where( localOwnerKey, keyValue );
+                        arrayZipEach( [ localKeys, keys ], function( localKey, keyValue ) {
+                            q2.where( localKey, keyValue );
                         } );
                     } );
                 } );
@@ -215,19 +215,19 @@ component extends="quick.models.Relationships.BelongsTo" {
         required array results
     ) {
         for ( var result in arguments.results ) {
-            var ownerDictionaryKey = variables.ownerKeys.isEmpty() ? result.keyValues().toList() : variables.ownerKeys
-                .map( function( ownerKey ) {
-                    return result.retrieveAttribute( ownerKey );
+            var localDictionaryKey = variables.localKeys.isEmpty() ? result.keyValues().toList() : variables.localKeys
+                .map( function( localKey ) {
+                    return result.retrieveAttribute( localKey );
                 } )
                 .toList();
 
             if (
                 variables.dictionary[ arguments.type ].keyExists(
-                    ownerDictionaryKey
+                    localDictionaryKey
                 )
             ) {
                 var entities = variables.dictionary[ arguments.type ][
-                    ownerDictionaryKey
+                    localDictionaryKey
                 ];
                 for ( var entity in entities ) {
                     entity.assignRelationship(

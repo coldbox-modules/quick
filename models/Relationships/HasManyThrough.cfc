@@ -253,4 +253,15 @@ component
         } );
     }
 
+    public HasManyThrough function applyAlias( required string alias ) {
+        return this;
+    }
+
+    public void function applyThroughJoin( required any base ) {
+        performJoin( arguments.base );
+        variables.closestToParent.applyThroughJoin(
+            arguments.base
+        );
+    }
+
 }

@@ -84,7 +84,25 @@ component quick {
     }
 
     function team() {
-        return belongsTo( "Team", "teamId" );
+        return belongsTo( "Team", "team_id" );
+    }
+
+    function teammates() {
+        return tap( hasManyThrough( [ "team", "users" ] ), function( r ) {
+            r.where( r.qualifyColumn( "id" ), "<>", this.getId() );
+        } );
+    }
+
+    function officemates() {
+        return tap( hasManyThrough( [ "team", "office", "teams", "users" ] ), function( r ) {
+            r.where( r.qualifyColumn( "id" ), "<>", this.getId() );
+        } );
+    }
+
+    function officematesAlternate() {
+        return tap( hasManyThrough( [ "team", "office", "users" ] ), function( r ) {
+            r.where( r.qualifyColumn( "id" ), "<>", this.getId() );
+        } );
     }
 
     function posts() {

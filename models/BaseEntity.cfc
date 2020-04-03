@@ -178,6 +178,11 @@ component accessors="true" {
     property name="_globalScopeExclusions" persistent="false";
 
     /**
+     * The current alias version used for hasManyThrough aliases
+     */
+    property name="_aliasPrefix" persistent="false" default="";
+
+    /**
      * Used to determine if a component is a Quick entity
      * without resorting to isInstanceOf
      */
@@ -216,6 +221,7 @@ component accessors="true" {
         param variables._castCache = {};
         param variables._casterCache = {};
         param variables._loaded = false;
+        param variables._aliasPrefix = "";
         return this;
     }
 
@@ -288,6 +294,12 @@ component accessors="true" {
      */
     public string function tableName() {
         return variables._table;
+    }
+
+    public any function withAlias( required string alias ) {
+        variables._table = "#variables._table# #alias#";
+        retrieveQuery().from( variables._table );
+        return this;
     }
 
     /**
@@ -820,7 +832,9 @@ component accessors="true" {
         if ( findNoCase( ".", arguments.column ) != 0 ) {
             return arguments.column;
         }
-        return tableName() & "." & retrieveColumnForAlias( arguments.column );
+        return listLast( tableName(), " " ) & "." & retrieveColumnForAlias(
+            arguments.column
+        );
     }
 
     /**
@@ -1590,13 +1604,13 @@ component accessors="true" {
      * ```sql
      * SELECT *
      * FROM users [relationName.tableName()]
-     * WHERE users.id [ownerKey] = 'posts.userId' [foreignKey]
+     * WHERE users.id [localKey] = 'posts.userId' [foreignKey]
      * ```
      *
      * @relationName        The WireBox mapping for the related entity.
      * @foreignKey          The column name on the `parent` entity that refers to
-     *                      the `ownerKey` on the `related` entity.
-     * @ownerKey            The column name on the `realted` entity that is referred
+     *                      the `localKey` on the `related` entity.
+     * @localKey            The column name on the `realted` entity that is referred
      *                      to by the `foreignKey` of the `parent` entity.
      * @relationMethodName  The method name called to retrieve this relationship.
      *                      Uses a stack backtrace to determine by default,
@@ -1606,7 +1620,7 @@ component accessors="true" {
     private BelongsTo function belongsTo(
         required string relationName,
         any foreignKey,
-        any ownerKey,
+        any localKey,
         string relationMethodName
     ) {
         var related = variables._wirebox.getInstance(
@@ -1622,15 +1636,15 @@ component accessors="true" {
                 } );
         }
         arguments.foreignKey = arrayWrap( arguments.foreignKey );
-        param arguments.ownerKey = related.keyNames();
-        arguments.ownerKey = arrayWrap( arguments.ownerKey );
+        param arguments.localKey = related.keyNames();
+        arguments.localKey = arrayWrap( arguments.localKey );
         param arguments.relationMethodName = lCase(
             callStackGet()[ 2 ][ "Function" ]
         );
 
         guardAgainstKeyLengthMismatch(
             arguments.foreignKey,
-            arguments.ownerKey
+            arguments.localKey
         );
 
         return variables._wirebox.getInstance(
@@ -1641,7 +1655,7 @@ component accessors="true" {
                 "relationMethodName": arguments.relationMethodName,
                 "parent": this,
                 "foreignKeys": arguments.foreignKey,
-                "ownerKeys": arguments.ownerKey,
+                "localKeys": arguments.localKey,
                 "withConstraints": !variables._withoutRelationshipConstraints
             }
         );
@@ -1897,14 +1911,28 @@ component accessors="true" {
      * @return              quick.models.Relationships.HasManyThrough
      */
     private HasManyThrough function hasManyThrough(
-        required any relationships,
-        string relationMethodName
+        required array relationships,
+        string relationMethodName,
+        string aliasPrefix = variables._aliasPrefix
     ) {
-        arguments.relationships = arrayWrap( arguments.relationships );
+        if ( arguments.relationships.len() <= 1 ) {
+            throw(
+                type = "RelationshipsLengthException",
+                message = "A hasManyThrough relationships must have at least two relationships"
+            );
+        }
 
         var previousEntity = this;
-        var relationshipsMap = arguments.relationships.reduce( function( map, relation ) {
+        var relationshipsMap = arguments.relationships.reduce( function( map, relation, index ) {
+            var mirroredIndex = ( index + ( relationships.len() - 1 ) ) % (
+                relationships.len() + 1
+            );
+            mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
+            previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
             var relationship = invoke( previousEntity, relation );
+            relationship.applyAlias(
+                relationship.tableName() & "_" & aliasPrefix & mirroredIndex
+            );
             map[ relation ] = relationship;
             previousEntity = relationship.getRelated();
             return map;
@@ -2017,7 +2045,7 @@ component accessors="true" {
         required string name,
         string type,
         any id,
-        any ownerKey,
+        any localKey,
         string relationMethodName
     ) {
         param arguments.relationMethodName = lCase(
@@ -2038,7 +2066,7 @@ component accessors="true" {
                     "relationMethodName": arguments.relationMethodName,
                     "parent": this,
                     "foreignKeys": arguments.id,
-                    "ownerKeys": [],
+                    "localKeys": [],
                     "type": arguments.type,
                     "withConstraints": !variables._withoutRelationshipConstraints
                 }
@@ -2046,8 +2074,8 @@ component accessors="true" {
         }
 
         var related = variables._wirebox.getInstance( relationName );
-        param arguments.ownerKey = related.keyNames();
-        arguments.ownerKey = arrayWrap( arguments.ownerKey );
+        param arguments.localKey = related.keyNames();
+        arguments.localKey = arrayWrap( arguments.localKey );
 
         return variables._wirebox.getInstance(
             name = "PolymorphicBelongsTo@quick",
@@ -2057,7 +2085,7 @@ component accessors="true" {
                 "relationMethodName": arguments.name,
                 "parent": this,
                 "foreignKeys": arguments.id,
-                "ownerKeys": arguments.ownerKey,
+                "localKeys": arguments.localKey,
                 "type": arguments.type,
                 "withConstraints": !variables._withoutRelationshipConstraints
             }

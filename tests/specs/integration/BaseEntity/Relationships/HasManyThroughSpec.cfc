@@ -55,6 +55,35 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                     "I thought this post was great"
                 );
             } );
+
+            it( "can go up and down belongsTo and hasMany relationships", function() {
+                var user = getInstance( "User" ).findOrFail( 1 );
+                var teammates = user.getTeammates();
+                expect( teammates ).toBeArray();
+                expect( teammates ).toHaveLength( 2 );
+                expect( teammates[ 1 ].getId() ).toBe( 2 );
+                expect( teammates[ 2 ].getId() ).toBe( 3 );
+            } );
+
+            it( "can go up and down many belongsTo and hasMany relationships", function() {
+                var user = getInstance( "User" ).findOrFail( 2 );
+                var officemates = user.getOfficemates();
+                expect( officemates ).toBeArray();
+                expect( officemates ).toHaveLength( 3 );
+                expect( officemates[ 1 ].getId() ).toBe( 1 );
+                expect( officemates[ 2 ].getId() ).toBe( 3 );
+                expect( officemates[ 3 ].getId() ).toBe( 4 );
+            } );
+
+            it( "can go up and down many belongsTo and hasMany even hasManyThrough relationships", function() {
+                var user = getInstance( "User" ).findOrFail( 2 );
+                var officemates = user.getOfficematesAlternate();
+                expect( officemates ).toBeArray();
+                expect( officemates ).toHaveLength( 3 );
+                expect( officemates[ 1 ].getId() ).toBe( 1 );
+                expect( officemates[ 2 ].getId() ).toBe( 3 );
+                expect( officemates[ 3 ].getId() ).toBe( 4 );
+            } );
         } );
     }
 

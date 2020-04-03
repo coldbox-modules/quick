@@ -26,9 +26,9 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @parent              The parent entity instance for the relationship.
      *                      In a `BelongsTo` relationship, this is also referred
      *                      to internally as `child`.
-     * @foreignKey          The column name on the `parent` entity that refers to
-     *                      the `ownerKey` on the `related` entity.
-     * @ownerKey            The column name on the `realted` entity that is referred
+     * @foreignKeys         The column name on the `parent` entity that refers to
+     *                      the `localKey` on the `related` entity.
+     * @localKeys           The column name on the `realted` entity that is referred
      *                      to by the `foreignKey` of the `parent` entity.
      *
      * @return              quick.models.Relationships.BelongsTo
@@ -39,10 +39,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
         required string relationMethodName,
         required any parent,
         required array foreignKeys,
-        required array ownerKeys,
+        required array localKeys,
         boolean withConstraints = true
     ) {
-        variables.ownerKeys = arguments.ownerKeys;
+        variables.localKeys = arguments.localKeys;
         variables.foreignKeys = arguments.foreignKeys;
         variables.child = arguments.parent;
 
@@ -95,9 +95,9 @@ component extends="quick.models.Relationships.BaseRelationship" {
      */
     public void function addConstraints() {
         variables.related.where( function( q ) {
-            arrayZipEach( [ variables.ownerKeys, variables.foreignKeys ], function( ownerKey, foreignKey ) {
+            arrayZipEach( [ variables.localKeys, variables.foreignKeys ], function( localKey, foreignKey ) {
                 q.where(
-                    variables.related.qualifyColumn( ownerKey ),
+                    variables.related.qualifyColumn( localKey ),
                     variables.child.retrieveAttribute( foreignKey )
                 );
             } );
@@ -115,9 +115,9 @@ component extends="quick.models.Relationships.BaseRelationship" {
         variables.related.where( function( q1 ) {
             getEagerEntityKeys( entities ).each( function( keys ) {
                 q1.orWhere( function( q2 ) {
-                    arrayZipEach( [ variables.ownerKeys, keys ], function( ownerKey, key ) {
+                    arrayZipEach( [ variables.localKeys, keys ], function( localKey, key ) {
                         q2.where(
-                            variables.related.qualifyColumn( ownerKey ),
+                            variables.related.qualifyColumn( localKey ),
                             key
                         );
                     } );
@@ -219,9 +219,9 @@ component extends="quick.models.Relationships.BaseRelationship" {
         required string relation
     ) {
         var dictionary = arguments.results.reduce( function( dict, result ) {
-            var key = variables.ownerKeys
-                .map( function( ownerKey ) {
-                    return result.retrieveAttribute( ownerKey );
+            var key = variables.localKeys
+                .map( function( localKey ) {
+                    return result.retrieveAttribute( localKey );
                 } )
                 .toList();
             arguments.dict[ key ] = arguments.result;
@@ -273,18 +273,18 @@ component extends="quick.models.Relationships.BaseRelationship" {
      * @return  quick.models.BaseEntity
      */
     public any function associate( required any entity ) {
-        var ownerKeyValues = !isObject( arguments.entity ) ? arrayWrap(
+        var localKeyValues = !isObject( arguments.entity ) ? arrayWrap(
             arguments.entity
-        ) : variables.ownerKeys.map( function( ownerKey ) {
-            return entity.retrieveAttribute( ownerKey );
+        ) : variables.localKeys.map( function( localKey ) {
+            return entity.retrieveAttribute( localKey );
         } );
 
-        guardAgainstKeyLengthMismatch( ownerKeyValues, variables.foreignKeys );
+        guardAgainstKeyLengthMismatch( localKeyValues, variables.foreignKeys );
 
-        arrayZipEach( [ variables.foreignKeys, ownerKeyValues ], function( foreignKey, ownerKeyValue ) {
+        arrayZipEach( [ variables.foreignKeys, localKeyValues ], function( foreignKey, localKeyValue ) {
             variables.child.forceAssignAttribute(
                 foreignKey,
-                ownerKeyValue
+                localKeyValue
             );
         } );
 
@@ -340,6 +340,28 @@ component extends="quick.models.Relationships.BaseRelationship" {
     public array function getExistenceCompareKeys() {
         return variables.foreignKeys.map( function( foreignKey ) {
             return variables.parent.qualifyColumn( foreignKey );
+        } );
+    }
+
+    public void function applyThroughJoin( required any base ) {
+        arguments.base.join( variables.parent.tableName(), function( j ) {
+            arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
+                j.on(
+                    variables.parent.qualifyColumn( foreignKey ),
+                    variables.related.qualifyColumn( localKey )
+                );
+            } );
+        } );
+    }
+
+    public void function applyThroughConstraints( required any base ) {
+        arguments.base.where( function( q ) {
+            arrayZipEach( [ variables.foreignKeys, variables.localKeys ], function( foreignKey, localKey ) {
+                q.where(
+                    variables.related.qualifyColumn( localKey ),
+                    variables.parent.retrieveAttribute( foreignKey )
+                );
+            } );
         } );
     }
 

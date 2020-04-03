@@ -2,14 +2,14 @@ component table="teams" extends="quick.models.BaseEntity" {
 
     property name="id";
     property name="name";
-    property name="companyId";
+    property name="officeId";
 
     function users() {
         return hasMany( "User", "team_id" );
     }
 
-    function company() {
-        return belongsTo( "Company" );
+    function office() {
+        return belongsTo( "Office" );
     }
 
 }

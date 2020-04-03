@@ -232,6 +232,11 @@ component accessors="true" {
         return this;
     }
 
+    public BaseRelationship function applyAlias( required string alias ) {
+        variables.related.withAlias( arguments.alias );
+        return this;
+    }
+
     /**
      * Retrieves the current query builder instance.
      *

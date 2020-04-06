@@ -81,6 +81,29 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
                 expect( userA.isNot( userB ) ).toBeTrue();
                 expect( userA.isNot( userAAgain ) ).toBeFalse();
             } );
+
+            it( "can return a query directly as mementos", function() {
+                var users = getInstance( "User" ).asMemento().all();
+                expect( users ).toBeArray( 4 );
+                expect( users[ 1 ] ).toBeStruct();
+                expect( users[ 1 ] ).notToBeComponent();
+            } );
+
+            it( "can configure the returned mementos with asMemento", function() {
+                var users = getInstance( "User" )
+                    .asMemento(
+                        ignoreDefaults = true,
+                        includes = [ "id", "username" ]
+                    )
+                    .get();
+
+                expect( users ).toBeArray( 4 );
+                expect( users[ 1 ] ).toBeStruct();
+                expect( users[ 1 ] ).notToBeComponent();
+                expect( users[ 1 ] ).toHaveLength( 2 );
+                expect( users[ 1 ] ).toHaveKey( "id" );
+                expect( users[ 1 ] ).toHaveKey( "username" );
+            } );
         } );
     }
 

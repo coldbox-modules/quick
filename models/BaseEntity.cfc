@@ -222,6 +222,8 @@ component accessors="true" {
         param variables._casterCache = {};
         param variables._loaded = false;
         param variables._aliasPrefix = "";
+        variables._asMemento = false;
+        variables._asMementoSettings = {};
         return this;
     }
 
@@ -891,7 +893,9 @@ component accessors="true" {
      * @return  The result of `newCollection` with the retrieved entities.
      */
     public any function get() {
-        return newCollection( eagerLoadRelations( getEntities() ) );
+        return newCollection(
+            handleTransformations( eagerLoadRelations( getEntities() ) )
+        );
     }
 
     /**
@@ -905,8 +909,8 @@ component accessors="true" {
     public any function paginate( numeric page = 1, numeric maxRows = 25 ) {
         activateGlobalScopes();
         return tap( retrieveQuery().paginate( page, maxRows ), function( p ) {
-            p.results = eagerLoadRelations(
-                p.results.map( variables.loadEntity )
+            p.results = handleTransformations(
+                eagerLoadRelations( p.results.map( variables.loadEntity ) )
             );
         } );
     }
@@ -920,8 +924,8 @@ component accessors="true" {
     public any function first() {
         activateGlobalScopes();
         var attrs = retrieveQuery().first();
-        return structIsEmpty( attrs ) ? javacast( "null", "" ) : loadEntity(
-            attrs
+        return structIsEmpty( attrs ) ? javacast( "null", "" ) : handleTransformations(
+            loadEntity( attrs )
         );
     }
 
@@ -952,7 +956,7 @@ component accessors="true" {
 
             throw( type = "EntityNotFound", message = arguments.errorMessage );
         }
-        return loadEntity( attrs );
+        return handleTransformations( loadEntity( attrs ) );
     }
 
     /**
@@ -973,7 +977,7 @@ component accessors="true" {
             return firstOrFail();
         } catch ( EntityNotFound e ) {
             arguments.attrs.append( arguments.newAttrs, true );
-            return newEntity().fill( arguments.attrs );
+            return handleTransformations( newEntity().fill( arguments.attrs ) );
         }
     }
 
@@ -999,7 +1003,7 @@ component accessors="true" {
             return firstOrFail();
         } catch ( EntityNotFound e ) {
             arguments.attrs.append( arguments.newAttrs, true );
-            return create( arguments.attrs );
+            return handleTransformations( create( arguments.attrs ) );
         }
     }
 
@@ -1024,12 +1028,16 @@ component accessors="true" {
                 } );
             } )
             .first();
+
         if ( structIsEmpty( data ) ) {
             return javacast( "null", "" );
         }
-        return tap( loadEntity( data ), function( entity ) {
-            fireEvent( "postLoad", { entity: entity } );
-        } );
+
+        return handleTransformations(
+            tap( loadEntity( data ), function( entity ) {
+                fireEvent( "postLoad", { entity: entity } );
+            } )
+        );
     }
 
     /**
@@ -1098,7 +1106,7 @@ component accessors="true" {
         try {
             return findOrFail( arguments.id );
         } catch ( EntityNotFound e ) {
-            return newEntity().fill( arguments.attrs );
+            return handleTransformations( newEntity().fill( arguments.attrs ) );
         }
     }
 
@@ -1116,7 +1124,7 @@ component accessors="true" {
         try {
             return findOrFail( arguments.id );
         } catch ( EntityNotFound e ) {
-            return create( arguments.attrs );
+            return handleTransformations( create( arguments.attrs ) );
         }
     }
 
@@ -2816,11 +2824,18 @@ component accessors="true" {
      * an empty collection.
      *
      * @entities  The array of entities returned by the query.
+     *
+     * @return    any
      */
     public any function newCollection( array entities = [] ) {
         return arguments.entities;
     }
 
+    /**
+     * Set up the memento struct when this instance is ready.
+     *
+     * @return  void
+     */
     function instanceReady() {
         if ( entityName() != "BaseEntity" ) {
             param this.memento = {};
@@ -2837,6 +2852,41 @@ component accessors="true" {
                 }
             );
         }
+    }
+
+    /**
+     * Automatically converts the entities found from a query to mementos.
+     *
+     * @return  quick.models.BaseEntity
+     */
+    public any function asMemento() {
+        variables._asMemento = true;
+        variables._asMementoSettings = arguments;
+        return this;
+    }
+
+    /**
+     * Converts an entity or array of entities to mementos
+     * if asked for via the `asMemento` function.
+     *
+     * @return any
+     */
+    private any function handleTransformations( entity ) {
+        if ( !variables._asMemento ) {
+            return arguments.entity;
+        }
+
+        if ( !isArray( arguments.entity ) ) {
+            return entity.getMemento(
+                argumentCollection = variables._asMementoSettings
+            );
+        }
+
+        return arguments.entity.map( function( e ) {
+            return e.getMemento(
+                argumentCollection = variables._asMementoSettings
+            );
+        } );
     }
 
     /**

@@ -20,11 +20,26 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 	/**
 	 * Returns the result of the relationship.
 	 *
-	 * @doc_generic  quick.models.BaseEntity
-	 * @return       [quick.models.BaseEntity]
+	 * @return  quick.models.BaseEntity
 	 */
-	public array function getResults() {
-		return variables.related.get();
+	public any function getResults() {
+		var result = variables.related.first();
+
+		if ( !isNull( result ) ) {
+			return result;
+		}
+
+		if ( !variables.returnDefaultEntity ) {
+			return javacast( "null", "" );
+		}
+
+		if ( isClosure( variables.defaultAttributes ) || isCustomFunction( variables.defaultAttributes ) ) {
+			return tap( variables.related.newEntity(), function( newEntity ) {
+				variables.defaultAttributes( newEntity, variables.parent );
+			} );
+		}
+
+		return variables.related.newEntity().fill( variables.defaultAttributes );
 	}
 
 	/**
@@ -38,13 +53,13 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 	 */
 	public array function initRelation( required array entities, required string relation ) {
 		return arguments.entities.map( function( entity ) {
-			return arguments.entity.assignRelationship( relation, [] );
+			return arguments.entity.assignRelationship( relation, javacast( "null", "" ) );
 		} );
 	}
 
 	/**
-	 * Matches the array of entity results to an array of entities for a relation.
-	 * Any matched records are populated into the matched entity's relation.
+	 * Matches the array of entity results to a single value for the relation.
+	 * The matched record is populated into the matched entity's relation.
 	 *
 	 * @entities     The entities being eager loaded.
 	 * @results      The relationship results.
@@ -58,31 +73,31 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 		required array results,
 		required string relation
 	) {
-		var dictionary = buildDictionary( arguments.results );
-		arguments.entities.each( function( entity ) {
-			var key = variables.closestToParent
-				.getLocalKeys()
-				.map( function( localKey ) {
-					return entity.retrieveAttribute( localKey );
-				} )
-				.toList();
-			if ( structKeyExists( dictionary, key ) ) {
-				entity.assignRelationship( relation, dictionary[ key ] );
-			}
-		} );
-		return arguments.entities;
+		return matchOne( argumentCollection = arguments );
 	}
 
 	/**
-	 * Applies the constraints for the final relationship in a `HasOneOrManyThrough` chain.
+	 * Applies the constraints for the final relationship in a `hasManyThrough` chain.
 	 *
 	 * @base    The query to apply the constraints to.
 	 *
 	 * @return  void
 	 */
 	public void function applyThroughConstraints( required any base ) {
-		performJoin( arguments.base );
-		variables.closestToParent.applyThroughConstraints( arguments.base );
+		arguments.base.where( function( q ) {
+			arrayZipEach(
+				[
+					variables.foreignKeys,
+					variables.localKeys
+				],
+				function( foreignKey, localKey ) {
+					q.where(
+						variables.related.qualifyColumn( foreignKey ),
+						variables.parent.retrieveAttribute( localKey )
+					);
+				}
+			);
+		} );
 	}
 
 }

@@ -4,36 +4,31 @@
  */
 component implements="KeyType" {
 
-    /**
-     * Adds a RETURNING clause for the primary key to the query.
-     *
-     * @entity   The entity that is being inserted.
-     *
-     * @return   void
-     */
-    public void function preInsert( required any entity ) {
-        arguments.entity
-            .retrieveQuery()
-            .returning( arguments.entity.keyNames() );
-    }
+	/**
+	 * Adds a RETURNING clause for the primary key to the query.
+	 *
+	 * @entity   The entity that is being inserted.
+	 *
+	 * @return   void
+	 */
+	public void function preInsert( required any entity ) {
+		arguments.entity.retrieveQuery().returning( arguments.entity.keyNames() );
+	}
 
-    /**
-     * Sets the primary key equal to the returned value.
-     *
-     * @entity   The entity that was inserted.
-     * @result   The result of the queryExecute call.
-     *
-     * @return   void
-     */
-    public void function postInsert(
-        required any entity,
-        required struct result
-    ) {
-        arguments.entity
-            .keyNames()
-            .each( function( keyName ) {
-                entity.assignAttribute( keyName, result.query[ keyName ] );
-            } );
-    }
+	/**
+	 * Sets the primary key equal to the returned value.
+	 *
+	 * @entity   The entity that was inserted.
+	 * @result   The result of the queryExecute call.
+	 *
+	 * @return   void
+	 */
+	public void function postInsert( required any entity, required struct result ) {
+		arguments.entity
+			.keyNames()
+			.each( function( keyName ) {
+				entity.assignAttribute( keyName, result.query[ keyName ] );
+			} );
+	}
 
 }

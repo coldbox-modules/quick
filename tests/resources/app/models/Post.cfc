@@ -38,6 +38,10 @@ component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
         return polymorphicHasMany( "Comment", "commentable" );
     }
 
+    function country() {
+        return belongsToThrough( [ "author", "country" ] );
+    }
+
     function commentingUsers() {
         return hasManyThrough( [ "comments", "author" ] );
     }

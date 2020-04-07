@@ -1874,10 +1874,10 @@ component accessors="true" {
 	 *                      will be resolved from the previously resolved relationship,
 	 *                      starting with the current entity.
 	 *
-	 *                      For example, if the entity is a `Country` entity and
-	 *                      the relationships array is `[ "users", "posts" ]`
-	 *                      then it would call `users()` on Country and `posts`
-	 *                      on the result on `Country.users()`.
+	 *                      For example, if the entity is a `Post` entity and
+	 *                      the relationships array is `[ "author", "country" ]`
+	 *                      then it would call `author()` on Post and `country`
+	 *                      on the result on `Post.author()`.
 	 *
 	 *                      There must be at least two relationships in the array
 	 *                      to use `hasOneThrough`.  Otherwise, just use `hasOne`.
@@ -1886,7 +1886,7 @@ component accessors="true" {
 	 *
 	 * @throw               RelationshipsLengthMismatch
 	 *
-	 * @return              quick.models.Relationships.HasManyThrough
+	 * @return              quick.models.Relationships.HasOneThrough
 	 */
 	private HasOneThrough function hasOneThrough( required array relationships, string relationMethodName ) {
 		if ( arguments.relationships.len() <= 1 ) {
@@ -1918,6 +1918,71 @@ component accessors="true" {
 
 		return variables._wirebox.getInstance(
 			name          = "HasOneThrough@quick",
+			initArguments = {
+				"related"            : relationshipsMap[ relationships[ relationships.len() ] ].getRelated(),
+				"relationName"       : relationships[ relationships.len() ],
+				"relationMethodName" : arguments.relationMethodName,
+				"parent"             : this,
+				"relationships"      : arguments.relationships,
+				"relationshipsMap"   : relationshipsMap,
+				"withConstraints"    : !variables._withoutRelationshipConstraints
+			}
+		);
+	}
+
+	/**
+	 * Returns a BelongsToThrough relationship between this entity and the entities
+	 * in the `relationships` array as a chain from left to right.
+	 *
+	 * @relationships       An array of relationships names.  The relationships
+	 *                      are resolved from left to right.  Each relationship
+	 *                      will be resolved from the previously resolved relationship,
+	 *                      starting with the current entity.
+	 *
+	 *                      For example, if the entity is a `Post` entity and
+	 *                      the relationships array is `[ "author", "country" ]`
+	 *                      then it would call `author()` on Post and `country`
+	 *                      on the result on `Post.author()`.
+	 *
+	 *                      There must be at least two relationships in the array
+	 *                      to use `belongsToThrough`.  Otherwise, just use `hasOne`.
+	 * @relationMethodName  The method name called to retrieve this relationship.
+	 *                      Uses a stack backtrace to determine by default.
+	 *
+	 * @throw               RelationshipsLengthMismatch
+	 *
+	 * @return              quick.models.Relationships.BelongsToThrough
+	 */
+	private BelongsToThrough function belongsToThrough( required array relationships, string relationMethodName ) {
+		if ( arguments.relationships.len() <= 1 ) {
+			throw(
+				type    = "RelationshipsLengthMismatch",
+				message = "A belongsToThrough relationship must have at least two relationships." &
+				"If you only need one, use `belongsTo` instead."
+			);
+		}
+
+		// this is set here for the first case where the previousEntity is
+		// `this` entity and we don't want to double prefix
+		var aliasPrefix      = variables._aliasPrefix;
+		var previousEntity   = this;
+		var relationshipsMap = arguments.relationships.reduce( function( map, relation, index ) {
+			var mirroredIndex = relationships.len() == 2 ? ( index == 1 ? 2 : 1 ) : ( index + ( relationships.len() - 1 ) ) % (
+				relationships.len() + 1
+			);
+			mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
+			previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
+			var relationship = invoke( previousEntity, relation );
+			relationship.applyAliasSuffix( "_" & aliasPrefix & mirroredIndex );
+			map[ relation ] = relationship;
+			previousEntity  = relationship.getRelated();
+			return map;
+		}, structNew( "ordered" ) );
+
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		return variables._wirebox.getInstance(
+			name          = "BelongsToThrough@quick",
 			initArguments = {
 				"related"            : relationshipsMap[ relationships[ relationships.len() ] ].getRelated(),
 				"relationName"       : relationships[ relationships.len() ],

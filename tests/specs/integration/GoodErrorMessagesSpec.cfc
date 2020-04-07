@@ -32,10 +32,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			it( "throws a helpful error message when the key value is defaulted", function() {
 				expect( function() {
 					getInstance( "DefaultedKeyEntity" );
-				} ).toThrow(
-					type  = "QuickEntityDefaultedKey",
-					regex = "The key value \[id\] has a default value\.  Default values on keys prevents Quick from working as expected\.  Remove the default value to continue\."
-				);
+				} ).toThrow( type = "QuickEntityDefaultedKey" );
 			} );
 		} );
 	}

@@ -13,6 +13,10 @@ component extends="quick.models.BaseEntity" {
         return hasManyThrough( [ "users", "posts" ] );
     }
 
+    function latestPost() {
+        return hasOneThrough( [ "users", "posts" ] ).latest();
+    }
+
     function tags() {
         return hasManyThrough( [ "users", "posts", "tags" ] );
     }

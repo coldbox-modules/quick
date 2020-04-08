@@ -1,8 +1,6 @@
 /**
  * The NullKeyType expects the key to be handled completely by the developer.
  * It does nothing pre- or post- insert.
- *
- * @deprecated Use AssignedKey
  */
 component implements="KeyType" {
 

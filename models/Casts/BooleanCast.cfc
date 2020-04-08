@@ -6,7 +6,6 @@ component implements="CastsAttribute" {
 	 * @entity      The entity with the attribute being casted.
 	 * @key         The attribute alias name.
 	 * @value       The value of the attribute.
-	 * @attributes  The struct of attributes for the entity.
 	 *
 	 * @return      The casted attribute.
 	 */
@@ -24,7 +23,6 @@ component implements="CastsAttribute" {
 	 * @entity      The entity with the attribute being casted.
 	 * @key         The attribute alias name.
 	 * @value       The value of the attribute.
-	 * @attributes  The struct of attributes for the entity.
 	 *
 	 * @return      The value to save to the database. A struct of values
 	 *              can be returned if the cast value affects multiple attributes.

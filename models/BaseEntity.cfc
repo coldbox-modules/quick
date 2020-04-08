@@ -2719,13 +2719,13 @@ component accessors="true" {
 			structAppend(
 				this.memento,
 				{
-					defaultIncludes : retrieveAttributeNames(),
-					defaultExcludes : [],
-					neverInclude    : [],
-					defaults        : {},
-					mappers         : {},
-					trustedGetters  : true,
-					ormAutoIncludes : false
+					"defaultIncludes" : retrieveAttributeNames(),
+					"defaultExcludes" : [],
+					"neverInclude"    : [],
+					"defaults"        : {},
+					"mappers"         : {},
+					"trustedGetters"  : true,
+					"ormAutoIncludes" : false
 				}
 			);
 		}

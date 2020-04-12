@@ -1136,17 +1136,7 @@ component accessors="true" {
 	 * @return        Boolean
 	 */
 	public boolean function existsOrFail( any id, any errorMessage ) {
-		activateGlobalScopes();
-		if ( !isNull( arguments.id ) ) {
-			arguments.id = arrayWrap( arguments.id );
-			guardAgainstKeyLengthMismatch( arguments.id );
-			retrieveQuery().where( function( q ) {
-				keyColumns().each( function( keyColumn, i ) {
-					q.where( keyColumn, id[ i ] );
-				} );
-			} );
-		}
-		if ( !retrieveQuery().exists() ) {
+		if ( !variables.exists( argumentCollection = arguments ) ) {
 			param arguments.errorMessage = "No [#entityName()#] exists with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
 			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
 				arguments.errorMessage = arguments.errorMessage( this );

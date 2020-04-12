@@ -484,17 +484,20 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	 * Uses subquery ordering to accomplish this.
 	 *
 	 * @relationshipName  The relationship name to order.  This can be a
-	 *                    dot-delimited list of nested relationships.
+	 *                    dot-delimited list of nested relationships or an array of relationship names.
 	 * @columnName        The column name in the final relationship to order by.
 	 * @direction         The direction to sort, `asc` or `desc`.
 	 *
 	 * @return            quick.models.QuickBuilder
 	 */
 	public QuickBuilder function orderByRelated(
-		required string relationshipName,
+		required any relationshipName,
 		required string columnName,
 		string direction = "asc"
 	) {
+        if ( isArray( arguments.relationshipName ) ) {
+            arguments.relationshipName = arguments.relationshipName.toList( "." );
+        }
 		var q = javacast( "null", "" );
 		while ( listLen( arguments.relationshipName, "." ) > 0 ) {
 			var thisRelationshipName = listFirst( arguments.relationshipName, "." );

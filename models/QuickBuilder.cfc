@@ -100,8 +100,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	}
 
 	/**
-	 * Updates matching entities with the given attributes
-	 * according to the configured query.
+	 * Updates matching entities with the given attributes according to the configured query.
 	 *
 	 * @attributes  The attributes to update on the matching records.
 	 * @force       If true, skips read-only entity and read-only attribute checks.

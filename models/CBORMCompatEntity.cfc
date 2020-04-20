@@ -1,3 +1,6 @@
+/**
+ * A custom BaseEntity that proxies the cbORM methods to their Quick equivalent.
+ */
 component extends="quick.models.BaseEntity" accessors="true" {
 
 	property

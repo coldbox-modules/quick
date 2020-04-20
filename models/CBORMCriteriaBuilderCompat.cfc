@@ -1,3 +1,6 @@
+/**
+ * A proxy object from cbORM's CriteriaBuilder methods to their Quick equivalent.
+ */
 component accessors="true" {
 
 	property name="entity";

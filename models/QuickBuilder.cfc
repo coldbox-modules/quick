@@ -1,3 +1,6 @@
+/**
+ *  QueryBuilder super-type to add additional Quick-only features like relationship querying and ordering to qb queries.
+ */
 component extends="qb.models.Query.QueryBuilder" accessors="true" {
 
 	/**

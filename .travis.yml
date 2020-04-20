@@ -35,4 +35,7 @@ after_success:
   - box config set endpoints.forgebox.APIToken=${FORGEBOX_TOKEN}
   - box semantic-release
 notifications:
-  email: false
+  email:
+    disabled: true
+    if: type = cron
+    on_failure: always

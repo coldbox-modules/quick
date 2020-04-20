@@ -171,8 +171,10 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		boolean negate = false
 	) {
 		var methodName = arguments.negate ? "whereNotExists" : "whereExists";
-		var relation   = getEntity().withoutRelationshipConstraints( function() {
-			return invoke( getEntity(), listFirst( relationshipName, "." ) );
+		var relation   = getEntity().ignoreLoadedGuard( function() {
+			return getEntity().withoutRelationshipConstraints( function() {
+				return invoke( getEntity(), listFirst( relationshipName, "." ) );
+			} );
 		} );
 
 		arguments.relationQuery = relation.addCompareConstraints().select( relation.raw( 1 ) );
@@ -247,8 +249,12 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	) {
 		var relation = relationQuery
 			.getEntity()
-			.withoutRelationshipConstraints( function() {
-				return invoke( relationQuery.getEntity(), listFirst( relationshipName, "." ) );
+			.ignoreLoadedGuard( function() {
+				return relationQuery
+					.getEntity()
+					.withoutRelationshipConstraints( function() {
+						return invoke( relationQuery.getEntity(), listFirst( relationshipName, "." ) );
+					} );
 			} );
 
 		if ( listLen( arguments.relationshipName, "." ) == 1 ) {
@@ -306,8 +312,10 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		boolean negate    = false
 	) {
 		var methodName = arguments.negate ? "whereNotExists" : "whereExists";
-		var relation   = getEntity().withoutRelationshipConstraints( function() {
-			return invoke( getEntity(), listFirst( relationshipName, "." ) );
+		var relation   = getEntity().ignoreLoadedGuard( function() {
+			return getEntity().withoutRelationshipConstraints( function() {
+				return invoke( getEntity(), listFirst( relationshipName, "." ) );
+			} );
 		} );
 
 		arguments.relationQuery = relation.addCompareConstraints();
@@ -395,9 +403,14 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	) {
 		var relation = arguments.relationQuery
 			.getEntity()
-			.withoutRelationshipConstraints( function() {
-				return invoke( relationQuery.getEntity(), listFirst( relationshipName, "." ) );
+			.ignoreLoadedGuard( function() {
+				return relationQuery
+					.getEntity()
+					.withoutRelationshipConstraints( function() {
+						return invoke( relationQuery.getEntity(), listFirst( relationshipName, "." ) );
+					} );
 			} );
+
 
 		if ( listLen( arguments.relationshipName, "." ) == 1 ) {
 			var q = relation
@@ -501,12 +514,16 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		while ( listLen( arguments.relationshipName, "." ) > 0 ) {
 			var thisRelationshipName = listFirst( arguments.relationshipName, "." );
 			if ( isNull( q ) ) {
-				q = getEntity().withoutRelationshipConstraints( function() {
-					return invoke( getEntity(), thisRelationshipName ).addCompareConstraints();
+				q = getEntity().ignoreLoadedGuard( function() {
+					return getEntity().withoutRelationshipConstraints( function() {
+						return invoke( getEntity(), thisRelationshipName ).addCompareConstraints();
+					} );
 				} );
 			} else {
-				var relationship = q.withoutRelationshipConstraints( function() {
-					return invoke( q, thisRelationshipName );
+				var relationship = q.ignoreLoadedGuard( function() {
+					return q.withoutRelationshipConstraints( function() {
+						return invoke( q, thisRelationshipName );
+					} );
 				} );
 				q = relationship.whereExists(
 					relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).retrieveQuery()

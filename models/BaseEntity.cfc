@@ -1,6 +1,5 @@
 /**
- * Abstract BaseEntity used to wire up objects and their properties to
- * database tables.
+ * Abstract BaseEntity used to wire up objects and their properties to database tables.
  *
  * @doc_abstract true
  */
@@ -51,8 +50,7 @@ component accessors="true" {
 		persistent="false";
 
 	/**
-	 * The ColdBox Interceptor service.  Used to announce lifecycle hooks
-	 * as interception points.
+	 * The ColdBox Interceptor service.  Used to announce lifecycle hooks as interception points.
 	 */
 	property
 		name      ="_interceptorService"
@@ -69,8 +67,7 @@ component accessors="true" {
 	property name="_entityName" persistent="false";
 
 	/**
-	 * The WireBox mapping for the entity.
-	 * This is added by an afterInstanceAutowire interception point.
+	 * The WireBox mapping for the entity. This is added by a beforeInstanceAutowire interception point.
 	 */
 	property name="_mapping" persistent="false";
 
@@ -111,8 +108,7 @@ component accessors="true" {
 	property name="_attributes" persistent="false";
 
 	/**
-	 * The unparsed metadata for the entity.
-	 * Saved to pass on to created entities and avoid unnecessary processing.
+	 * The unparsed metadata for the entity. Saved to pass on to created entities and avoid unnecessary processing.
 	 */
 	property name="_meta" persistent="false";
 
@@ -146,14 +142,12 @@ component accessors="true" {
 	property name="_data" persistent="false";
 
 	/**
-	 * The original values of the attributes.
-	 * Used if the entity is reset.
+	 * The original values of the attributes. Used if the entity is reset.
 	 */
 	property name="_originalAttributes" persistent="false";
 
 	/**
-	 * A hash of the original attributes and their values.
-	 * Used to check if the entity has been edited.
+	 * A hash of the original attributes and their values. Used to check if the entity has been edited.
 	 */
 	property name="_originalAttributesHash" persistent="false";
 
@@ -173,16 +167,19 @@ component accessors="true" {
 	property name="_eagerLoad" persistent="false";
 
 	/**
-	 * A boolean flag representing that the entity does not
-	 * want automatic relatinoship constraints.
+	 * A boolean flag representing that the entity does not want automatic relationship constraints.
 	 */
 	property name="_withoutRelationshipConstraints" persistent="false";
 
 	/**
-	 * A boolean flag representing that the entity is currently
-	 * applying global scopes.
+	 * A boolean flag representing that the entity is currently applying global scopes.
 	 */
 	property name="_applyingGlobalScopes" persistent="false";
+
+	/**
+	 * A boolean flag representing that guarding against not loaded entities should be skipped..
+	 */
+	property name="_ignoreNotLoadedGuard" persistent="false";
 
 	/**
 	 * A boolean flag indicating that the entity has been loaded from the database.
@@ -193,8 +190,7 @@ component accessors="true" {
 		default   ="false";
 
 	/**
-	 * An array of global scopes to exclude from being applied.
-	 * Added using the `withoutGlobalScope` method.
+	 * An array of global scopes to exclude from being applied. Added using the `withoutGlobalScope` method.
 	 */
 	property name="_globalScopeExclusions" persistent="false";
 
@@ -207,16 +203,14 @@ component accessors="true" {
 		default   ="";
 
 	/**
-	 * Used to determine if a component is a Quick entity
-	 * without resorting to isInstanceOf
+	 * Used to determine if a component is a Quick entity without resorting to isInstanceOf
 	 */
 	this.isQuickEntity = true;
 
 	/**
 	 * Initializes the entity with default properties and optional metadata.
 	 *
-	 * @meta    An optional struct of metadata.  Used to avoid processing
-	 *          the metadata again.
+	 * @meta    An optional struct of metadata.  Used to avoid processing the metadata again.
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
@@ -240,6 +234,7 @@ component accessors="true" {
 		param variables._eagerLoad                = [];
 		variables._withoutRelationshipConstraints = false;
 		variables._applyingGlobalScopes           = false;
+		variables._ignoreNotLoadedGuard           = false;
 		param variables._nullValues               = {};
 		param variables._casts                    = {};
 		param variables._castCache                = {};
@@ -1611,6 +1606,12 @@ component accessors="true" {
 		any localKey,
 		string relationMethodName
 	) {
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
 		// ACF doesn't let us use param with functions. ¯\_(ツ)_/¯
@@ -1621,10 +1622,9 @@ component accessors="true" {
 					return related.entityName() & keyName;
 				} );
 		}
-		arguments.foreignKey               = arrayWrap( arguments.foreignKey );
-		param arguments.localKey           = related.keyNames();
-		arguments.localKey                 = arrayWrap( arguments.localKey );
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
+		param arguments.localKey = related.keyNames();
+		arguments.localKey       = arrayWrap( arguments.localKey );
 
 		guardAgainstKeyLengthMismatch( arguments.foreignKey, arguments.localKey );
 
@@ -1666,6 +1666,12 @@ component accessors="true" {
 		any localKey,
 		string relationMethodName
 	) {
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
 		if ( isNull( arguments.foreignKey ) ) {
@@ -1673,10 +1679,9 @@ component accessors="true" {
 				return entityName() & keyName;
 			} );
 		}
-		arguments.foreignKey               = arrayWrap( arguments.foreignKey );
-		param arguments.localKey           = keyNames();
-		arguments.localKey                 = arrayWrap( arguments.localKey );
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
+		param arguments.localKey = keyNames();
+		arguments.localKey       = arrayWrap( arguments.localKey );
 
 		return variables._wirebox.getInstance(
 			name          = "HasOne@quick",
@@ -1716,6 +1721,12 @@ component accessors="true" {
 		any localKey,
 		string relationMethodName
 	) {
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
 		if ( isNull( arguments.foreignKey ) ) {
@@ -1723,10 +1734,9 @@ component accessors="true" {
 				return entityName() & keyName;
 			} );
 		}
-		arguments.foreignKey               = arrayWrap( arguments.foreignKey );
-		param arguments.localKey           = keyNames();
-		arguments.localKey                 = arrayWrap( arguments.localKey );
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
+		param arguments.localKey = keyNames();
+		arguments.localKey       = arrayWrap( arguments.localKey );
 
 		return variables._wirebox.getInstance(
 			name          = "HasMany@quick",
@@ -1784,6 +1794,12 @@ component accessors="true" {
 		any relatedKey,
 		string relationMethodName
 	) {
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
 		param arguments.table = generateDefaultPivotTableString( related.tableName(), tableName() );
@@ -1803,8 +1819,6 @@ component accessors="true" {
 				} );
 		}
 		arguments.relatedPivotKey = arrayWrap( arguments.relatedPivotKey );
-
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
 		param arguments.parentKey = keyNames();
 		arguments.parentKey       = arrayWrap( arguments.parentKey );
@@ -1879,6 +1893,12 @@ component accessors="true" {
 			);
 		}
 
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
 		// this is set here for the first case where the previousEntity is
 		// `this` entity and we don't want to double prefix
 		var aliasPrefix      = variables._aliasPrefix;
@@ -1889,14 +1909,14 @@ component accessors="true" {
 			);
 			mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
 			previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
-			var relationship = invoke( previousEntity, relation );
+			var relationship = previousEntity.ignoreLoadedGuard( function() {
+				return invoke( previousEntity, relation );
+			} );
 			relationship.applyAliasSuffix( "_" & aliasPrefix & mirroredIndex );
 			map[ relation ] = relationship;
 			previousEntity  = relationship.getRelated();
 			return map;
 		}, structNew( "ordered" ) );
-
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
 		return variables._wirebox.getInstance(
 			name          = "HasManyThrough@quick",
@@ -1944,6 +1964,12 @@ component accessors="true" {
 			);
 		}
 
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
 		// this is set here for the first case where the previousEntity is
 		// `this` entity and we don't want to double prefix
 		var aliasPrefix      = variables._aliasPrefix;
@@ -1954,14 +1980,14 @@ component accessors="true" {
 			);
 			mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
 			previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
-			var relationship = invoke( previousEntity, relation );
+			var relationship = previousEntity.ignoreLoadedGuard( function() {
+				return invoke( previousEntity, relation );
+			} );
 			relationship.applyAliasSuffix( "_" & aliasPrefix & mirroredIndex );
 			map[ relation ] = relationship;
 			previousEntity  = relationship.getRelated();
 			return map;
 		}, structNew( "ordered" ) );
-
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
 		return variables._wirebox.getInstance(
 			name          = "HasOneThrough@quick",
@@ -2009,6 +2035,12 @@ component accessors="true" {
 			);
 		}
 
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
 		// this is set here for the first case where the previousEntity is
 		// `this` entity and we don't want to double prefix
 		var aliasPrefix      = variables._aliasPrefix;
@@ -2019,7 +2051,9 @@ component accessors="true" {
 			);
 			mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
 			previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
-			var relationship = invoke( previousEntity, relation );
+			var relationship = previousEntity.ignoreLoadedGuard( function() {
+				return invoke( previousEntity, relation );
+			} );
 			relationship.applyAliasSuffix( "_" & aliasPrefix & mirroredIndex );
 			map[ relation ] = relationship;
 			previousEntity  = relationship.getRelated();
@@ -2075,14 +2109,19 @@ component accessors="true" {
 		any localKey,
 		string relationMethodName
 	) {
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
-		param arguments.type               = arguments.name & "_type";
-		param arguments.id                 = arguments.name & "_id";
-		arguments.id                       = arrayWrap( arguments.id );
-		param arguments.localKey           = keyNames();
-		arguments.localKey                 = arrayWrap( arguments.localKey );
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		param arguments.type     = arguments.name & "_type";
+		param arguments.id       = arguments.name & "_id";
+		arguments.id             = arrayWrap( arguments.id );
+		param arguments.localKey = keyNames();
+		arguments.localKey       = arrayWrap( arguments.localKey );
 
 		return variables._wirebox.getInstance(
 			name          = "PolymorphicHasMany@quick",
@@ -2132,9 +2171,14 @@ component accessors="true" {
 	) {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 		param arguments.name               = arguments.relationMethodName;
-		param arguments.type               = arguments.name & "_type";
-		param arguments.id                 = arguments.name & "_id";
-		arguments.id                       = arrayWrap( arguments.id );
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the related polymorphic entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
+		param arguments.type = arguments.name & "_type";
+		param arguments.id   = arguments.name & "_id";
+		arguments.id         = arrayWrap( arguments.id );
 
 		var relationName = retrieveAttribute( arguments.type, "" );
 		if ( relationName == "" ) {
@@ -2261,8 +2305,10 @@ component accessors="true" {
 			}
 		}
 		var currentRelationship = listFirst( arguments.relationName, "." );
-		var relation            = withoutRelationshipConstraints( function() {
-			return invoke( this, currentRelationship );
+		var relation            = ignoreLoadedGuard( function() {
+			return withoutRelationshipConstraints( function() {
+				return invoke( this, currentRelationship );
+			} );
 		} );
 		callback( relation );
 		relation.addEagerConstraints( arguments.entities );
@@ -2371,12 +2417,16 @@ component accessors="true" {
 			while ( listLen( column, "." ) > 1 ) {
 				var relationshipName = listFirst( column, "." );
 				if ( isNull( q ) ) {
-					q = withoutRelationshipConstraints( function() {
-						return invoke( this, relationshipName ).addCompareConstraints();
+					q = ignoreLoadedGuard( function() {
+						return withoutRelationshipConstraints( function() {
+							return invoke( this, relationshipName ).addCompareConstraints();
+						} );
 					} );
 				} else {
-					var relationship = q.withoutRelationshipConstraints( function() {
-						return invoke( q, relationshipName );
+					var relationship = q.ignoreLoadedGuard( function() {
+						return q.withoutRelationshipConstraints( function() {
+							return invoke( q, relationshipName );
+						} );
 					} );
 					q = relationship.whereExists(
 						relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).retrieveQuery()
@@ -2619,7 +2669,9 @@ component accessors="true" {
 			return;
 		}
 
-		var relationship = invoke( this, relationshipName );
+		var relationship = ignoreLoadedGuard( function() {
+			return invoke( this, relationshipName );
+		} );
 
 		return relationship.applySetter( argumentCollection = arguments.missingMethodArguments );
 	}
@@ -3118,8 +3170,22 @@ component accessors="true" {
 	 * @throws        QuickEntityNotLoaded
 	 */
 	private void function guardAgainstNotLoaded( required string errorMessage ) {
-		if ( !isLoaded() ) {
+		if ( !variables._ignoreNotLoadedGuard && !isLoaded() ) {
 			throw( type = "QuickEntityNotLoaded", message = arguments.errorMessage );
+		}
+	}
+
+	/**
+	 * Ignores the loaded entity guard for the duration of the callback.
+	 *
+	 * @callback  The callback to run without any loaded entity guarding.
+	 */
+	public any function ignoreLoadedGuard( required any callback ) {
+		variables._ignoreNotLoadedGuard = true;
+		try {
+			return arguments.callback();
+		} finally {
+			variables._ignoreNotLoadedGuard = false;
 		}
 	}
 

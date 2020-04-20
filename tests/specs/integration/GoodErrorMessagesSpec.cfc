@@ -34,6 +34,22 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					getInstance( "DefaultedKeyEntity" );
 				} ).toThrow( type = "QuickEntityDefaultedKey" );
 			} );
+
+			it( "throws a helpful error message when trying to access relationships on unloaded entities", function() {
+				expect( function() {
+					getInstance( "User" ).posts();
+				} ).toThrow(
+					type  = "QuickEntityNotLoaded",
+					regex = "This instance is not loaded so it cannot access the \[posts\] relationship\.  Either load the entity from the database using a query executor \(like \`first\`\) or base your query off of the \[Post\] entity directly and use the \`has\` or \`whereHas\` methods to constrain it based on data in \[User\]\."
+				);
+
+				expect( function() {
+					getInstance( "User" ).getPosts();
+				} ).toThrow(
+					type  = "QuickEntityNotLoaded",
+					regex = "This instance is not loaded so it cannot access the \[posts\] relationship\.  Either load the entity from the database using a query executor \(like \`first\`\) or base your query off of the \[Post\] entity directly and use the \`has\` or \`whereHas\` methods to constrain it based on data in \[User\]\."
+				);
+			} );
 		} );
 	}
 

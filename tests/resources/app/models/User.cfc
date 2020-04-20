@@ -63,11 +63,13 @@ component quick {
     function scopeWithLatestPostIdRelationship() {
         addSubselect(
             "latestPostId",
-            this.withoutRelationshipConstraints( function() {
-                return this.posts()
-                    .addCompareConstraints()
-                    .latest()
-                    .select( "post_pk" );
+            this.ignoreLoadedGuard( function() {
+                return this.withoutRelationshipConstraints( function() {
+                    return this.posts()
+                        .addCompareConstraints()
+                        .latest()
+                        .select( "post_pk" );
+                } );
             } )
         );
     }

@@ -61,6 +61,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			it( "can associate a new entity", function() {
 				var newPost = getInstance( "Post" );
 				newPost.setBody( "A new post by me!" );
+				newPost.save();
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.posts().count() ).toBe( 2 );
 				newPost
@@ -72,10 +73,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can set the associated relationship by calling a relationship setter", function() {
-				var newPost = getInstance( "Post" );
-				newPost.setBody( "A new post by me!" );
-				var user = getInstance( "User" ).find( 1 );
-				newPost.setAuthor( user ).save();
+				var user    = getInstance( "User" ).find( 1 );
+				var newPost = getInstance( "Post" ).create( {
+					"body"   : "A new post by me!",
+					"author" : user
+				} );
 				expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
 				expect( user.posts().count() ).toBe( 3 );
 			} );

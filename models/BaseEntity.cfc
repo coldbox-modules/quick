@@ -542,12 +542,12 @@ component accessors="true" {
 			}
 		}
 		return this;
-    }
+	}
 
-    /**
+	/**
 	 * Alias for fill.
-     *
-     * Sets attributes data from a struct of key / value pairs.
+	 *
+	 * Sets attributes data from a struct of key / value pairs.
 	 * This method does the following, in order:
 	 * 1. Guard against read-only attributes
 	 * 2. Attempt to call a relationship setter.
@@ -560,9 +560,9 @@ component accessors="true" {
 	 *                               the non-existent attribute.
 	 *
 	 * @return                       quick.models.BaseEntity
-     */
+	 */
 	public any function populate( required struct attributes, boolean ignoreNonExistentAttributes = false ) {
-        return fill( argumentCollection = arguments );
+		return fill( argumentCollection = arguments );
 	}
 
 	/**
@@ -577,7 +577,7 @@ component accessors="true" {
 	 * @return                       quick.models.BaseEntity
 	 */
 	public any function hydrate( required struct attributes, boolean ignoreNonExistentAttributes = false ) {
-        guardAgainstMissingKeys( arguments.attributes );
+		guardAgainstMissingKeys( arguments.attributes );
 		fill( argumentCollection = arguments );
 		markLoaded();
 		return this;
@@ -948,13 +948,17 @@ component accessors="true" {
 	 *                               found the attributes are filled on the new entity returned.
 	 * @newAttributes                A struct of attributes to fill on the new entity if no entity
 	 *                               is found. These attributes are combined with `attributes`.
-     * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
 	 *
 	 * @return                       quick.models.BaseEntity
 	 */
-	public any function firstOrNew( struct attributes = {}, struct newAttributes = {}, boolean ignoreNonExistentAttributes = false ) {
+	public any function firstOrNew(
+		struct attributes                   = {},
+		struct newAttributes                = {},
+		boolean ignoreNonExistentAttributes = false
+	) {
 		try {
 			arguments.attributes.each( function( key, value ) {
 				retrieveQuery().where( key, value );
@@ -962,7 +966,9 @@ component accessors="true" {
 			return firstOrFail();
 		} catch ( EntityNotFound e ) {
 			arguments.attributes.append( arguments.newAttributes, true );
-			return handleTransformations( newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes ) );
+			return handleTransformations(
+				newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes )
+			);
 		}
 	}
 
@@ -973,13 +979,17 @@ component accessors="true" {
 	 *                               found the attributes are filled on the new entity created.
 	 * @newAttributes                A struct of attributes to fill on the created entity if no entity
 	 *                               is found. These attributes are combined with `attributes`.
-     * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
 	 *
 	 * @return                       quick.models.BaseEntity
 	 */
-	public any function firstOrCreate( struct attributes = {}, struct newAttributes = {}, boolean ignoreNonExistentAttributes = false ) {
+	public any function firstOrCreate(
+		struct attributes                   = {},
+		struct newAttributes                = {},
+		boolean ignoreNonExistentAttributes = false
+	) {
 		arguments.attributes.each( function( key, value ) {
 			retrieveQuery().where( key, value );
 		} );
@@ -1082,17 +1092,23 @@ component accessors="true" {
 	 *
 	 * @id                           The id value to find.
 	 * @attributes                   A struct of attributes to fill on the new entity if no entity is found.
-     * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
 	 *
 	 * @return      quick.models.BaseEntity
 	 */
-	public any function findOrNew( required any id, struct attributes = {}, boolean ignoreNonExistentAttributes = false ) {
+	public any function findOrNew(
+		required any id,
+		struct attributes                   = {},
+		boolean ignoreNonExistentAttributes = false
+	) {
 		try {
 			return findOrFail( arguments.id );
 		} catch ( EntityNotFound e ) {
-			return handleTransformations( newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes ) );
+			return handleTransformations(
+				newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes )
+			);
 		}
 	}
 
@@ -1103,13 +1119,17 @@ component accessors="true" {
 	 * @id                           The id value to find.
 	 * @attributes                   A struct of attributes to use when creating the new entity
 	 *                               if no entity is found.
-     * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function findOrCreate( required any id, struct attributes = {}, boolean ignoreNonExistentAttributes = false ) {
+	public any function findOrCreate(
+		required any id,
+		struct attributes                   = {},
+		boolean ignoreNonExistentAttributes = false
+	) {
 		try {
 			return findOrFail( arguments.id );
 		} catch ( EntityNotFound e ) {
@@ -1390,13 +1410,17 @@ component accessors="true" {
 	 *                               found the attributes are filled on the new entity created.
 	 * @newAttributes                A struct of attributes to update on the found entity or the
 	 *                               new entity if no entity is found.
-     * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
 	 *
 	 * @return         quick.models.BaseEntity
 	 */
-	public any function updateOrCreate( struct attributes = {}, struct newAttributes = {}, boolean ignoreNonExistentAttributes = false ) {
+	public any function updateOrCreate(
+		struct attributes                   = {},
+		struct newAttributes                = {},
+		boolean ignoreNonExistentAttributes = false
+	) {
 		return tap( firstOrNew( arguments.attributes ), function( entity ) {
 			arguments.entity.fill( newAttributes, ignoreNonExistentAttributes ).save();
 		} );
@@ -1619,8 +1643,7 @@ component accessors="true" {
 	}
 
 	/**
-	 * Returns a HasOne relationship between this entity and the entity
-	 * defined by `relationName`.
+	 * Returns a HasOne relationship between this entity and the entity defined by `relationName`.
 	 *
 	 * Given a User `hasOne` UserProfile and using the defaults, the SQL would be:
 	 * ```sql
@@ -1670,8 +1693,7 @@ component accessors="true" {
 	}
 
 	/**
-	 * Returns a HasMany relationship between this entity and the entity
-	 * defined by `relationName`.
+	 * Returns a HasMany relationship between this entity and the entity defined by `relationName`.
 	 *
 	 * Given a User `hasMany` Posts and using the defaults, the SQL would be:
 	 * ```sql
@@ -2086,7 +2108,7 @@ component accessors="true" {
 	 * ```sql
 	 * SELECT *
 	 * FROM posts [#type#.tableName()]
-	 * WHERE posts.id [ownerKey] = 'comments.commentable_id' [id]
+	 * WHERE posts.id [localKey] = 'comments.commentable_id' [id]
 	 * ```
 	 *
 	 * @name                The name given to the polymorphic relationship.
@@ -2827,7 +2849,7 @@ component accessors="true" {
 
 		if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
 			variables._meta = duplicate(
-				variables._cache.getOrSet( "quick-metadata:#getMetadata( this ).fullname#", function() {
+				variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
 					var util                               = createObject( "component", "coldbox.system.core.util.Util" );
 					var meta                               = {};
 					meta[ "originalMetadata" ]             = util.getInheritedMetadata( this );
@@ -3141,9 +3163,9 @@ component accessors="true" {
 				"does not match the number expected [#expectedLength#]."
 			);
 		}
-    }
+	}
 
-    /**
+	/**
 	 * Throws an exception if the struct of attributes doesn't contain the keys for this entity.
 	 *
 	 * @attributes  The key / value pairs to check for the entity's keys.
@@ -3153,14 +3175,14 @@ component accessors="true" {
 	 * @return  void
 	 */
 	public void function guardAgainstMissingKeys( required struct attributes ) {
-        for ( var key in keyNames() ) {
-            if ( !arguments.attributes.keyExists( key ) ) {
-                throw(
-                    type = "MissingHydrationKey",
-                    message = "An entity cannot be hydrated without its key values.  Missing: #key#"
-                );
-            }
-        }
+		for ( var key in keyNames() ) {
+			if ( !arguments.attributes.keyExists( key ) ) {
+				throw(
+					type    = "MissingHydrationKey",
+					message = "An entity cannot be hydrated without its key values.  Missing: #key#"
+				);
+			}
+		}
 	}
 
 	/*==============================

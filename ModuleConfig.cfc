@@ -59,7 +59,7 @@ component {
      * @interceptData  The intercept data for `afterInstanceAutowire`.
      *                 { mapping, target, targetID, injector }
      */
-    function afterInstanceAutowire( event, interceptData ) {
+    function beforeInstanceAutowire( event, interceptData ) {
         if ( structKeyExists( interceptData.target, "isQuickEntity" ) ) {
             interceptData.target.set_mapping( interceptData.targetID );
         }

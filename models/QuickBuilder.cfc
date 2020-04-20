@@ -494,9 +494,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		required string columnName,
 		string direction = "asc"
 	) {
-        if ( isArray( arguments.relationshipName ) ) {
-            arguments.relationshipName = arguments.relationshipName.toList( "." );
-        }
+		if ( isArray( arguments.relationshipName ) ) {
+			arguments.relationshipName = arguments.relationshipName.toList( "." );
+		}
 		var q = javacast( "null", "" );
 		while ( listLen( arguments.relationshipName, "." ) > 0 ) {
 			var thisRelationshipName = listFirst( arguments.relationshipName, "." );

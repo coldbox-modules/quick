@@ -2150,20 +2150,16 @@ component accessors="true" {
 	 * WHERE posts.id [localKey] = 'comments.commentable_id' [id]
 	 * ```
 	 *
-	 * @name                The name given to the polymorphic relationship.
-	 * @type                The column name that defines the type of the
-	 *                      polymorphic relationship. Defaults to `#name#_type`.
-	 * @id                  The column name that defines the id of the
-	 *                      polymorphic relationship. Defaults to `#name#_id`.
-	 * @localKey            The column name on the `realted` entity that is referred
-	 *                      to by the `foreignKey` of the `parent` entity.
-	 * @relationMethodName  The method name called to retrieve this relationship.
-	 *                      Uses a stack backtrace to determine by default.
+	 * @name                The name given to the polymorphic relationship.  Defaults to `relationMethodName`.
+	 * @type                The column name that defines the type of the polymorphic relationship. Defaults to `#name#_type`.
+	 * @id                  The column name that defines the id of the polymorphic relationship. Defaults to `#name#_id`.
+	 * @localKey            The column name on the `realted` entity that is referred to by the `foreignKey` of the `parent` entity.
+	 * @relationMethodName  The method name called to retrieve this relationship. Uses a stack backtrace to determine by default.
 	 *
 	 * @return              quick.models.Relationships.PolymorphicBelongsTo
 	 */
 	private PolymorphicBelongsTo function polymorphicBelongsTo(
-		required string name,
+		string name,
 		string type,
 		any id,
 		any localKey,

@@ -161,15 +161,16 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	/**
 	 * Checks for the existence of a relationship when executing the query.
 	 *
-	 * @relationshipName  The relationship to check.
+	 * @relationshipName  The relationship to check.  Can also be a dot-delimited list of nested relationships.
 	 * @operator          An optional operator to constrain the check.
 	 * @count             An optional count to constrain the check.
+	 * @negate            If true, checks for the the absence of the relationship instead of its existence.
 	 *
 	 * @return            quick.models.QuickBuilder
 	 */
 	public QuickBuilder function has(
 		required string relationshipName,
-		string operator,
+		any operator,
 		numeric count,
 		boolean negate = false
 	) {
@@ -226,7 +227,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	 */
 	public QuickBuilder function doesntHave(
 		required string relationshipName,
-		string operator,
+		any operator,
 		numeric count
 	) {
 		arguments.negate = true;
@@ -247,7 +248,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	private any function hasNested(
 		required any relationQuery,
 		required string relationshipName,
-		string operator,
+		any operator,
 		numeric count
 	) {
 		var relation = relationQuery
@@ -308,7 +309,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	 */
 	public QuickBuilder function whereHas(
 		required string relationshipName,
-		any callback,
+		required any callback,
 		any operator,
 		any count,
 		string combinator = "and",
@@ -377,7 +378,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	 */
 	public QuickBuilder function whereDoesntHave(
 		required string relationshipName,
-		any callback,
+		required any callback,
 		any operator,
 		any count,
 		string combinator = "and"
@@ -401,7 +402,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		required any relationQuery,
 		required string relationshipName,
 		any callback,
-		string operator,
+		any operator,
 		numeric count
 	) {
 		var relation = arguments.relationQuery
@@ -464,7 +465,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	 */
 	public QuickBuilder function orWhereHas(
 		required string relationshipName,
-		any callback,
+		required any callback,
 		any operator,
 		any count
 	) {
@@ -486,7 +487,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	 */
 	public QuickBuilder function orWhereDoesntHave(
 		required string relationshipName,
-		any callback,
+		required any callback,
 		any operator,
 		any count
 	) {

@@ -1214,7 +1214,9 @@ component accessors="true" {
 	}
 
 	/**
-	 * Resets the entity to a fresh, unloaded state.
+	 * Resets the entity to a fresh state.
+	 *
+	 * @toNew   If true, marks the entity as unloaded.  Otherwise it uses the previous loaded value.
 	 *
 	 * @return  quick.models.BaseEntity
 	 */

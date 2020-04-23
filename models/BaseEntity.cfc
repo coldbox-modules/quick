@@ -858,7 +858,6 @@ component accessors="true" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	private array function getEntities() {
-		activateGlobalScopes();
 		return retrieveQuery().get().map( variables.loadEntity );
 	}
 

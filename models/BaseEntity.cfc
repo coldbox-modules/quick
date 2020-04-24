@@ -1206,7 +1206,7 @@ component accessors="true" {
 		if ( isNull( arguments.name ) ) {
 			return variables._wirebox.getInstance(
 				name          = mappingName(),
-				initArguments = { meta : variables._meta }
+				initArguments = { meta : duplicate( variables._meta ) }
 			);
 		}
 		return variables._wirebox.getInstance( arguments.name );

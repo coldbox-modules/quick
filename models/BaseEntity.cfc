@@ -177,6 +177,11 @@ component accessors="true" {
 	property name="_applyingGlobalScopes" persistent="false";
 
 	/**
+	 * A boolean flag representing that the entity has already applied global scopes.
+	 */
+	property name="_globalScopesApplied" persistent="false";
+
+	/**
 	 * A boolean flag representing that guarding against not loaded entities should be skipped..
 	 */
 	property name="_ignoreNotLoadedGuard" persistent="false";
@@ -234,6 +239,7 @@ component accessors="true" {
 		param variables._eagerLoad                = [];
 		variables._withoutRelationshipConstraints = false;
 		variables._applyingGlobalScopes           = false;
+		variables._globalScopesApplied            = false;
 		variables._ignoreNotLoadedGuard           = false;
 		param variables._nullValues               = {};
 		param variables._casts                    = {};
@@ -2743,9 +2749,12 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function activateGlobalScopes() {
-		variables._applyingGlobalScopes = true;
-		applyGlobalScopes();
-		variables._applyingGlobalScopes = false;
+		if ( !variables._globalScopesApplied ) {
+			variables._applyingGlobalScopes = true;
+			applyGlobalScopes();
+			variables._applyingGlobalScopes = false;
+			variables._globalScopesApplied = true;
+		}
 		return this;
 	}
 

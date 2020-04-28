@@ -181,7 +181,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			} );
 		} );
 
-		arguments.relationQuery = relation.addCompareConstraints().select( relation.raw( 1 ) );
+		arguments.relationQuery = relation.addCompareConstraints().clearOrders().select( relation.raw( 1 ) );
 
 		if ( listLen( arguments.relationshipName, "." ) > 1 ) {
 			arguments.relationshipName = listRest( arguments.relationshipName, "." );
@@ -322,7 +322,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			} );
 		} );
 
-		arguments.relationQuery = relation.addCompareConstraints();
+		arguments.relationQuery = relation.addCompareConstraints().clearOrders();
 
 		if ( listLen( arguments.relationshipName, "." ) > 1 ) {
 			arguments.relationshipName = listRest( arguments.relationshipName, "." );
@@ -419,6 +419,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		if ( listLen( arguments.relationshipName, "." ) == 1 ) {
 			var q = relation
 				.addCompareConstraints()
+				.clearOrders()
 				.when( !isNull( callback ), function( q ) {
 					callback( q );
 				} )
@@ -436,7 +437,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			);
 		}
 
-		var q = relation.addCompareConstraints();
+		var q = relation.addCompareConstraints().clearOrders();
 
 		if ( structKeyExists( q, "retrieveQuery" ) ) {
 			q = q.retrieveQuery();
@@ -520,7 +521,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			if ( isNull( q ) ) {
 				q = getEntity().ignoreLoadedGuard( function() {
 					return getEntity().withoutRelationshipConstraints( function() {
-						return invoke( getEntity(), thisRelationshipName ).addCompareConstraints();
+						return invoke( getEntity(), thisRelationshipName ).addCompareConstraints().clearOrders();
 					} );
 				} );
 			} else {
@@ -530,7 +531,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 					} );
 				} );
 				q = relationship.whereExists(
-					relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).retrieveQuery()
+					relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).clearOrders().retrieveQuery()
 				);
 			}
 			arguments.relationshipName = listRest( arguments.relationshipName, "." );

@@ -423,7 +423,10 @@ component accessors="true" {
 	 * @doc_generic  string
 	 * @return       [string]
 	 */
-	public array function retrieveAttributeNames( boolean asColumnNames = false, boolean withVirtualAttributes = false ) {
+	public array function retrieveAttributeNames(
+		boolean asColumnNames         = false,
+		boolean withVirtualAttributes = false
+	) {
 		return variables._attributes.reduce( function( items, key, value ) {
 			if ( value.virtual && !withVirtualAttributes ) {
 				return items;
@@ -2767,7 +2770,7 @@ component accessors="true" {
 			variables._applyingGlobalScopes = true;
 			applyGlobalScopes();
 			variables._applyingGlobalScopes = false;
-			variables._globalScopesApplied = true;
+			variables._globalScopesApplied  = true;
 		}
 		return this;
 	}
@@ -2920,16 +2923,16 @@ component accessors="true" {
 		if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
 			variables._meta = duplicate(
 				variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
-					var util                               = createObject( "component", "coldbox.system.core.util.Util" );
-					var meta                               = {};
-					meta[ "originalMetadata" ]             = util.getInheritedMetadata( this );
-					meta[ "localMetadata" ]                = getMetadata( this );
+					var util                   = createObject( "component", "coldbox.system.core.util.Util" );
+					var meta                   = {};
+					meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
+					meta[ "localMetadata" ]    = getMetadata( this );
 					if (
 						!meta[ "localMetadata" ].keyExists( "accessors" ) ||
 						meta[ "localMetadata" ].accessors == false
 					) {
 						throw(
-							type = "QuickAccessorsMissing",
+							type    = "QuickAccessorsMissing",
 							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
 						);
 					}
@@ -3028,8 +3031,8 @@ component accessors="true" {
 	public any function appendVirtualAttribute( required string name ) {
 		if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
 			variables._attributes[ arguments.name ] = paramAttribute( {
-				"name"   : arguments.name,
-				"virtual": true
+				"name"    : arguments.name,
+				"virtual" : true
 			} );
 			variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 			variables._meta.originalMetadata.properties.append(

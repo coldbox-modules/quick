@@ -181,7 +181,10 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			} );
 		} );
 
-		arguments.relationQuery = relation.addCompareConstraints().clearOrders().select( relation.raw( 1 ) );
+		arguments.relationQuery = relation
+			.addCompareConstraints()
+			.clearOrders()
+			.select( relation.raw( 1 ) );
 
 		if ( listLen( arguments.relationshipName, "." ) > 1 ) {
 			arguments.relationshipName = listRest( arguments.relationshipName, "." );
@@ -531,7 +534,10 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 					} );
 				} );
 				q = relationship.whereExists(
-					relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).clearOrders().retrieveQuery()
+					relationship
+						.addCompareConstraints( q.select( q.raw( 1 ) ) )
+						.clearOrders()
+						.retrieveQuery()
 				);
 			}
 			arguments.relationshipName = listRest( arguments.relationshipName, "." );

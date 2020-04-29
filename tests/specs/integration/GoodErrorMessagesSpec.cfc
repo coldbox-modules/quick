@@ -55,7 +55,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( function() {
 					getInstance( "EntityWithoutAccessors" );
 				} ).toThrow(
-					type = "QuickAccessorsMissing",
+					type  = "QuickAccessorsMissing",
 					regex = 'This instance is missing \`accessors\=\"true\"\` in the component metadata\.  This is required for Quick to work properly\.  Please add it to your component metadata and reinit your application\.'
 				);
 			} );

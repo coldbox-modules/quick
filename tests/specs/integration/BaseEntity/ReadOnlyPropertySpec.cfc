@@ -7,8 +7,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( link.getUrl() ).toBe( "http://example.com/some-link" );
 				expect( link.getCreatedDate() ).toBe( "2017-07-28 02:07:00" );
 
-				link
-					.setUrl( "https://example.com/" )
+				link.setUrl( "https://example.com/" )
 					.setCreatedDate( now() )
 					.save();
 

@@ -32,7 +32,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can use multiple attributes for casting", function() {
-				var user    = getInstance( "User" ).findOrFail( 1 );
+				var user = getInstance( "User" ).findOrFail( 1 );
 				expect( user.getAddress() ).notToBeNull();
 				var address = user.getAddress();
 				expect( address.fullStreet() ).toBe( "123 Elm Street" );

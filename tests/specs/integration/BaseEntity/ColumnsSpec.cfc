@@ -8,7 +8,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				var configuredAttributes = link.get_Attributes();
 				expect( configuredAttributes ).toBeStruct();
 
-				var attributeNames = link.retrieveAttributeNames( columnNames = true );
+				var attributeNames = link.retrieveAttributeNames( asColumnNames = true );
 				arraySort( attributeNames, "textnocase" );
 				expect( attributeNames ).toBeArray();
 				expect( attributeNames ).toHaveLength( 3 );

@@ -417,19 +417,33 @@ component accessors="true" {
 	/**
 	 * Retrieves an array of the attribute names.
 	 *
-	 * @columnNames  If true, returns an array of column names instead of aliases.
+	 * @asColumnNames          If true, returns an array of column names instead of aliases.
+	 * @withVirtualAttributes  If true, returns virtual attributes as well as normal attributes.
 	 *
 	 * @doc_generic  string
 	 * @return       [string]
 	 */
-	public array function retrieveAttributeNames( boolean columnNames = false, boolean withVirtualColumns = false ) {
+	public array function retrieveAttributeNames( boolean asColumnNames = false, boolean withVirtualAttributes = false ) {
 		return variables._attributes.reduce( function( items, key, value ) {
-			if ( value.virtual && !withVirtualColumns ) {
+			if ( value.virtual && !withVirtualAttributes ) {
 				return items;
 			}
-			items.append( columnNames ? value.column : key );
+			items.append( asColumnNames ? value.column : key );
 			return items;
 		}, [] );
+	}
+
+	/**
+	 * Retrieves an array of the attribute names.
+	 *
+	 * @withVirtualAttributes  If true, returns virtual attributes as well as normal attributes.
+	 *
+	 * @doc_generic  string
+	 * @return       [string]
+	 */
+	public array function retrieveColumnNames( boolean withVirtualAttributes = false ) {
+		arguments.asColumnNames = true;
+		return retrieveAttributeNames( argumentCollection = arguments );
 	}
 
 	/**
@@ -850,7 +864,7 @@ component accessors="true" {
 	 * @return       [string]
 	 */
 	public array function retrieveQualifiedColumns() {
-		var attributes = retrieveAttributeNames( columnNames = true );
+		var attributes = retrieveColumnNames();
 		arraySort( attributes, "textnocase" );
 		return attributes.map( function( column ) {
 			return qualifyColumn( column );
@@ -2823,7 +2837,7 @@ component accessors="true" {
 		structAppend(
 			this.memento,
 			{
-				"defaultIncludes" : retrieveAttributeNames( withVirtualColumns = true ),
+				"defaultIncludes" : retrieveAttributeNames( withVirtualAttributes = true ),
 				"defaultExcludes" : [],
 				"neverInclude"    : [],
 				"defaults"        : {},

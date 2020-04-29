@@ -54,6 +54,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( user.getUsername() ).toBe( "elpete" );
 				expect( user.getCountryName() ).toBe( "United States" );
 			} );
+
+			it( "returns global scoped virtual columns with the memento by default", function() {
+				var user = getInstance( "UserWithGlobalScope" ).findOrFail( 1 ).getMemento();
+				expect( user ).toHaveKey( "countryName" );
+				expect( user.countryName ).toBe( "United States" );
+
+				user = getInstance( "UserWithGlobalScope" ).asMemento().findOrFail( 1 );
+				expect( user ).toHaveKey( "countryName" );
+				expect( user.countryName ).toBe( "United States" );
+			} );
 		} );
 	}
 

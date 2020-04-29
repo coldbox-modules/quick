@@ -2823,7 +2823,7 @@ component accessors="true" {
 		structAppend(
 			this.memento,
 			{
-				"defaultIncludes" : retrieveAttributeNames(),
+				"defaultIncludes" : retrieveAttributeNames( withVirtualColumns = true ),
 				"defaultExcludes" : [],
 				"neverInclude"    : [],
 				"defaults"        : {},

@@ -1265,7 +1265,7 @@ component accessors="true" {
 			.resetQuery()
 			.where( function( q ) {
 				keyNames().each( function( keyName, i ) {
-					q.where( keyName, keyValues()[ i ] );
+					q.where( qualifyColumn( keyName ), keyValues()[ i ] );
 				} );
 			} )
 			.first();
@@ -1285,7 +1285,7 @@ component accessors="true" {
 				.from( tableName() )
 				.where( function( q ) {
 					keyNames().each( function( keyName, i ) {
-						q.where( keyName, keyValues()[ i ] );
+						q.where( qualifyColumn( keyName ), keyValues()[ i ] );
 					} );
 				} )
 				.first()

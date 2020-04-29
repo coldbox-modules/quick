@@ -2818,21 +2818,19 @@ component accessors="true" {
 	 * @return  void
 	 */
 	function instanceReady() {
-		if ( entityName() != "BaseEntity" ) {
-			param this.memento = {};
-			structAppend(
-				this.memento,
-				{
-					"defaultIncludes" : retrieveAttributeNames(),
-					"defaultExcludes" : [],
-					"neverInclude"    : [],
-					"defaults"        : {},
-					"mappers"         : {},
-					"trustedGetters"  : true,
-					"ormAutoIncludes" : false
-				}
-			);
-		}
+		param this.memento = {};
+		structAppend(
+			this.memento,
+			{
+				"defaultIncludes" : retrieveAttributeNames(),
+				"defaultExcludes" : [],
+				"neverInclude"    : [],
+				"defaults"        : {},
+				"mappers"         : {},
+				"trustedGetters"  : true,
+				"ormAutoIncludes" : false
+			}
+		);
 	}
 
 	/**

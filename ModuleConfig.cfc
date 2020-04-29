@@ -27,10 +27,6 @@ component {
             ]
         };
 
-		interceptors = [
-			{ class="#moduleMapping#.interceptors.QuickVirtualInheritanceInterceptor" }
-        ];
-
         binder.map( "quick.models.BaseEntity" )
             .to( "#moduleMapping#.models.BaseEntity" );
 

@@ -3019,12 +3019,11 @@ component accessors="true" {
 	}
 
 	/**
-	 * Creates the internal attribute struct from an existing struct.
-	 * The only required field on the passed in struct is `name`.
+	 * Creates a virtual attribute for the given name.
 	 *
-	 * @prop    The attribute struct to param.
+	 * @name    The attribute name to create.
 	 *
-	 * @return  An attribute struct with all the keys needed.
+	 * @return  quick.models.BaseEntity
 	 */
 	public any function appendVirtualAttribute( required string name ) {
 		if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {

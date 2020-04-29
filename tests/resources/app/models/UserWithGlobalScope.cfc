@@ -1,8 +1,4 @@
-component extends="User" mappedSuperClass="true" table="users" quick {
-
-    function scopeHasCountry( query ) {
-        return query.whereNotNull( "countryName" );
-    }
+component extends="User" table="users" quick {
 
     function scopeWithCountryName( query ) {
         addSubselect( "countryName", newEntity( "Country")
@@ -12,7 +8,6 @@ component extends="User" mappedSuperClass="true" table="users" quick {
     }
 
     function applyGlobalScopes() {
-        this.HasCountry();
         this.withCountryName();
     }
 }

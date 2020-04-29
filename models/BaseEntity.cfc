@@ -103,7 +103,7 @@ component accessors="true" {
 		persistent="false";
 
 	/**
-	 * A map of attribute names to column names.
+	 * A map of alias names to attribute options.
 	 */
 	property name="_attributes" persistent="false";
 
@@ -421,9 +421,12 @@ component accessors="true" {
 	 * @doc_generic  string
 	 * @return       [string]
 	 */
-	public array function retrieveAttributeNames( boolean columnNames = false ) {
+	public array function retrieveAttributeNames( boolean columnNames = false, boolean withVirtualColumns = false ) {
 		return variables._attributes.reduce( function( items, key, value ) {
-			items.append( columnNames ? value : key );
+			if ( value.virtual && !withVirtualColumns ) {
+				return items;
+			}
+			items.append( columnNames ? value.column : key );
 			return items;
 		}, [] );
 	}
@@ -459,10 +462,10 @@ component accessors="true" {
 		if ( arguments.force ) {
 			var alias = retrieveAliasForColumn( arguments.name );
 			if ( !variables._attributes.keyExists( alias ) ) {
-				variables._attributes[ arguments.name ]      = arguments.name;
-				variables._meta.attributes[ arguments.name ] = paramAttribute( { "name" : arguments.name } );
+				variables._attributes[ arguments.name ]      = paramAttribute( { "name" : arguments.name } );
+				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 				variables._meta.originalMetadata.properties.append(
-					variables._meta.attributes[ arguments.name ]
+					variables._attributes[ arguments.name ]
 				);
 			}
 		}
@@ -624,7 +627,7 @@ component accessors="true" {
 	 * @return  string
 	 */
 	public string function retrieveColumnForAlias( required string alias ) {
-		return variables._attributes.keyExists( arguments.alias ) ? variables._attributes[ arguments.alias ] : arguments.alias;
+		return variables._attributes.keyExists( arguments.alias ) ? variables._attributes[ arguments.alias ].column : arguments.alias;
 	}
 
 	/**
@@ -636,8 +639,8 @@ component accessors="true" {
 	 * @return  string
 	 */
 	public string function retrieveAliasForColumn( required string column ) {
-		return variables._attributes.reduce( function( acc, alias, columnName ) {
-			return column == arguments.columnName ? arguments.alias : arguments.acc;
+		return variables._attributes.reduce( function( acc, alias, options ) {
+			return column == arguments.options.column ? arguments.alias : arguments.acc;
 		}, arguments.column );
 	}
 
@@ -786,10 +789,10 @@ component accessors="true" {
 	) {
 		if ( arguments.force ) {
 			if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
-				variables._attributes[ arguments.name ]      = arguments.name;
-				variables._meta.attributes[ arguments.name ] = paramAttribute( { "name" : arguments.name } );
+				variables._attributes[ arguments.name ]      = paramAttribute( { "name" : arguments.name } );
+				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 				variables._meta.originalMetadata.properties.append(
-					variables._meta.attributes[ arguments.name ]
+					variables._attributes[ arguments.name ]
 				);
 			}
 		} else {
@@ -846,7 +849,7 @@ component accessors="true" {
 	 * @return       [string]
 	 */
 	public array function retrieveQualifiedColumns() {
-		var attributes = structValueArray( variables._attributes );
+		var attributes = retrieveAttributeNames( columnNames = true );
 		arraySort( attributes, "textnocase" );
 		return attributes.map( function( column ) {
 			return qualifyColumn( column );
@@ -2393,11 +2396,7 @@ component accessors="true" {
 	 * @return     quick.models.BaseEntity
 	 */
 	public any function addSubselect( required string name, required any subselect ) {
-		appendReadOnlyAttribute(
-			name   = arguments.name,
-			update = false,
-			insert = false
-		);
+		appendVirtualAttribute( arguments.name );
 
 		if (
 			retrieveQuery().getColumns().isEmpty() ||
@@ -3004,16 +3003,15 @@ component accessors="true" {
 	 *
 	 * @return  An attribute struct with all the keys needed.
 	 */
-	public any function appendReadOnlyAttribute( required string name ) {
+	public any function appendVirtualAttribute( required string name ) {
 		if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
-			variables._attributes[ arguments.name ]      = arguments.name;
-			variables._meta.attributes[ arguments.name ] = paramAttribute( {
+			variables._attributes[ arguments.name ] = paramAttribute( {
 				"name"   : arguments.name,
-				"update" : false,
-				"insert" : false
+				"virtual": true
 			} );
+			variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 			variables._meta.originalMetadata.properties.append(
-				variables._meta.attributes[ arguments.name ]
+				variables._attributes[ arguments.name ]
 			);
 		}
 		return this;
@@ -3037,6 +3035,7 @@ component accessors="true" {
 		param attr.sqltype       = "";
 		param attr.insert        = true;
 		param attr.update        = true;
+		param attr.virtual       = false;
 		return arguments.attr;
 	}
 
@@ -3048,7 +3047,7 @@ component accessors="true" {
 	private any function explodeAttributesMetadata( required struct attributes ) {
 		for ( var alias in arguments.attributes ) {
 			var options                    = arguments.attributes[ alias ];
-			variables._attributes[ alias ] = options.column;
+			variables._attributes[ alias ] = options;
 			if ( options.convertToNull ) {
 				variables._nullValues[ alias ] = options.nullValue;
 			}

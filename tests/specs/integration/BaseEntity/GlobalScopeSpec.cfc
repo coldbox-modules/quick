@@ -34,6 +34,26 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( admins[ 1 ].id ).toBe( 1 );
 				expect( admins[ 2 ].id ).toBe( 4 );
 			} );
+
+			it( "applies global scopes when calling fresh", function() {
+				var user = getInstance( "UserWithGlobalScope" ).findOrFail( 1 );
+				expect( user.getUsername() ).toBe( "elpete" );
+				expect( user.getCountryName() ).toBe( "United States" );
+				user = user.fresh();
+				user = user.fresh();
+				expect( user.getUsername() ).toBe( "elpete" );
+				expect( user.getCountryName() ).toBe( "United States" );
+			} );
+
+			it( "applies global scopes when calling refresh", function() {
+				var user = getInstance( "UserWithGlobalScope" ).findOrFail( 1 );
+				expect( user.getUsername() ).toBe( "elpete" );
+				expect( user.getCountryName() ).toBe( "United States" );
+				user.refresh();
+				user.refresh();
+				expect( user.getUsername() ).toBe( "elpete" );
+				expect( user.getCountryName() ).toBe( "United States" );
+			} );
 		} );
 	}
 

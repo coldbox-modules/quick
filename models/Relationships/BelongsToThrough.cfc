@@ -114,7 +114,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 			.toList();
 		variables.related
 			.selectRaw( "CONCAT(#qualifiedForeignKeyList#) AS __QuickThroughKey__" )
-			.appendReadOnlyAttribute( "__QuickThroughKey__" )
+			.appendVirtualAttribute( "__QuickThroughKey__" )
 			.where( function( q1 ) {
 				getKeys( entities, variables.closestToParent.getLocalKeys() ).each( function( keys ) {
 					q1.orWhere( function( q2 ) {

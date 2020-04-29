@@ -1,4 +1,4 @@
-component table="composite_children" extends="quick.models.BaseEntity" {
+component table="composite_children" extends="quick.models.BaseEntity" accessors="true" {
 
     property name="id";
     property name="composite_a";

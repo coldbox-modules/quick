@@ -19,7 +19,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getUsername() ).toBe( "elpete" );
 				user.setUsername( javacast( "null", "" ) );
-				expect( user.getUsername() ).toBe( "" );
+				expect( user.getUsername() ).toBeNull();
 			} );
 
 			it( "does not set attributes using the `setColumnName` magic methods during object creation", function() {

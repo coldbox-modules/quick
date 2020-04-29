@@ -50,6 +50,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					regex = "This instance is not loaded so it cannot access the \[posts\] relationship\.  Either load the entity from the database using a query executor \(like \`first\`\) or base your query off of the \[Post\] entity directly and use the \`has\` or \`whereHas\` methods to constrain it based on data in \[User\]\."
 				);
 			} );
+
+			it( "throws a helpful error message if accessors are not turned on", function() {
+				expect( function() {
+					getInstance( "EntityWithoutAccessors" );
+				} ).toThrow(
+					type = "QuickAccessorsMissing",
+					regex = 'This instance is missing \`accessors\=\"true\"\` in the component metadata\.  This is required for Quick to work properly\.  Please add it to your component metadata and reinit your application\.'
+				);
+			} );
 		} );
 	}
 

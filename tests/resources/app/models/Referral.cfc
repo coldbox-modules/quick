@@ -1,4 +1,4 @@
-component extends="quick.models.BaseEntity" readonly="true" {
+component extends="quick.models.BaseEntity" readonly="true" accessors="true" {
 
     property name="id";
     property name="type";

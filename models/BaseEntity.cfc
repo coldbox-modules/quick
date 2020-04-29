@@ -260,6 +260,7 @@ component accessors="true" {
 	public void function onDIComplete() {
 		metadataInspection();
 		resetQuery();
+		setUpMementifier();
 		fireEvent( "instanceReady", { entity : this } );
 	}
 
@@ -2813,11 +2814,11 @@ component accessors="true" {
 	}
 
 	/**
-	 * Set up the memento struct when this instance is ready.
+	 * Set up the memento struct for mementifier.
 	 *
 	 * @return  void
 	 */
-	function instanceReady() {
+	function setUpMementifier() {
 		param this.memento = {};
 		structAppend(
 			this.memento,
@@ -2908,6 +2909,16 @@ component accessors="true" {
 					var util                               = createObject( "component", "coldbox.system.core.util.Util" );
 					var meta                               = {};
 					meta[ "originalMetadata" ]             = util.getInheritedMetadata( this );
+					meta[ "localMetadata" ]                = getMetadata( this );
+					if (
+						!meta[ "localMetadata" ].keyExists( "accessors" ) ||
+						meta[ "localMetadata" ].accessors == false
+					) {
+						throw(
+							type = "QuickAccessorsMissing",
+							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
+						);
+					}
 					meta[ "fullName" ]                     = meta.originalMetadata.fullname;
 					param meta.originalMetadata.mapping    = listLast( meta.originalMetadata.fullname, "." );
 					meta[ "mapping" ]                      = meta.originalMetadata.mapping;

@@ -1,4 +1,4 @@
-component extends="quick.models.BaseEntity" {
+component extends="quick.models.BaseEntity" accessors="true" {
 
     property name="id";
     property name="username";
@@ -13,7 +13,7 @@ component extends="quick.models.BaseEntity" {
     property name="type";
     property name="externalID";
 
-    property name="address" casts="AddressCast" persistent="false";
+    property name="address" casts="AddressCast" persistent="false" getter="false";
     property name="streetOne";
     property name="streetTwo";
     property name="city";

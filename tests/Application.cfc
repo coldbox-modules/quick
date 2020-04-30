@@ -396,5 +396,18 @@ component {
             INSERT INTO `composite_children` (`id`, `composite_a`, `composite_b`) VALUES (2, 2, 2)
         " );
 
+        queryExecute(
+            "
+            CREATE TABLE `themes` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `slug` varchar(100) NOT NULL,
+                `version` varchar(100) NOT NULL,
+                PRIMARY KEY (`id`)
+            )
+            "
+        );
+        queryExecute( "
+            INSERT INTO `themes` (`id`, `slug`, `version`) VALUES (1, 'theme-a', '1.0.0')
+        " );
     }
 }

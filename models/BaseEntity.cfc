@@ -1450,6 +1450,23 @@ component accessors="true" {
 	}
 
 	/**
+	 * Forwards on the call to `updateOrCreate`.
+	 *
+	 * @values                       A struct of column and value pairs to update or insert.
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 *                               attribute does not exist.  Instead, it skips
+	 *                               the non-existent attribute.
+	 *
+	 * @return quick.models.BaseEntity
+	 */
+	public any function updateOrInsert( required struct values, boolean ignoreNonExistentAttributes = false ) {
+		return updateOrCreate(
+			newAttributes               = arguments.values,
+			ignoreNonExistentAttributes = arguments.ignoreNonExistentAttributes
+		);
+	}
+
+	/**
 	 * Creates a new entity with the given attributes and then saves the entity.
 	 *
 	 * @attributes                   A struct of key / value pairs.

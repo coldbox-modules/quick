@@ -83,7 +83,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( userRowsPostSave.email ).toBe( "" );
 			} );
 
-			it( "uses the type attribute if present for each column", function() {
+			it( "uses the sqltype attribute if present for each column", function() {
 				structDelete( request, "saveSpecPreQBExecute" );
 
 				var newPhoneNumber = getInstance( "PhoneNumber" );
@@ -100,6 +100,62 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].value ).toBe( "+18018644200" );
 				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "cfsqltype" );
 				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+			} );
+
+			it( "uses the sqltype attribute when calling updateOrCreate and updating", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
+
+				var newTheme = getInstance( "Theme" ).updateOrCreate( { "slug" : "theme-a" }, { "version" : "1.1.1" } );
+
+				expect( request ).toHaveKey( "saveSpecPreQBExecute" );
+				expect( request.saveSpecPreQBExecute ).toBeArray();
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
+				expect( request.saveSpecPreQBExecute[ 2 ] ).toHaveKey( "bindings" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toBeArray();
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 3 );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].value ).toBe( "1.1.1" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+			} );
+
+			it( "forwards on updateOrInsert calls to updateOrCreate", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
+
+				var newTheme = getInstance( "Theme" )
+					.where( "slug", "theme-a" )
+					.updateOrInsert( {
+						"slug"    : "theme-a",
+						"version" : "1.1.1"
+					} );
+
+				expect( request ).toHaveKey( "saveSpecPreQBExecute" );
+				expect( request.saveSpecPreQBExecute ).toBeArray();
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
+				expect( request.saveSpecPreQBExecute[ 2 ] ).toHaveKey( "bindings" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toBeArray();
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 3 );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].value ).toBe( "1.1.1" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+			} );
+
+			it( "uses the sqltype attribute when calling updateOrCreate and creating", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
+
+				var newTheme = getInstance( "Theme" ).updateOrCreate( { "slug" : "theme-b" }, { "version" : "1.1.1" } );
+
+				expect( request ).toHaveKey( "saveSpecPreQBExecute" );
+				expect( request.saveSpecPreQBExecute ).toBeArray();
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
+				expect( request.saveSpecPreQBExecute[ 2 ] ).toHaveKey( "bindings" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toBeArray();
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 2 );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].value ).toBe( "1.1.1" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
 			} );
 
 			it( "can attach an id to a relationship", function() {

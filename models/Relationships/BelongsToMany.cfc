@@ -124,24 +124,26 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return    void
 	 */
 	public void function addEagerConstraints( required array entities ) {
-		variables.related
-			.select() // clear select
-			.from( variables.table )
-			.where( function( q1 ) {
-				getKeys( entities, variables.parentKeys ).each( function( keys ) {
-					q1.orWhere( function( q2 ) {
-						arrayZipEach(
-							[
-								getQualifiedForeignPivotKeyNames(),
-								keys
-							],
-							function( foreignPivotKeyName, keyValue ) {
-								q2.where( foreignPivotKeyName, keyValue );
-							}
-						);
-					} );
+		performJoin();
+		variables.foreignPivotKeys.each( function( foreignPivotKey ) {
+			variables.related.addSelect( listLast( variables.table, " " ) & "." & foreignPivotKey );
+			variables.related.appendVirtualAttribute( name = foreignPivotKey, excludeFromMemento = true );
+		} );
+		variables.related.where( function( q1 ) {
+			getKeys( entities, variables.parentKeys ).each( function( keys ) {
+				q1.orWhere( function( q2 ) {
+					arrayZipEach(
+						[
+							getQualifiedForeignPivotKeyNames(),
+							keys
+						],
+						function( foreignPivotKeyName, keyValue ) {
+							q2.where( foreignPivotKeyName, keyValue );
+						}
+					);
 				} );
 			} );
+		} );
 	}
 
 	/**
@@ -382,7 +384,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  qb.models.Query.QueryBuilder
 	 */
 	public any function newPivotStatement() {
-		return variables.related.newQuery().from( variables.table );
+		return variables.related.set_table( variables.table ).newQuery();
 	}
 
 	/**

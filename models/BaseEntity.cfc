@@ -424,10 +424,15 @@ component accessors="true" {
 	 * @return       [string]
 	 */
 	public array function retrieveAttributeNames(
-		boolean asColumnNames         = false,
-		boolean withVirtualAttributes = false
+		boolean asColumnNames          = false,
+		boolean withVirtualAttributes  = false,
+		boolean withExcludedAttributes = false
 	) {
 		return variables._attributes.reduce( function( items, key, value ) {
+			if ( value.exclude && !withExcludedAttributes ) {
+				return items;
+			}
+
 			if ( value.virtual && !withVirtualAttributes ) {
 				return items;
 			}
@@ -2392,7 +2397,7 @@ component accessors="true" {
 			.newQuery()
 			.setReturnFormat( "array" )
 			.setColumnFormatter( function( column ) {
-				return retrieveColumnForAlias( column );
+				return qualifyColumn( column );
 			} )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() )
@@ -3045,11 +3050,12 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function appendVirtualAttribute( required string name ) {
+	public any function appendVirtualAttribute( required string name, boolean excludeFromMemento = false ) {
 		if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
 			variables._attributes[ arguments.name ] = paramAttribute( {
 				"name"    : arguments.name,
-				"virtual" : true
+				"virtual" : true,
+				"exclude" : arguments.excludeFromMemento
 			} );
 			variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 			variables._meta.originalMetadata.properties.append(
@@ -3078,6 +3084,7 @@ component accessors="true" {
 		param attr.insert        = true;
 		param attr.update        = true;
 		param attr.virtual       = false;
+		param attr.exclude       = false;
 		return arguments.attr;
 	}
 

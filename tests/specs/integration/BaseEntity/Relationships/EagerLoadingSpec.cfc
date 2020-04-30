@@ -185,12 +185,16 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 				expect( posts[ 2 ].getTags() ).toBeArray();
 				expect( posts[ 2 ].getTags() ).toHaveLength( 2 );
+				expect( posts[ 2 ].getTags()[ 1 ].getName() ).toBe( "programming" );
+				expect( posts[ 2 ].getTags()[ 2 ].getName() ).toBe( "music" );
 
 				expect( posts[ 3 ].getTags() ).toBeArray();
 				expect( posts[ 3 ].getTags() ).toHaveLength( 0 );
 
 				expect( posts[ 4 ].getTags() ).toBeArray();
 				expect( posts[ 4 ].getTags() ).toHaveLength( 2 );
+				expect( posts[ 4 ].getTags()[ 1 ].getName() ).toBe( "programming" );
+				expect( posts[ 4 ].getTags()[ 2 ].getName() ).toBe( "music" );
 
 				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
 			} );

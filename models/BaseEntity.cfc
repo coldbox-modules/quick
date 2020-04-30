@@ -394,21 +394,22 @@ component accessors="true" {
 		boolean withoutKey = false,
 		boolean withNulls  = false
 	) {
-		variables._attributes
-			.keyArray()
-			.each( function( key ) {
-				if ( variables.keyExists( key ) && !isReadOnlyAttribute( key ) ) {
-					assignAttribute( key, variables[ key ] );
-				}
-			} );
+		retrieveAttributeNames( withVirtualColumns = false ).each( function( key ) {
+			if ( variables.keyExists( key ) && !isReadOnlyAttribute( key ) ) {
+				assignAttribute( key, variables[ key ] );
+			}
+		} );
 		return variables._data.reduce( function( acc, key, value ) {
-			if ( withoutKey && arrayContainsNoCase( keyColumns(), key ) ) {
+			if ( isVirtualAttribute( key ) ) {
+				return acc;
+			}
+			if ( withoutKey && arrayContainsNoCase( keyNames(), retrieveAliasForColumn( key ) ) ) {
 				return acc;
 			}
 			if ( isNull( value ) || ( isNullValue( key, value ) && withNulls ) ) {
-				acc[ aliased ? retrieveAliasForColumn( key ) : key ] = javacast( "null", "" );
+				acc[ aliased ? retrieveAliasForColumn( key ) : retrieveColumnForAlias( key ) ] = javacast( "null", "" );
 			} else {
-				acc[ aliased ? retrieveAliasForColumn( key ) : key ] = value;
+				acc[ aliased ? retrieveAliasForColumn( key ) : retrieveColumnForAlias( key ) ] = value;
 			}
 			return acc;
 		}, {} );
@@ -493,10 +494,10 @@ component accessors="true" {
 			}
 		}
 		if ( arguments.setToNull ) {
-			variables._data[ arguments.name ]                     = javacast( "null", "" );
-			variables[ retrieveAliasForColumn( arguments.name ) ] = javacast( "null", "" );
+			variables._data[ retrieveColumnForAlias( arguments.name ) ] = javacast( "null", "" );
+			variables[ retrieveAliasForColumn( arguments.name ) ]       = javacast( "null", "" );
 		} else {
-			variables._data.delete( arguments.name );
+			variables._data.delete( retrieveColumnForAlias( arguments.name ) );
 			variables.delete( retrieveAliasForColumn( arguments.name ) );
 		}
 		return this;
@@ -3065,6 +3066,10 @@ component accessors="true" {
 		return this;
 	}
 
+	public boolean function isVirtualAttribute( name ) {
+		return variables._attributes[ retrieveAliasForColumn( arguments.name ) ].virtual;
+	}
+
 	/**
 	 * Creates the internal attribute struct from an existing struct.
 	 * The only required field on the passed in struct is `name`.
@@ -3436,12 +3441,13 @@ component accessors="true" {
 	 * By default, the null value for a column is an empty string ("").
 	 *
 	 * @key     The attribute name to check.
-	 * @value   The value to check.
+	 * @value   The value to check.  If no value is passed, it uses the current value.
 	 *
 	 * @return  Boolean
 	 */
 	public boolean function isNullValue( required string key, any value ) {
-		var alias = retrieveAliasForColumn( arguments.key );
+		param arguments.value = invoke( this, "get" & arguments.key );
+		var alias             = retrieveAliasForColumn( arguments.key );
 		return variables._nullValues.keyExists( alias ) &&
 		compare( variables._nullValues[ alias ], arguments.value ) == 0;
 	}
@@ -3573,22 +3579,6 @@ component accessors="true" {
 	 */
 	private array function arrayWrap( required any value ) {
 		return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
-	}
-
-
-	/**
-	 * Returns an array of a struct's values.
-	 *
-	 * @s            A struct to return an array of its values.
-	 *
-	 * @doc_generic  any
-	 * @return       [any]
-	 */
-	private array function structValueArray( required struct s ) {
-		return s.reduce( function( arr, key, value ) {
-			arr.append( value );
-			return arr;
-		}, [] );
 	}
 
 }

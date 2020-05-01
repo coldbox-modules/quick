@@ -663,9 +663,12 @@ component accessors="true" {
 	 * @return  string
 	 */
 	public string function retrieveAliasForColumn( required string column ) {
-		return variables._attributes.reduce( function( acc, alias, options ) {
-			return column == arguments.options.column ? arguments.alias : arguments.acc;
-		}, arguments.column );
+		for ( var alias in variables._attributes ) {
+			if ( arguments.column == variables._attributes[ alias ].column ) {
+				return alias;
+			}
+		}
+		return arguments.column;
 	}
 
 	/**
@@ -2969,7 +2972,21 @@ component accessors="true" {
 					param meta.originalMetadata.readonly   = false;
 					meta[ "readonly" ]                     = meta.originalMetadata.readonly;
 					param meta.originalMetadata.functions  = [];
-					meta[ "functionNames" ]                = generateFunctionNameArray( meta.originalMetadata.functions );
+					var baseEntityFunctionNames            = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
+						return arrayReduce(
+							getComponentMetadata( "quick.models.BaseEntity" ).functions,
+							function( acc, func ) {
+								arguments.acc[ arguments.func.name ] = "";
+								return arguments.acc;
+							},
+							{}
+						);
+					} );
+					meta[ "functionNames" ] = generateFunctionNameArray(
+						from    = meta.originalMetadata.functions,
+						without = baseEntityFunctionNames
+					);
+
 					param meta.originalMetadata.properties = [];
 					meta[ "attributes" ]                   = generateAttributesFromProperties( meta.originalMetadata.properties );
 					arrayWrap( variables._key ).each( function( key ) {
@@ -3009,10 +3026,13 @@ component accessors="true" {
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	private array function generateFunctionNameArray( required array functions ) {
-		return arguments.functions.map( function( func ) {
-			return lCase( func.name );
-		} );
+	private array function generateFunctionNameArray( required array from, struct without = {} ) {
+		return arguments.from.reduce( function( acc, func ) {
+			if ( !without.keyExists( func.name ) ) {
+				acc.append( func.name );
+			}
+			return acc;
+		}, [] );
 	}
 
 	/**

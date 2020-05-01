@@ -119,6 +119,28 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 						expect( posts ).toBeArray();
 						expect( posts ).toHaveLength( 2 );
 					} );
+
+					it( "can use whereHas on a belongsToMany relationship", function() {
+						var posts = getInstance( "Post" )
+							.whereHas( "tags", function( q ) {
+								q.where( "name", "doesnt-exist" );
+							} )
+							.get();
+
+						expect( posts ).toBeEmpty();
+					} );
+
+					it( "can use whereHas on a nested belongsToMany relationship", function() {
+						var posts = getInstance( "Post" )
+							.whereHas( "author.roles", function( q ) {
+								expect( q.getEntity().entityName() ).toBe( "Role" );
+								q.where( "id", 2 );
+							} )
+							.get();
+						expect( posts ).toBeArray();
+						expect( posts ).toHaveLength( 1 );
+						expect( posts[ 1 ].getAuthor().getId() ).toBe( 4 );
+					} );
 				} );
 
 				describe( "hasManyThrough", function() {

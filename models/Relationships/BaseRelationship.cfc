@@ -218,6 +218,10 @@ component accessors="true" {
 			} );
 	}
 
+	public any function nestCompareConstraints( required any base, required any nested ) {
+		return arguments.base.whereExists( arguments.nested );
+	}
+
 	/**
 	 * Returns the fully-qualified local key.
 	 *

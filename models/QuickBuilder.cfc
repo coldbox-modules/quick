@@ -325,7 +325,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			} );
 		} );
 
-		arguments.relationQuery = relation.addCompareConstraints().clearOrders();
+		arguments.relationQuery = relation.addCompareConstraints( nested = this ).clearOrders();
 
 		if ( listLen( arguments.relationshipName, "." ) > 1 ) {
 			arguments.relationshipName = listRest( arguments.relationshipName, "." );
@@ -421,7 +421,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 
 		if ( listLen( arguments.relationshipName, "." ) == 1 ) {
 			var q = relation
-				.addCompareConstraints()
+				.addCompareConstraints( nested = arguments.relationQuery )
 				.clearOrders()
 				.when( !isNull( callback ), function( q ) {
 					callback( q );
@@ -433,11 +433,8 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			if ( structKeyExists( q, "retrieveQuery" ) ) {
 				q = q.retrieveQuery();
 			}
-			return invoke(
-				arguments.relationQuery,
-				"whereExists",
-				{ "query" : q }
-			);
+
+			return relation.nestCompareConstraints( base = arguments.relationQuery, nested = q );
 		}
 
 		var q = relation.addCompareConstraints().clearOrders();
@@ -446,11 +443,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			q = q.retrieveQuery();
 		}
 
-		arguments.relationQuery = invoke(
-			arguments.relationQuery,
-			"whereExists",
-			{ "query" : q }
-		);
+		arguments.relationQuery = relation.nestCompareConstraints( base = arguments.relationQuery, nested = q );
 
 		return whereHasNested( argumentCollection = arguments );
 	}

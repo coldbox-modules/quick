@@ -457,7 +457,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  qb.models.Query.QueryBuilder
 	 */
-	public QueryBuilder function addCompareConstraints( any base = variables.parent ) {
+	public any function addCompareConstraints( any base = variables.related.newQuery(), any nested ) {
+		if ( !isNull( arguments.nested ) ) {
+			return addNestedCompareConstraints( arguments.base, arguments.nested );
+		}
+
 		return arguments.base
 			.newQuery()
 			.select( variables.parent.raw( 1 ) )
@@ -473,6 +477,44 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					}
 				);
 			} );
+	}
+
+	public any function addNestedCompareConstraints( required any base, required any nested ) {
+		return arguments.base
+			.select( variables.related.raw( 1 ) )
+			.whereExists( function( q ) {
+				q.selectRaw( 1 ).from( variables.table );
+				arrayZipEach(
+					[
+						getQualifiedRelatedPivotKeyNames(),
+						variables.related.retrieveQualifiedKeyNames()
+					],
+					function( relatedPivotKeyName, keyName ) {
+						q.whereColumn( relatedPivotKeyName, keyName );
+					}
+				);
+
+				var nestedQuery = nested.clone().select( variables.parent.raw( 1 ) );
+				arrayZipEach(
+					[
+						getQualifiedForeignKeyNames(),
+						variables.parent.retrieveQualifiedKeyNames()
+					],
+					function( foreignKeyName, keyName ) {
+						nestedQuery.whereColumn( foreignKeyName, keyName );
+					}
+				);
+
+				if ( structKeyExists( nestedQuery, "retrieveQuery" ) ) {
+					nestedQuery = nestedQuery.retrieveQuery();
+				}
+
+				q.whereExists( nestedQuery );
+			} );
+	}
+
+	function nestCompareConstraints( base, nested ) {
+		return structKeyExists( arguments.nested, "retrieveQuery" ) ? arguments.nested.retrieveQuery() : arguments.nested;
 	}
 
 	/**

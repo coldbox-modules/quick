@@ -726,6 +726,7 @@ component accessors="true" {
 	 */
 	public any function markLoaded() {
 		variables._loaded = true;
+		fireEvent( "postLoad", { entity : this } );
 		return this;
 	}
 
@@ -1064,11 +1065,7 @@ component accessors="true" {
 			return javacast( "null", "" );
 		}
 
-		return handleTransformations(
-			tap( loadEntity( data ), function( entity ) {
-				fireEvent( "postLoad", { entity : entity } );
-			} )
-		);
+		return handleTransformations( loadEntity( data ) );
 	}
 
 	/**

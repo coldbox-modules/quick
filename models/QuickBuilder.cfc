@@ -610,12 +610,13 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	 */
 	public QuickBuilder function newQuery() {
 		var builder = new quick.models.QuickBuilder(
-			grammar             = getGrammar(),
-			utils               = getUtils(),
-			returnFormat        = getReturnFormat(),
-			paginationCollector = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
-			columnFormatter     = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
-			defaultOptions      = getDefaultOptions()
+			grammar               = getGrammar(),
+			utils                 = getUtils(),
+			returnFormat          = getReturnFormat(),
+			paginationCollector   = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
+			columnFormatter       = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
+			defaultOptions        = getDefaultOptions(),
+			preventDuplicateJoins = getPreventDuplicateJoins()
 		);
 		builder.setEntity( getEntity() );
 		builder.setFrom( getEntity().tableName() );

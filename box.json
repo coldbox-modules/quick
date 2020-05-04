@@ -49,9 +49,7 @@
         "**/.*",
         "test",
         "tests",
-        ".engine",
-        ".travis.yml",
-        ".gitignore",
-        "server.json"
+        "server.json",
+        "quick300.png"
     ]
 }

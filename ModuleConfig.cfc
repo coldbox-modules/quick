@@ -8,7 +8,8 @@ component {
 
     function configure() {
         settings = {
-            defaultGrammar = "AutoDiscover@qb"
+            "defaultGrammar" = "AutoDiscover@qb",
+            "preventDuplicateJoins" = true
         };
 
         interceptorSettings = {
@@ -34,15 +35,10 @@ component {
     }
 
     function onLoad() {
-        binder.map( "QuickQB@quick" )
-            .to( "qb.models.Query.QueryBuilder" )
-            .initArg( name = "grammar", dsl = settings.defaultGrammar )
-            .initArg( name = "utils", dsl = "QueryUtils@qb" )
-            .initArg( name = "returnFormat", value = "array" );
-
         binder.map( alias = "QuickBuilder@quick", force = true )
             .to( "#moduleMapping#.models.QuickBuilder" )
             .initArg( name = "grammar", dsl = settings.defaultGrammar )
+            .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "utils", dsl = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = "array" );
     }

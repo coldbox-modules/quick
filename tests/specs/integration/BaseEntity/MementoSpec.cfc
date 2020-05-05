@@ -73,11 +73,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				var userA      = users[ 1 ];
 				var userB      = users[ 2 ];
 				var userAAgain = users[ 1 ];
-				expect( userA.is( userB ) ).toBeFalse();
-				expect( userA.is( userAAgain ) ).toBeTrue();
+				expect( userA.isSameAs( userB ) ).toBeFalse();
+				expect( userA.isSameAs( userAAgain ) ).toBeTrue();
 
-				expect( userA.isNot( userB ) ).toBeTrue();
-				expect( userA.isNot( userAAgain ) ).toBeFalse();
+				expect( userA.isNotSameAs( userB ) ).toBeTrue();
+				expect( userA.isNotSameAs( userAAgain ) ).toBeFalse();
 			} );
 
 			it( "can return a query directly as mementos", function() {

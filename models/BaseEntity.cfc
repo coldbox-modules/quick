@@ -2485,30 +2485,13 @@ component accessors="true" {
 	}
 
 	/**
-	 * This handles the .is call, since ACF doesn't parse it correctly.
-	 * If the method name is not `is`, then it returns null.
-	 *
-	 * @missingMethodName       The method name that is missing.
-	 * @missingMethodArguments  The arguments passed to the missing method call.
-	 *
-	 * @return                  Boolean
-	 */
-	private any function tryIsMethod( missingMethodName, missingMethodArguments ) {
-		if ( arguments.missingMethodName != "is" ) {
-			return;
-		}
-
-		return handleIs( argumentCollection = missingMethodArguments );
-	}
-
-	/**
 	 * Checks if an entity is another entity.
 	 *
 	 * @otherEntity  The entity to compare.
 	 *
 	 * @return       Boolean
 	 */
-	private boolean function handleIs( required any otherEntity ) {
+	public boolean function isSameAs( required any otherEntity ) {
 		if ( entityName() != arguments.otherEntity.entityName() ) {
 			return false;
 		}
@@ -2532,8 +2515,8 @@ component accessors="true" {
 	 *
 	 * @return       Boolean
 	 */
-	public boolean function isNot( required any otherEntity ) {
-		return !handleIs( arguments.otherEntity );
+	public boolean function isNotSameAs( required any otherEntity ) {
+		return !isSameAs( arguments.otherEntity );
 	}
 
 	/*=====================================
@@ -2561,11 +2544,6 @@ component accessors="true" {
 	 * @return                  any
 	 */
 	public any function onMissingMethod( required string missingMethodName, struct missingMethodArguments = {} ) {
-		var isValue = tryIsMethod( arguments.missingMethodName, arguments.missingMethodArguments );
-		if ( !isNull( isValue ) ) {
-			return isValue;
-		}
-
 		var columnValue = tryAttributeAccessor( arguments.missingMethodName, arguments.missingMethodArguments );
 		if ( !isNull( columnValue ) ) {
 			return columnValue;

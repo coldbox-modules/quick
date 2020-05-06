@@ -12,6 +12,7 @@ component {
     this.mappings[ "/root" ] = rootPath;
     this.mappings[ "/testingModuleRoot" ] = listDeleteAt( rootPath, listLen( rootPath, '\/' ), "\/" );
     this.mappings[ "/quick" ] = listDeleteAt( rootPath, listLen( rootPath, '\/' ), "\/" );
+    this.mappings[ "/qb" ] = listDeleteAt( rootPath, listLen( rootPath, '\/' ), "\/" ) & "modules/qb";
     this.mappings[ "/app" ] = testsPath & "resources/app";
     this.mappings[ "/coldbox" ] = testsPath & "resources/app/coldbox";
     this.mappings[ "/testbox" ] = rootPath & "/testbox";

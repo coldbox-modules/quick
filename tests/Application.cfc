@@ -20,6 +20,8 @@ component {
     this.datasource = "quick";
 
     function onRequestStart() {
+        writeDump( var = expandPath( "/qb/modules/cbpaginator/models/Pagination.cfc" ) );
+        writeDump( var = fileExists( expandPath( "/qb/modules/cbpaginator/models/Pagination.cfc" ) ) );
         structDelete( application, "cbController" );
         setUpDatabase();
     }

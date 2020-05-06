@@ -33,7 +33,7 @@ install:
   - sudo apt-get update && sudo apt-get --assume-yes install commandbox jq rsync
   - box install commandbox-cfconfig,commandbox-cfformat
   - box install
-  - box install coldbox@${COLDBOX_VERSION} --force
+  - box install coldbox@${COLDBOX_VERSION} --force --!save
 before_script:
   - box server start cfengine=$ENGINE port=8500 debug=true
 script:

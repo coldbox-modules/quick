@@ -30,8 +30,6 @@ install:
   - box install commandbox-cfconfig,commandbox-cfformat
   - box install --verbose
   - box install coldbox@${COLDBOX_VERSION} --force --!save
-  - pwd
-  - ls modules/qb/modules/cbpaginator/models
 before_script:
   - box server start cfengine=$ENGINE port=8500 debug=true
 script:

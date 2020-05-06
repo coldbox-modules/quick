@@ -5,10 +5,6 @@ services:
   - mysql
 jdk:
   - openjdk8
-cache:
-  directories:
-  - "$HOME/.CommandBox/artifacts/"
-  - "$HOME/.CommandBox/server/"
 env:
   global:
     - MODULE_ID=qb

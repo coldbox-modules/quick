@@ -553,6 +553,14 @@ component accessors="true" {
 	public any function fill( struct attributes = {}, boolean ignoreNonExistentAttributes = false ) {
 		for ( var key in arguments.attributes ) {
 			guardAgainstReadOnlyAttribute( key );
+			if ( isNull( arguments.attributes[ key ] ) || !structKeyExists( arguments.attributes, key ) ) {
+				if ( hasAttribute( key ) ) {
+					clearAttribute( key, true );
+				} else if ( !arguments.ignoreNonExistentAttributes ) {
+					guardAgainstNonExistentAttribute( key );
+				}
+				continue;
+			}
 			var value = arguments.attributes[ key ];
 			var rs    = tryRelationshipSetter( "set#key#", { "1" : value } );
 			if ( !isNull( rs ) ) {
@@ -2838,19 +2846,17 @@ component accessors="true" {
 	 */
 	function setUpMementifier() {
 		param this.memento = {};
-		structAppend(
-			{
-				"defaultIncludes" : retrieveAttributeNames( withVirtualAttributes = true ),
-				"defaultExcludes" : [],
-				"neverInclude"    : [],
-				"defaults"        : {},
-				"mappers"         : {},
-				"trustedGetters"  : true,
-				"ormAutoIncludes" : false
-			},
-			this.memento,
-			true
-		);
+		var defaults       = {
+			"defaultIncludes" : retrieveAttributeNames( withVirtualAttributes = true ),
+			"defaultExcludes" : [],
+			"neverInclude"    : [],
+			"defaults"        : {},
+			"mappers"         : {},
+			"trustedGetters"  : true,
+			"ormAutoIncludes" : false
+		};
+		structAppend( defaults, this.memento, true );
+		this.memento = defaults;
 	}
 
 	/**

@@ -2839,7 +2839,6 @@ component accessors="true" {
 	function setUpMementifier() {
 		param this.memento = {};
 		structAppend(
-			this.memento,
 			{
 				"defaultIncludes" : retrieveAttributeNames( withVirtualAttributes = true ),
 				"defaultExcludes" : [],
@@ -2848,7 +2847,9 @@ component accessors="true" {
 				"mappers"         : {},
 				"trustedGetters"  : true,
 				"ormAutoIncludes" : false
-			}
+			},
+			this.memento,
+			true
 		);
 	}
 

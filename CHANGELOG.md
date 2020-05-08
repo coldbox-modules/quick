@@ -1,3 +1,14 @@
+# v3.0.1
+## 08 May 2020 — 22:04:29 UTC
+
+### fix
+
++ __BaseEntity:__ Account for null values in fill
+ ([3f8bc2c](https://github.com/coldbox-modules/quick/commit/3f8bc2cabb1503d6617ccea9ad0c870b3816461c))
++ __Memento:__ Swap structAppend order for a Lucee bug
+ ([1e0d217](https://github.com/coldbox-modules/quick/commit/1e0d2173ad8fe2eefce96ac509cd8d127ab34a0c))
+
+
 # v3.0.0
 ## 06 May 2020 — 19:01:56 UTC
 

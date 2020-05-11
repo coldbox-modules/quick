@@ -122,7 +122,13 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 				getKeys( entities, variables.closestToParent.getLocalKeys() ).each( function( keys ) {
 					q1.orWhere( function( q2 ) {
 						arrayZipEach( [ foreignKeys, keys ], function( foreignKey, keyValue ) {
-							q2.where( variables.closestToParent.qualifyColumn( foreignKey ), keyValue );
+							q2.where(
+								variables.closestToParent.qualifyColumn( foreignKey ),
+								variables.closestToParent.generateQueryParamStruct(
+									foreignKey,
+									keyValue
+								)
+							);
 						} );
 					} );
 				} );

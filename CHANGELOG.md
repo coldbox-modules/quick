@@ -1,3 +1,12 @@
+# v3.0.2
+## 11 May 2020 — 20:02:26 UTC
+
+### fix
+
++ __EagerLoading:__ Apply custom sqltypes during eager loading
+ ([c9633d3](https://github.com/coldbox-modules/quick/commit/c9633d3fc42a1e14fe48051a735dd1eeee956318))
+
+
 # v3.0.1
 ## 08 May 2020 — 22:04:29 UTC
 

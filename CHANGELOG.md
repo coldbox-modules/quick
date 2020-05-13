@@ -1,3 +1,17 @@
+# v3.0.3
+## 13 May 2020 — 17:24:08 UTC
+
+### chore
+
++ __CI:__ Fix module id
+ ([9d9c4ab](https://github.com/coldbox-modules/quick/commit/9d9c4abe00ba3bce9051d815408f0c94f7c8ab90))
+
+### fix
+
++ __Casts:__ Optimize cast caching
+ ([2f9b510](https://github.com/coldbox-modules/quick/commit/2f9b510ccf8a3e60402eadd85c4386fd75f1a885))
+
+
 # v3.0.2
 ## 11 May 2020 — 20:02:26 UTC
 

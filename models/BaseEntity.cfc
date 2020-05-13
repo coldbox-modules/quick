@@ -394,11 +394,7 @@ component accessors="true" {
 		boolean withoutKey = false,
 		boolean withNulls  = false
 	) {
-		retrieveAttributeNames( withVirtualColumns = false ).each( function( key ) {
-			if ( variables.keyExists( key ) && !isReadOnlyAttribute( key ) ) {
-				assignAttribute( key, variables[ key ] );
-			}
-		} );
+		syncVariablesScopeWithData();
 		return variables._data.reduce( function( acc, key, value ) {
 			if ( isVirtualAttribute( key ) ) {
 				return acc;
@@ -413,6 +409,17 @@ component accessors="true" {
 			}
 			return acc;
 		}, {} );
+	}
+
+	/**
+	 * Syncs the values found in the variables scope (due to accessors) in to data
+	 */
+	private void function syncVariablesScopeWithData() {
+		retrieveAttributeNames( withVirtualColumns = false ).each( function( key ) {
+			if ( variables.keyExists( key ) && !isReadOnlyAttribute( key ) ) {
+				assignAttribute( key, variables[ key ] );
+			}
+		} );
 	}
 
 	/**
@@ -3503,18 +3510,8 @@ component accessors="true" {
 		if ( !structKeyExists( variables._casts, arguments.key ) ) {
 			return arguments.value;
 		}
-		var castMapping = variables._casts[ arguments.key ];
-		if ( !variables._casterCache.keyExists( arguments.key ) ) {
-			variables._casterCache[ arguments.key ] = variables._wirebox.getInstance( dsl = castMapping );
-		}
-		var caster = variables._casterCache[ arguments.key ];
-		return variables._wirebox
-			.getInstance( dsl = castMapping )
-			.set(
-				entity = this,
-				key    = arguments.key,
-				value  = arguments.value
-			);
+		variables._castCache[ arguments.key ] = arguments.value;
+		return variables._castCache[ arguments.key ];
 	}
 
 	/**
@@ -3523,9 +3520,10 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	private any function mergeAttributesFromCastCache() {
+		syncVariablesScopeWithData();
 		variables._castCache.each( function( key, castedValue ) {
-			var castMapping = variables._casts[ arguments.key ];
 			if ( !variables._casterCache.keyExists( arguments.key ) ) {
+				var castMapping                         = variables._casts[ arguments.key ];
 				variables._casterCache[ arguments.key ] = variables._wirebox.getInstance( dsl = castMapping );
 			}
 			var caster = variables._casterCache[ arguments.key ];

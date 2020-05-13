@@ -7,7 +7,7 @@ jdk:
   - openjdk8
 env:
   global:
-    - MODULE_ID=qb
+    - MODULE_ID=quick
   jobs:
     - ENGINE=adobe@2018 COLDBOX_VERSION=stable
     - ENGINE=adobe@2016 COLDBOX_VERSION=stable

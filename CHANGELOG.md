@@ -1,3 +1,12 @@
+# v3.0.4
+## 27 May 2020 — 05:41:15 UTC
+
+### fix
+
++ __CBORMCompatEntity:__ Updates for coldbox@6
+ ([1f10fde](https://github.com/coldbox-modules/quick/commit/1f10fde47a78b18b94112198c89911620a5c69db))
+
+
 # v3.0.3
 ## 13 May 2020 — 17:24:08 UTC
 

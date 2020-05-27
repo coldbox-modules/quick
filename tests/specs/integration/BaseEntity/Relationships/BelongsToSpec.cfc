@@ -128,8 +128,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 						.posts()
 						.count()
 				).toBe( 2 );
-				post
-					.author()
+				post.author()
 					.dissociate()
 					.save();
 				expect( post.retrieveAttribute( "user_id" ) ).toBe( "" );

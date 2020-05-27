@@ -152,7 +152,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	}
 
 	function newCriteria() {
-		return CBORMCriteriaBuilderCompat.get().setEntity( this );
+		return CBORMCriteriaBuilderCompat.setEntity( this );
 	}
 
 	private void function guardAgainstCompositePrimaryKeys() {

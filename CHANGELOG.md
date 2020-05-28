@@ -1,3 +1,12 @@
+# v3.1.1
+## 28 May 2020 — 22:05:51 UTC
+
+### fix
+
++ __Relationships:__ Fix orWhereHas methods when querying nested relationships
+ ([8262bb3](https://github.com/coldbox-modules/quick/commit/8262bb30efba7c28da753b395b4826a1969de5be))
+
+
 # v3.1.0
 ## 28 May 2020 — 21:25:33 UTC
 

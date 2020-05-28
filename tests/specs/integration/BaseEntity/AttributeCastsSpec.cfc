@@ -55,6 +55,26 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				user.refresh();
 				expect( user.getState() ).toBe( "TX" );
 			} );
+
+			it( "can cast json data", function() {
+				var theme = getInstance( "Theme" ).create( {
+					"slug"    : "my-theme",
+					"version" : "1.0.0",
+					"config"  : {
+						"fontFamily"   : "Dank Mono",
+						"primaryColor" : "orange"
+					}
+				} );
+
+				theme.refresh();
+
+				expect( theme.getConfig() ).notToBeNull();
+				expect( theme.getConfig() ).toBeStruct();
+				expect( theme.getConfig() ).toHaveKey( "fontFamily" );
+				expect( theme.getConfig().fontFamily ).toBe( "Dank Mono" );
+				expect( theme.getConfig() ).toHaveKey( "primaryColor" );
+				expect( theme.getConfig().primaryColor ).toBe( "orange" );
+			} );
 		} );
 	}
 

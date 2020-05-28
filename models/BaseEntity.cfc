@@ -843,18 +843,13 @@ component accessors="true" {
 			guardAgainstReadOnlyAttribute( arguments.name );
 		}
 
-		// If the value passed in is a Quick entity, use its `keyValue` as the value.
-		if ( !isNull( arguments.value ) && isStruct( arguments.value ) ) {
-			// Check for the keyValue method that should be on a Quick entity
-			// to check if the value is a Quick entity.
-			if ( !structKeyExists( arguments.value, "keyValue" ) ) {
-				throw(
-					type    = "QuickNotEntityException",
-					message = "The value assigned to [#arguments.name#] is not a Quick entity. " &
-					"Perhaps you forgot to add `persistent=""false""` to a new property?",
-					detail = getMetadata( arguments.value ).fullname
-				);
-			}
+		// If the value passed in is a Quick entity, use its first `keyValues` as the value.
+		if (
+			!isNull( arguments.value ) && isStruct( arguments.value ) && structKeyExists(
+				arguments.value,
+				"isQuickEntity"
+			)
+		) {
 			guardAgainstKeyLengthMismatch( arguments.value.keyValues(), 1 );
 			arguments.value = castValueForSetter( arguments.name, arguments.value.keyValues()[ 1 ] );
 		}

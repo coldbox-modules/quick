@@ -403,6 +403,7 @@ component {
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `slug` varchar(100) NOT NULL,
                 `version` varchar(100) NOT NULL,
+                `config` TEXT,
                 PRIMARY KEY (`id`)
             )
             "

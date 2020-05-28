@@ -23,6 +23,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( newUserAgain.getFirstName() ).toBe( "New" );
 				expect( newUserAgain.getLastName() ).toBe( "User" );
 			} );
+
 			it( "allow inserting of column where update=false in property", function() {
 				var newUser = getInstance( "User" );
 				newUser.setUsername( "new_user2" );
@@ -40,7 +41,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( newUserAgain.getLastName() ).toBe( "User2" );
 				expect( newUserAgain.getEmail() ).toBe( "test2@test.com" );
 			} );
-
 
 			it( "retrieves the generated key when saving a new record", function() {
 				var newUser = getInstance( "User" );
@@ -112,11 +112,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
 				expect( request.saveSpecPreQBExecute[ 2 ] ).toHaveKey( "bindings" );
 				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toBeArray();
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 3 );
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "value" );
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].value ).toBe( "1.1.1" );
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "cfsqltype" );
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 4 );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ].value ).toBe( "1.1.1" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
 			} );
 
 			it( "forwards on updateOrInsert calls to updateOrCreate", function() {
@@ -134,11 +134,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
 				expect( request.saveSpecPreQBExecute[ 2 ] ).toHaveKey( "bindings" );
 				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toBeArray();
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 3 );
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "value" );
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].value ).toBe( "1.1.1" );
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "cfsqltype" );
-				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 4 );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ].value ).toBe( "1.1.1" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
 			} );
 
 			it( "uses the sqltype attribute when calling updateOrCreate and creating", function() {

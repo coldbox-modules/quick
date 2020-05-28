@@ -1,3 +1,11 @@
+# v3.1.0
+## 28 May 2020 — 21:25:33 UTC
+
+### feat
+
++ __JSONCast:__ Add support for JSON casting ([137701a](https://github.com/coldbox-modules/quick/commit/137701a5383abf25d53d218fa5f90537fea53554))
+
+
 # v3.0.4
 ## 27 May 2020 — 05:41:15 UTC
 

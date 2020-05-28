@@ -172,10 +172,10 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		required string relationshipName,
 		any operator,
 		numeric count,
-		boolean negate = false
+		string combinator = "and",
+		boolean negate    = false
 	) {
-		var methodName = arguments.negate ? "whereNotExists" : "whereExists";
-		var relation   = getEntity().ignoreLoadedGuard( function() {
+		var relation = getEntity().ignoreLoadedGuard( function() {
 			return getEntity().withoutRelationshipConstraints( function() {
 				return invoke( getEntity(), listFirst( relationshipName, "." ) );
 			} );
@@ -193,10 +193,10 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 				arguments.relationQuery = arguments.relationQuery.retrieveQuery();
 			}
 
-			invoke(
-				this,
-				methodName,
-				{ "query" : hasNested( argumentCollection = arguments ) }
+			whereExists(
+				query      = hasNested( argumentCollection = arguments ),
+				combinator = arguments.combinator,
+				negate     = arguments.negate
 			);
 
 			return this;
@@ -210,13 +210,33 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			arguments.relationQuery = arguments.relationQuery.retrieveQuery();
 		}
 
-		invoke(
-			this,
-			methodName,
-			{ "query" : arguments.relationQuery }
+		whereExists(
+			query      = arguments.relationQuery,
+			combinator = arguments.combinator,
+			negate     = arguments.negate
 		);
 
 		return this;
+	}
+
+	/**
+	 * Checks for the existence of a relationship when executing the query.
+	 *
+	 * @relationshipName  The relationship to check.  Can also be a dot-delimited list of nested relationships.
+	 * @operator          An optional operator to constrain the check.
+	 * @count             An optional count to constrain the check.
+	 * @negate            If true, checks for the the absence of the relationship instead of its existence.
+	 *
+	 * @return            quick.models.QuickBuilder
+	 */
+	public QuickBuilder function orHas(
+		required string relationshipName,
+		any operator,
+		numeric count,
+		boolean negate = false
+	) {
+		arguments.combinator = "or";
+		return has( argumentCollection = arguments );
 	}
 
 	/**
@@ -235,6 +255,24 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	) {
 		arguments.negate = true;
 		return has( argumentCollection = arguments );
+	}
+
+	/**
+	 * Checks for the absence of a relationship when executing the query using an OR combinator.
+	 *
+	 * @relationshipName  The relationship to check.
+	 * @operator          An optional operator to constrain the check.
+	 * @count             An optional count to constrain the check.
+	 *
+	 * @return            quick.models.QuickBuilder
+	 */
+	public QuickBuilder function orDoesntHave(
+		required string relationshipName,
+		any operator,
+		numeric count
+	) {
+		arguments.combinator = "or";
+		return doesntHave( argumentCollection = arguments );
 	}
 
 	/**
@@ -318,8 +356,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		string combinator = "and",
 		boolean negate    = false
 	) {
-		var methodName = arguments.negate ? "whereNotExists" : "whereExists";
-		var relation   = getEntity().ignoreLoadedGuard( function() {
+		var relation = getEntity().ignoreLoadedGuard( function() {
 			return getEntity().withoutRelationshipConstraints( function() {
 				return invoke( getEntity(), listFirst( relationshipName, "." ) );
 			} );
@@ -334,10 +371,10 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 				arguments.relationQuery = arguments.relationQuery.retrieveQuery();
 			}
 
-			invoke(
-				this,
-				methodName,
-				{ "query" : whereHasNested( argumentCollection = arguments ) }
+			whereExists(
+				query      = whereHasNested( argumentCollection = arguments ),
+				combinator = arguments.combinator,
+				negate     = arguments.negate
 			);
 
 			return this;
@@ -355,14 +392,12 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			q = q.retrieveQuery();
 		}
 
-		invoke(
-			this,
-			methodName,
-			{
-				"query"      : q,
-				"combinator" : arguments.combinator
-			}
+		whereExists(
+			query      = q,
+			combinator = arguments.combinator,
+			negate     = arguments.negate
 		);
+
 		return this;
 	}
 

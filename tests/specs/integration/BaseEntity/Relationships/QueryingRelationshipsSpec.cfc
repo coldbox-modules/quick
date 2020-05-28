@@ -14,10 +14,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 						var users = getInstance( "User" ).has( "posts", ">=", 2 ).get();
 						expect( users ).toBeArray();
 						expect( users ).toHaveLength( 1 );
+					} );
 
-						// var users = getInstance( "User" ).has( "posts", "=", 1 ).get();
-						// expect( users ).toBeArray();
-						// expect( users ).toHaveLength( 1 );
+					it( "can use orHas as well", function() {
+						var users = getInstance( "User" )
+							.where( function( q ) {
+								q.has( "posts", "=", 2 );
+								q.orHas( "posts", "=", 1 );
+							} )
+							.get();
+
+						expect( users ).toBeArray();
+						expect( users ).toHaveLength( 2 );
 					} );
 
 					it( "can constrain a has query using whereHas", function() {
@@ -71,6 +79,20 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 						expect( users ).toBeArray();
 						expect( users ).toHaveLength( 1 );
+					} );
+
+					it( "can use orWhereHas with nested relationships", function() {
+						var users = getInstance( "User" )
+							.where( function( q ) {
+								q.doesntHave( "posts" );
+								q.orWhereHas( "posts.comments", function( q2 ) {
+									q2.where( "body", "like", "%great%" );
+								} );
+							} )
+							.get();
+
+						expect( users ).toBeArray();
+						expect( users ).toHaveLength( 3 );
 					} );
 
 					it( "can apply counts to a whereHas constraint", function() {

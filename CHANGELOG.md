@@ -1,3 +1,12 @@
+# v3.1.2
+## 29 May 2020 — 18:03:15 UTC
+
+### fix
+
++ __BelongsToMany:__ Remove unnecessary nesting in compare queries
+ ([97e3a88](https://github.com/coldbox-modules/quick/commit/97e3a88cb1171855cc12c59353ed00e8a6595707))
+
+
 # v3.1.1
 ## 28 May 2020 — 22:05:51 UTC
 

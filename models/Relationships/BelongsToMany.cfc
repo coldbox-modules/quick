@@ -494,7 +494,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					}
 				);
 
-				var nestedQuery = nested.clone().select( variables.parent.raw( 1 ) );
+				var nestedQuery = isBoolean( nested ) ? q : nested.clone().select( variables.parent.raw( 1 ) );
 				arrayZipEach(
 					[
 						getQualifiedForeignKeyNames(),
@@ -504,6 +504,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 						nestedQuery.whereColumn( foreignKeyName, keyName );
 					}
 				);
+
+				if ( isBoolean( nested ) ) {
+					return;
+				}
 
 				if ( structKeyExists( nestedQuery, "retrieveQuery" ) ) {
 					nestedQuery = nestedQuery.retrieveQuery();

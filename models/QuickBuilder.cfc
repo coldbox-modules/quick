@@ -362,7 +362,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			} );
 		} );
 
-		arguments.relationQuery = relation.addCompareConstraints( nested = this ).clearOrders();
+		arguments.relationQuery = relation.addCompareConstraints( nested = true ).clearOrders();
 
 		if ( listLen( arguments.relationshipName, "." ) > 1 ) {
 			arguments.relationshipName = listRest( arguments.relationshipName, "." );

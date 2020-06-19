@@ -453,7 +453,6 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 					} );
 			} );
 
-
 		if ( listLen( arguments.relationshipName, "." ) == 1 ) {
 			var q = relation
 				.addCompareConstraints( nested = arguments.relationQuery )
@@ -478,9 +477,16 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			q = q.retrieveQuery();
 		}
 
-		arguments.relationQuery = relation.nestCompareConstraints( base = arguments.relationQuery, nested = q );
-
-		return whereHasNested( argumentCollection = arguments );
+		return relation.nestCompareConstraints(
+			base   = arguments.relationQuery,
+			nested = whereHasNested(
+				relationQuery    = q,
+				relationshipName = listRest( arguments.relationshipName, "." ),
+				callback         = structKeyExists( arguments, "callback" ) ? arguments.callback : javacast( "null", "" ),
+				operator         = structKeyExists( arguments, "operator" ) ? arguments.operator : javacast( "null", "" ),
+				count            = structKeyExists( arguments, "count" ) ? arguments.count : javacast( "null", "" )
+			)
+		);
 	}
 
 	/**

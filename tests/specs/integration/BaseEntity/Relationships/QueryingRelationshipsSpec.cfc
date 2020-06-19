@@ -80,6 +80,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 						expect( users ).toHaveLength( 1 );
 					} );
 
+					it( "can nest multiple levels", function() {
+						var countries = getInstance( "Country" )
+							.whereHas( "users.posts.comments", function( q ) {
+								q.where( "body", "like", "%great%" );
+							} )
+							.get();
+
+						expect( countries ).toBeArray();
+						expect( countries ).toHaveLength( 1 );
+					} );
+
 					it( "can use orWhereHas with nested relationships", function() {
 						var users = getInstance( "User" )
 							.where( function( q ) {

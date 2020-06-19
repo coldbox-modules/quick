@@ -1,3 +1,11 @@
+# v3.1.3
+## 19 Jun 2020 — 05:44:30 UTC
+
+### fix
+
++ __QuickBuilder:__ Configured tables are now used for qualifying columns ([76bb1f7](https://github.com/coldbox-modules/quick/commit/76bb1f7b8eb089a18c5da4a1c69473dffd203d04))
+
+
 # v3.1.2
 ## 29 May 2020 — 18:03:15 UTC
 

@@ -121,10 +121,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 						arrayZipEach( [ foreignKeys, keys ], function( foreignKey, keyValue ) {
 							q2.where(
 								variables.closestToParent.qualifyColumn( foreignKey ),
-								variables.closestToParent.generateQueryParamStruct(
-									foreignKey,
-									keyValue
-								)
+								variables.closestToParent.generateQueryParamStruct( foreignKey, keyValue )
 							);
 						} );
 					} );

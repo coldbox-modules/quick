@@ -343,7 +343,7 @@ component accessors="true" {
 	 */
 	public array function retrieveQualifiedKeyNames() {
 		return keyNames().map( function( keyName ) {
-			return qualifyColumn( keyName );
+			return this.qualifyColumn( keyName );
 		} );
 	}
 
@@ -495,9 +495,7 @@ component accessors="true" {
 			if ( !variables._attributes.keyExists( alias ) ) {
 				variables._attributes[ arguments.name ]      = paramAttribute( { "name" : arguments.name } );
 				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
-				variables._meta.originalMetadata.properties.append(
-					variables._attributes[ arguments.name ]
-				);
+				variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
 			}
 		}
 		if ( arguments.setToNull ) {
@@ -723,8 +721,7 @@ component accessors="true" {
 		var keys = arguments.attributes.keyArray();
 		arraySort( keys, "textnocase" );
 		return hash(
-			keys
-				.map( function( key ) {
+			keys.map( function( key ) {
 					var valueIsNotNull = structKeyExists( attributes, arguments.key ) &&
 					!isNull( attributes[ arguments.key ] );
 					var value = valueIsNotNull ? attributes[ arguments.key ] : "";
@@ -834,9 +831,7 @@ component accessors="true" {
 			if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
 				variables._attributes[ arguments.name ]      = paramAttribute( { "name" : arguments.name } );
 				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
-				variables._meta.originalMetadata.properties.append(
-					variables._attributes[ arguments.name ]
-				);
+				variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
 			}
 		} else {
 			guardAgainstNonExistentAttribute( arguments.name );
@@ -867,20 +862,6 @@ component accessors="true" {
 	}
 
 	/**
-	 * Qualifies a column with the entity's table name.
-	 *
-	 * @column  The column to qualify.
-	 *
-	 * @return  string
-	 */
-	public string function qualifyColumn( required string column ) {
-		if ( findNoCase( ".", arguments.column ) != 0 ) {
-			return arguments.column;
-		}
-		return listLast( tableName(), " " ) & "." & retrieveColumnForAlias( arguments.column );
-	}
-
-	/**
 	 * Retrieve an array of qualified column names.
 	 *
 	 * @doc_generic  string
@@ -890,7 +871,7 @@ component accessors="true" {
 		var attributes = retrieveColumnNames();
 		arraySort( attributes, "textnocase" );
 		return attributes.map( function( column ) {
-			return qualifyColumn( column );
+			return this.qualifyColumn( column );
 		} );
 	}
 
@@ -1302,7 +1283,7 @@ component accessors="true" {
 			.resetQuery()
 			.where( function( q ) {
 				keyNames().each( function( keyName, i ) {
-					q.where( qualifyColumn( keyName ), keyValues()[ i ] );
+					q.where( this.qualifyColumn( keyName ), keyValues()[ i ] );
 				} );
 			} )
 			.first();
@@ -1322,7 +1303,7 @@ component accessors="true" {
 				.from( tableName() )
 				.where( function( q ) {
 					keyNames().each( function( keyName, i ) {
-						q.where( qualifyColumn( keyName ), keyValues()[ i ] );
+						q.where( this.qualifyColumn( keyName ), keyValues()[ i ] );
 					} );
 				} )
 				.first()
@@ -2398,20 +2379,15 @@ component accessors="true" {
 	 */
 	public any function newQuery() {
 		if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
-			variables._builder.setGrammar(
-				variables._wirebox.getInstance( variables._meta.originalMetadata.grammar )
-			);
+			variables._builder.setGrammar( variables._wirebox.getInstance( variables._meta.originalMetadata.grammar ) );
 		}
-
+		retrieveQuery().from( tableName() );
 		return variables._builder
 			.setEntity( this )
-			.newQuery()
 			.setReturnFormat( "array" )
-			.setColumnFormatter( function( column ) {
-				return qualifyColumn( column );
-			} )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() )
+			.newQuery()
 			.select( retrieveQualifiedColumns() );
 	}
 
@@ -2718,9 +2694,7 @@ component accessors="true" {
 		if ( !variables._str.startsWith( arguments.missingMethodName, "get" ) ) {
 			return false;
 		}
-		return variables._relationshipsLoaded.keyExists(
-			variables._str.slice( arguments.missingMethodName, 4 )
-		);
+		return variables._relationshipsLoaded.keyExists( variables._str.slice( arguments.missingMethodName, 4 ) );
 	}
 
 	/**
@@ -2990,11 +2964,7 @@ component accessors="true" {
 		variables._entityName         = variables._meta.entityName;
 		variables._table              = variables._meta.table;
 		param variables._queryOptions = {};
-		if (
-			variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists(
-				"datasource"
-			)
-		) {
+		if ( variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists( "datasource" ) ) {
 			variables._queryOptions = { datasource : variables._meta.originalMetadata.datasource };
 		}
 		variables._readonly = variables._meta.readonly;
@@ -3063,9 +3033,7 @@ component accessors="true" {
 				"exclude" : arguments.excludeFromMemento
 			} );
 			variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
-			variables._meta.originalMetadata.properties.append(
-				variables._attributes[ arguments.name ]
-			);
+			variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
 		}
 		return this;
 	}
@@ -3337,10 +3305,7 @@ component accessors="true" {
 			);
 		}
 		if ( !isNull( variables._interceptorService ) ) {
-			variables._interceptorService.processState(
-				"quick" & arguments.eventName,
-				arguments.eventData
-			);
+			variables._interceptorService.processState( "quick" & arguments.eventName, arguments.eventData );
 		}
 	}
 

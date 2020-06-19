@@ -639,6 +639,20 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	}
 
 	/**
+	 * Qualifies a column with the entity's table name.
+	 *
+	 * @column  The column to qualify.
+	 *
+	 * @return  string
+	 */
+	public string function qualifyColumn( required string column ) {
+		if ( findNoCase( ".", arguments.column ) != 0 ) {
+			return arguments.column;
+		}
+		return listLast( getFrom(), " " ) & "." & getEntity().retrieveColumnForAlias( arguments.column );
+	}
+
+	/**
 	 * Creates a new query using the same Grammar and QueryUtils.
 	 *
 	 * @return quick.models.QuickBuilder
@@ -649,12 +663,14 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			utils                 = getUtils(),
 			returnFormat          = getReturnFormat(),
 			paginationCollector   = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
-			columnFormatter       = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
 			defaultOptions        = getDefaultOptions(),
 			preventDuplicateJoins = getPreventDuplicateJoins()
 		);
 		builder.setEntity( getEntity() );
 		builder.setFrom( getEntity().tableName() );
+		builder.setColumnFormatter( function( column ) {
+			return builder.qualifyColumn( column );
+		} );
 		return builder;
 	}
 

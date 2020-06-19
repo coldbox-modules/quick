@@ -289,8 +289,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					newTagB.keyValues()
 				];
 
-				post
-					.tags()
+				post.tags()
 					.sync( [
 						existingTags[ 1 ],
 						newTagA.getId(),

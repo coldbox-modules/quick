@@ -57,10 +57,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 	) {
 		variables.quickPreInsertCalled = duplicate( arguments.interceptData );
 		if ( arguments.interceptData.entity.getTitle() == "Bohemian Rhapsody" ) {
-			arguments.interceptData.entity.assignAttribute(
-				"createdDate",
-				createDate( 1975, 10, 31 )
-			);
+			arguments.interceptData.entity.assignAttribute( "createdDate", createDate( 1975, 10, 31 ) );
 		}
 	}
 

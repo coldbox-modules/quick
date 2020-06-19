@@ -45,6 +45,20 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
 				expect( users[ 2 ].getUsername() ).toBe( "elpete2" );
 			} );
+
+			it( "uses the current table name instead of the entity table name", function() {
+				var users = getInstance( "User" )
+					.whereIn( "id", function( q ) {
+						q.from( "my_posts" )
+							.select( "user_id" )
+							.whereNotNull( "published_date" );
+					} )
+					.orderBy( "id" )
+					.get();
+				expect( users ).toHaveLength( 2, "Two users should exist in the database and be returned." );
+				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
+				expect( users[ 2 ].getUsername() ).toBe( "elpete2" );
+			} );
 		} );
 	}
 

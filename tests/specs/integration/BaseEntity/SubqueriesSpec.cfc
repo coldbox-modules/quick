@@ -22,9 +22,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can add a subquery to an entity using a relationship", function() {
-				var elpete = getInstance( "User" )
-					.withLatestPostIdRelationship()
-					.findOrFail( 1 );
+				var elpete = getInstance( "User" ).withLatestPostIdRelationship().findOrFail( 1 );
 				expect( elpete.getLatestPostId() ).notToBeNull();
 				expect( elpete.getLatestPostId() ).toBe( 523526 );
 				expect( variables.queries ).toHaveLength(
@@ -34,9 +32,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can add a subquery to an entity using a relationship shortcut", function() {
-				var elpete = getInstance( "User" )
-					.withLatestPostIdRelationshipShortcut()
-					.findOrFail( 1 );
+				var elpete = getInstance( "User" ).withLatestPostIdRelationshipShortcut().findOrFail( 1 );
 				expect( elpete.getLatestPostId() ).notToBeNull();
 				expect( elpete.getLatestPostId() ).toBe( 523526 );
 				expect( variables.queries ).toHaveLength(

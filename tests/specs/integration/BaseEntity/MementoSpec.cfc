@@ -88,7 +88,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can configure the returned mementos with asMemento", function() {
-				var users = getInstance( "User" ).asMemento( ignoreDefaults = true, includes = [ "id", "username" ] ).get();
+				var users = getInstance( "User" )
+					.asMemento( ignoreDefaults = true, includes = [ "id", "username" ] )
+					.get();
 
 				expect( users ).toBeArray( 4 );
 				expect( users[ 1 ] ).toBeStruct();

@@ -41,8 +41,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					it( "can constrain a has query using whereHas and orWhereHas", function() {
 						var users = getInstance( "User" )
 							.where( function( q ) {
-								q
-									.whereHas( "posts", function( q ) {
+								q.whereHas( "posts", function( q ) {
 										q.where( "body", "like", "%different%" );
 									} )
 									.orWhereHas( "posts", function( q ) {

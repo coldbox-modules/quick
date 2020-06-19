@@ -1,3 +1,11 @@
+# v3.1.4
+## 19 Jun 2020 — 05:58:34 UTC
+
+### fix
+
++ __QuickBuilder:__ Fix stack overflow on nested relationship checks ([16bae19](https://github.com/coldbox-modules/quick/commit/16bae1992b5d2f690f33569520ebd49f567e5e29))
+
+
 # v3.1.3
 ## 19 Jun 2020 — 05:44:30 UTC
 

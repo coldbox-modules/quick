@@ -1,10 +1,10 @@
 {
     "name":"quick",
-    "version":"2.5.4",
+    "version":"3.1.4",
     "author":"Ortus Solutions",
-    "location":"coldbox-modules/quick#v2.5.4",
+    "location":"forgeboxStorage",
     "homepage":"https://github.com/coldbox-modules/quick",
-    "documentation":"https://github.com/coldbox-modules/quick",
+    "documentation":"https://quick.ortusbooks.com",
     "repository":{
         "type":"git",
         "URL":"https://github.com/coldbox-modules/quick"
@@ -14,17 +14,20 @@
     "shortDescription":"A ColdBox ORM Engine",
     "description":"A ColdBox ORM Engine",
     "scripts":{
-        "postVersion":"package set location='coldbox-modules/quick#v`package version`'"
+        "format":"cfformat run dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,tests/specs/**/*.cfc --overwrite",
+        "format:check":"cfformat check dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,tests/specs/**/*.cfc --verbose",
+        "format:watch":"cfformat watch dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,tests/specs/**/*.cfc",
+        "generateAPIDocs":"rm .tmp --recurse --force && docbox generate mapping=quick excludes=test|/modules|ModuleConfig|QuickCollection strategy-outputDir=.tmp/apidocs strategy-projectTitle=Quick"
     },
     "type":"modules",
     "dependencies":{
-        "qb":"^7.2.0",
+        "qb":"^7.6.0",
         "str":"^1.0.0",
-        "testbox":"^3.1.0+339"
+        "mementifier":"^2.1.0+100"
     },
     "devDependencies":{
-        "coldbox":"be",
-        "testbox":"^2.4.0+80",
+        "coldbox":"stable",
+        "testbox":"^3.1.0+339",
         "cfcollection":"^3.6.1"
     },
     "installPaths":{
@@ -33,7 +36,8 @@
         "qb":"modules/qb/",
         "str":"modules/str/",
         "cbvalidation":"modules/cbvalidation/",
-        "cfcollection":"modules/cfcollection/"
+        "cfcollection":"modules/cfcollection/",
+        "mementifier":"modules/mementifier/"
     },
     "testbox":{
         "reporter":"json",
@@ -45,9 +49,13 @@
         "**/.*",
         "test",
         "tests",
-        ".engine",
-        ".travis.yml",
-        ".gitignore",
-        "server.json"
-    ]
+        "server.json",
+        "quick300.png"
+    ],
+    "githooks":{
+        "preCommit":[
+            "cfformat run `!git diff --name-only --staged` --overwrite",
+            "!git add `git diff --name-only --staged`"
+        ]
+    }
 }

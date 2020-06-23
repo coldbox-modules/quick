@@ -91,7 +91,7 @@ component {
 </cfoutput>
 ```
 
-Now that you've seen an example, [dig in to what you can do](https://github.com/ortus-docs/quick-docs/blob/master/getting-started/defining-an-entity.md) with Quick!
+Now that you've seen an example, [dig in to what you can do](https://quick.ortusbooks.com/) with Quick!
 
 ### Tests and Contributing
 

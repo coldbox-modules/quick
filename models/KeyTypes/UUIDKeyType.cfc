@@ -1,19 +1,34 @@
+/**
+ * Sets the primary key to a random UUID before inserting it into the database.
+ */
 component implements="KeyType" {
 
-    /**
-     * Called to handle any tasks before inserting into the database.
-     * Receives the entity as the only argument.
-     */
-    public void function preInsert( required entity ) {
-        entity.assignAttribute( entity.get_Key(), createUUID() );
-    }
+	/**
+	 * Sets the primary keys to random UUIDs.
+	 *
+	 * @entity   The entity that is being inserted.
+	 *
+	 * @return   void
+	 */
+	public void function preInsert( required any entity ) {
+		arguments.entity
+			.keyNames()
+			.each( function( keyName ) {
+				entity.assignAttribute( keyName, createUUID() );
+			} );
+	}
 
-    /**
-     * Called to handle any tasks after inserting into the database.
-     * Receives the entity and the queryExecute result as arguments.
-     */
-    public void function postInsert( required entity, required struct result ) {
-        return;
-    }
+	/**
+	 * Does nothing as the key was set before inserting into the database
+	 * and the database should not have modified it.
+	 *
+	 * @entity   The entity that was inserted.
+	 * @result   The result of the queryExecute call.
+	 *
+	 * @return   void
+	 */
+	public void function postInsert( required any entity, required struct result ) {
+		return;
+	}
 
 }

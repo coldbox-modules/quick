@@ -1,4 +1,4 @@
-component quick table="externalThings" {
+component extends="quick.models.BaseEntity" table="externalThings" accessors="true" {
 
     property name="thingID";
     property name="externalID"; // the external vendor foreign key

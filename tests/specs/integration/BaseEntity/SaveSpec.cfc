@@ -1,279 +1,370 @@
 component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
-    function beforeAll() {
-        super.beforeAll();
-        var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
-        interceptorService.registerInterceptor( interceptorObject = this );
-    }
+	function beforeAll() {
+		super.beforeAll();
+		var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
+		interceptorService.registerInterceptor( interceptorObject = this );
+	}
 
-    function run() {
-        describe( "Save Spec", function() {
-            it( "inserts the attributes as a new row if it has not been loaded", function() {
-                var newUser = getInstance( "User" );
-                newUser.setUsername( "new_user" );
-                newUser.setFirstName( "New" );
-                newUser.setLastName( "User" );
-                newUser.setPassword( hash( "password" ) );
-                var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPreSave ).toHaveLength( 4 );
-                newUser.save();
-                var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostSave ).toHaveLength( 5 );
-                var newUserAgain = getInstance( "User" ).whereUsername( "new_user" ).firstOrFail();
-                expect( newUserAgain.getFirstName() ).toBe( "New" );
-                expect( newUserAgain.getLastName() ).toBe( "User" );
-            } );
-            it( "allow inserting of column where update=false in property", function() {
-                var newUser = getInstance( "User" );
-                newUser.setUsername( "new_user2" );
-                newUser.setFirstName( "New2" );
-                newUser.setLastName( "User2" );
-                newUser.setEmail( "test2@test.com" );
-                newUser.setPassword( hash( "password" ) );
-                var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPreSave ).toHaveLength( 4 );
-                newUser.save();
-                var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostSave ).toHaveLength( 5 );
-                var newUserAgain = getInstance( "User" ).whereUsername( "new_user2" ).firstOrFail();
-                expect( newUserAgain.getFirstName() ).toBe( "New2" );
-                expect( newUserAgain.getLastName() ).toBe( "User2" );
-                expect( newUserAgain.getEmail() ).toBe( "test2@test.com" );
-            } );
+	function run() {
+		describe( "Save Spec", function() {
+			it( "inserts the attributes as a new row if it has not been loaded", function() {
+				var newUser = getInstance( "User" );
+				newUser.setUsername( "new_user" );
+				newUser.setFirstName( "New" );
+				newUser.setLastName( "User" );
+				newUser.setPassword( hash( "password" ) );
+				var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+				expect( userRowsPreSave ).toHaveLength( 4 );
+				newUser.save();
+				var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+				expect( userRowsPostSave ).toHaveLength( 5 );
+				var newUserAgain = getInstance( "User" ).whereUsername( "new_user" ).firstOrFail();
+				expect( newUserAgain.getFirstName() ).toBe( "New" );
+				expect( newUserAgain.getLastName() ).toBe( "User" );
+			} );
 
+			it( "allow inserting of column where update=false in property", function() {
+				var newUser = getInstance( "User" );
+				newUser.setUsername( "new_user2" );
+				newUser.setFirstName( "New2" );
+				newUser.setLastName( "User2" );
+				newUser.setEmail( "test2@test.com" );
+				newUser.setPassword( hash( "password" ) );
+				var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+				expect( userRowsPreSave ).toHaveLength( 4 );
+				newUser.save();
+				var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+				expect( userRowsPostSave ).toHaveLength( 5 );
+				var newUserAgain = getInstance( "User" ).whereUsername( "new_user2" ).firstOrFail();
+				expect( newUserAgain.getFirstName() ).toBe( "New2" );
+				expect( newUserAgain.getLastName() ).toBe( "User2" );
+				expect( newUserAgain.getEmail() ).toBe( "test2@test.com" );
+			} );
 
-            it( "retrieves the generated key when saving a new record", function() {
-                var newUser = getInstance( "User" );
-                newUser.setUsername( "new_user" );
-                newUser.setFirstName( "New" );
-                newUser.setLastName( "User" );
-                newUser.setPassword( hash( "password" ) );
-                newUser.save();
-                expect( newUser.retrieveAttributesData() ).toHaveKey( "id" );
-            } );
+			it( "retrieves the generated key when saving a new record", function() {
+				var newUser = getInstance( "User" );
+				newUser.setUsername( "new_user" );
+				newUser.setFirstName( "New" );
+				newUser.setLastName( "User" );
+				newUser.setPassword( hash( "password" ) );
+				newUser.save();
+				expect( newUser.retrieveAttributesData() ).toHaveKey( "id" );
+			} );
 
-            it( "a saved entity is not dirty", function() {
-                var newUser = getInstance( "User" );
-                newUser.setUsername( "new_user" );
-                newUser.setFirstName( "New" );
-                newUser.setLastName( "User" );
-                newUser.setPassword( hash( "password" ) );
-                newUser.save();
-                expect( newUser.isDirty() ).toBeFalse();
-            } );
+			it( "a saved entity is not dirty", function() {
+				var newUser = getInstance( "User" );
+				newUser.setUsername( "new_user" );
+				newUser.setFirstName( "New" );
+				newUser.setLastName( "User" );
+				newUser.setPassword( hash( "password" ) );
+				newUser.save();
+				expect( newUser.isDirty() ).toBeFalse();
+			} );
 
-            it( "updates the attributes of an existing row if it has been loaded", function() {
-                var existingUser = getInstance( "User" ).find( 1 );
-                existingUser.setUsername( "new_elpete_username" );
-                var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPreSave ).toHaveLength( 4 );
-                existingUser.save();
-                var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostSave ).toHaveLength( 4 );
-            } );
+			it( "updates the attributes of an existing row if it has been loaded", function() {
+				var existingUser = getInstance( "User" ).find( 1 );
+				existingUser.setUsername( "new_elpete_username" );
+				var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+				expect( userRowsPreSave ).toHaveLength( 4 );
+				existingUser.save();
+				var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+				expect( userRowsPostSave ).toHaveLength( 4 );
+			} );
 
-            it( "does not allow updating of column where update=false in property", function() {
-                var existingUser = getInstance( "User" ).find( 1 );
-                existingUser.setEmail( "test2@test.com" );
-                var userRowsPreSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPreSave ).toHaveLength( 4 );
-                existingUser.save();
-                var userRowsPostSave = queryExecute( "SELECT * FROM users" );
-                expect( userRowsPostSave ).toHaveLength( 4 );
-                expect( userRowsPostSave.email ).toBe( "" );
-            } );
+			it( "does not allow updating of column where update=false in property", function() {
+				var existingUser = getInstance( "User" ).find( 1 );
+				existingUser.setEmail( "test2@test.com" );
+				var userRowsPreSave = queryExecute( "SELECT * FROM users" );
+				expect( userRowsPreSave ).toHaveLength( 4 );
+				existingUser.save();
+				var userRowsPostSave = queryExecute( "SELECT * FROM users" );
+				expect( userRowsPostSave ).toHaveLength( 4 );
+				expect( userRowsPostSave.email ).toBe( "" );
+			} );
 
-            it( "uses the type attribute if present for each column", function() {
-                structDelete( request, "saveSpecPreQBExecute" );
+			it( "uses the sqltype attribute if present for each column", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
 
-                var newPhoneNumber = getInstance( "PhoneNumber" );
-                newPhoneNumber.setNumber( "+18018644200" );
-                newPhoneNumber.save();
+				var newPhoneNumber = getInstance( "PhoneNumber" );
+				newPhoneNumber.setNumber( "+18018644200" );
+				newPhoneNumber.save();
 
-                expect( request ).toHaveKey( "saveSpecPreQBExecute" );
-                expect( request.saveSpecPreQBExecute ).toBeArray();
-                expect( request.saveSpecPreQBExecute ).toHaveLength( 1 );
-                expect( request.saveSpecPreQBExecute[ 1 ] ).toHaveKey( "bindings" );
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toBeArray();
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toHaveLength( 1 );
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "value" );
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].value ).toBe( "+18018644200" );
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "cfsqltype" );
-                expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
-            } );
+				expect( request ).toHaveKey( "saveSpecPreQBExecute" );
+				expect( request.saveSpecPreQBExecute ).toBeArray();
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 1 );
+				expect( request.saveSpecPreQBExecute[ 1 ] ).toHaveKey( "bindings" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toBeArray();
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toHaveLength( 1 );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].value ).toBe( "+18018644200" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+			} );
 
-            it( "can attach an id to a relationship", function() {
-                var tag = getInstance( "Tag" );
-                tag.setName( "miscellaneous" );
-                tag.save();
+			it( "uses the sqltype attribute when calling updateOrCreate and updating", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
 
-                var post = getInstance( "Post" ).find( 1245 );
+				var newTheme = getInstance( "Theme" ).updateOrCreate( { "slug" : "theme-a" }, { "version" : "1.1.1" } );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 2 );
+				expect( request ).toHaveKey( "saveSpecPreQBExecute" );
+				expect( request.saveSpecPreQBExecute ).toBeArray();
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
+				expect( request.saveSpecPreQBExecute[ 2 ] ).toHaveKey( "bindings" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toBeArray();
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 4 );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ].value ).toBe( "1.1.1" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+			} );
 
-                post.tags().attach( tag.getId() );
+			it( "forwards on updateOrInsert calls to updateOrCreate", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
 
-                post.refresh();
+				var newTheme = getInstance( "Theme" )
+					.where( "slug", "theme-a" )
+					.updateOrInsert( {
+						"slug"    : "theme-a",
+						"version" : "1.1.1"
+					} );
 
-                expect( post.getTags() ).toBeArray();
-                expect( post.getTags() ).toHaveLength( 3 );
-            } );
+				expect( request ).toHaveKey( "saveSpecPreQBExecute" );
+				expect( request.saveSpecPreQBExecute ).toBeArray();
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
+				expect( request.saveSpecPreQBExecute[ 2 ] ).toHaveKey( "bindings" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toBeArray();
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 4 );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ].value ).toBe( "1.1.1" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 3 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+			} );
 
-            it( "attaches using the id if the entity is passed", function() {
-                var tag = getInstance( "Tag" );
-                tag.setName( "miscellaneous" );
-                tag.save();
+			it( "uses the sqltype attribute when calling updateOrCreate and creating", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
 
-                var post = getInstance( "Post" ).find( 1245 );
+				var newTheme = getInstance( "Theme" ).updateOrCreate( { "slug" : "theme-b" }, { "version" : "1.1.1" } );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 2 );
+				expect( request ).toHaveKey( "saveSpecPreQBExecute" );
+				expect( request.saveSpecPreQBExecute ).toBeArray();
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
+				expect( request.saveSpecPreQBExecute[ 2 ] ).toHaveKey( "bindings" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toBeArray();
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings ).toHaveLength( 2 );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].value ).toBe( "1.1.1" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 2 ].bindings[ 2 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+			} );
 
-                post.tags().attach( tag );
+			it( "can attach an id to a relationship", function() {
+				var tag = getInstance( "Tag" );
+				tag.setName( "miscellaneous" );
+				tag.save();
 
-                post.refresh();
+				var post = getInstance( "Post" ).find( 1245 );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 3 );
-            } );
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 2 );
 
-            it( "can attach multiple ids or entities at once", function() {
-                var tagA = getInstance( "Tag" );
-                tagA.setName( "miscellaneous" );
-                tagA.save();
+				post.tags().attach( tag.getId() );
 
-                var tagB = getInstance( "Tag" );
-                tagB.setName( "other" );
-                tagB.save();
+				post.refresh();
 
-                var post = getInstance( "Post" ).find( 1245 );
+				expect( post.getTags() ).toBeArray();
+				expect( post.getTags() ).toHaveLength( 3 );
+			} );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 2 );
+			it( "attaches using the id if the entity is passed", function() {
+				var tag = getInstance( "Tag" );
+				tag.setName( "miscellaneous" );
+				tag.save();
 
-                post.tags().attach( [ tagA.getId(), tagB ] );
+				var post = getInstance( "Post" ).find( 1245 );
 
-                post.refresh();
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 2 );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 4 );
-            } );
+				post.tags().attach( tag );
 
-            it( "can detach an id from a relationship", function() {
-                var post = getInstance( "Post" ).find( 1245 );
+				post.refresh();
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 2 );
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 3 );
+			} );
 
-                var tag = post.getTags().toArray()[ 1 ];
+			it( "can attach multiple ids or entities at once", function() {
+				var tagA = getInstance( "Tag" );
+				tagA.setName( "miscellaneous" );
+				tagA.save();
 
-                post.tags().detach( tag.getId() );
+				var tagB = getInstance( "Tag" );
+				tagB.setName( "other" );
+				tagB.save();
 
-                post.refresh();
+				var post = getInstance( "Post" ).find( 1245 );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 1 );
-            } );
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 2 );
 
-            it( "detaches using the id if the entity is passed", function() {
-                var post = getInstance( "Post" ).find( 1245 );
+				post.tags().attach( [ tagA.getId(), tagB ] );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 2 );
+				post.refresh();
 
-                var tag = post.getTags().toArray()[ 1 ];
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 4 );
+			} );
 
-                post.tags().detach( tag );
+			it( "can detach an id from a relationship", function() {
+				var post = getInstance( "Post" ).find( 1245 );
 
-                post.refresh();
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 2 );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 1 );
-            } );
+				var tag = post.getTags().toArray()[ 1 ];
 
-            it( "can detach multiple ids or entities at once", function() {
-                var post = getInstance( "Post" ).find( 1245 );
+				post.tags().detach( tag.getId() );
 
-                var tags = post.getTags().toArray();
-                expect( tags ).toBeArray();
-                expect( tags ).toHaveLength( 2 );
+				post.refresh();
 
-                post.tags().detach( [ tags[ 1 ].getId(), tags[ 2 ] ] );
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 1 );
+			} );
 
-                post.refresh();
+			it( "detaches using the id if the entity is passed", function() {
+				var post = getInstance( "Post" ).find( 1245 );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toBeEmpty();
-            } );
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 2 );
 
-            it( "sets the related ids equal to the list passed in", function() {
-                var newTagA = getInstance( "Tag" );
-                newTagA.setName( "miscellaneous" );
-                newTagA.save();
+				var tag = post.getTags().toArray()[ 1 ];
 
-                var newTagB = getInstance( "Tag" );
-                newTagB.setName( "other" );
-                newTagB.save();
+				post.tags().detach( tag );
 
-                var post = getInstance( "Post" ).find( 1245 );
+				post.refresh();
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 2 );
-                var existingTags = post.getTags().toArray();
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 1 );
+			} );
 
-                var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
-                var tagIds = [
-                    existingTags[ 1 ].keyValue(),
-                    newTagA.keyValue(),
-                    newTagB.keyValue()
-                ];
+			it( "can detach multiple ids or entities at once", function() {
+				var post = getInstance( "Post" ).find( 1245 );
 
-                post.tags().sync( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
+				var tags = post.getTags().toArray();
+				expect( tags ).toBeArray();
+				expect( tags ).toHaveLength( 2 );
 
-                post.refresh();
+				post.tags().detach( [ tags[ 1 ].getId(), tags[ 2 ] ] );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 3 );
-                expect( post.getTags().map( function( tag ) { return tag.keyValue(); } ).toArray() ).toBe( tagIds );
-            } );
+				post.refresh();
 
-            it( "sets the related ids equal to the list passed in using a relationship setter", function() {
-                var newTagA = getInstance( "Tag" );
-                newTagA.setName( "miscellaneous" );
-                newTagA.save();
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toBeEmpty();
+			} );
 
-                var newTagB = getInstance( "Tag" );
-                newTagB.setName( "other" );
-                newTagB.save();
+			it( "sets the related ids equal to the list passed in", function() {
+				var newTagA = getInstance( "Tag" );
+				newTagA.setName( "miscellaneous" );
+				newTagA.save();
 
-                var post = getInstance( "Post" ).find( 1245 );
+				var newTagB = getInstance( "Tag" );
+				newTagB.setName( "other" );
+				newTagB.save();
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 2 );
-                var existingTags = post.getTags().toArray();
+				var post = getInstance( "Post" ).find( 1245 );
 
-                var tagsToSync = [ existingTags[ 1 ], newTagA.getId(), newTagB ];
-                var tagIds = [
-                    existingTags[ 1 ].keyValue(),
-                    newTagA.keyValue(),
-                    newTagB.keyValue()
-                ];
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 2 );
+				var existingTags = post.getTags().toArray();
 
-                post.setTags( [ existingTags[ 1 ], newTagA.getId(), newTagB ] );
+				var tagsToSync = [
+					existingTags[ 1 ],
+					newTagA.getId(),
+					newTagB
+				];
+				var tagIds = [
+					existingTags[ 1 ].keyValues(),
+					newTagA.keyValues(),
+					newTagB.keyValues()
+				];
 
-                post.refresh();
+				post.tags()
+					.sync( [
+						existingTags[ 1 ],
+						newTagA.getId(),
+						newTagB
+					] );
 
-                expect( post.getTags().toArray() ).toBeArray();
-                expect( post.getTags().toArray() ).toHaveLength( 3 );
-                expect( post.getTags().map( function( tag ) { return tag.keyValue(); } ).toArray() ).toBe( tagIds );
-            } );
-        } );
-    }
+				post.refresh();
 
-    function preQBExecute( event, interceptData, buffer, rc, prc ) {
-        param request.saveSpecPreQBExecute = [];
-        arrayAppend( request.saveSpecPreQBExecute, duplicate( arguments.interceptData ) );
-    }
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 3 );
+				expect(
+					post.getTags()
+						.map( function( tag ) {
+							return tag.keyValues();
+						} )
+						.toArray()
+				).toBe( tagIds );
+			} );
+
+			it( "sets the related ids equal to the list passed in using a relationship setter", function() {
+				var newTagA = getInstance( "Tag" );
+				newTagA.setName( "miscellaneous" );
+				newTagA.save();
+
+				var newTagB = getInstance( "Tag" );
+				newTagB.setName( "other" );
+				newTagB.save();
+
+				var post = getInstance( "Post" ).find( 1245 );
+
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 2 );
+				var existingTags = post.getTags().toArray();
+
+				var tagsToSync = [
+					existingTags[ 1 ],
+					newTagA.getId(),
+					newTagB
+				];
+				var tagIds = [
+					existingTags[ 1 ].keyValues(),
+					newTagA.keyValues(),
+					newTagB.keyValues()
+				];
+
+				post.setTags( [
+					existingTags[ 1 ],
+					newTagA.getId(),
+					newTagB
+				] );
+
+				post.refresh();
+
+				expect( post.getTags().toArray() ).toBeArray();
+				expect( post.getTags().toArray() ).toHaveLength( 3 );
+				expect(
+					post.getTags()
+						.map( function( tag ) {
+							return tag.keyValues();
+						} )
+						.toArray()
+				).toBe( tagIds );
+			} );
+		} );
+	}
+
+	function preQBExecute(
+		event,
+		interceptData,
+		buffer,
+		rc,
+		prc
+	) {
+		param request.saveSpecPreQBExecute = [];
+		arrayAppend( request.saveSpecPreQBExecute, duplicate( arguments.interceptData ) );
+	}
 
 }

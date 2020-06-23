@@ -46,9 +46,9 @@
 		};
 
 		moduleSettings = {
-			quick = {
-				defaultGrammar = "MySQLGrammar@qb"
-			}
+			"quick" = {
+				"defaultGrammar" = "MySQLGrammar@qb"
+            }
 		};
 
 		// custom settings
@@ -98,12 +98,7 @@
 		};
 
 		//Register interceptors as an array, we need order
-		interceptors = [
-			//SES
-			{class="coldbox.system.interceptors.SES",
-			 properties={}
-			}
-		];
+		interceptors = [];
 
 		/*
 		// module setting overrides

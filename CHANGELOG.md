@@ -1,3 +1,224 @@
+# v3.1.4
+## 19 Jun 2020 — 05:58:34 UTC
+
+### fix
+
++ __QuickBuilder:__ Fix stack overflow on nested relationship checks ([16bae19](https://github.com/coldbox-modules/quick/commit/16bae1992b5d2f690f33569520ebd49f567e5e29))
+
+
+# v3.1.3
+## 19 Jun 2020 — 05:44:30 UTC
+
+### fix
+
++ __QuickBuilder:__ Configured tables are now used for qualifying columns ([76bb1f7](https://github.com/coldbox-modules/quick/commit/76bb1f7b8eb089a18c5da4a1c69473dffd203d04))
+
+
+# v3.1.2
+## 29 May 2020 — 18:03:15 UTC
+
+### fix
+
++ __BelongsToMany:__ Remove unnecessary nesting in compare queries
+ ([97e3a88](https://github.com/coldbox-modules/quick/commit/97e3a88cb1171855cc12c59353ed00e8a6595707))
+
+
+# v3.1.1
+## 28 May 2020 — 22:05:51 UTC
+
+### fix
+
++ __Relationships:__ Fix orWhereHas methods when querying nested relationships
+ ([8262bb3](https://github.com/coldbox-modules/quick/commit/8262bb30efba7c28da753b395b4826a1969de5be))
+
+
+# v3.1.0
+## 28 May 2020 — 21:25:33 UTC
+
+### feat
+
++ __JSONCast:__ Add support for JSON casting ([137701a](https://github.com/coldbox-modules/quick/commit/137701a5383abf25d53d218fa5f90537fea53554))
+
+
+# v3.0.4
+## 27 May 2020 — 05:41:15 UTC
+
+### fix
+
++ __CBORMCompatEntity:__ Updates for coldbox@6
+ ([1f10fde](https://github.com/coldbox-modules/quick/commit/1f10fde47a78b18b94112198c89911620a5c69db))
+
+
+# v3.0.3
+## 13 May 2020 — 17:24:08 UTC
+
+### chore
+
++ __CI:__ Fix module id
+ ([9d9c4ab](https://github.com/coldbox-modules/quick/commit/9d9c4abe00ba3bce9051d815408f0c94f7c8ab90))
+
+### fix
+
++ __Casts:__ Optimize cast caching
+ ([2f9b510](https://github.com/coldbox-modules/quick/commit/2f9b510ccf8a3e60402eadd85c4386fd75f1a885))
+
+
+# v3.0.2
+## 11 May 2020 — 20:02:26 UTC
+
+### fix
+
++ __EagerLoading:__ Apply custom sqltypes during eager loading
+ ([c9633d3](https://github.com/coldbox-modules/quick/commit/c9633d3fc42a1e14fe48051a735dd1eeee956318))
+
+
+# v3.0.1
+## 08 May 2020 — 22:04:29 UTC
+
+### fix
+
++ __BaseEntity:__ Account for null values in fill
+ ([3f8bc2c](https://github.com/coldbox-modules/quick/commit/3f8bc2cabb1503d6617ccea9ad0c870b3816461c))
++ __Memento:__ Swap structAppend order for a Lucee bug
+ ([1e0d217](https://github.com/coldbox-modules/quick/commit/1e0d2173ad8fe2eefce96ac509cd8d127ab34a0c))
+
+
+# v3.0.0
+## 06 May 2020 — 19:01:56 UTC
+
+### BREAKING
+
++ __QuickBuilder:__ Prevent duplicate joins by default ([a8ac022](https://github.com/coldbox-modules/quick/commit/a8ac02207b2b7125a11fd4b9ba60ed44ebcfbdbc))
++ __BaseEntity:__ Enforce accessors for entities ([ad16248](https://github.com/coldbox-modules/quick/commit/ad162481322ea8c6a56cc59fa1cc80904e4b666c))
++ __BaseEntity:__ Remove virtual inheritance ([3b026b1](https://github.com/coldbox-modules/quick/commit/3b026b156684332648fbeb093086618c50f5d272))
++ __BaseEntity:__ Improve virtual column support ([5ebc42c](https://github.com/coldbox-modules/quick/commit/5ebc42c9d09d625285594c94311d38b41fd9dc1f))
+
+### chore
+
++ __CI:__ CI debugging
+ ([1111603](https://github.com/coldbox-modules/quick/commit/1111603eaaa1a981822f1c5441af883516dc8922))
++ __CI:__ CI debugging
+ ([19b3053](https://github.com/coldbox-modules/quick/commit/19b30532b77fb1cbbed28ac30f22f7d95ddb8f67))
++ __CI:__ CI debugging
+ ([6280040](https://github.com/coldbox-modules/quick/commit/6280040c7fc61bbf9573c4e944b6ea7cbfea7612))
++ __CI:__ CI debugging
+ ([75bcb64](https://github.com/coldbox-modules/quick/commit/75bcb64d8757778c7a44e4e8efdde77104185aab))
++ __CI:__ CI debugging
+ ([fda269a](https://github.com/coldbox-modules/quick/commit/fda269ab259bfa36aaa38174c465d51a8daa2ce4))
++ __CI:__ CI debugging
+ ([5662bdc](https://github.com/coldbox-modules/quick/commit/5662bdc450218cddc4da0df6772079b9d05d6fcb))
++ __CI:__ CI debugging
+ ([7716222](https://github.com/coldbox-modules/quick/commit/771622240e8e051d5dedd6031a0ba1f11b59fdb5))
++ __CI:__ CI debugging. :-(
+ ([1912c2a](https://github.com/coldbox-modules/quick/commit/1912c2a8b80895abc81e446f2754c6df177efae7))
++ __CI:__ Add qb mapping for tests
+ ([45c5238](https://github.com/coldbox-modules/quick/commit/45c5238767b57a356dc1a52bc30fee3003ac1348))
++ __CI:__ Fix overriding coldbox@be installation
+ ([c4f9ae0](https://github.com/coldbox-modules/quick/commit/c4f9ae02e575855bd5e5d5b14fd01059039a6484))
++ __CI:__ Publish API docs after publishing a new version
+ ([690b95d](https://github.com/coldbox-modules/quick/commit/690b95d077c3a179fccdb6d210d932326b6e5f9d))
++ __CI:__ Adjust CI builds to test bleeding edge on cron jobs
+ ([0ffdafc](https://github.com/coldbox-modules/quick/commit/0ffdafc1049a4aac1ffd92fb9281200fa1b34b31))
++ __CI:__ Clean up .travis.yml
+ ([d5753b5](https://github.com/coldbox-modules/quick/commit/d5753b51736ff2fb37b4c69ac390e1df567e87f6))
+
+### feat
+
++ __Interceptors:__ Fire the postLoad event for all entities
+ ([a480ef2](https://github.com/coldbox-modules/quick/commit/a480ef230ac73975b53995cbd8cb7c9f9177ee3f))
++ __ErrorMessages:__ Improve error message when accessing relationships on unloaded entities ([d43f699](https://github.com/coldbox-modules/quick/commit/d43f6994e8e7c9cf16bf44a79c1bde0170ef43fe))
+
+### fix
+
++ __BaseEntity:__ Rename is and isNot to isSameAs and isNotSameAs for better ACF compatibility
+ ([fff27a1](https://github.com/coldbox-modules/quick/commit/fff27a1f0c17579bb9b229711f7d1937bb18f353))
++ __BaseEntity:__ Improved hasRelationship check ([4064619](https://github.com/coldbox-modules/quick/commit/406461960915aea8d24dd9d448214d0df864f762))
++ __QuickBuilder:__ Fix nested whereHas with belongsToMany Relationships ([99f957e](https://github.com/coldbox-modules/quick/commit/99f957ed4c909860afd73b5b6ea7c0fb1e744b44))
++ __BaseEntity:__ Fix for virtual columns trying to be updated
+ ([5f13e4f](https://github.com/coldbox-modules/quick/commit/5f13e4f9f210acf1f9d97b6a740acce9e03cb531))
++ __BaseEntity:__ Qualify all column names and correctly return eager loaded belongsToMany Relationships ([09f9c64](https://github.com/coldbox-modules/quick/commit/09f9c643c095f8b0d936d6fb4234341b0aa04b3c))
++ __BaseEntity:__ Forward updateOrInsert calls to updateOrCreate ([888fa22](https://github.com/coldbox-modules/quick/commit/888fa22c2586bc86fe2ecd6c3a855ca3ac8a1164))
++ __Memento:__ Ensure virtual columns are included in mementos by default
+ ([6c72a46](https://github.com/coldbox-modules/quick/commit/6c72a4658be04ddfff6b25148e58ec832bbea064))
++ __BaseEntity:__ qualify columns when using fresh and refresh
+ ([1cce0a2](https://github.com/coldbox-modules/quick/commit/1cce0a252b751879c5f74628d8aa24147152cdac))
++ __QuickBuilder:__ Clear orders when querying releationships ([d77c781](https://github.com/coldbox-modules/quick/commit/d77c781b1d204f00bf9514bb3292aaf73da61021))
++ __GlobalScopes:__ Ensure global scopes are only applied once per query
+ ([664b288](https://github.com/coldbox-modules/quick/commit/664b288feb25f74f70ed28dd22b7f2b9068b6108))
++ __BaseEntity:__ Duplicate metadata struct when creating new entities ([5c06fa4](https://github.com/coldbox-modules/quick/commit/5c06fa4ea6dfdd508a932302c69cf28581fe8756))
++ __BaseEntity:__ Fix double applying of global scopes
+ ([b374caa](https://github.com/coldbox-modules/quick/commit/b374caa9f65d4534c381945eb6af0a2d0e2bdf5c))
++ __BaseEntity:__ Default polymorphicBelongsTo name to the relation method name
+ ([72352d6](https://github.com/coldbox-modules/quick/commit/72352d6a7325e95258fbef952375903858a381e0))
+
+### other
+
++ __\*:__ v3.0.0-beta.13
+ ([27ada30](https://github.com/coldbox-modules/quick/commit/27ada3048023a90e615a0f161a3b792eda07fcc7))
++ __\*:__ v3.0.0-beta.12
+ ([57c1098](https://github.com/coldbox-modules/quick/commit/57c1098cd419fdffe8963da27b9653cb87c68728))
++ __\*:__ v3.0.0-beta.11
+ ([defadc4](https://github.com/coldbox-modules/quick/commit/defadc4707919bfe492d95963ba189c096e2c75f))
++ __\*:__ v3.0.0-beta.10
+ ([3ed41b4](https://github.com/coldbox-modules/quick/commit/3ed41b473f976fc1bf92d1f9c94bcda0eddaa651))
++ __\*:__ v3.0.0-beta.9
+ ([0e761bf](https://github.com/coldbox-modules/quick/commit/0e761bf82c7cb21eb831a522b51655305a5ee2d9))
++ __\*:__ v3.0.0-beta.8
+ ([5f33efa](https://github.com/coldbox-modules/quick/commit/5f33efad60a2701daf4d167e494c248ccada4c00))
++ __\*:__ chore: format with cfformat
+ ([ad9d544](https://github.com/coldbox-modules/quick/commit/ad9d5441ee1f04b37eaffabc462c1846c8f0c492))
++ __\*:__ v3.0.0-beta.7
+ ([da7eb88](https://github.com/coldbox-modules/quick/commit/da7eb880a8ab8897855de1a74d1ba6af9dbf428c))
++ __\*:__ Update docblocks
+ ([b48e1d8](https://github.com/coldbox-modules/quick/commit/b48e1d8f0f8f8156be0e4ce6e5de94277fd73e56))
++ __\*:__ v3.0.0-beta.6
+ ([24ad429](https://github.com/coldbox-modules/quick/commit/24ad42992b5f658254c6ef8c03a6acbe1f6bdc42))
++ __\*:__ v3.0.0-beta.5
+ ([27e0258](https://github.com/coldbox-modules/quick/commit/27e02585f86be3cb87cae30371e7923031e6e313))
++ __\*:__ v3.0.0-beta.4
+ ([d41d071](https://github.com/coldbox-modules/quick/commit/d41d071663db2405ac6647612b7ea5ddd90acbf2))
++ __\*:__ v3.0.0-beta.3
+ ([59bb622](https://github.com/coldbox-modules/quick/commit/59bb622f19117263a0b188046a14f06f78355a1e))
++ __\*:__ v3.0.0-beta.2
+ ([6e2ceab](https://github.com/coldbox-modules/quick/commit/6e2ceab6f2f8626998e711cc36cc334f2eba7af5))
++ __\*:__ v3.0.0-beta.1
+ ([092ce93](https://github.com/coldbox-modules/quick/commit/092ce93beec9577f99136e73f24998ef8ed1e399))
++ __\*:__ chore: Update docblocks
+ ([ecd3e27](https://github.com/coldbox-modules/quick/commit/ecd3e277ca1d0a1995362afedf1985f01f6fedb0))
++ __\*:__ v3.0.0-alpha.2
+ ([4f01505](https://github.com/coldbox-modules/quick/commit/4f01505258721ce132dca0d947fdd71e47ae72a7))
+
+### refactor
+
++ __BaseEntity:__ Clean up virtual column naming
+ ([88d8237](https://github.com/coldbox-modules/quick/commit/88d823709a50b5c20363011bae3713311285ea89))
+
+
+# v2.5.7
+## 26 Feb 2020 — 00:16:25 UTC
+
+### other
+
++ __\*:__ docs: Fix link to Gitbook from README ([5a8cf6a](https://github.com/coldbox-modules/quick/commit/5a8cf6aa945b4e5dc21b17823a475feaa0ab8e06))
+
+
+# v2.5.6
+## 19 Feb 2020 — 22:22:10 UTC
+
+### fix
+
++ __BaseEntity:__ Correctly use the grammar annotation
+ ([2312e9e](https://github.com/coldbox-modules/quick/commit/2312e9e3bcfdd441b4d80207d0636402aa612b1a))
+
+
+# v2.5.5
+## 13 Feb 2020 — 17:30:08 UTC
+
+### other
+
++ __\*:__ chore: Use forgeboxStorage ([ad6c413](https://github.com/coldbox-modules/quick/commit/ad6c41392be2cff5b1d738a15209ed5b01beef1d))
+
+
 # v2.5.4
 ## 20 Dec 2019 — 06:20:30 UTC
 

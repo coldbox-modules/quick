@@ -534,6 +534,19 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	}
 
 	/**
+	 * Wrap .with() to the parent entity
+	 *
+	 * @relationName  A single relation name or array of relation
+	 *                names to eager load.
+	 *
+	 * @return        quick.models.BaseEntity
+	 */
+
+	public any function with( required any relationName ) {
+		return this.getEntity().with( argumentCollection = arguments );
+	}
+
+	/**
 	 * Orders the query by a field in a relationship.
 	 * Uses subquery ordering to accomplish this.
 	 *

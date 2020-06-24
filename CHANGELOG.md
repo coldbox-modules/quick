@@ -1,3 +1,11 @@
+# v3.1.5
+## 24 Jun 2020 — 00:24:50 UTC
+
+### fix
+
++ __QuickBuilder:__ Add an alias to `with` ([5491ba7](https://github.com/coldbox-modules/quick/commit/5491ba70333e3f7a308d8c1ed0f2eb3e177e6b59))
+
+
 # v3.1.4
 ## 19 Jun 2020 — 05:58:34 UTC
 

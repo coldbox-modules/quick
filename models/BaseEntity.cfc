@@ -503,7 +503,7 @@ component accessors="true" {
 			variables[ retrieveAliasForColumn( arguments.name ) ]       = javacast( "null", "" );
 		} else {
 			variables._data.delete( retrieveColumnForAlias( arguments.name ) );
-			variables.delete( retrieveAliasForColumn( arguments.name ) );
+			structDelete( variables, retrieveAliasForColumn( arguments.name ) );
 		}
 		return this;
 	}

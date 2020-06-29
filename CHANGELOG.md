@@ -1,3 +1,14 @@
+# v3.1.6
+## 29 Jun 2020 — 19:19:44 UTC
+
+### fix
+
++ __QuickBuilder:__ Allow expressions in basic where clauses
+ ([f267c2f](https://github.com/coldbox-modules/quick/commit/f267c2f7fff469d113e4d52f1a52c1c1a4ae7d40))
++ __BaseEntity:__ Fix delete naming collision
+ ([c7dca98](https://github.com/coldbox-modules/quick/commit/c7dca9870e37b4ba7600e7d7ef6c4443b8930791))
+
+
 # v3.1.5
 ## 24 Jun 2020 — 00:24:50 UTC
 

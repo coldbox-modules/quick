@@ -26,12 +26,12 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	 * @return      quick.models.QuickBuilder
 	 */
 	private QuickBuilder function whereBasic(
-		required string column,
-		required string operator,
+		required any column,
+		required any operator,
 		any value,
 		string combinator = "and"
 	) {
-		if ( getEntity().hasAttribute( arguments.column ) ) {
+		if ( isSimpleValue( arguments.column ) && getEntity().hasAttribute( arguments.column ) ) {
 			arguments.value = getEntity().generateQueryParamStruct(
 				column          = arguments.column,
 				value           = isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,

@@ -13,6 +13,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( user.getLatestPost() ).toBeNull();
 			} );
 
+			it( "returns null if the foreign key has no value", function() {
+				var hasNoFavoritePost = getInstance( "User" ).find( 2 );
+				expect( hasNoFavoritePost.getFavoritePost() ).toBeNull();
+			} );
+
 			it( "can return an empty default entity if there is no owning entity", function() {
 				var user = getInstance( "User" ).find( 2 );
 				expect( user.getLatestPostWithEmptyDefault() ).notToBeNull();

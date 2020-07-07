@@ -196,6 +196,19 @@ component accessors="true" {
 	}
 
 	/**
+	 * Checks if all of the keys (usually foreign keys) on the specified entity are null. Used to determine whether we should even run a relationship query or just return null.
+	 *
+	 * @fields An array of field names to check on the parent entity
+	 *
+	 * @return true if all keys are null; false if any foreign keys have a value
+	 */
+	public boolean function fieldsAreNull( required any entity, required array fields ) {
+		return fields.every( function( key ) {
+			return ( len( entity.retrieveAttribute( key ) ) == 0 );
+		} );
+	}
+
+	/**
 	 * Gets the query used to check for relation existance.
 	 *
 	 * @base    The base entity for the query.

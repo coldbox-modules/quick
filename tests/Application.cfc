@@ -149,6 +149,7 @@ component {
               `city` varchar(100),
               `state` varchar(2),
               `zip` varchar(10),
+              `favoritePost_id` int(11),
               PRIMARY KEY (`id`)
             )
         " );
@@ -163,16 +164,16 @@ component {
             )
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `type`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (1, 'elpete', 'Eric', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', 1, '2017-07-28 02:06:36', '2017-07-28 02:06:36', 'admin', '1234', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123')
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `type`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`, `favoritePost_id`) VALUES (1, 'elpete', 'Eric', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', 1, '2017-07-28 02:06:36', '2017-07-28 02:06:36', 'admin', '1234', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123', '1245')
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (2, 'johndoe', 'John', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', 1, '2017-07-28 02:07:16', '2017-07-28 02:07:16', '6789', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123');
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`, `favoritePost_id`) VALUES (2, 'johndoe', 'John', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', '02B84D66-0AA0-F7FB-1F71AFC954843861', 1, '2017-07-28 02:07:16', '2017-07-28 02:07:16', '6789', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123', NULL);
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (3, 'janedoe', 'Jane', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', NULL, 1, '2017-07-28 02:08:16', '2017-07-28 02:08:16', '5555', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123');
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`, `favoritePost_id`) VALUES (3, 'janedoe', 'Jane', 'Doe', '5F4DCC3B5AA765D61D8327DEB882CF99', NULL, 1, '2017-07-28 02:08:16', '2017-07-28 02:08:16', '5555', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123', NULL);
         " );
         queryExecute( "
-            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `type`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`) VALUES (4, 'elpete2', 'Another', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02BA2DB0-EB1E-3F85-5F283AB5E45608C6', 2, '2019-06-15 12:29:36', '2017-07-28 02:06:36', 'admin', '1234', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123')
+            INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password`, `country_id`, `team_id`, `created_date`, `modified_date`, `type`, `externalId`, `streetOne`, `streetTwo`, `city`, `state`, `zip`, `favoritePost_id`) VALUES (4, 'elpete2', 'Another', 'Peterson', '5F4DCC3B5AA765D61D8327DEB882CF99', '02BA2DB0-EB1E-3F85-5F283AB5E45608C6', 2, '2019-06-15 12:29:36', '2017-07-28 02:06:36', 'admin', '1234', '123 Elm Street', NULL, 'Salt Lake City', 'UT', '84123', NULL)
         " );
 
         queryExecute( "

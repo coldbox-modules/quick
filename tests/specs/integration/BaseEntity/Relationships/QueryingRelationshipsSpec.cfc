@@ -189,6 +189,28 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 						expect( users ).toBeArray();
 						expect( users ).toHaveLength( 2 );
 					} );
+
+					it( "can tell when an entity has a null foreign key(s)", function() {
+						var hasFavoritePost   = getInstance( "User" ).find( 1 );
+						var hasNoFavoritePost = getInstance( "User" ).find( 2 );
+
+						expect(
+							hasFavoritePost
+								.FavoritePost()
+								.fieldsAreNull(
+									entity = hasFavoritePost,
+									fields = hasFavoritePost.favoritePost().getLocalKeys()
+								)
+						).toBeFalse();
+						expect(
+							hasNoFavoritePost
+								.FavoritePost()
+								.fieldsAreNull(
+									entity = hasNoFavoritePost,
+									fields = hasNoFavoritePost.favoritePost().getForeignKeys()
+								)
+						).toBeTrue();
+					} );
 				} );
 			} );
 

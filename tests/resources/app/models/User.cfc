@@ -12,6 +12,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
     property name="email" column="email" update="false" insert="true";
     property name="type";
     property name="externalID";
+    property name="favoritePost_id";
 
     property name="address" casts="AddressCast" persistent="false" getter="false" setter="false";
     property name="streetOne";
@@ -125,6 +126,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 
     function latestPost() {
         return hasOne( "Post", "user_id" ).latest();
+    }
+
+    function favoritePost() {
+        return hasOne( "Post", "user_id", "favoritePost_id" );
     }
 
     function latestPostWithEmptyDefault() {

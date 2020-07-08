@@ -330,7 +330,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return       [String]
 	 */
 	public array function getQualifiedLocalKeys() {
-		return variables.related.retrieveQualifiedKeyNames();
+		return variables.localKeys.map( function( localKey ) {
+			return variables.related.qualifyColumn( localKey );
+		} );
 	}
 
 	/**

@@ -1,3 +1,11 @@
+# v3.1.7
+## 10 Jul 2020 — 16:04:10 UTC
+
+### fix
+
++ __tests:__ Correct jQuery link in test runner (#95) ([7bb1b3d](https://github.com/coldbox-modules/quick/commit/7bb1b3d755f4642421926a93ef5bf623f5578e14))
+
+
 # v3.1.6
 ## 29 Jun 2020 — 19:19:44 UTC
 

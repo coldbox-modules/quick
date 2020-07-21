@@ -167,8 +167,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
 					],
 					function( localKey, foreignKey ) {
 						q2.whereColumn(
-							variables.parent.qualifyColumn( localKey ),
-							variables.closestToParent.qualifyColumn( foreignKey )
+							variables.closestToParent.qualifyColumn( localKey ),
+							variables.parent.qualifyColumn( foreignKey )
 						);
 					}
 				);

@@ -80,7 +80,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  quick.models.BaseEntity | null
 	 */
 	public any function getResults() {
-		var result = variables.related.first();
+		var result = (
+			fieldsAreNull( entity = variables.child, fields = variables.foreignKeys )
+			 ? javacast( "null", "" )
+			 : variables.related.first()
+		);
 
 		if ( !isNull( result ) ) {
 			return result;

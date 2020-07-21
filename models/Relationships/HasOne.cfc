@@ -23,7 +23,11 @@ component extends="quick.models.Relationships.HasOneOrMany" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function getResults() {
-		var result = variables.related.first();
+		var result = (
+			fieldsAreNull( entity = variables.parent, fields = variables.localKeys )
+			 ? javacast( "null", "" )
+			 : variables.related.first()
+		);
 
 		if ( !isNull( result ) ) {
 			return result;

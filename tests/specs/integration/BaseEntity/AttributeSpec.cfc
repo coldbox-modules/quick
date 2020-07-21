@@ -82,45 +82,47 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "shows all the attributes in the memento of a newly created object", function() {
 				expect( getInstance( "User" ).getMemento() ).toBe( {
-					"id"           : "",
-					"username"     : "",
-					"firstName"    : "",
-					"lastName"     : "",
-					"password"     : "",
-					"countryId"    : "",
-					"teamId"       : "",
-					"createdDate"  : "",
-					"modifiedDate" : "",
-					"type"         : "",
-					"email"        : "",
-					"externalId"   : "",
-					"streetOne"    : "",
-					"streetTwo"    : "",
-					"city"         : "",
-					"state"        : "",
-					"zip"          : ""
+					"id"              : "",
+					"username"        : "",
+					"firstName"       : "",
+					"lastName"        : "",
+					"password"        : "",
+					"countryId"       : "",
+					"teamId"          : "",
+					"createdDate"     : "",
+					"modifiedDate"    : "",
+					"type"            : "",
+					"email"           : "",
+					"externalId"      : "",
+					"streetOne"       : "",
+					"streetTwo"       : "",
+					"city"            : "",
+					"state"           : "",
+					"zip"             : "",
+					"favoritePost_id" : ""
 				} );
 			} );
 
 			it( "shows all the attributes in the component casing", function() {
 				expect( getInstance( "User" ).findOrFail( 1 ).getMemento() ).toBe( {
-					"id"           : 1,
-					"username"     : "elpete",
-					"firstName"    : "Eric",
-					"lastName"     : "Peterson",
-					"password"     : "5F4DCC3B5AA765D61D8327DEB882CF99",
-					"countryId"    : "02B84D66-0AA0-F7FB-1F71AFC954843861",
-					"teamId"       : 1,
-					"createdDate"  : "2017-07-28 02:06:36",
-					"modifiedDate" : "2017-07-28 02:06:36",
-					"type"         : "admin",
-					"email"        : "",
-					"externalId"   : "1234",
-					"streetOne"    : "123 Elm Street",
-					"streetTwo"    : "",
-					"city"         : "Salt Lake City",
-					"state"        : "UT",
-					"zip"          : "84123"
+					"id"              : 1,
+					"username"        : "elpete",
+					"firstName"       : "Eric",
+					"lastName"        : "Peterson",
+					"password"        : "5F4DCC3B5AA765D61D8327DEB882CF99",
+					"countryId"       : "02B84D66-0AA0-F7FB-1F71AFC954843861",
+					"teamId"          : 1,
+					"createdDate"     : "2017-07-28 02:06:36",
+					"modifiedDate"    : "2017-07-28 02:06:36",
+					"type"            : "admin",
+					"email"           : "",
+					"externalId"      : "1234",
+					"streetOne"       : "123 Elm Street",
+					"streetTwo"       : "",
+					"city"            : "Salt Lake City",
+					"state"           : "UT",
+					"zip"             : "84123",
+					"favoritePost_id" : "1245"
 				} );
 			} );
 		} );

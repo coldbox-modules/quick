@@ -4,23 +4,24 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 		describe( "mementos", function() {
 			it( "returns an empty memento for a newly created entity", function() {
 				expect( getInstance( "User" ).getMemento() ).toBe( {
-					"id"           : "",
-					"firstName"    : "",
-					"lastName"     : "",
-					"email"        : "",
-					"username"     : "",
-					"password"     : "",
-					"type"         : "",
-					"countryId"    : "",
-					"teamId"       : "",
-					"createdDate"  : "",
-					"modifiedDate" : "",
-					"externalID"   : "",
-					"streetOne"    : "",
-					"streetTwo"    : "",
-					"city"         : "",
-					"state"        : "",
-					"zip"          : ""
+					"id"              : "",
+					"firstName"       : "",
+					"lastName"        : "",
+					"email"           : "",
+					"username"        : "",
+					"password"        : "",
+					"type"            : "",
+					"countryId"       : "",
+					"teamId"          : "",
+					"createdDate"     : "",
+					"modifiedDate"    : "",
+					"externalID"      : "",
+					"streetOne"       : "",
+					"streetTwo"       : "",
+					"city"            : "",
+					"state"           : "",
+					"zip"             : "",
+					"favoritePost_id" : ""
 				} );
 			} );
 
@@ -47,23 +48,24 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					"publishedDate" : "2017-07-28 02:07:00",
 					"user_id"       : "1",
 					"author"        : {
-						"id"           : "1",
-						"firstName"    : "Eric",
-						"lastName"     : "Peterson",
-						"email"        : "",
-						"username"     : "elpete",
-						"password"     : "5F4DCC3B5AA765D61D8327DEB882CF99",
-						"type"         : "admin",
-						"countryId"    : "02B84D66-0AA0-F7FB-1F71AFC954843861",
-						"teamId"       : 1,
-						"createdDate"  : "2017-07-28 02:06:36",
-						"modifiedDate" : "2017-07-28 02:06:36",
-						"externalID"   : "1234",
-						"streetOne"    : "123 Elm Street",
-						"streetTwo"    : "",
-						"city"         : "Salt Lake City",
-						"state"        : "UT",
-						"zip"          : "84123"
+						"id"              : "1",
+						"firstName"       : "Eric",
+						"lastName"        : "Peterson",
+						"email"           : "",
+						"username"        : "elpete",
+						"password"        : "5F4DCC3B5AA765D61D8327DEB882CF99",
+						"type"            : "admin",
+						"countryId"       : "02B84D66-0AA0-F7FB-1F71AFC954843861",
+						"teamId"          : 1,
+						"createdDate"     : "2017-07-28 02:06:36",
+						"modifiedDate"    : "2017-07-28 02:06:36",
+						"externalID"      : "1234",
+						"streetOne"       : "123 Elm Street",
+						"streetTwo"       : "",
+						"city"            : "Salt Lake City",
+						"state"           : "UT",
+						"zip"             : "84123",
+						"favoritePost_id" : "1245"
 					}
 				} );
 			} );

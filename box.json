@@ -21,7 +21,7 @@
     },
     "type":"modules",
     "dependencies":{
-        "qb":"^7.6.0",
+        "qb":"^8.0.0",
         "str":"^1.0.0",
         "mementifier":"^2.1.0+100"
     },
@@ -51,11 +51,5 @@
         "tests",
         "server.json",
         "quick300.png"
-    ],
-    "githooks":{
-        "preCommit":[
-            "cfformat run `!git diff --name-only --staged` --overwrite",
-            "!git add `git diff --name-only --staged`"
-        ]
-    }
+    ]
 }

@@ -2710,28 +2710,34 @@ component accessors="true" {
 		struct missingMethodArguments = {},
 		any builder                   = this
 	) {
-		if ( structKeyExists( variables, "scope#arguments.missingMethodName#" ) ) {
-			if (
-				variables._applyingGlobalScopes &&
-				arrayContains( variables._globalScopeExclusions, lCase( arguments.missingMethodName ) )
-			) {
-				return this;
+		if ( !structKeyExists( variables, "scope#arguments.missingMethodName#" ) ) {
+			return;
+		}
+
+		if (
+			variables._applyingGlobalScopes &&
+			arrayContains( variables._globalScopeExclusions, lCase( arguments.missingMethodName ) )
+		) {
+			return this;
+		}
+		var scopeArgs = { "1" : arguments.builder };
+		// this is to allow default arguments to be set for scopes
+		if ( !structIsEmpty( arguments.missingMethodArguments ) ) {
+			for ( var i = 1; i <= structCount( arguments.missingMethodArguments ); i++ ) {
+				scopeArgs[ i + 1 ] = arguments.missingMethodArguments[ i ];
 			}
-			var scopeArgs = { "1" : arguments.builder };
-			// this is to allow default arguments to be set for scopes
-			if ( !structIsEmpty( arguments.missingMethodArguments ) ) {
-				for ( var i = 1; i <= structCount( arguments.missingMethodArguments ); i++ ) {
-					scopeArgs[ i + 1 ] = arguments.missingMethodArguments[ i ];
-				}
-			}
-			var result = invoke(
+		}
+		var result = javacast( "null", "" );
+
+		arguments.builder.withScoping( function() {
+			result = invoke(
 				this,
-				"scope#arguments.missingMethodName#",
+				"scope#missingMethodName#",
 				scopeArgs
 			);
-			return isNull( result ) ? this : result;
-		}
-		return;
+		} );
+
+		return isNull( result ) ? this : result;
 	}
 
 	/**

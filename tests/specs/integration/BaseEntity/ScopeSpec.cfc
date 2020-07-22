@@ -59,6 +59,26 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
 				expect( users[ 2 ].getUsername() ).toBe( "elpete2" );
 			} );
+
+			it( "wraps scopes in parenthesis automatically if the scope contains an or clause", function() {
+				var sql = getInstance( "User" )
+					.canView()
+					.retrieveQuery()
+					.toSQL();
+				expect( sql ).toBe(
+					"SELECT `users`.`city`, `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`externalID`, `users`.`favoritePost_id`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`state`, `users`.`streetOne`, `users`.`streetTwo`, `users`.`team_id`, `users`.`type`, `users`.`username`, `users`.`zip` FROM `users` WHERE (`users`.`type` <> ? OR `users`.`type` = ?)"
+				);
+			} );
+
+			it( "does not wrap scopes in parenthesis automatically if the scope does not contain an or clause", function() {
+				var sql = getInstance( "User" )
+					.ofType( "admin" )
+					.retrieveQuery()
+					.toSQL();
+				expect( sql ).toBe(
+					"SELECT `users`.`city`, `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`externalID`, `users`.`favoritePost_id`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`state`, `users`.`streetOne`, `users`.`streetTwo`, `users`.`team_id`, `users`.`type`, `users`.`username`, `users`.`zip` FROM `users` WHERE `users`.`type` = ?"
+				);
+			} );
 		} );
 	}
 

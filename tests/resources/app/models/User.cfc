@@ -38,6 +38,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		);
 	}
 
+	function scopeCanView( qb ) {
+		qb.where( "type", "<>", "limited" ).orWhere( "type", "admin" );
+	}
+
 	function scopeLatest( qb ) {
 		return qb.orderBy( "created_date", "desc" );
 	}

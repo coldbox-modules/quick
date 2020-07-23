@@ -49,6 +49,11 @@ component accessors="true" {
 	property name="parent";
 
 	/**
+	 * Used to check for the type of relationship more quickly than using isInstanceOf.
+	 */
+	this.relationshipClass = "BaseRelationship";
+
+	/**
 	 * Creates a new relationship component to query and retrieve results.
 	 *
 	 * @related             The related entity instance.
@@ -224,7 +229,7 @@ component accessors="true" {
 			.where( function( q ) {
 				arrayZipEach(
 					[
-						getQualifiedLocalKeys(),
+						getExistanceLocalKeys(),
 						getExistenceCompareKeys()
 					],
 					function( qualifiedLocalKey, existenceCompareKey ) {
@@ -246,6 +251,16 @@ component accessors="true" {
 	 */
 	public array function getQualifiedLocalKeys() {
 		return variables.parent.retrieveQualifiedKeyNames();
+	}
+
+	/**
+	 * Returns the fully-qualified local key.
+	 *
+	 * @doc_generic  String
+	 * @return       [String]
+	 */
+	public array function getExistanceLocalKeys() {
+		return getQualifiedLocalKeys();
 	}
 
 	/**
@@ -314,6 +329,7 @@ component accessors="true" {
 
 		if (
 			isStruct( result ) &&
+			!structKeyExists( result, "relationshipClass" ) &&
 			( structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isBuilder" ) )
 		) {
 			return this;

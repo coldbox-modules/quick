@@ -35,6 +35,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	property name="localKeys" type="array";
 
 	/**
+	 * Used to check for the type of relationship more quickly than using isInstanceOf.
+	 */
+	this.relationshipClass = "BelongsTo";
+
+	/**
 	 * Creates a belongsTo relationship.
 	 *
 	 * @related             The related entity instance.

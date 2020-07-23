@@ -216,6 +216,42 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
 			} );
 
+			it( "can eager load a long has many through relationship", function() {
+				var countries = getInstance( "Country" ).with( "comments" ).get();
+				expect( countries ).toBeArray();
+				expect( countries ).toHaveLength( 2 );
+
+				expect( countries[ 1 ].getComments() ).toBeArray();
+				expect( countries[ 1 ].getComments() ).toHaveLength( 1 );
+				expect( countries[ 1 ].getComments()[ 1 ].getBody() ).toBe( "I thought this post was great" );
+
+				expect( countries[ 2 ].getComments() ).toBeArray();
+				expect( countries[ 2 ].getComments() ).toHaveLength( 1 );
+				expect( countries[ 2 ].getComments()[ 1 ].getBody() ).toBe( "I thought this post was not so good" );
+
+				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+			} );
+
+			it( "can eager load a recursive has many through relationship", function() {
+				var countries = getInstance( "Country" ).with( "commentsUsingHasManyThrough" ).get();
+				expect( countries ).toBeArray();
+				expect( countries ).toHaveLength( 2 );
+
+				expect( countries[ 1 ].getCommentsUsingHasManyThrough() ).toBeArray();
+				expect( countries[ 1 ].getCommentsUsingHasManyThrough() ).toHaveLength( 1 );
+				expect( countries[ 1 ].getCommentsUsingHasManyThrough()[ 1 ].getBody() ).toBe(
+					"I thought this post was great"
+				);
+
+				expect( countries[ 2 ].getCommentsUsingHasManyThrough() ).toBeArray();
+				expect( countries[ 2 ].getCommentsUsingHasManyThrough() ).toHaveLength( 1 );
+				expect( countries[ 2 ].getCommentsUsingHasManyThrough()[ 1 ].getBody() ).toBe(
+					"I thought this post was not so good"
+				);
+
+				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+			} );
+
 			it( "can eager load polymorphic belongs to relationships", function() {
 				var comments = getInstance( "Comment" ).with( "commentable" ).get();
 

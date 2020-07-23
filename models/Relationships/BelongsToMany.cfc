@@ -28,6 +28,12 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	property name="parentKeys" type="array";
 
 	/**
+	 * The primary keys for the parent entity.
+	 * Alias for `parentKeys`
+	 */
+	property name="foreignKeys" type="array";
+
+	/**
 	 * The primary keys for the related entity.
 	 */
 	property name="relatedKeys" type="array";
@@ -46,6 +52,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * The table suffix. Stored in case this is the `applyThroughConstraints` is called.
 	 */
 	property name="tableSuffix" type="string";
+
+	/**
+	 * Used to check for the type of relationship more quickly than using isInstanceOf.
+	 */
+	this.relationshipClass = "BelongsToMany";
 
 	/**
 	 * Creates a BelongsToMany relationship.
@@ -81,6 +92,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	) {
 		variables.table            = arguments.table;
 		variables.parentKeys       = arguments.parentKeys;
+		variables.foreignKeys      = arguments.parentKeys;
 		variables.relatedKeys      = arguments.relatedKeys;
 		variables.relatedPivotKeys = arguments.relatedPivotKeys;
 		variables.foreignPivotKeys = arguments.foreignPivotKeys;

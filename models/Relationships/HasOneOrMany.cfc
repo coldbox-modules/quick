@@ -17,6 +17,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	property name="localKeys";
 
 	/**
+	 * Used to check for the type of relationship more quickly than using isInstanceOf.
+	 */
+	this.relationshipClass = "HasOneOrMany";
+
+	/**
 	 * Creates a HasOneOrMany relationship.
 	 *
 	 * @related             The related entity instance.

@@ -22,6 +22,11 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	property name="morphMapping" type="string";
 
 	/**
+	 * Used to check for the type of relationship more quickly than using isInstanceOf.
+	 */
+	this.relationshipClass = "PolymorphicHasOneOrMany";
+
+	/**
 	 * Creates a Polymorphic HasOneOrMany relationship.
 	 *
 	 * @related             The related entity instance.

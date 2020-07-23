@@ -193,6 +193,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 						expect( countries ).toBeArray();
 						expect( countries ).toHaveLength( 2 );
 					} );
+
+					it( "can find only entities that have a related hasManyThrough entity through multiple levels", function() {
+						var countries = getInstance( "Country" ).has( "comments" ).get();
+						expect( countries ).toBeArray();
+						expect( countries ).toHaveLength( 2 );
+					} );
+
+					it( "can find only entities that have a related hasManyThrough entity through multiple levels using a nested hasManyThrough", function() {
+						var countries = getInstance( "Country" ).has( "commentsUsingHasManyThrough" ).get();
+						expect( countries ).toBeArray();
+						expect( countries ).toHaveLength( 2 );
+					} );
 				} );
 
 				describe( "hasOne", function() {

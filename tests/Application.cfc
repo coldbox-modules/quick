@@ -412,5 +412,128 @@ component {
         queryExecute( "
             INSERT INTO `themes` (`id`, `slug`, `version`) VALUES (1, 'theme-a', '1.0.0')
         " );
+
+        queryExecute(
+            "
+            CREATE TABLE `parents` (
+                `ID` int(11) NOT NULL AUTO_INCREMENT,
+                `firstname` varchar(100) NOT NULL,
+                `lastname` varchar(100) NOT NULL,
+                PRIMARY KEY (`ID`)
+            )
+            "
+        );
+
+        queryExecute(
+            "
+            INSERT INTO `parents` (`ID`, `firstname`, `lastname`) VALUES(1, 'Amy', 'Pond')
+            "
+        );
+        queryExecute(
+            "
+            INSERT INTO `parents` (`ID`, `firstname`, `lastname`) VALUES(2, 'Rory', 'Williams')
+            "
+        );
+
+        queryExecute(
+            "
+            CREATE TABLE `families` (
+                `familyID` int(11) NOT NULL AUTO_INCREMENT,
+                `parent1ID` int(11),
+                `parent2ID` int(11),
+                PRIMARY KEY (`familyID`)
+            )
+            "
+        );
+
+        queryExecute(
+            "
+            INSERT INTO `families` (`familyID`, `parent1ID`, `parent2ID`) VALUES(1, 1, 2)
+            "
+        );
+
+        queryExecute(
+            "
+            CREATE TABLE `family_parents` (
+                `parentID` int(11) NOT NULL,
+                `familyID` int(11) NOT NULL,
+                PRIMARY KEY (`parentID`, `familyID`)
+            )
+            "
+        );
+
+        queryExecute(
+            "
+            CREATE TABLE `children` (
+                `childID` int(11) NOT NULL AUTO_INCREMENT,
+                `familyID` int(11),
+                `firstname` varchar(100) NOT NULL,
+                `lastname` varchar(100) NOT NULL,
+                PRIMARY KEY (`childID`)
+            )
+            "
+        );
+
+        queryExecute(
+            "
+            INSERT INTO `children` (`childID`, `familyID`, `firstname`, `lastname`) VALUES(1, 1, 'River', 'Song')
+            "
+        );
+
+        queryExecute(
+            "
+            CREATE TABLE `registrations` (
+                `registrationID` int(11) NOT NULL AUTO_INCREMENT,
+                `childID` int(11),
+                PRIMARY KEY (`registrationID`)
+            )
+            "
+        );
+
+        queryExecute(
+            "
+            INSERT INTO `registrations` (`registrationID`, `childID`) VALUES(1, 1)
+            "
+        );
+
+        queryExecute(
+            "
+            CREATE TABLE `playing_fields` (
+                `fieldID` int(11) NOT NULL AUTO_INCREMENT,
+                `clientID` int(11),
+                `fieldName` varchar(100) NOT NULL,
+                PRIMARY KEY (`fieldID`, `clientID`)
+            )
+            "
+        );
+
+        queryExecute(
+            "
+            INSERT INTO `playing_fields` (`fieldID`, `clientID`, `fieldName`) VALUES(1, 1, 'First Field')
+            "
+        );
+
+        queryExecute(
+            "
+            INSERT INTO `playing_fields` (`fieldID`, `clientID`, `fieldName`) VALUES(1, 2, 'Second Field')
+            "
+        );
+
+        queryExecute(
+            "
+            CREATE TABLE `games` (
+                `ID` int(11) NOT NULL AUTO_INCREMENT,
+                `fieldID` int(11),
+                `clientID` int(11),
+                PRIMARY KEY (`ID`)
+            )
+            "
+        );
+
+        queryExecute(
+            "
+            INSERT INTO `games` (`ID`, `fieldID`, `clientID`) VALUES(1, 1, 2)
+            "
+        );
     }
 }

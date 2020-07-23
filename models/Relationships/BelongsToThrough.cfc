@@ -33,6 +33,11 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	property name="closestToParent";
 
 	/**
+	 * Used to check for the type of relationship more quickly than using isInstanceOf.
+	 */
+	this.relationshipClass = "BelongsToThrough";
+
+	/**
 	 * Creates a BelongsToThrough relationship.
 	 *
 	 * @related             The related entity instance.
@@ -162,13 +167,13 @@ component extends="quick.models.Relationships.BaseRelationship" {
 			q.where( function( q2 ) {
 				arrayZipEach(
 					[
-						variables.parent.keyNames(),
-						variables.closestToParent.getForeignKeys()
+						variables.closestToParent.getForeignKeys(),
+						variables.closestToParent.getLocalKeys()
 					],
 					function( localKey, foreignKey ) {
 						q2.whereColumn(
-							variables.closestToParent.qualifyColumn( localKey ),
-							variables.parent.qualifyColumn( foreignKey )
+							variables.parent.qualifyColumn( localKey ),
+							variables.closestToParent.qualifyColumn( foreignKey )
 						);
 					}
 				);
@@ -282,6 +287,14 @@ component extends="quick.models.Relationships.BaseRelationship" {
 				}
 			);
 		} );
+	}
+
+	public array function getForeignKeys() {
+		return variables.closestToParent.getLocalKeys();
+	}
+
+	public array function getLocalKeys() {
+		return variables.parent.keyNames();
 	}
 
 }

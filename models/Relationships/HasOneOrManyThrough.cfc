@@ -36,6 +36,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	property name="closestToParent";
 
 	/**
+	 * Used to check for the type of relationship more quickly than using isInstanceOf.
+	 */
+	this.relationshipClass = "HasOneOrManyThrough";
+
+	/**
 	 * Creates a HasOneOrManyThrough relationship.
 	 *
 	 * @related             The related entity instance.
@@ -87,8 +92,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  quick.models.Relationships.HasOneOrManyThrough
 	 */
 	public HasOneOrManyThrough function performJoin( any base = variables.related ) {
+		arguments.base.distinct();
 		// no arrayReverse in ACF means for loops. :-(
-		for ( var index = variables.relationships.len(); index > 1; index-- ) {
+		for ( var index = variables.relationships.len(); index > 0; index-- ) {
 			var relationshipName = variables.relationships[ index ];
 			var relation         = variables.relationshipsMap[ relationshipName ];
 			relation.applyThroughJoin( arguments.base );
@@ -105,13 +111,13 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 */
 	public HasOneOrManyThrough function addEagerConstraints( required array entities ) {
 		performJoin();
-		var foreignKeys             = variables.closestToParent.getForeignKeys();
+		var foreignKeys             = variables.parent.keyNames();
 		var qualifiedForeignKeyList = foreignKeys
 			.reduce( function( acc, foreignKey, i ) {
 				if ( i != 1 ) {
 					acc.append( "," );
 				}
-				acc.append( variables.closestToParent.qualifyColumn( foreignKey ) );
+				acc.append( variables.parent.qualifyColumn( foreignKey ) );
 				return acc;
 			}, [] )
 			.toList();
@@ -123,8 +129,8 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					q1.orWhere( function( q2 ) {
 						arrayZipEach( [ foreignKeys, keys ], function( foreignKey, keyValue ) {
 							q2.where(
-								variables.closestToParent.qualifyColumn( foreignKey ),
-								variables.closestToParent.generateQueryParamStruct( foreignKey, keyValue )
+								variables.parent.qualifyColumn( foreignKey ),
+								variables.parent.generateQueryParamStruct( foreignKey, keyValue )
 							);
 						} );
 					} );
@@ -160,6 +166,16 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
 	public any function addCompareConstraints( any base = variables.related ) {
+		if (
+			variables.closestToParent.relationshipClass == "HasOneOrManyThrough" ||
+			variables.closestToParent.relationshipClass == "BelongsToThrough"
+		) {
+			return variables.closestToParent.nestCompareConstraints(
+				base   = arguments.base,
+				nested = variables.closestToParent.addCompareConstraints().retrieveQuery()
+			);
+		}
+
 		return tap( arguments.base.select(), function( q ) {
 			performJoin( q );
 			q.where( function( q2 ) {
@@ -202,6 +218,14 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	public void function applyThroughJoin( required any base ) {
 		performJoin( arguments.base );
 		variables.closestToParent.applyThroughJoin( arguments.base );
+	}
+
+	public array function getForeignKeys() {
+		return variables.closestToParent.getLocalKeys();
+	}
+
+	public array function getLocalKeys() {
+		return variables.parent.keyNames();
 	}
 
 }

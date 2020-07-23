@@ -25,6 +25,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
         return hasManyThrough( [ "users", "posts", "comments" ] );
     }
 
+    function commentsUsingHasManyThrough() {
+        return hasManyThrough( [ "posts", "comments" ] );
+    }
+
     function roles() {
         return hasManyThrough( [ "users", "roles" ] );
     }

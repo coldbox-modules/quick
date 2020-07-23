@@ -28,6 +28,11 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	property name="morphType" type="string";
 
 	/**
+	 * Used to check for the type of relationship more quickly than using isInstanceOf.
+	 */
+	this.relationshipClass = "PolymorphicBelongsTo";
+
+	/**
 	 * Creates a belongsTo relationship.
 	 *
 	 * @related             The related entity instance.

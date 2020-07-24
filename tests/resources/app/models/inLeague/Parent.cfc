@@ -1,6 +1,8 @@
 component extends="quick.models.BaseEntity" accessors="true" {
 
 	property name="ID";
+	property name="firstname";
+	property name="lastname";
 
 	variables._key = "ID";
 

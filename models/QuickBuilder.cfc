@@ -665,9 +665,14 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	 * @return  string
 	 */
 	public string function qualifyColumn( required string column ) {
-		if ( findNoCase( ".", arguments.column ) != 0 ) {
+		if (
+			findNoCase( ".", arguments.column ) != 0 ||
+			!getEntity().hasAttribute( arguments.column ) ||
+			getEntity().isVirtualAttribute( arguments.column )
+		) {
 			return arguments.column;
 		}
+
 		return listLast( getFrom(), " " ) & "." & getEntity().retrieveColumnForAlias( arguments.column );
 	}
 

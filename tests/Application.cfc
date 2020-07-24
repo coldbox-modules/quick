@@ -224,10 +224,10 @@ component {
             INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`, `published_date`) VALUES (523526, 1, 'My second awesome post body', '2017-07-28 02:07:36', '2017-07-28 02:07:36', NULL)
         " );
         queryExecute( "
-            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`, `published_date`) VALUES (7777, NULL, 'My post with no author', '2017-07-28 02:07:36', '2017-07-28 02:07:36', NULL)
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`, `published_date`) VALUES (7777, NULL, 'My post with no author', '2017-07-30 07:00:22', '2017-07-30 07:00:22', NULL)
         " );
         queryExecute( "
-            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`, `published_date`) VALUES (321, 4, 'My post with a different author', '2017-07-28 02:07:36', '2017-07-28 02:07:36', '2017-07-28 02:07:00')
+            INSERT INTO `my_posts` (`post_pk`, `user_id`, `body`, `created_date`, `modified_date`, `published_date`) VALUES (321, 4, 'My post with a different author', '2017-08-28 14:22:22', '2017-08-28 14:22:22', '2017-08-28 14:22:22')
         " );
         queryExecute( "
             CREATE TABLE `videos` (

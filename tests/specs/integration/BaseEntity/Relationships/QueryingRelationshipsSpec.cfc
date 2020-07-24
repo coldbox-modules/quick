@@ -41,12 +41,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					it( "automatically groups where clauses with an OR combinator inside whereHas", function() {
 						var sql = getInstance( "User" )
 							.whereHas( "posts", function( q ) {
-								q.where( "body", "like", "%different%" ).orWhere( "title", "like", "%different%" );
+								q.where( "body", "like", "different%" ).orWhere( "body", "like", "something else%" );
 							} )
 							.retrieveQuery()
 							.toSQL();
 						expect( sql ).toBe(
-							"SELECT `users`.`city`, `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`externalID`, `users`.`favoritePost_id`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`state`, `users`.`streetOne`, `users`.`streetTwo`, `users`.`team_id`, `users`.`type`, `users`.`username`, `users`.`zip` FROM `users` WHERE EXISTS (SELECT 1 FROM `my_posts` WHERE (`users`.`id` = `my_posts`.`user_id`) AND (`my_posts`.`body` LIKE ? OR `my_posts`.`title` LIKE ?))"
+							"SELECT `users`.`city`, `users`.`country_id`, `users`.`created_date`, `users`.`email`, `users`.`externalID`, `users`.`favoritePost_id`, `users`.`first_name`, `users`.`id`, `users`.`last_name`, `users`.`modified_date`, `users`.`password`, `users`.`state`, `users`.`streetOne`, `users`.`streetTwo`, `users`.`team_id`, `users`.`type`, `users`.`username`, `users`.`zip` FROM `users` WHERE EXISTS (SELECT 1 FROM `my_posts` WHERE (`users`.`id` = `my_posts`.`user_id`) AND (`my_posts`.`body` LIKE ? OR `my_posts`.`body` LIKE ?))"
 						);
 					} );
 

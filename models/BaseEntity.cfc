@@ -2463,10 +2463,57 @@ component accessors="true" {
 				}
 				column = listRest( column, "." );
 			}
-			subselectQuery = q.select( column ).retrieveQuery();
+			subselectQuery = q.select( q.qualifyColumn( column ) ).retrieveQuery();
 		}
 
 		retrieveQuery().subselect( name, subselectQuery.limit( 1 ) );
+		return this;
+	}
+
+	/**
+	 * Adds a count of related entities as a subselect property.
+	 * Relationships can be constrained at runtime by passing a
+	 * struct where the key is the relationship name and the value
+	 * is a function to constrain the query.
+	 *
+	 * @relation  A single relation name or array of relation names to load counts.
+	 *
+	 * @return    quick.models.BaseEntity
+	 */
+	public any function withCount( required any relation ) {
+		arrayWrap( arguments.relation ).each( function( r ) {
+			var relationName = r;
+			var callback     = function() {
+			};
+
+			if ( isStruct( r ) ) {
+				for ( var key in r ) {
+					relationName = key;
+					callback     = r[ key ];
+					break;
+				}
+			}
+
+			var subselectName = variables._str.camel( relationName & " Count" );
+			if ( findNoCase( " as ", relationName ) ) {
+				var parts     = relationName.split( "\s(?:A|a)(?:S|s)\s" );
+				relationName  = parts[ 1 ];
+				subselectName = parts[ 2 ];
+			}
+
+			addSubselect(
+				subselectName,
+				this.ignoreLoadedGuard( function() {
+					return this.withoutRelationshipConstraints( function() {
+						return invoke( this, relationName )
+							.addCompareConstraints()
+							.when( true, callback )
+							.reselectRaw( "COUNT(*)" );
+					} );
+				} )
+			);
+		} );
+
 		return this;
 	}
 

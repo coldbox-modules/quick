@@ -1,3 +1,32 @@
+# v4.0.0
+## 24 Jul 2020 — 15:14:31 UTC
+
+### BREAKING
+
++ __Scopes:__ Scopes with an OR combinator are automatically grouped ([3183f6d](https://github.com/coldbox-modules/quick/commit/3183f6d45bfbd1755002d585fb578564f0728195))
+
+### chore
+
++ __docs:__ Fix broken link from README to official docs ([6881634](https://github.com/coldbox-modules/quick/commit/6881634e256c01837b5b02706a3a000b3b38f1ab))
+
+### feat
+
++ __Relationships:__ Add a `withCount` method to easily add relationship counts to entities ([8524ef8](https://github.com/coldbox-modules/quick/commit/8524ef8473276e6d21589f9c54544b624113d1f2))
++ __QuickBuilder:__ Automatically scope whereHas and whereDoesntHave callbacks
+ ([38b8a46](https://github.com/coldbox-modules/quick/commit/38b8a466cf9863d73d6b24ab204790705be63e3a))
+
+### fix
+
++ __ErrorMessages:__ Improve error message when attempting to set relationships on unloaded entities
+ ([fe4ad26](https://github.com/coldbox-modules/quick/commit/fe4ad26b72c34e707daf52fd3eecf11055c221f5))
++ __Relationships:__ Fix addSubselect and *manyThrough overflows and bugs
+ ([ab8e121](https://github.com/coldbox-modules/quick/commit/ab8e1218b785e78d0cc5b323bde61e29b9a34dd0))
++ __BelongsTo:__ If all the foreign keys are null, skip the database and return the default entity or null ([287e990](https://github.com/coldbox-modules/quick/commit/287e990a14947db06e723878b596078610dad240))
++ __BelongsTo:__  Reference provided localKeys instead of pulling them from the related entity ([43f47aa](https://github.com/coldbox-modules/quick/commit/43f47aa73ff0568d256ec018b37952329ba792aa))
++ __HasManyThrough:__ Swap final compare constraints in nested query
+ ([22d1728](https://github.com/coldbox-modules/quick/commit/22d17280ec3e99dce66b34f3114f8611a22e4081))
+
+
 # v3.1.7
 ## 10 Jul 2020 — 16:04:10 UTC
 

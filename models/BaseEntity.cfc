@@ -2680,6 +2680,16 @@ component accessors="true" {
 			return invoke( this, relationshipName );
 		} );
 
+		if (
+			relationship.relationshipClass != "BelongsTo" &&
+			relationship.relationshipClass != "PolymorphicBelongsTo"
+		) {
+			guardAgainstNotLoaded(
+				"This instance is not loaded so it cannot set the [#relationshipName#] relationship.  " &
+				"Save the new entity first before trying to save related entities."
+			);
+		}
+
 		return relationship.applySetter( argumentCollection = arguments.missingMethodArguments );
 	}
 

@@ -100,9 +100,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can add a subselect using a belongsTo relationship with multiple foreign keys", function() {
-				var game = getInstance( "Game" )
-					.addSubselect( "fieldName", "field.fieldName" )
-					.findOrFail( 1 );
+				var game = getInstance( "Game" ).addSubselect( "fieldName", "field.fieldName" ).findOrFail( 1 );
 				expect( game.getFieldName() ).notToBeNull();
 				expect( game.getFieldName() ).toBe( "Second Field" );
 				expect( variables.queries ).toHaveLength(

@@ -59,6 +59,20 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					regex = 'This instance is missing \`accessors\=\"true\"\` in the component metadata\.  This is required for Quick to work properly\.  Please add it to your component metadata and reinit your application\.'
 				);
 			} );
+
+			it( "throws a helpful error message when trying to set a belongsToMany relationship when the relationship is not loaded", function() {
+				expect( function() {
+					getInstance( "Post" ).create( {
+						"user_id"       : 1,
+						"body"          : "A new post body",
+						"publishedDate" : now(),
+						"tags"          : [ 1, 2 ]
+					} );
+				} ).toThrow(
+					type  = "QuickEntityNotLoaded",
+					regex = "This instance is not loaded so it cannot set the \[tags\] relationship\.  Save the new entity first before trying to save related entities\."
+				);
+			} );
 		} );
 	}
 

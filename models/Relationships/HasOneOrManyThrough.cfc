@@ -81,9 +81,27 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  quick.models.Relationships.HasOneOrManyThrough
 	 */
 	public HasOneOrManyThrough function addConstraints() {
-		performJoin();
-		variables.closestToParent.applyThroughConstraints( variables.related );
+		var selectedColumns = variables.related.getColumns();
+		var base = initialThroughConstraints();
+		base.select( selectedColumns );
+		variables.related.populateQuery( base );
 		return this;
+	}
+
+	public QuickBuilder function addNestedWhereExists( required QuickBuilder base ) {
+		for ( var index = 2; index <= variables.relationships.len(); index++ ) {
+			var relationshipName = variables.relationships[ index ];
+			var relation         = variables.relationshipsMap[ relationshipName ];
+			arguments.base = relation.applyThroughExists( arguments.base );
+		}
+		return arguments.base;
+	}
+
+
+	public QuickBuilder function initialThroughConstraints() {
+		return addNestedWhereExists(
+			variables.closestToParent.initialThroughConstraints()
+		);
 	}
 
 	/**
@@ -92,7 +110,6 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  quick.models.Relationships.HasOneOrManyThrough
 	 */
 	public HasOneOrManyThrough function performJoin( any base = variables.related ) {
-		arguments.base.distinct();
 		// no arrayReverse in ACF means for loops. :-(
 		for ( var index = variables.relationships.len(); index > 0; index-- ) {
 			var relationshipName = variables.relationships[ index ];

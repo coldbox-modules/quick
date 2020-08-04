@@ -60,6 +60,35 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 		return matchMany( argumentCollection = arguments );
 	}
 
+	public QuickBuilder function initialThroughConstraints() {
+		var base = variables.parent
+			.newQuery()
+			.reselectRaw( 1 )
+			.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
+
+		variables.localKeys.each( function( localKey ) {
+			base.where( variables.parent.qualifyColumn( localKey ), variables.parent.retrieveAttribute( localKey ) );
+		} );
+
+		arrayZipEach(
+			[
+				variables.foreignKeys,
+				variables.localKeys
+			],
+			function( foreignKey, localKey ) {
+				base.whereColumn(
+					variables.related.qualifyColumn( foreignKey ),
+					variables.parent.qualifyColumn( localKey )
+				);
+			}
+		);
+
+		return variables.related
+			.newQuery()
+			.reselectRaw( 1 )
+			.whereExists( base );
+	}
+
 	/**
 	 * Applies the constraints for the final relationship in a `hasManyThrough` chain.
 	 *

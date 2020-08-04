@@ -415,11 +415,11 @@ component accessors="true" {
 	 * Syncs the values found in the variables scope (due to accessors) in to data
 	 */
 	private void function syncVariablesScopeWithData() {
-		retrieveAttributeNames( withVirtualColumns = false ).each( function( key ) {
+		for ( var key in retrieveAttributeNames( withVirtualColumns = false ) ) {
 			if ( variables.keyExists( key ) && !isReadOnlyAttribute( key ) ) {
 				assignAttribute( key, variables[ key ] );
 			}
-		} );
+		}
 	}
 
 	/**
@@ -526,16 +526,14 @@ component accessors="true" {
 			return this;
 		}
 
-		arguments.attributes.each( function( key, value ) {
-			variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ? javacast( "null", "" ) : castValueForGetter(
-				key,
-				value
-			);
-			variables[ retrieveAliasForColumn( key ) ] = isNull( value ) ? javacast( "null", "" ) : castValueForGetter(
-				key,
-				value
-			);
-		} );
+		for ( var key in arguments.attributes ) {
+			variables._data[ retrieveColumnForAlias( key ) ] = (
+				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
+			) ? javacast( "null", "" ) : castValueForGetter( key, arguments.attributes[ key ] );
+			variables[ retrieveAliasForColumn( key ) ] = (
+				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
+			) ? javacast( "null", "" ) : castValueForGetter( key, arguments.attributes[ key ] );
+		}
 
 		return this;
 	}
@@ -982,9 +980,9 @@ component accessors="true" {
 		boolean ignoreNonExistentAttributes = false
 	) {
 		try {
-			arguments.attributes.each( function( key, value ) {
-				retrieveQuery().where( key, value );
-			} );
+			for ( var key in arguments.attributes ) {
+				retrieveQuery().where( key, arguments.attributes[ key ] );
+			}
 			return firstOrFail();
 		} catch ( EntityNotFound e ) {
 			arguments.attributes.append( arguments.newAttributes, true );
@@ -1012,9 +1010,9 @@ component accessors="true" {
 		struct newAttributes                = {},
 		boolean ignoreNonExistentAttributes = false
 	) {
-		arguments.attributes.each( function( key, value ) {
-			retrieveQuery().where( key, value );
-		} );
+		for ( var key in arguments.attributes ) {
+			retrieveQuery().where( key, arguments.attributes[ key ] );
+		}
 
 		try {
 			return firstOrFail();
@@ -1046,9 +1044,10 @@ component accessors="true" {
 		var data = retrieveQuery()
 			.from( tableName() )
 			.where( function( q ) {
-				keyNames().each( function( keyName, i ) {
-					q.where( keyName, id[ i ] );
-				} );
+				var allKeyNames = keyNames();
+				for ( var i = 1; i <= allKeyNames.len(); i++ ) {
+					q.where( allKeyNames[ i ], id[ i ] );
+				}
 			} )
 			.first();
 
@@ -1185,9 +1184,9 @@ component accessors="true" {
 			arguments.id = arrayWrap( arguments.id );
 			guardAgainstKeyLengthMismatch( arguments.id );
 			retrieveQuery().where( function( q ) {
-				keyColumns().each( function( keyColumn, i ) {
+				for ( var keyColumn in keyColumns() ) {
 					q.where( keyColumn, id[ 1 ] );
-				} );
+				}
 			} );
 		}
 		return retrieveQuery().exists();
@@ -1282,8 +1281,8 @@ component accessors="true" {
 		return variables
 			.resetQuery()
 			.where( function( q ) {
-				keyNames().each( function( keyName, i ) {
-					q.where( this.qualifyColumn( keyName ), keyValues()[ i ] );
+				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
+					q.where( keyName, keyValue );
 				} );
 			} )
 			.first();
@@ -1302,8 +1301,8 @@ component accessors="true" {
 			newQuery()
 				.from( tableName() )
 				.where( function( q ) {
-					keyNames().each( function( keyName, i ) {
-						q.where( this.qualifyColumn( keyName ), keyValues()[ i ] );
+					arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
+						q.where( this.qualifyColumn( keyName ), keyValue );
 					} );
 				} )
 				.first()
@@ -1331,8 +1330,8 @@ component accessors="true" {
 			fireEvent( "preUpdate", { entity : this } );
 			newQuery()
 				.where( function( q ) {
-					keyNames().each( function( keyName, i ) {
-						q.where( keyName, keyValues()[ i ] );
+					arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
+						q.where( keyName, keyValue );
 					} );
 				} )
 				.update(
@@ -1391,8 +1390,8 @@ component accessors="true" {
 		);
 		newQuery()
 			.where( function( q ) {
-				keyNames().each( function( keyName, i ) {
-					q.where( keyName, keyValues()[ i ] );
+				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
+					q.where( keyName, keyValue );
 				} );
 			} )
 			.delete();
@@ -1526,13 +1525,13 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity;
 	 */
 	public any function loadRelationship( required any name, boolean force = false ) {
-		arrayWrap( arguments.name ).each( function( n ) {
-			if ( force || !isRelationshipLoaded( arguments.n ) ) {
-				var relationship = invoke( this, arguments.n );
-				relationship.setRelationMethodName( arguments.n );
-				assignRelationship( arguments.n, relationship.get() );
+		for ( var n in arrayWrap( arguments.name ) ) {
+			if ( arguments.force || !isRelationshipLoaded( n ) ) {
+				var relationship = invoke( this, n );
+				relationship.setRelationMethodName( n );
+				assignRelationship( n, relationship.get() );
 			}
-		} );
+		}
 		return this;
 	}
 
@@ -2481,7 +2480,7 @@ component accessors="true" {
 	 * @return    quick.models.BaseEntity
 	 */
 	public any function withCount( required any relation ) {
-		arrayWrap( arguments.relation ).each( function( r ) {
+		for ( var r in arrayWrap( arguments.relation ) ) {
 			var relationName = r;
 			var callback     = function() {
 			};
@@ -2512,7 +2511,7 @@ component accessors="true" {
 					} );
 				} )
 			);
-		} );
+		}
 
 		return this;
 	}
@@ -2831,9 +2830,9 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function withoutGlobalScope( required any name ) {
-		arrayWrap( arguments.name ).each( function( n ) {
-			variables._globalScopeExclusions.append( lCase( arguments.n ) );
-		} );
+		for ( var n in arrayWrap( arguments.name ) ) {
+			variables._globalScopeExclusions.append( lCase( n ) );
+		}
 		return this;
 	}
 
@@ -2883,7 +2882,7 @@ component accessors="true" {
 	 *
 	 * @return  void
 	 */
-	function setUpMementifier() {
+	private void function setUpMementifier() {
 		param this.memento = {};
 		var defaults       = {
 			"defaultIncludes" : retrieveAttributeNames( withVirtualAttributes = true ),
@@ -3010,12 +3009,12 @@ component accessors="true" {
 
 					param meta.originalMetadata.properties = [];
 					meta[ "attributes" ]                   = generateAttributesFromProperties( meta.originalMetadata.properties );
-					arrayWrap( variables._key ).each( function( key ) {
+					for ( var key in keyNames() ) {
 						if ( !meta.attributes.keyExists( key ) ) {
 							var keyProp                     = paramAttribute( { "name" : key } );
 							meta.attributes[ keyProp.name ] = keyProp;
 						}
-					} );
+					}
 					meta[ "casts" ] = generateCastsFromProperties( meta.originalMetadata.properties );
 					guardKeyHasNoDefaultValue( meta.attributes );
 					return meta;
@@ -3289,7 +3288,7 @@ component accessors="true" {
 	 * @throws  QuickEntityDefaultedKey
 	 */
 	private void function guardKeyHasNoDefaultValue( required struct attributes ) {
-		keyNames().each( function( keyName ) {
+		for ( var keyName in keyNames() ) {
 			if ( attributes.keyExists( keyName ) ) {
 				if ( attributes[ keyName ].keyExists( "default" ) ) {
 					throw(
@@ -3298,7 +3297,7 @@ component accessors="true" {
 					);
 				}
 			}
-		} );
+		}
 	}
 
 	/**
@@ -3544,24 +3543,21 @@ component accessors="true" {
 	 */
 	private any function mergeAttributesFromCastCache() {
 		syncVariablesScopeWithData();
-		variables._castCache.each( function( key, castedValue ) {
-			if ( !variables._casterCache.keyExists( arguments.key ) ) {
-				var castMapping                         = variables._casts[ arguments.key ];
-				variables._casterCache[ arguments.key ] = variables._wirebox.getInstance( dsl = castMapping );
+		for ( var key in variables._castCache ) {
+			var castedValue = variables._castCache[ key ];
+			if ( !variables._casterCache.keyExists( key ) ) {
+				var castMapping               = variables._casts[ key ];
+				variables._casterCache[ key ] = variables._wirebox.getInstance( dsl = castMapping );
 			}
-			var caster = variables._casterCache[ arguments.key ];
-			var attrs  = caster.set(
-				this,
-				arguments.key,
-				arguments.castedValue
-			);
+			var caster = variables._casterCache[ key ];
+			var attrs  = caster.set( this, key, castedValue );
 			if ( !isStruct( attrs ) ) {
-				attrs = { "#arguments.key#" : attrs };
+				attrs = { "#key#" : attrs };
 			}
-			attrs.each( function( column, value ) {
-				assignAttribute( column, value );
-			} );
-		} );
+			for ( var column in attrs ) {
+				assignAttribute( column, attrs[ column ] );
+			}
+		}
 		return this;
 	}
 
@@ -3602,6 +3598,56 @@ component accessors="true" {
 	 */
 	private array function arrayWrap( required any value ) {
 		return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
+	}
+
+	/**
+	 * Accepts an array of arrays and calls a callback passing each item of
+	 * the same index from each of the arrays.
+	 *
+	 * @arrays    An array of arrays.  All arrays must have the same length.
+	 * @callback  The callback to call.  It will be passed an item from each
+	 *            array passed in at the same index.
+	 *
+	 * @throws    ArrayZipLengthMismatch
+	 *
+	 * @return    The original array of arrays passed in.
+	 */
+	private array function arrayZipEach( required array arrays, required any callback ) {
+		if ( arguments.arrays.isEmpty() ) {
+			return arguments.arrays;
+		}
+
+		var lengths = arguments.arrays.map( function( arr ) {
+			return arr.len();
+		} );
+		if ( unique( lengths ).len() > 1 ) {
+			throw(
+				type    = "ArrayZipLengthMismatch",
+				message = "The arrays do not have the same length. Lengths: [#serializeJSON( lengths )#]"
+			);
+		}
+
+		for ( var i = 1; i <= arguments.arrays[ 1 ].len(); i++ ) {
+			var args = {};
+			for ( var j = 1; j <= arguments.arrays.len(); j++ ) {
+				args[ j ] = arguments.arrays[ j ][ i ];
+			}
+			callback( argumentCollection = args );
+		}
+
+		return arguments.arrays;
+	}
+
+	/**
+	 * Returns an array of the unique items of an array.
+	 *
+	 * @items        An array of items.
+	 *
+	 * @doc_generic  any
+	 * @return       [any]
+	 */
+	public array function unique( required array items ) {
+		return arraySlice( createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(), 1 );
 	}
 
 }

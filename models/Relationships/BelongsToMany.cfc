@@ -559,6 +559,72 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		return this;
 	}
 
+	public QuickBuilder function initialThroughConstraints() {
+		var base = variables.related
+			.newQuery()
+			.reselectRaw( 1 )
+			.from( variables.table );
+
+		arrayZipEach(
+			[
+				variables.relatedKeys,
+				getQualifiedRelatedPivotKeyNames()
+			],
+			function( relatedKey, pivotKey ) {
+				base.whereColumn( variables.related.qualifyColumn( relatedKey ), pivotKey );
+			}
+		);
+
+		return variables.related
+			.newQuery()
+			.reselectRaw( 1 )
+			.whereExists( base );
+	}
+
+	/**
+	 * Applies the exists for relationship in a `hasManyThrough` chain.
+	 *
+	 * @base    The query to apply the exists to.
+	 *
+	 * @return  void
+	 */
+	public QuickBuilder function applyThroughExists( required QuickBuilder base ) {
+		// apply compare constraints for pivot table
+		arrayZipEach(
+			[
+				variables.foreignKeys,
+				getQualifiedForeignPivotKeyNames()
+			],
+			function( foreignKey, pivotKey ) {
+				base.whereColumn( variables.parent.qualifyColumn( foreignKey ), pivotKey );
+			}
+		);
+
+		// nest in where exists for pivot table
+		arguments.base = variables.parent
+			.newQuery()
+			.reselectRaw( 1 )
+			.from( variables.table )
+			.whereExists( arguments.base );
+
+		// apply compare constraints for base table
+		arrayZipEach(
+			[
+				variables.relatedKeys,
+				getQualifiedRelatedPivotKeyNames()
+			],
+			function( relatedKey, pivotKey ) {
+				base.whereColumn( variables.related.qualifyColumn( relatedKey ), pivotKey );
+			}
+		);
+
+		// nest in where exists for base table
+		return variables.related
+			.newQuery()
+			.reselectRaw( 1 )
+			.whereExists( arguments.base );
+	}
+
 	/**
 	 * Applies the join for relationship in a `hasManyThrough` chain.
 	 *
@@ -567,7 +633,6 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  void
 	 */
 	public void function applyThroughJoin( required any base ) {
-		arguments.base.distinct();
 		performJoin( arguments.base );
 		arguments.base.join( variables.parent.tableName(), function( j ) {
 			arrayZipEach(

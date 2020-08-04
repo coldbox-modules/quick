@@ -104,6 +104,16 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		);
 	}
 
+	public QuickBuilder function applyThroughExists( required QuickBuilder base ) {
+		var selectedColumns = variables.related.getColumns();
+		return addNestedWhereExists(
+			variables.closestToParent
+				.getRelated()
+				.newQuery()
+				.reselectRaw( 1 )
+		).whereExists( arguments.base ).select( selectedColumns );
+	}
+
 	/**
 	 * Adds a join to the intermediate tables for the relationship.
 	 *

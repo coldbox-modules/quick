@@ -375,6 +375,19 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		return variables.related.newQuery().reselectRaw( 1 ).whereExists( arguments.base );
 	}
 
+	public QuickBuilder function initialThroughConstraints() {
+		var base = variables.related.newQuery().reselectRaw( 1 );
+
+		arrayZipEach( [ variables.localKeys, variables.foreignKeys ], function( localKey, foreignKey ) {
+			base.where(
+				variables.related.qualifyColumn( localKey ),
+				variables.parent.retrieveAttribute( foreignKey )
+			);
+		} );
+
+		return base;
+	}
+
 	/**
 	 * Applies the join for relationship in a `hasManyThrough` chain.
 	 *

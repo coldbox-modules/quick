@@ -61,18 +61,13 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 	}
 
 	public QuickBuilder function initialThroughConstraints() {
-		var base = variables.parent.newQuery()
+		var base = variables.parent
+			.newQuery()
 			.reselectRaw( 1 )
-			.where(
-				variables.related.qualifyColumn( variables.morphType ),
-				variables.morphMapping
-			);
+			.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
 
 		variables.localKeys.each( function( localKey ) {
-			base.where(
-				variables.parent.qualifyColumn( localKey ),
-				variables.parent.retrieveAttribute( localKey )
-			);
+			base.where( variables.parent.qualifyColumn( localKey ), variables.parent.retrieveAttribute( localKey ) );
 		} );
 
 		arrayZipEach(
@@ -88,7 +83,8 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 			}
 		);
 
-		return variables.related.newQuery()
+		return variables.related
+			.newQuery()
 			.reselectRaw( 1 )
 			.whereExists( base );
 	}

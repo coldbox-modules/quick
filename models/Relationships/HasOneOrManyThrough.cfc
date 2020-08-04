@@ -82,7 +82,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 */
 	public HasOneOrManyThrough function addConstraints() {
 		var selectedColumns = variables.related.getColumns();
-		var base = initialThroughConstraints();
+		var base            = initialThroughConstraints();
 		base.select( selectedColumns );
 		variables.related.populateQuery( base );
 		return this;
@@ -92,16 +92,14 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		for ( var index = 2; index <= variables.relationships.len(); index++ ) {
 			var relationshipName = variables.relationships[ index ];
 			var relation         = variables.relationshipsMap[ relationshipName ];
-			arguments.base = relation.applyThroughExists( arguments.base );
+			arguments.base       = relation.applyThroughExists( arguments.base );
 		}
 		return arguments.base;
 	}
 
 
 	public QuickBuilder function initialThroughConstraints() {
-		return addNestedWhereExists(
-			variables.closestToParent.initialThroughConstraints()
-		);
+		return addNestedWhereExists( variables.closestToParent.initialThroughConstraints() );
 	}
 
 	public QuickBuilder function applyThroughExists( required QuickBuilder base ) {

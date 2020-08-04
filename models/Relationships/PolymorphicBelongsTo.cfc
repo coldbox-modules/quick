@@ -231,16 +231,20 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	}
 
 	public QuickBuilder function initialThroughConstraints() {
-		var base = variables.related
-			.newQuery()
-			.reselectRaw( 1 );
+		var base = variables.related.newQuery().reselectRaw( 1 );
 
-		arrayZipEach( [ variables.localKeys, variables.foreignKeys ], function( localKey, foreignKey ) {
-			base.where(
-				variables.related.qualifyColumn( localKey ),
-				variables.parent.retrieveAttribute( foreignKey )
-			);
-		} );
+		arrayZipEach(
+			[
+				variables.localKeys,
+				variables.foreignKeys
+			],
+			function( localKey, foreignKey ) {
+				base.where(
+					variables.related.qualifyColumn( localKey ),
+					variables.parent.retrieveAttribute( foreignKey )
+				);
+			}
+		);
 
 		return base;
 	}

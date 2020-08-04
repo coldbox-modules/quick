@@ -560,7 +560,8 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	}
 
 	public QuickBuilder function initialThroughConstraints() {
-		var base = variables.related.newQuery()
+		var base = variables.related
+			.newQuery()
 			.reselectRaw( 1 )
 			.from( variables.table );
 
@@ -600,7 +601,8 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		);
 
 		// nest in where exists for pivot table
-		arguments.base = variables.parent.newQuery()
+		arguments.base = variables.parent
+			.newQuery()
 			.reselectRaw( 1 )
 			.from( variables.table )
 			.whereExists( arguments.base );
@@ -617,7 +619,8 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		);
 
 		// nest in where exists for base table
-		return variables.related.newQuery()
+		return variables.related
+			.newQuery()
 			.reselectRaw( 1 )
 			.whereExists( arguments.base );
 	}

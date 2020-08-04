@@ -527,14 +527,12 @@ component accessors="true" {
 		}
 
 		for ( var key in arguments.attributes ) {
-			variables._data[ retrieveColumnForAlias( key ) ] = (!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )) ? javacast( "null", "" ) : castValueForGetter(
-				key,
-				arguments.attributes[ key ]
-			);
-			variables[ retrieveAliasForColumn( key ) ] = (!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )) ? javacast( "null", "" ) : castValueForGetter(
-				key,
-				arguments.attributes[ key ]
-			);
+			variables._data[ retrieveColumnForAlias( key ) ] = (
+				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
+			) ? javacast( "null", "" ) : castValueForGetter( key, arguments.attributes[ key ] );
+			variables[ retrieveAliasForColumn( key ) ] = (
+				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
+			) ? javacast( "null", "" ) : castValueForGetter( key, arguments.attributes[ key ] );
 		}
 
 		return this;
@@ -3548,15 +3546,11 @@ component accessors="true" {
 		for ( var key in variables._castCache ) {
 			var castedValue = variables._castCache[ key ];
 			if ( !variables._casterCache.keyExists( key ) ) {
-				var castMapping                         = variables._casts[ key ];
+				var castMapping               = variables._casts[ key ];
 				variables._casterCache[ key ] = variables._wirebox.getInstance( dsl = castMapping );
 			}
 			var caster = variables._casterCache[ key ];
-			var attrs  = caster.set(
-				this,
-				key,
-				castedValue
-			);
+			var attrs  = caster.set( this, key, castedValue );
 			if ( !isStruct( attrs ) ) {
 				attrs = { "#key#" : attrs };
 			}

@@ -63,30 +63,6 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	/**
 	 * Applies the constraints for the final relationship in a `hasManyThrough` chain.
 	 *
-	 * @base    The query to apply the constraints to.
-	 *
-	 * @return  void
-	 */
-	public void function applyThroughConstraints( required any base ) {
-		arguments.base.where( function( q ) {
-			arrayZipEach(
-				[
-					variables.foreignKeys,
-					variables.localKeys
-				],
-				function( foreignKey, localKey ) {
-					q.where(
-						variables.related.qualifyColumn( foreignKey ),
-						variables.parent.retrieveAttribute( localKey )
-					);
-				}
-			);
-		} );
-	}
-
-	/**
-	 * Applies the constraints for the final relationship in a `hasManyThrough` chain.
-	 *
 	 * @return  void
 	 */
 	public QueryBuilder function initialThroughConstraints() {

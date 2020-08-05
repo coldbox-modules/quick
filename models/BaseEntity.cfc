@@ -689,7 +689,7 @@ component accessors="true" {
 	 */
 	public string function retrieveAliasForColumn( required string column ) {
 		for ( var alias in variables._attributes ) {
-			if ( arguments.column == variables._attributes[ alias ].column || arguments.column == listLast( variables._attributes[ alias ].column, "." ) ) {
+			if ( arguments.column == variables._attributes[ alias ].column ) {
 				return alias;
 			}
 		}
@@ -1058,8 +1058,9 @@ component accessors="true" {
 		);
 		activateGlobalScopes();
 
-		var data = newQuery()
-			.where( function( q ) {
+		var q = variables._hasParentEntity ? newQuery() : retrieveQuery();
+
+		var data = q.where( function( q ) {
 				var allKeyNames = keyNames();
 				for ( var i = 1; i <= allKeyNames.len(); i++ ) {
 					q.where( allKeyNames[ i ], id[ i ] );
@@ -1189,6 +1190,10 @@ component accessors="true" {
 
 	}
 
+	/**
+	 * Checks for the presence of children and loads the child entity if it exists
+	 * @entity   the reference entity to inspect
+	 **/
 	private any function loadChildIfExists( required BaseEntity entity = this ){
 		if( !variables._loadChildren ) return arguments.entity;
 		

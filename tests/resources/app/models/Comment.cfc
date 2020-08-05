@@ -1,4 +1,8 @@
-component extends="quick.models.BaseEntity" accessors="true" {
+component 
+    extends="quick.models.BaseEntity"
+    discriminatorColumn="designation" 
+    accessors="true" 
+{
 
     property name="id";
     property name="body";

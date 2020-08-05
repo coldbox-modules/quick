@@ -226,7 +226,7 @@ component accessors="true" {
 	 */
 	public any function init( struct meta = {} ) {
 		assignDefaultProperties();
-		variables._meta = arguments.meta;
+		variables._meta         = arguments.meta;
 		variables._loadChildren = true;
 		return this;
 	}
@@ -1060,7 +1060,8 @@ component accessors="true" {
 
 		var q = variables._hasParentEntity ? newQuery() : retrieveQuery();
 
-		var data = q.where( function( q ) {
+		var data = q
+			.where( function( q ) {
 				var allKeyNames = keyNames();
 				for ( var i = 1; i <= allKeyNames.len(); i++ ) {
 					q.where( allKeyNames[ i ], id[ i ] );
@@ -1182,21 +1183,26 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	private any function loadEntity( required struct data ) {
-
-		if( 
+		if (
 			variables._loadChildren
 			&&
-			variables._meta.localMetadata.keyExists( "discriminatorColumn" ) 
-			&& 
+			variables._meta.localMetadata.keyExists( "discriminatorColumn" )
+			&&
 			application.quickMeta.discriminators.keyExists( variables._meta.table )
 			&&
 			data.keyExists( variables._meta.localMetadata.discriminatorColumn )
 			&&
-			application.quickMeta.discriminators[ variables._meta.table ].keyExists( data[ variables._meta.localMetadata.discriminatorColumn ] )
-		){
-			var childClass = variables._wirebox.getInstance( application.quickMeta.discriminators[ variables._meta.table ][ data[ variables._meta.localMetadata.discriminatorColumn ] ].mapping );
-			
-			keyNames().each( function( key, i ){
+			application.quickMeta.discriminators[ variables._meta.table ].keyExists(
+				data[ variables._meta.localMetadata.discriminatorColumn ]
+			)
+		) {
+			var childClass = variables._wirebox.getInstance(
+				application.quickMeta.discriminators[ variables._meta.table ][
+					data[ variables._meta.localMetadata.discriminatorColumn ]
+				].mapping
+			);
+
+			keyNames().each( function( key, i ) {
 				data[ childClass.keyNames()[ i ] ] = data[ key ];
 			} );
 
@@ -1207,7 +1213,6 @@ component accessors="true" {
 				.assignOriginalAttributes( arguments.data )
 				.markLoaded();
 		}
-
 	}
 
 	/**
@@ -1361,22 +1366,22 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function save() {
-		if( variables._hasParentEntity ){
-
-			if( isLoaded() ){
-				var parent = variables._wirebox.getInstance( variables._parentEntity.meta.fullName ).set_LoadChildren( false ).findOrFail( keyValues() );
+		if ( variables._hasParentEntity ) {
+			if ( isLoaded() ) {
+				var parent = variables._wirebox
+					.getInstance( variables._parentEntity.meta.fullName )
+					.set_LoadChildren( false )
+					.findOrFail( keyValues() );
 			} else {
 				var parent = variables._wirebox.getInstance( variables._parentEntity.meta.fullName );
 			}
 
 			parent.fill( getMemento(), true ).save();
-						
-			assignAttributesData(
-				{
-					"#variables._parentEntity.key#" : parent.keyValues()[1],
-					"#variables._parentEntity.joinColumn#" : parent.keyValues()[1]
-				}
-			);
+
+			assignAttributesData( {
+				"#variables._parentEntity.key#"        : parent.keyValues()[ 1 ],
+				"#variables._parentEntity.joinColumn#" : parent.keyValues()[ 1 ]
+			} );
 		}
 		guardNoAttributes();
 		guardReadOnly();
@@ -1418,11 +1423,11 @@ component accessors="true" {
 			guardEmptyAttributeData( attrs );
 
 			var result = retrieveQuery().insert( attrs );
-			
-			if( variables._hasParentEntity ){
+
+			if ( variables._hasParentEntity ) {
 				result.result[ variables._parentEntity.joincolumn ] = variables._data[ variables._parentEntity.joinColumn ];
 			}
-			retrieveKeyType().postInsert( this, result );	
+			retrieveKeyType().postInsert( this, result );
 			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
 			fireEvent( "postInsert", { entity : this } );
@@ -1457,13 +1462,14 @@ component accessors="true" {
 			} )
 			.delete();
 
-		if( variables._hasParentEntity ){
-			variables._wirebox.getInstance( variables._parentEntity.meta.fullName )
-								.set_LoadChildren( false )
-								.findOrFail( keyValues() )
-								.delete();
+		if ( variables._hasParentEntity ) {
+			variables._wirebox
+				.getInstance( variables._parentEntity.meta.fullName )
+				.set_LoadChildren( false )
+				.findOrFail( keyValues() )
+				.delete();
 		}
-		
+
 		variables._loaded = false;
 		fireEvent( "postDelete", { entity : this } );
 		return this;
@@ -2455,47 +2461,45 @@ component accessors="true" {
 			.setReturnFormat( "array" )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() );
-		
-		if( variables._hasParentEntity ){
 
+		if ( variables._hasParentEntity ) {
 			return variables._builder
-						.newQuery()
-						.select( retrieveQualifiedColumns() )
-						.join( variables._parentEntity.meta.table, variables._parentEntity.meta.table & "." & variables._parentEntity.key, this.qualifyColumn( variables._key ) );
-		} else if( variables._meta.keyExists( "discriminatorColumn" ) && application.quickMeta.discriminators.keyExists( tableName() ) ){
-			
+				.newQuery()
+				.select( retrieveQualifiedColumns() )
+				.join(
+					variables._parentEntity.meta.table,
+					variables._parentEntity.meta.table & "." & variables._parentEntity.key,
+					this.qualifyColumn( variables._key )
+				);
+		} else if (
+			variables._meta.keyExists( "discriminatorColumn" ) && application.quickMeta.discriminators.keyExists(
+				tableName()
+			)
+		) {
 			var q = variables._builder..newQuery();
 
-			var columns = retrieveQualifiedColumns();
+			var columns        = retrieveQualifiedColumns();
 			var discriminators = application.quickMeta.discriminators[ tableName ];
-			discriminators.each( 
-				function( discriminator, data ){
-					columns.append( 
-						data.attributes.map( 
-							function( attr ){ 
-								return data.table & '.' & attr.column;
-							} 
-						), true
-					);
-						
-					q.join(
-						data.table,
-						'=',
-						data.joincolumn,
-						'right outer'
-					);
-				} 
-			);
-			
+			discriminators.each( function( discriminator, data ) {
+				columns.append(
+					data.attributes.map( function( attr ) {
+						return data.table & "." & attr.column;
+					} ),
+					true
+				);
+
+				q.join(
+					data.table,
+					"=",
+					data.joincolumn,
+					"right outer"
+				);
+			} );
+
 			return q.select( columns );
-			
 		} else {
-			return 
-				variables._builder
-				.newQuery()
-				.select( retrieveQualifiedColumns() );
+			return variables._builder.newQuery().select( retrieveQualifiedColumns() );
 		}
-		
 	}
 
 	/**
@@ -2517,7 +2521,6 @@ component accessors="true" {
 	 */
 	public QueryBuilder function retrieveQuery() {
 		return variables._builder;
-
 	}
 
 	/**
@@ -3024,7 +3027,6 @@ component accessors="true" {
 	 * @return any
 	 */
 	private any function handleTransformations( entity ) {
-
 		if ( !variables._asMemento ) {
 			return arguments.entity;
 		}
@@ -3092,44 +3094,42 @@ component accessors="true" {
 							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
 						);
 					}
-					meta[ "fullName" ]                     = meta.originalMetadata.fullname;
-					param meta.originalMetadata.mapping    = listLast( meta.originalMetadata.fullname, "." );
-					meta[ "mapping" ]                      = meta.originalMetadata.mapping;
-					param meta.originalMetadata.entityName = listLast( meta.originalMetadata.name, "." );
-					meta[ "entityName" ]                   = meta.originalMetadata.entityName;
-					param meta.originalMetadata.table      = variables._str.plural( variables._str.snake( meta.entityName ) );
-					meta[ "table" ]                        = meta.originalMetadata.table;
-					param meta.originalMetadata.readonly   = false;
-					meta[ "readonly" ]                     = meta.originalMetadata.readonly;
-					param meta.originalMetadata.joincolumn = "";
+					meta[ "fullName" ]                             = meta.originalMetadata.fullname;
+					param meta.originalMetadata.mapping            = listLast( meta.originalMetadata.fullname, "." );
+					meta[ "mapping" ]                              = meta.originalMetadata.mapping;
+					param meta.originalMetadata.entityName         = listLast( meta.originalMetadata.name, "." );
+					meta[ "entityName" ]                           = meta.originalMetadata.entityName;
+					param meta.originalMetadata.table              = variables._str.plural( variables._str.snake( meta.entityName ) );
+					meta[ "table" ]                                = meta.originalMetadata.table;
+					param meta.originalMetadata.readonly           = false;
+					meta[ "readonly" ]                             = meta.originalMetadata.readonly;
+					param meta.originalMetadata.joincolumn         = "";
 					param meta.originalMetadata.discriminatorValue = "";
-					param meta.originalMetadata.extends    = "";
-					param meta.originalMetadata.functions  = [];
-					meta[ "hasParentEntity" ]              = !!len( meta.originalMetadata.joincolumn );
-					if( meta.hasParentEntity ){
-						
+					param meta.originalMetadata.extends            = "";
+					param meta.originalMetadata.functions          = [];
+					meta[ "hasParentEntity" ]                      = !!len( meta.originalMetadata.joincolumn );
+					if ( meta.hasParentEntity ) {
 						var reference = variables._wirebox.getInstance( meta.localMetadata.extends.fullName );
 
-						meta["parentEntity"] = {
-							"meta"      : reference.get_Meta(),
-							"key"       : reference.keyNames()[ 1 ],
+						meta[ "parentEntity" ] = {
+							"meta"       : reference.get_Meta(),
+							"key"        : reference.keyNames()[ 1 ],
 							"joincolumn" : meta.originalMetadata.joincolumn
 						};
 
-						if( len( meta.originalMetadata.discriminatorValue ) ){
-							try{
-								var parentMeta = getComponentMetadata( meta.parentEntity.meta.fullName );
-								meta.parentEntity[ "discriminatorValue" ] = meta.originalMetadata.discriminatorValue;
+						if ( len( meta.originalMetadata.discriminatorValue ) ) {
+							try {
+								var parentMeta                             = getComponentMetadata( meta.parentEntity.meta.fullName );
+								meta.parentEntity[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
 								meta.parentEntity[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
-							} catch( any e ){
-								throw( 
-									type = "QuickChildInstantiationException", 
+							} catch ( any e ) {
+								throw(
+									type    = "QuickChildInstantiationException",
 									message = "Failed to instantiate child entity [#meta.fullName#]. This may be due to a configuration error in the parent/child relationships. The root cause was #e.message#",
-									detail = e.detail
+									detail  = e.detail
 								);
 							}
 						}
-			
 					}
 
 					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
@@ -3149,8 +3149,10 @@ component accessors="true" {
 
 					param meta.originalMetadata.properties = [];
 
-					meta[ "attributes" ] = generateAttributesFromProperties( meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties );
-					if( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ){
+					meta[ "attributes" ] = generateAttributesFromProperties(
+						meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
+					);
+					if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
 						meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
 					}
 					arrayWrap( variables._key ).each( function( key ) {
@@ -3166,17 +3168,19 @@ component accessors="true" {
 			);
 		}
 
-		variables._fullName           = variables._meta.fullName;
-		variables._entityName         = variables._meta.entityName;
-		variables._table              = variables._meta.table;
-		variables._hasParentEntity    = variables._meta.hasParentEntity;
+		variables._fullName        = variables._meta.fullName;
+		variables._entityName      = variables._meta.entityName;
+		variables._table           = variables._meta.table;
+		variables._hasParentEntity = variables._meta.hasParentEntity;
 
-		if( variables._hasParentEntity ){
+		if ( variables._hasParentEntity ) {
 			variables._parentEntity = variables._meta.parentEntity;
-			
-			if( structKeyExists( variables._parentEntity, "discriminatorColumn" ) ){
-				variables[ "get" & variables._parentEntity.discriminatorColumn ] = function(){ 
-					return variables._data.keyExists( variables._parentEntity.discriminatorColumn ) ? variables._data[ variables._parentEntity.discriminatorColumn ] : javacast( "null", 0 );
+
+			if ( structKeyExists( variables._parentEntity, "discriminatorColumn" ) ) {
+				variables[ "get" & variables._parentEntity.discriminatorColumn ] = function() {
+					return variables._data.keyExists( variables._parentEntity.discriminatorColumn ) ? variables._data[
+						variables._parentEntity.discriminatorColumn
+					] : javacast( "null", 0 );
 				};
 			}
 
@@ -3262,7 +3266,7 @@ component accessors="true" {
 		return variables._attributes[ retrieveAliasForColumn( arguments.name ) ].virtual;
 	}
 
-	public boolean function isParentAttribute( required string column ){
+	public boolean function isParentAttribute( required string column ) {
 		return variables._attributes[ retrieveAliasForColumn( arguments.column ) ].isParentColumn;
 	}
 
@@ -3275,18 +3279,18 @@ component accessors="true" {
 	 * @return  An attribute struct with all the keys needed.
 	 */
 	private struct function paramAttribute( required struct attr ) {
-		param attr.column        = arguments.attr.name;
-		param attr.persistent    = true;
-		param attr.nullValue     = "";
-		param attr.convertToNull = true;
-		param attr.casts         = "";
-		param attr.readOnly      = false;
-		param attr.sqltype       = "";
-		param attr.insert        = true;
-		param attr.update        = true;
-		param attr.virtual       = false;
-		param attr.exclude       = false;
-		param attr.isParentColumn= false;
+		param attr.column         = arguments.attr.name;
+		param attr.persistent     = true;
+		param attr.nullValue      = "";
+		param attr.convertToNull  = true;
+		param attr.casts          = "";
+		param attr.readOnly       = false;
+		param attr.sqltype        = "";
+		param attr.insert         = true;
+		param attr.update         = true;
+		param attr.virtual        = false;
+		param attr.exclude        = false;
+		param attr.isParentColumn = false;
 		return arguments.attr;
 	}
 
@@ -3296,7 +3300,6 @@ component accessors="true" {
 	 * @attributes  The attributes to explode
 	 */
 	private any function explodeAttributesMetadata( required struct attributes ) {
-
 		for ( var alias in arguments.attributes ) {
 			var options                    = arguments.attributes[ alias ];
 			variables._attributes[ alias ] = options;
@@ -3305,29 +3308,34 @@ component accessors="true" {
 			}
 		}
 
-		if( variables._hasParentEntity ){
+		if ( variables._hasParentEntity ) {
 			explodeParentAttributes();
 		}
-		
+
 		return this;
 	}
 
 	/**
 	 * Appends parent attributes as first class attributes
-	**/
-	private function explodeParentAttributes(){
-
-		if( !variables._hasParentEntity ) return;
+	 **/
+	private function explodeParentAttributes() {
+		if ( !variables._hasParentEntity ) return;
 
 		variables._attributes[ variables._parentEntity.joincolumn ] = paramAttribute( { "name" : variables._parentEntity.joincolumn } );
 
-		variables._parentEntity.meta.attributes.keyArray().each( function( alias ){
-			variables._attributes[ alias ] = duplicate( variables._parentEntity.meta.attributes[ alias ] );
-			variables._attributes[ alias ].isParentColumn = true;
-		} );
+		variables._parentEntity.meta.attributes
+			.keyArray()
+			.each( function( alias ) {
+				variables._attributes[ alias ] = duplicate( variables._parentEntity.meta.attributes[ alias ] );
+				variables._attributes[ alias ].isParentColumn = true;
+			} );
 
-		if( structKeyExists( variables._parentEntity, "discriminatorColumn" ) ){
-			variables._attributes[ variables._parentEntity.discriminatorColumn ] = paramAttribute( { "name" : variables._parentEntity.discriminatorColumn, "column" : variables._parentEntity.discriminatorColumn, "isParentColumn" : true } );
+		if ( structKeyExists( variables._parentEntity, "discriminatorColumn" ) ) {
+			variables._attributes[ variables._parentEntity.discriminatorColumn ] = paramAttribute( {
+				"name"           : variables._parentEntity.discriminatorColumn,
+				"column"         : variables._parentEntity.discriminatorColumn,
+				"isParentColumn" : true
+			} );
 			assignAttribute( variables._parentEntity.discriminatorColumn, variables._parentEntity.discriminatorValue );
 		}
 	}
@@ -3610,7 +3618,6 @@ component accessors="true" {
 		any value,
 		boolean checkNullValues = true
 	) {
-
 		arguments.column = arguments.column;
 
 		// If that value is already a struct, pass it back unchanged.
@@ -3763,8 +3770,8 @@ component accessors="true" {
 	private boolean function canUpdateAttribute( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
 		return variables._attributes.keyExists( alias ) &&
-				variables._attributes[ alias ].update &&
-				!variables._attributes[ alias ].isParentColumn;
+		variables._attributes[ alias ].update &&
+		!variables._attributes[ alias ].isParentColumn;
 	}
 
 	/**
@@ -3777,7 +3784,7 @@ component accessors="true" {
 	private boolean function canInsertAttribute( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
 		return variables._attributes.keyExists( alias ) &&
-		variables._attributes[ alias ].insert && 
+		variables._attributes[ alias ].insert &&
 		!variables._attributes[ alias ].isParentColumn;
 	}
 

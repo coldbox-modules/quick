@@ -3,6 +3,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 	function run() {
 		describe( "Polymorphic Has Many Spec", function() {
 			it( "can get the related polymorphic entities", function() {
+				// delete our internal comments to allow the test to pass:
+				getInstance( "InternalComment" ).get().each( function( comment ){ comment.delete(); } );
+				variables.queries = [];
+				
 				var postA         = getInstance( "Post" ).find( 1245 );
 				var postAComments = postA.getComments();
 				expect( postAComments ).toBeArray();

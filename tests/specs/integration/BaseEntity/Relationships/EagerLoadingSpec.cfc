@@ -253,7 +253,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can eager load polymorphic belongs to relationships", function() {
-				var comments = getInstance( "Comment" ).with( "commentable" ).get();
+				var comments = getInstance( "Comment" ).where( 'designation', 'public' ).with( "commentable" ).get();
 
 				expect( comments ).toBeArray();
 				expect( comments ).toHaveLength( 3 );
@@ -274,6 +274,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can eager load polymorphic has many relationships", function() {
+				// delete our internal comments to allow the test to pass:
+				getInstance( "InternalComment" ).get().each( function( comment ){ comment.delete(); } );
+				variables.queries = [];
+
 				var posts = getInstance( "Post" ).with( "comments" ).get();
 
 				expect( posts ).toBeArray();
@@ -295,6 +299,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can eager load a nested relationship", function() {
+				// delete our internal comments to allow the test to pass:
+				getInstance( "InternalComment" ).get().each( function( comment ){ comment.delete(); } );
+				variables.queries = [];
 				var users = getInstance( "User" )
 					.with( "posts.comments" )
 					.latest()

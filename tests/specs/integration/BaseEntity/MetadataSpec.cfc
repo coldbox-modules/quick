@@ -65,43 +65,36 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				} );
 			} );
 
-			describe( "parent meta", function(){
-				it( "can detect a discriminated entity", function(){
+			describe( "parent meta", function() {
+				it( "can detect a discriminated entity", function() {
 					var discriminated = getInstance( "InternalComment" );
 					debug( discriminated.get_Meta() );
 
-					expect( discriminated.get_Meta() )
-						.toHaveKey( "parentEntity" )
-						.toHaveKey( "hasParentEntity" );
+					expect( discriminated.get_Meta() ).toHaveKey( "parentEntity" ).toHaveKey( "hasParentEntity" );
 
-					expect( discriminated.get_Meta().hasParentEntity ).toBe( true);
+					expect( discriminated.get_Meta().hasParentEntity ).toBe( true );
 					expect( discriminated.get_Meta().parentEntity )
-												.toBeStruct()
-												.toHaveKey( "meta" )
-												.toHaveKey( "joincolumn" )
-												.toHaveKey( "discriminatorValue" )
-												.toHaveKey( "discriminatorColumn" );
-
+						.toBeStruct()
+						.toHaveKey( "meta" )
+						.toHaveKey( "joincolumn" )
+						.toHaveKey( "discriminatorValue" )
+						.toHaveKey( "discriminatorColumn" );
 				} );
 
-				it( "can detect a non-discriminated child subclass", function(){
+				it( "can detect a non-discriminated child subclass", function() {
 					var discriminated = getInstance( "Jingle" );
 					debug( discriminated.get_Meta() );
 
-					expect( discriminated.get_Meta() )
-						.toHaveKey( "parentEntity" )
-						.toHaveKey( "hasParentEntity" );
+					expect( discriminated.get_Meta() ).toHaveKey( "parentEntity" ).toHaveKey( "hasParentEntity" );
 
-					expect( discriminated.get_Meta().hasParentEntity ).toBe( true);
+					expect( discriminated.get_Meta().hasParentEntity ).toBe( true );
 					expect( discriminated.get_Meta().parentEntity )
-												.toBeStruct()
-												.toHaveKey( "meta" )
-												.toHaveKey( "joincolumn" )
-												.notToHaveKey( "discriminatorValue" )
-												.notToHaveKey( "discriminatorColumn" );
-
+						.toBeStruct()
+						.toHaveKey( "meta" )
+						.toHaveKey( "joincolumn" )
+						.notToHaveKey( "discriminatorValue" )
+						.notToHaveKey( "discriminatorColumn" );
 				} );
-
 			} );
 		} );
 	}

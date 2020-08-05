@@ -12,11 +12,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can add a subselect for the count of a relationship without loading the relationship", function() {
-
 				// delete our internal comments to allow the test to pass:
-				getInstance( "InternalComment" ).get().each( function( comment ){ comment.delete(); } );
+				getInstance( "InternalComment" )
+					.get()
+					.each( function( comment ) {
+						comment.delete();
+					} );
 				variables.queries = [];
-				
+
 				var posts = getInstance( "Post" )
 					.withCount( "comments" )
 					.orderBy( "createdDate" )
@@ -64,8 +67,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( posts[ 4 ].getPost_Pk() ).toBe( 7777 );
 			} );
 
-			it( "can add multiple counts at once", function() {// delete our internal comments to allow the test to pass:
-				getInstance( "InternalComment" ).get().each( function( comment ){ comment.delete(); } );
+			it( "can add multiple counts at once", function() {
+				// delete our internal comments to allow the test to pass:
+				getInstance( "InternalComment" )
+					.get()
+					.each( function( comment ) {
+						comment.delete();
+					} );
 				variables.queries = [];
 
 				var posts = getInstance( "Post" )
@@ -119,7 +127,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "can constrain counts at runtime", function() {
 				// delete our internal comments to allow the test to pass:
-				getInstance( "InternalComment" ).get().each( function( comment ){ comment.delete(); } );
+				getInstance( "InternalComment" )
+					.get()
+					.each( function( comment ) {
+						comment.delete();
+					} );
 				variables.queries = [];
 
 				var posts = getInstance( "Post" )
@@ -161,7 +173,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "can alias the counts attribute name", function() {
 				// delete our internal comments to allow the test to pass:
-				getInstance( "InternalComment" ).get().each( function( comment ){ comment.delete(); } );
+				getInstance( "InternalComment" )
+					.get()
+					.each( function( comment ) {
+						comment.delete();
+					} );
 				variables.queries = [];
 
 				var posts = getInstance( "Post" )

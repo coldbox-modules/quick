@@ -43,6 +43,42 @@ component {
             .initArg( name = "returnFormat", value = "array" );
     }
 
+    function onUnload(){
+        structDelete( application, "quickMeta" );
+    }
+
+    /**
+     * This interception ensures that quick entity parent/child relationships are available to discriminated entities
+     * @event          The current request context
+     * @interceptData  The intercept data for `afterAspectsLoad`.
+     */
+    function afterAspectsLoad( event, interceptData ){
+        param application.quickMeta = {};
+        param application.quickMeta.discriminators = {};
+        
+        binder.getMappings().each( function( key, mapping ){
+            if( !mapping.isDiscovered() ){
+                mapping.process( binder, application.wirebox );
+            }
+            var meta = mapping.getObjectMetadata();
+            if( structKeyExists( meta, "joincolumn" ) && structKeyExists( meta, "discriminatorValue" ) ){
+                // retrieve the inheritance metadata
+                meta = getComponentMetadata( meta.fullName );
+                parentMeta = meta.extends;
+                
+                if( !structKeyExists( parentMeta, "table" ) ) parentMeta = application.wirebox.getInstance( parentMeta.fullName ).get_Meta();
+                if( !structKeyExists( application.quickMeta.discriminators, parentMeta.table ) ){
+                    application.quickMeta.discriminators[ parentMeta.table ] = {};
+                }
+                application.quickMeta.discriminators[ parentMeta.table ][ meta.discriminatorValue ] = {
+                    "mapping" : meta.fullName,
+                    "joincolumn" : meta.joinColumn
+                };
+            }
+        } );
+        
+    }
+
     /**
      * This interceptor ensures that the `_mapping` property for a Quick entity
      * is correctly set to the mapping used in WireBox.

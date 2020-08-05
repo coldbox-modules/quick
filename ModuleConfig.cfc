@@ -62,17 +62,28 @@ component {
             }
             var meta = mapping.getObjectMetadata();
             if( structKeyExists( meta, "joincolumn" ) && structKeyExists( meta, "discriminatorValue" ) ){
-                // retrieve the inheritance metadata
-                meta = getComponentMetadata( meta.fullName );
-                parentMeta = meta.extends;
+                // retrieve the inheritance metadata and attributes
+                var childClass = application.wirebox.getInstance( meta.fullName );
+                var childAttributes = childClass.get_Attributes().reduce( function( acc, attr, data ){ 
+                    if( !data.isParentColumn && !data.virtual && !data.exclude ){
+                        acc.append( data );
+                    }
+                    return acc;
+                 }, [] );
+                var meta = childClass.get_Meta();
+                var parentMeta = meta.parentEntity.meta;
                 
                 if( !structKeyExists( parentMeta, "table" ) ) parentMeta = application.wirebox.getInstance( parentMeta.fullName ).get_Meta();
+                
                 if( !structKeyExists( application.quickMeta.discriminators, parentMeta.table ) ){
                     application.quickMeta.discriminators[ parentMeta.table ] = {};
                 }
-                application.quickMeta.discriminators[ parentMeta.table ][ meta.discriminatorValue ] = {
+
+                application.quickMeta.discriminators[ parentMeta.table ][ meta.parentEntity.discriminatorValue ] = {
                     "mapping" : meta.fullName,
-                    "joincolumn" : meta.joinColumn
+                    "table" : meta.table,
+                    "joincolumn" : meta.parentEntity.joinColumn,
+                    "attributes" : childAttributes
                 };
             }
         } );

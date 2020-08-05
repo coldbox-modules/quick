@@ -1183,36 +1183,31 @@ component accessors="true" {
 	 */
 	private any function loadEntity( required struct data ) {
 
-		return newEntity()
-			.assignAttributesData( arguments.data )
-			.assignOriginalAttributes( arguments.data )
-			.markLoaded();
-
-	}
-
-	/**
-	 * Checks for the presence of children and loads the child entity if it exists
-	 * @entity   the reference entity to inspect
-	 **/
-	private any function loadChildIfExists( required BaseEntity entity = this ){
-		if( !variables._loadChildren ) return arguments.entity;
-		
-		var meta = arguments.entity.get_Meta();
-		var data = arguments.entity.get_Data();
 		if( 
-			meta.localMetadata.keyExists( "discriminatorColumn" ) 
+			variables._loadChildren
+			&&
+			variables._meta.localMetadata.keyExists( "discriminatorColumn" ) 
 			&& 
-			application.quickMeta.discriminators.keyExists( meta.table )
+			application.quickMeta.discriminators.keyExists( variables._meta.table )
 			&&
-			data.keyExists( meta.localMetadata.discriminatorColumn )
+			data.keyExists( variables._meta.localMetadata.discriminatorColumn )
 			&&
-			application.quickMeta.discriminators[ meta.table ].keyExists( data[ meta.localMetadata.discriminatorColumn ] )
+			application.quickMeta.discriminators[ variables._meta.table ].keyExists( data[ variables._meta.localMetadata.discriminatorColumn ] )
 		){
-			var keyValues = arguments.entity.keyNames().map( function( key ){ return data[ key ]; } );
-			return variables._wirebox.getInstance( application.quickMeta.discriminators[ meta.table ][ data[ meta.localMetadata.discriminatorColumn ] ].mapping ).find( keyValues );
+			var childClass = variables._wirebox.getInstance( application.quickMeta.discriminators[ variables._meta.table ][ data[ variables._meta.localMetadata.discriminatorColumn ] ].mapping );
+			
+			keyNames().each( function( key, i ){
+				data[ childClass.keyNames()[ i ] ] = data[ key ];
+			} );
+
+			return childClass.hydrate( data, true );
 		} else {
-			return arguments.entity;
+			return newEntity()
+				.assignAttributesData( arguments.data )
+				.assignOriginalAttributes( arguments.data )
+				.markLoaded();
 		}
+
 	}
 
 	/**
@@ -2467,6 +2462,33 @@ component accessors="true" {
 						.newQuery()
 						.select( retrieveQualifiedColumns() )
 						.join( variables._parentEntity.meta.table, variables._parentEntity.meta.table & "." & variables._parentEntity.key, this.qualifyColumn( variables._key ) );
+		} else if( variables._meta.keyExists( "discriminatorColumn" ) && application.quickMeta.discriminators.keyExists( tableName() ) ){
+			
+			var q = variables._builder..newQuery();
+
+			var columns = retrieveQualifiedColumns();
+			var discriminators = application.quickMeta.discriminators[ tableName ];
+			discriminators.each( 
+				function( discriminator, data ){
+					columns.append( 
+						data.attributes.map( 
+							function( attr ){ 
+								return data.table & '.' & attr.column;
+							} 
+						), true
+					);
+						
+					q.join(
+						data.table,
+						'=',
+						data.joincolumn,
+						'right outer'
+					);
+				} 
+			);
+			
+			return q.select( columns );
+			
 		} else {
 			return 
 				variables._builder
@@ -3003,8 +3025,6 @@ component accessors="true" {
 	 */
 	private any function handleTransformations( entity ) {
 
-		arguments.entity = isArray( arguments.entity ) ? arguments.entity.map( variables.loadChildIfExists ) : loadChildIfExists( arguments.entity );
-		
 		if ( !variables._asMemento ) {
 			return arguments.entity;
 		}

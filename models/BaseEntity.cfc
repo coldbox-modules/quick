@@ -2476,7 +2476,7 @@ component accessors="true" {
 				tableName()
 			)
 		) {
-			var q = variables._builder..newQuery();
+			var q = variables._builder.newQuery();
 
 			var columns        = retrieveQualifiedColumns();
 			var discriminators = application.quickMeta.discriminators[ tableName ];

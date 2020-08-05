@@ -357,6 +357,35 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  void
 	 */
+	public QuickBuilder function applyThroughExists( any base = variables.related ) {
+		// apply compare constraints
+		arrayZipEach(
+			[
+				variables.foreignKeys,
+				variables.localKeys
+			],
+			function( foreignKey, localKey ) {
+				base.whereColumn(
+					variables.related.qualifyColumn( foreignKey ),
+					variables.parent.qualifyColumn( localKey )
+				);
+			}
+		);
+
+		// nest in exists
+		return variables.related
+			.newQuery()
+			.reselectRaw( 1 )
+			.whereExists( arguments.base );
+	}
+
+	/**
+	 * Applies the join for relationship in a `hasManyThrough` chain.
+	 *
+	 * @base    The query to apply the join to.
+	 *
+	 * @return  void
+	 */
 	public void function applyThroughJoin( required any base ) {
 		arguments.base.join( variables.parent.tableName(), function( j ) {
 			arrayZipEach(

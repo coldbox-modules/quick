@@ -73,16 +73,4 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 		return arguments.entities;
 	}
 
-	/**
-	 * Applies the constraints for the final relationship in a `HasOneOrManyThrough` chain.
-	 *
-	 * @base    The query to apply the constraints to.
-	 *
-	 * @return  void
-	 */
-	public void function applyThroughConstraints( required any base ) {
-		performJoin( arguments.base );
-		variables.closestToParent.applyThroughConstraints( arguments.base );
-	}
-
 }

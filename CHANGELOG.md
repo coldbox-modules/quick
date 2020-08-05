@@ -1,3 +1,11 @@
+# v4.0.1
+## 04 Aug 2020 — 21:26:55 UTC
+
+### fix
+
++ __Relationships:__ Remove DISTINCT in favor of WHERE EXISTS ([a051c98](https://github.com/coldbox-modules/quick/commit/a051c98772b58a397e622538c8cd0747502744a1))
+
+
 # v4.0.0
 ## 24 Jul 2020 — 15:14:31 UTC
 

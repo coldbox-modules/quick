@@ -452,12 +452,12 @@ component accessors="true" {
 			if ( value.virtual && !withVirtualAttributes ) {
 				return items;
 			}
-			items.append( 
-				asColumnNames 
-				? value.isParentColumn 
-					? ( variables._parentEntity.meta.table & "." & value.column ) 
-					: value.column 
-				: key 
+			items.append(
+				asColumnNames
+				 ? value.isParentColumn
+				 ? ( variables._parentEntity.meta.table & "." & value.column )
+				 : value.column
+				 : key
 			);
 			return items;
 		}, [] );
@@ -945,7 +945,7 @@ component accessors="true" {
 	 */
 	public any function first() {
 		activateGlobalScopes();
-	
+
 		var attrs = retrieveQuery().first();
 
 		return structIsEmpty( attrs ) ? javacast( "null", "" ) : handleTransformations( loadEntity( attrs ) );

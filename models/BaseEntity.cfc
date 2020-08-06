@@ -254,7 +254,7 @@ component accessors="true" {
 		param variables._loaded                   = false;
 		param variables._aliasPrefix              = "";
 		param variables._hasParentEntity          = false;
-		param variables._parentDefinition             = {};
+		param variables._parentDefinition         = {};
 		variables._asMemento                      = false;
 		variables._asMementoSettings              = {};
 		return this;
@@ -3114,7 +3114,7 @@ component accessors="true" {
 
 						if ( len( meta.originalMetadata.discriminatorValue ) ) {
 							try {
-								var parentMeta                             = getComponentMetadata( meta.parentDefinition.meta.fullName );
+								var parentMeta                                 = getComponentMetadata( meta.parentDefinition.meta.fullName );
 								meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
 								meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
 							} catch ( any e ) {
@@ -3170,7 +3170,7 @@ component accessors="true" {
 
 		if ( variables._hasParentEntity ) {
 			variables._parentDefinition = variables._meta.parentDefinition;
-			variables._key          = variables._parentDefinition.joincolumn;
+			variables._key              = variables._parentDefinition.joincolumn;
 		}
 
 		param variables._queryOptions = {};
@@ -3305,27 +3305,27 @@ component accessors="true" {
     =       Subclass Inheritance      =
     =================================*/
 
-	public boolean function hasParentEntity(){
+	public boolean function hasParentEntity() {
 		return variables._hasParentEntity;
 	}
 
-	public boolean function isDiscriminatedChild(){
+	public boolean function isDiscriminatedChild() {
 		return hasParentEntity() && getParentDefinition().keyExists( "discriminatorValue" );
 	}
 
-	public boolean function isDiscriminatedParent(){
-		return variables._meta.keyExists( "discriminatorColumn" ) 
-				&& application.quickMeta.discriminators.keyExists( tableName() );
+	public boolean function isDiscriminatedParent() {
+		return variables._meta.keyExists( "discriminatorColumn" )
+		&& application.quickMeta.discriminators.keyExists( tableName() );
 	}
 
-	public function getParentDefinition(){
+	public function getParentDefinition() {
 		return hasParentEntity() ? variables._parentDefinition : javacast( "null", 0 );
 	}
 
 	/**
 	 * Appends parent attributes as first class attributes
 	 **/
-	 private function explodeParentAttributes() {
+	private function explodeParentAttributes() {
 		if ( !hasParentEntity() ) return;
 
 		var parentDefinition = getParentDefinition();
@@ -3335,7 +3335,7 @@ component accessors="true" {
 		parentDefinition.meta.attributes
 			.keyArray()
 			.each( function( alias ) {
-				// Note: bracket notation here on `attributes` as ACF 2016 will sometimes show a null for the dot notation key 
+				// Note: bracket notation here on `attributes` as ACF 2016 will sometimes show a null for the dot notation key
 				variables._attributes[ alias ] = duplicate( parentDefinition.meta[ "attributes" ][ alias ] );
 				variables._attributes[ alias ].isParentColumn = true;
 			} );

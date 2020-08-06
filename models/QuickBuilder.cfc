@@ -701,7 +701,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		return builder;
 	}
 
-	function applyInheritanceJoins( required QuickBuilder builder ){
+	function applyInheritanceJoins( required QuickBuilder builder ) {
 		var entity = getEntity();
 		// Apply and append any inheritance joins/colu
 		if ( entity.hasParentEntity() ) {
@@ -711,9 +711,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 				parentDefinition.meta.table & "." & parentDefinition.key,
 				entity.qualifyColumn( entity.keyNames()[ 1 ] )
 			);
-		} else if (
-			entity.isDiscriminatedParent()
-		) {
+		} else if ( entity.isDiscriminatedParent() ) {
 			var discriminators = application.quickMeta.discriminators[ entity.tableName() ];
 			discriminators.each( function( discriminator, data ) {
 				columns.append(

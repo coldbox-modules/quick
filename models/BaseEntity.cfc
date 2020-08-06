@@ -631,9 +631,9 @@ component accessors="true" {
 	 */
 	public any function hydrate( required struct attributes, boolean ignoreNonExistentAttributes = false ) {
 		guardAgainstMissingKeys( arguments.attributes );
-		fill( argumentCollection = arguments );
-		markLoaded();
-		return this;
+		return fill( argumentCollection = arguments )
+			.assignOriginalAttributes( arguments.attributes )
+			.markLoaded();
 	}
 
 	/**

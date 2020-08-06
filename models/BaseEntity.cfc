@@ -3175,15 +3175,6 @@ component accessors="true" {
 
 		if ( variables._hasParentEntity ) {
 			variables._parentEntity = variables._meta.parentEntity;
-
-			if ( structKeyExists( variables._parentEntity, "discriminatorColumn" ) ) {
-				variables[ "get" & variables._parentEntity.discriminatorColumn ] = function() {
-					return variables._data.keyExists( variables._parentEntity.discriminatorColumn ) ? variables._data[
-						variables._parentEntity.discriminatorColumn
-					] : javacast( "null", 0 );
-				};
-			}
-
 			variables._key = variables._parentEntity.joincolumn;
 		}
 

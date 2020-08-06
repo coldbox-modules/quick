@@ -631,9 +631,7 @@ component accessors="true" {
 	 */
 	public any function hydrate( required struct attributes, boolean ignoreNonExistentAttributes = false ) {
 		guardAgainstMissingKeys( arguments.attributes );
-		return fill( argumentCollection = arguments )
-			.assignOriginalAttributes( arguments.attributes )
-			.markLoaded();
+		return fill( argumentCollection = arguments ).assignOriginalAttributes( arguments.attributes ).markLoaded();
 	}
 
 	/**
@@ -3175,7 +3173,7 @@ component accessors="true" {
 
 		if ( variables._hasParentEntity ) {
 			variables._parentEntity = variables._meta.parentEntity;
-			variables._key = variables._parentEntity.joincolumn;
+			variables._key          = variables._parentEntity.joincolumn;
 		}
 
 		param variables._queryOptions = {};

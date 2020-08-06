@@ -42,6 +42,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 				expect( newJingle.getId() ).notToBeNull();
 				expect( newJingle.isLoaded() ).toBeTrue();
+
+				var jingle = getInstance( "Jingle" ).findOrFail( newJingle.getId() );
+
+				expect( jingle.getMemento() ).toBe( newJingle.getMemento() );
+
+				
+
 			} );
 
 			it( "can update a child entity", function() {

@@ -674,7 +674,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		}
 
 		return getEntity().isParentAttribute( arguments.column )
-		 ? getEntity().retrieveColumnForAlias( arguments.column )
+		 ? getEntity().get_Meta().parentEntity.meta.table & "." & getEntity().retrieveColumnForAlias( arguments.column )
 		 : listLast( getFrom(), " " ) & "." & getEntity().retrieveColumnForAlias( arguments.column );
 	}
 

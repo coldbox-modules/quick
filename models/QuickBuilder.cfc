@@ -697,7 +697,40 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		builder.setColumnFormatter( function( column ) {
 			return builder.qualifyColumn( column );
 		} );
+		applyInheritanceJoins( builder );
 		return builder;
+	}
+
+	function applyInheritanceJoins( required QuickBuilder builder ){
+		var entity = getEntity();
+		// Apply and append any inheritance joins/colu
+		if ( entity.hasParentEntity() ) {
+			var parentDefinition = entity.getParentDefinition();
+			builder.join(
+				parentDefinition.meta.table,
+				parentDefinition.meta.table & "." & parentDefinition.key,
+				entity.qualifyColumn( entity.keyNames()[ 1 ] )
+			);
+		} else if (
+			entity.isDiscriminatedParent()
+		) {
+			var discriminators = application.quickMeta.discriminators[ entity.tableName() ];
+			discriminators.each( function( discriminator, data ) {
+				columns.append(
+					data.attributes.map( function( attr ) {
+						return data.table & "." & attr.column;
+					} ),
+					true
+				);
+
+				builder.join(
+					data.table,
+					"=",
+					data.joincolumn,
+					"right outer"
+				);
+			} );
+		}
 	}
 
 	/**

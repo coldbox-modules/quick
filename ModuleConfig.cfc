@@ -71,7 +71,7 @@ component {
                     return acc;
                  }, [] );
                 var meta = childClass.get_Meta();
-                var parentMeta = meta.parentEntity.meta;
+                var parentMeta = meta.parentDefinition.meta;
                 
                 if( !structKeyExists( parentMeta, "table" ) ) parentMeta = application.wirebox.getInstance( parentMeta.fullName ).get_Meta();
                 
@@ -79,10 +79,10 @@ component {
                     application.quickMeta.discriminators[ parentMeta.table ] = {};
                 }
 
-                application.quickMeta.discriminators[ parentMeta.table ][ meta.parentEntity.discriminatorValue ] = {
+                application.quickMeta.discriminators[ parentMeta.table ][ meta.parentDefinition.discriminatorValue ] = {
                     "mapping" : meta.fullName,
                     "table" : meta.table,
-                    "joincolumn" : meta.parentEntity.joinColumn,
+                    "joincolumn" : meta.parentDefinition.joinColumn,
                     "attributes" : childAttributes
                 };
             }

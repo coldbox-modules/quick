@@ -70,10 +70,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					var discriminated = getInstance( "InternalComment" );
 					debug( discriminated.get_Meta() );
 
-					expect( discriminated.get_Meta() ).toHaveKey( "parentEntity" ).toHaveKey( "hasParentEntity" );
+					expect( discriminated.get_Meta() ).toHaveKey( "parentDefinition" ).toHaveKey( "hasParentEntity" );
 
 					expect( discriminated.get_Meta().hasParentEntity ).toBe( true );
-					expect( discriminated.get_Meta().parentEntity )
+					expect( discriminated.get_Meta().parentDefinition )
 						.toBeStruct()
 						.toHaveKey( "meta" )
 						.toHaveKey( "joincolumn" )
@@ -85,10 +85,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					var discriminated = getInstance( "Jingle" );
 					debug( discriminated.get_Meta() );
 
-					expect( discriminated.get_Meta() ).toHaveKey( "parentEntity" ).toHaveKey( "hasParentEntity" );
+					expect( discriminated.get_Meta() ).toHaveKey( "parentDefinition" ).toHaveKey( "hasParentEntity" );
 
 					expect( discriminated.get_Meta().hasParentEntity ).toBe( true );
-					expect( discriminated.get_Meta().parentEntity )
+					expect( discriminated.get_Meta().parentDefinition )
 						.toBeStruct()
 						.toHaveKey( "meta" )
 						.toHaveKey( "joincolumn" )

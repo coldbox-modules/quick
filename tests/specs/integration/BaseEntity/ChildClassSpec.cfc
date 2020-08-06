@@ -62,8 +62,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					} )
 					.save();
 
-				transactionSetSavepoint( "jingle-saved" );
-
 				var jingle = getInstance( "Jingle" ).findOrFail( newJingle.getId() );
 
 				jingle.setTitle( "Give me a Break ( The Kit Kat Bar Song )" );
@@ -97,11 +95,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					} )
 					.save();
 
-				transactionSetSavepoint( "jingle-saved" );
-
 				getInstance( "Jingle" ).findOrFail( newJingle.getId() ).delete();
-
-				transactionSetSavepoint( "jingle-deleted" );
 
 				expect( isNull( getInstance( "Jingle" ).find( newJingle.getId() ) ) ).toBeTrue();
 			} );
@@ -173,8 +167,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					} )
 					.save();
 
-				transactionSetSavepoint( "comment-saved" );
-
 				var memento = newComment.getMemento();
 
 				expect( memento )
@@ -202,8 +194,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 						"modifiedDate"    : now()
 					} )
 					.save();
-
-				transactionSetSavepoint( "comment-saved" );
 
 				var comment = getInstance( "InternalComment" ).findOrFail( newComment.getId() );
 
@@ -245,11 +235,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					} )
 					.save();
 
-				transactionSetSavepoint( "comment-saved" );
-
 				getInstance( "InternalComment" ).findOrFail( newComment.getId() ).delete();
-
-				transactionSetSavepoint( "comment-deleted" );
 
 				expect( isNull( getInstance( "InternalComment" ).find( newComment.getId() ) ) ).toBeTrue();
 			} );

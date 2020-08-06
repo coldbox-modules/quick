@@ -3618,8 +3618,6 @@ component accessors="true" {
 		any value,
 		boolean checkNullValues = true
 	) {
-		arguments.column = arguments.column;
-
 		// If that value is already a struct, pass it back unchanged.
 		if ( !isNull( arguments.value ) && isStruct( arguments.value ) ) {
 			return arguments.value;

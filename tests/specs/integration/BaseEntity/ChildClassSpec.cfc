@@ -254,13 +254,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.save();
 
 				var parentRetrieval = getInstance( "Comment" ).find( newComment.getId() );
-				expect( isInstanceOf( parentRetrieval, "InternalComment" ) ).toBeTrue();
+				expect( parentRetrieval ).toBeInstanceOf( "InternalComment" );
 			} );
 
 			it( "Will return an array of child classes when fetching multiple results from the parent class", function() {
 				var internalComments = getInstance( "Comment" ).where( "designation", "internal" ).get();
 				internalComments.each( function( comment ) {
-					expect( isInstanceOf( comment, "InternalComment" ) ).toBeTrue();
+					expect( comment, "InternalComment" ).toBeInstanceOf( "InternalComment" );
 				} );
 			} );
 		} );

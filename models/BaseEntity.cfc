@@ -1193,6 +1193,11 @@ component accessors="true" {
 			variables._loadChildren
 			&&
 			isDiscriminatedParent()
+			&&
+			structKeyExists( 
+				getDiscriminations(),
+				data[ variables._meta.localMetadata.discriminatorColumn ]
+			)
 		) {
 			var childClass = variables._wirebox.getInstance(
 				getDiscriminations()[ data[ variables._meta.localMetadata.discriminatorColumn ] ].mapping

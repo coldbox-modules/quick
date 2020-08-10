@@ -674,7 +674,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		}
 
 		return getEntity().isParentAttribute( arguments.column )
-		 ? getEntity().get_Meta().parentEntity.meta.table & "." & getEntity().retrieveColumnForAlias( arguments.column )
+		 ? getEntity().get_Meta().parentDefinition.meta.table & "." & getEntity().retrieveColumnForAlias(
+			arguments.column
+		)
 		 : listLast( getFrom(), " " ) & "." & getEntity().retrieveColumnForAlias( arguments.column );
 	}
 
@@ -706,28 +708,23 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		// Apply and append any inheritance joins/colu
 		if ( entity.hasParentEntity() ) {
 			var parentDefinition = entity.getParentDefinition();
-			builder.join(
+			arguments.builder.join(
 				parentDefinition.meta.table,
 				parentDefinition.meta.table & "." & parentDefinition.key,
 				entity.qualifyColumn( entity.keyNames()[ 1 ] )
 			);
-		} else if ( entity.isDiscriminatedParent() ) {
-			var discriminators = application.quickMeta.discriminators[ entity.tableName() ];
-			discriminators.each( function( discriminator, data ) {
-				columns.append(
-					data.attributes.map( function( attr ) {
-						return data.table & "." & attr.column;
-					} ),
-					true
-				);
-
-				builder.join(
-					data.table,
-					"=",
-					data.joincolumn,
-					"right outer"
-				);
-			} );
+		} else if ( entity.isDiscriminatedParent() && entity.get_loadChildren() ) {
+			entity
+				.getDiscriminations()
+				.each( function( discriminator, data ) {
+					builder.join(
+						data.table,
+						getEntity().qualifyColumn( getEntity().keyNames()[ 1 ] ),
+						"=",
+						data.joincolumn,
+						"right outer"
+					);
+				} );
 		}
 	}
 

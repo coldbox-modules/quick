@@ -94,7 +94,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 				getInstance( "Jingle" ).findOrFail( newJingle.getId() ).delete();
 
-				expect( isNull( getInstance( "Jingle" ).find( newJingle.getId() ) ) ).toBeTrue();
+				expect( isNull( getInstance( "Song" ).set_LoadChildren( false ).find( newJingle.getId() ) ) ).toBeTrue(
+					"The parent table row was not deleted"
+				);
+				expect( isNull( getInstance( "Jingle" ).find( newJingle.getId() ) ) ).toBeTrue(
+					"The child table row was not deleted"
+				);
 			} );
 		} );
 
@@ -111,6 +116,23 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( comment.getId() ).notToBeNull();
 				expect( comment.getDesignation() ).toBe( memento.designation );
 				expect( comment.isLoaded() ).toBeTrue();
+
+
+				expect( comment.getAuthor() ).toBeInstanceOf( "User" );
+				expect( comment.getAuthor().isLoaded() ).toBeTrue();
+
+				expect( comment.getCommentable() ).toBeInstanceOf( "Post" );
+			} );
+
+			it( "Can load the relationships of the parent through the discriminated child", function() {
+				var comment = getInstance( "InternalComment" ).first();
+
+				expect( comment ).toBeInstanceOf( "InternalComment" );
+
+				expect( comment.getAuthor() ).toBeInstanceOf( "User" );
+				expect( comment.getAuthor().isLoaded() ).toBeTrue();
+
+				expect( comment.getCommentable() ).toBeInstanceOf( "Post" );
 			} );
 
 			it( "Can query on parent values through the child", function() {
@@ -118,7 +140,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.fill( {
 						"reason"          : "I like to keep things private",
 						"body"            : "Lorem ipsum",
-						"commentableId"   : 1345,
+						"commentableId"   : 1245,
 						"commentableType" : "Post",
 						"userId"          : getInstance( "User" ).first().getId(),
 						"createdDate"     : now(),
@@ -136,7 +158,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.fill( {
 						"reason"          : "I like to keep things private",
 						"body"            : "Lorem ipsum",
-						"commentableId"   : 1345,
+						"commentableId"   : 1245,
 						"commentableType" : "Post",
 						"userId"          : getInstance( "User" ).first().getId(),
 						"createdDate"     : now(),
@@ -156,7 +178,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.fill( {
 						"reason"          : "I like to keep things private",
 						"body"            : "Lorem ipsum",
-						"commentableId"   : 1345,
+						"commentableId"   : 1245,
 						"commentableType" : "Post",
 						"userId"          : getInstance( "User" ).first().getId(),
 						"createdDate"     : now(),
@@ -179,12 +201,46 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( newComment.isLoaded() ).toBeTrue();
 			} );
 
+			it( "Can associate/dissociate parent relationships from the child", function() {
+				var newComment = getInstance( "InternalComment" )
+					.fill( {
+						"reason"          : "I like to keep things private",
+						"body"            : "Lorem ipsum",
+						"commentableId"   : 1245,
+						"commentableType" : "Post",
+						"userId"          : getInstance( "User" ).first().getId(),
+						"createdDate"     : now(),
+						"modifiedDate"    : now()
+					} )
+					.save();
+
+				var newComment = getInstance( "InternalComment" ).find( newComment.getId() );
+
+				expect( newComment.getCommentable() ).notToBeNull();
+
+				var otherPost = getInstance( "Post" ).find( 523526 );
+				var otherUser = otherPost.getAuthor();
+
+				newComment.author().associate( otherUser );
+				newComment.commentable().associate( otherPost );
+
+				newComment.save();
+
+				var comment = getInstance( "InternalComment" ).find( newComment.getId() );
+
+				expect( comment.getAuthor() ).toBeInstanceOf( "User" );
+				expect( comment.getAuthor().getId() ).toBe( otherUser.getId() );
+
+				expect( comment.getCommentable() ).toBeInstanceOf( "Post" );
+				expect( comment.getCommentable().getPost_pk() ).toBe( 523526 );
+			} );
+
 			it( "can update a child entity", function() {
 				var newComment = getInstance( "InternalComment" )
 					.fill( {
 						"reason"          : "I like to keep things private",
 						"body"            : "Lorem ipsum",
-						"commentableId"   : 1345,
+						"commentableId"   : 1245,
 						"commentableType" : "Post",
 						"userId"          : getInstance( "User" ).first().getId(),
 						"createdDate"     : now(),
@@ -224,7 +280,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.fill( {
 						"reason"          : "I like to keep things private",
 						"body"            : "Lorem ipsum",
-						"commentableId"   : 1345,
+						"commentableId"   : 1245,
 						"commentableType" : "Post",
 						"userId"          : getInstance( "User" ).first().getId(),
 						"createdDate"     : now(),
@@ -234,7 +290,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 				getInstance( "InternalComment" ).findOrFail( newComment.getId() ).delete();
 
-				expect( isNull( getInstance( "InternalComment" ).find( newComment.getId() ) ) ).toBeTrue();
+				expect( isNull( getInstance( "Comment" ).set_LoadChildren( false ).find( newComment.getId() ) ) ).toBeTrue(
+					"The parent table row was not deleted"
+				);
+				expect( isNull( getInstance( "InternalComment" ).find( newComment.getId() ) ) ).toBeTrue(
+					"The child table row was not deleted"
+				);
 			} );
 
 			it( "Will return a child entity when retrieving a single entity from the parent", function() {
@@ -242,7 +303,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.fill( {
 						"reason"          : "I like to keep things private",
 						"body"            : "Lorem ipsum",
-						"commentableId"   : 1345,
+						"commentableId"   : 1245,
 						"commentableType" : "Post",
 						"userId"          : getInstance( "User" ).first().getId(),
 						"createdDate"     : now(),
@@ -250,12 +311,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					} )
 					.save();
 
-				var parentRetrieval = getInstance( "Comment" ).find( newComment.getId() );
+				var parentClass = getInstance( "Comment" );
+				expect( parentClass.isDiscriminatedParent() ).toBeTrue();
+
+				var parentRetrieval = parentClass.find( newComment.getId() );
 				expect( parentRetrieval ).toBeInstanceOf( "InternalComment" );
 			} );
 
 			it( "Will return an array of child classes when fetching multiple results from the parent class", function() {
-				var internalComments = getInstance( "Comment" ).where( "designation", "internal" ).get();
+				var parentClass = getInstance( "Comment" );
+				expect( parentClass.isDiscriminatedParent() ).toBeTrue();
+				var internalComments = parentClass.where( "designation", "internal" ).get();
 				internalComments.each( function( comment ) {
 					expect( comment, "InternalComment" ).toBeInstanceOf( "InternalComment" );
 				} );

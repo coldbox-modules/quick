@@ -30,7 +30,7 @@ component accessors="true" {
 	 */
 	property
 		name      ="_cache"
-		inject    ="cachebox:default"
+		inject    ="cachebox:quickMeta"
 		persistent="false";
 
 	/**
@@ -167,6 +167,11 @@ component accessors="true" {
 	property name="_eagerLoad" persistent="false";
 
 	/**
+	 * Discriminated chilrent property
+	 **/
+	property name="_discriminations" persistent="false";
+
+	/**
 	 * Flag for whether to load child entities
 	 */
 	property name="_loadChildren" persistent="false";
@@ -221,10 +226,12 @@ component accessors="true" {
 	 * Initializes the entity with default properties and optional metadata.
 	 *
 	 * @meta    An optional struct of metadata.  Used to avoid processing the metadata again.
+	 * @shallow When passed as true, the initial query instantiation and recursion in to child classes will not be performed
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function init( struct meta = {} ) {
+	public any function init( struct meta = {}, boolean shallow = false ) {
+		variables._loadShallow = arguments.shallow;
 		assignDefaultProperties();
 		variables._meta         = arguments.meta;
 		variables._loadChildren = true;
@@ -255,6 +262,7 @@ component accessors="true" {
 		param variables._aliasPrefix              = "";
 		param variables._hasParentEntity          = false;
 		param variables._parentDefinition         = {};
+		param variables._discriminators           = [];
 		variables._asMemento                      = false;
 		variables._asMementoSettings              = {};
 		return this;
@@ -267,9 +275,11 @@ component accessors="true" {
 	 */
 	public void function onDIComplete() {
 		metadataInspection();
-		resetQuery();
-		setUpMementifier();
-		fireEvent( "instanceReady", { entity : this } );
+		if ( !variables._loadShallow ) {
+			resetQuery();
+			setUpMementifier();
+			fireEvent( "instanceReady", { entity : this } );
+		}
 	}
 
 	/**
@@ -879,46 +889,10 @@ component accessors="true" {
 	 */
 	public array function retrieveQualifiedColumns() {
 		var attributes = retrieveColumnNames();
-		appendQualifiedInheritanceColumns( attributes );
 		arraySort( attributes, "textnocase" );
 		return attributes.map( function( column ) {
 			return this.qualifyColumn( column );
 		} );
-	}
-
-	/**
-	 * Appends the inheritance columns and ensures the joins are present to retrieve them
-	 *
-	 * @columns an array of local column names being selected
-	 */
-	function appendQualifiedInheritanceColumns( required array columns ) {
-		var builder = retrieveQuery();
-
-		// Apply and append any inheritance joins/colu
-		if ( hasParentEntity() ) {
-			builder.join(
-				getParentDefinition().meta.table,
-				getParentDefinition().meta.table & "." & getParentDefinition().key,
-				this.qualifyColumn( variables._key )
-			);
-		} else if ( isDiscriminatedParent() ) {
-			var discriminators = application.quickMeta.discriminators[ tableName ];
-			discriminators.each( function( discriminator, data ) {
-				columns.append(
-					data.attributes.map( function( attr ) {
-						return data.table & "." & attr.column;
-					} ),
-					true
-				);
-
-				builder.join(
-					data.table,
-					"=",
-					data.joincolumn,
-					"right outer"
-				);
-			} );
-		}
 	}
 
 	/*=====================================
@@ -1143,7 +1117,7 @@ component accessors="true" {
 	public any function findOrFail( required any id, any errorMessage ) {
 		var entity = variables.find( arguments.id );
 		if ( isNull( entity ) ) {
-			param arguments.errorMessage = "No [#entityName()#] found with id [#arguments.id#]";
+			param arguments.errorMessage = "No [#entityName()#] found with id [#( isArray( arguments.id ) ? arguments.id.toList() : arguments.id )#]";
 			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
 				arguments.errorMessage = arguments.errorMessage( this, arguments.id );
 			}
@@ -1218,20 +1192,10 @@ component accessors="true" {
 		if (
 			variables._loadChildren
 			&&
-			variables._meta.localMetadata.keyExists( "discriminatorColumn" )
-			&&
-			application.quickMeta.discriminators.keyExists( variables._meta.table )
-			&&
-			data.keyExists( variables._meta.localMetadata.discriminatorColumn )
-			&&
-			application.quickMeta.discriminators[ variables._meta.table ].keyExists(
-				data[ variables._meta.localMetadata.discriminatorColumn ]
-			)
+			isDiscriminatedParent()
 		) {
 			var childClass = variables._wirebox.getInstance(
-				application.quickMeta.discriminators[ variables._meta.table ][
-					data[ variables._meta.localMetadata.discriminatorColumn ]
-				].mapping
+				getDiscriminations()[ data[ variables._meta.localMetadata.discriminatorColumn ] ].mapping
 			);
 
 			keyNames().each( function( key, i ) {
@@ -1487,6 +1451,7 @@ component accessors="true" {
 			"This instance is not loaded so it cannot be deleted. " &
 			"Did you maybe mean to use `deleteAll`?"
 		);
+
 		newQuery()
 			.where( function( q ) {
 				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
@@ -1496,11 +1461,14 @@ component accessors="true" {
 			.delete();
 
 		if ( hasParentEntity() ) {
-			variables._wirebox
+			var parentEntity = variables._wirebox
 				.getInstance( getParentDefinition().meta.fullName )
 				.set_LoadChildren( false )
-				.findOrFail( keyValues() )
-				.delete();
+				.find( keyValues() );
+
+			if ( !isNull( parentEntity ) ) {
+				parentEntity.delete();
+			}
 		}
 
 		variables._loaded = false;
@@ -2491,6 +2459,7 @@ component accessors="true" {
 		retrieveQuery().from( tableName() );
 		return variables._builder
 			.setEntity( this )
+			.newQuery()
 			.setReturnFormat( "array" )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() )
@@ -3104,7 +3073,10 @@ component accessors="true" {
 					param meta.originalMetadata.functions          = [];
 					meta[ "hasParentEntity" ]                      = !!len( meta.originalMetadata.joincolumn );
 					if ( meta.hasParentEntity ) {
-						var reference = variables._wirebox.getInstance( meta.localMetadata.extends.fullName );
+						var reference = variables._wirebox.getInstance(
+							name          = meta.localMetadata.extends.fullName,
+							initArguments = { "meta" : {}, "shallow" : true }
+						);
 
 						meta[ "parentDefinition" ] = {
 							"meta"       : reference.get_Meta(),
@@ -3310,16 +3282,50 @@ component accessors="true" {
 	}
 
 	public boolean function isDiscriminatedChild() {
-		return hasParentEntity() && getParentDefinition().keyExists( "discriminatorValue" );
+		return hasParentEntity() && variables._meta.localMetadata.keyExists( "discriminatorValue" );
 	}
 
 	public boolean function isDiscriminatedParent() {
-		return variables._meta.keyExists( "discriminatorColumn" )
-		&& application.quickMeta.discriminators.keyExists( tableName() );
+		return variables._meta.localMetadata.keyExists( "discriminatorColumn" )
+		&& variables._discriminators.len();
 	}
 
 	public function getParentDefinition() {
 		return hasParentEntity() ? variables._parentDefinition : javacast( "null", 0 );
+	}
+
+	public function getDiscriminations() {
+		return variables._cache.getOrSet( "quick-metadata:discriminations-#tableName()#", function() {
+			return variables._discriminators.reduce( function( acc, dsl ) {
+				var childClass = variables._wirebox.getInstance(
+					dsl           = dsl,
+					initArguments = { "meta" : {}, "shallow" : true }
+				);
+				var childMeta = childClass.get_Meta().localMetaData;
+				if ( !structKeyExists( childMeta, "joincolumn" ) || !structKeyExists( childMeta, "discriminatorValue" ) ) {
+					throw(
+						type    = "QuickParentInstantiationException",
+						message = "Failed to instantiate the parent entity [#variables._meta.fullName#]. The discriminated child class [#childMeta.fullName#] did not contain either a `joinColumn` or `discriminatorValue` attribute"
+					);
+				}
+				var childAttributes = childClass
+					.get_Attributes()
+					.reduce( function( acc, attr, data ) {
+						if ( !data.isParentColumn && !data.virtual && !data.exclude ) {
+							acc.append( data );
+						}
+						return acc;
+					}, [] );
+
+				acc[ childMeta.discriminatorValue ] = {
+					"mapping"    : childMeta.fullName,
+					"table"      : childMeta.table,
+					"joincolumn" : childMeta.joinColumn,
+					"attributes" : childAttributes
+				};
+				return acc;
+			}, {} );
+		} );
 	}
 
 	/**

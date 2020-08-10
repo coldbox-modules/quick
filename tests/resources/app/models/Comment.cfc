@@ -12,6 +12,10 @@ component
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
 
+    variables._discriminators = [
+        "InternalComment"
+    ];
+
     function commentable() {
         return polymorphicBelongsTo( "commentable" );
     }

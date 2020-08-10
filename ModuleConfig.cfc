@@ -9,7 +9,17 @@ component {
     function configure() {
         settings = {
             "defaultGrammar" = "AutoDiscover@qb",
-            "preventDuplicateJoins" = true
+            "preventDuplicateJoins" = true,
+            "metadataCache" = {
+                "name"                  : "quickMeta",
+                "provider"              : "coldbox.system.cache.providers.CacheBoxColdBoxProvider",
+                "properties"            : {
+                    "objectDefaultTimeout"  : 0, // no timeout
+                    "useLastAccessTimeouts" : false, // no last access timeout
+                    "maxObjects"            : 300,
+                    "objectStore"           : "ConcurrentStore"
+                }
+			}
         };
 
         interceptorSettings = {
@@ -41,10 +51,22 @@ component {
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "utils", dsl = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = "array" );
+
+        if( isSimpleValue( settings.metadataCache ) ){
+            settings.metadataCache = { "name" : settings.metadataCache };
+        }
+
+        if( settings.metadataCache.name != "quickMeta" ){
+            binder.map( "cachebox:quickMeta" )
+                    .toDSL( "cachebox:#settings.metadataCache.name#" );
+        } else {
+            controller.getCachebox().createCache( argumentCollection = settings.metadataCache );
+        }
+        
     }
 
     function onUnload(){
-        structDelete( application, "quickMeta" );
+        controller.getCachebox().getCache( settings.metadataCache.name ).clearAll();
     }
 
     /**

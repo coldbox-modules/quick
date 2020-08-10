@@ -722,7 +722,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 						getEntity().qualifyColumn( getEntity().keyNames()[ 1 ] ),
 						"=",
 						data.joincolumn,
-						"right outer"
+						"left outer"
 					);
 				} );
 		}

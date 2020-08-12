@@ -19,9 +19,12 @@ component {
 
     this.datasource = "quick";
 
+    function onApplicationStart() {
+        param url.reloadFixtures = true;
+    }
+
     function onRequestStart() {
         structDelete( application, "cbController" );
-        setUpDatabase();
     }
 
     private function setUpDatabase() {

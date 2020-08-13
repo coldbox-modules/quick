@@ -118,7 +118,15 @@ component extends="quick.models.Relationships.BaseRelationship" {
 			}, [] )
 			.toList();
 		variables.related
-			.selectRaw( "CONCAT(#qualifiedForeignKeyList#) AS __QuickThroughKey__" )
+			.when(
+				( qualifiedForeignKeyList.listLen() > 1 ),
+				function( q1 ) {
+					q1.selectRaw( "CONCAT(#qualifiedForeignKeyList#) AS __QuickThroughKey__" );
+				},
+				function( q1 ) {
+					q1.addSelect( "#qualifiedForeignKeyList# AS __QuickThroughKey__" );
+				}
+			)
 			.appendVirtualAttribute( name = "__QuickThroughKey__", excludeFromMemento = true )
 			.where( function( q1 ) {
 				getKeys( entities, variables.closestToParent.getLocalKeys() ).each( function( keys ) {

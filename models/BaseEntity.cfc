@@ -2348,11 +2348,11 @@ component accessors="true" {
 			} );
 		} );
 		callback( relation );
-		relation.addEagerConstraints( arguments.entities );
+		var hasMatches = relation.addEagerConstraints( arguments.entities );
 		relation.with( listRest( arguments.relationName, "." ) );
 		return relation.match(
 			relation.initRelation( arguments.entities, currentRelationship ),
-			relation.getEager(),
+			hasMatches ? relation.getEager() : [],
 			currentRelationship
 		);
 	}

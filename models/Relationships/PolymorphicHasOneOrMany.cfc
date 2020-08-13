@@ -82,10 +82,12 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	 *
 	 * @return    quick.models.Relationships.PolymorphicHasOneOrMany
 	 */
-	public PolymorphicHasOneOrMany function addEagerConstraints( required array entities ) {
-		super.addEagerConstraints( arguments.entities );
+	public boolean function addEagerConstraints( required array entities ) {
+		if ( !super.addEagerConstraints( arguments.entities ) ) {
+			return false;
+		}
 		variables.related.where( variables.morphType, variables.morphMapping );
-		return this;
+		return true;
 	}
 
 	/**

@@ -188,13 +188,17 @@ component accessors="true" {
 	 */
 	public array function getKeys( required array entities, required array keys ) {
 		return unique(
-			arguments.entities.map( function( entity ) {
-				return keys
-					.map( function( key ) {
-						return entity.retrieveAttribute( key );
-					} )
-					.toList();
-			} )
+			arguments.entities.reduce( function( acc, entity ) {
+				var keyValues = [];
+				for ( var key in keys ) {
+					if ( entity.isNullValue( key ) ) {
+						return acc;
+					}
+					keyValues.append( entity.retrieveAttribute( key ) );
+				}
+				acc.append( keyValues.toList() );
+				return acc;
+			}, [] )
 		).map( function( key ) {
 			return key.listToArray();
 		} );
@@ -347,6 +351,10 @@ component accessors="true" {
 	 * @return       [any]
 	 */
 	public array function unique( required array items ) {
+		if ( arrayIsEmpty( arguments.items ) ) {
+			return arguments.items;
+		}
+
 		return arraySlice( createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(), 1 );
 	}
 

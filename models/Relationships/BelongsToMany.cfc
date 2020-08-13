@@ -135,14 +135,20 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return    void
 	 */
-	public void function addEagerConstraints( required array entities ) {
+	public boolean function addEagerConstraints( required array entities ) {
+		var allKeys = getKeys( entities, variables.parentKeys );
+		if ( allKeys.isEmpty() ) {
+			return false;
+		}
+
 		performJoin();
 		variables.foreignPivotKeys.each( function( foreignPivotKey ) {
 			variables.related.addSelect( listLast( variables.table, " " ) & "." & foreignPivotKey );
 			variables.related.appendVirtualAttribute( name = foreignPivotKey, excludeFromMemento = true );
 		} );
+
 		variables.related.where( function( q1 ) {
-			getKeys( entities, variables.parentKeys ).each( function( keys ) {
+			allKeys.each( function( keys ) {
 				q1.orWhere( function( q2 ) {
 					arrayZipEach(
 						[
@@ -156,6 +162,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 				} );
 			} );
 		} );
+		return true;
 	}
 
 	/**

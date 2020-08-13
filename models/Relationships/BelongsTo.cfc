@@ -137,9 +137,13 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return    quick.models.Relationships.BelongsTo
 	 */
-	public BelongsTo function addEagerConstraints( required array entities ) {
+	public boolean function addEagerConstraints( required array entities ) {
+		var allKeys = getEagerEntityKeys( entities );
+		if ( allKeys.isEmpty() ) {
+			return false;
+		}
 		variables.related.where( function( q1 ) {
-			getEagerEntityKeys( entities ).each( function( keys ) {
+			allKeys.each( function( keys ) {
 				q1.orWhere( function( q2 ) {
 					arrayZipEach( [ variables.localKeys, keys ], function( localKey, key ) {
 						q2.where(
@@ -150,7 +154,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 				} );
 			} );
 		} );
-		return this;
+		return true;
 	}
 
 	/**

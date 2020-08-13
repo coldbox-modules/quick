@@ -1,3 +1,12 @@
+# v4.0.2
+## 13 Aug 2020 — 05:45:22 UTC
+
+### fix
+
++ __EagerLoading:__ Skip eager loading when no keys are found ([8b83529](https://github.com/coldbox-modules/quick/commit/8b835296de59c1b4fdd93981d6dd724591296305))
++ __Relationships:__ Only apply CONCAT when needed ([db220e2](https://github.com/coldbox-modules/quick/commit/db220e290db06b8604e15b631ac8301efea0bdaa))
+
+
 # v4.0.1
 ## 04 Aug 2020 — 21:26:55 UTC
 

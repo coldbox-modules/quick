@@ -233,7 +233,7 @@ component accessors="true" {
 	public any function init( struct meta = {}, boolean shallow = false ) {
 		variables._loadShallow = arguments.shallow;
 		assignDefaultProperties();
-		variables._meta         = arguments.meta;
+		variables._meta = arguments.meta;
 		return this;
 	}
 
@@ -262,7 +262,7 @@ component accessors="true" {
 		param variables._hasParentEntity          = false;
 		param variables._parentDefinition         = {};
 		param variables._discriminators           = [];
-		param variables._loadChildren 			  = true;
+		param variables._loadChildren             = true;
 		variables._asMemento                      = false;
 		variables._asMementoSettings              = {};
 		return this;

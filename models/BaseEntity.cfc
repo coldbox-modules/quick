@@ -30,7 +30,7 @@ component accessors="true" {
 	 */
 	property
 		name      ="_cache"
-		inject    ="cachebox:default"
+		inject    ="cachebox:quickMeta"
 		persistent="false";
 
 	/**
@@ -167,6 +167,16 @@ component accessors="true" {
 	property name="_eagerLoad" persistent="false";
 
 	/**
+	 * Discriminated chilrent property
+	 **/
+	property name="_discriminations" persistent="false";
+
+	/**
+	 * Flag for whether to load child entities
+	 */
+	property name="_loadChildren" persistent="false";
+
+	/**
 	 * A boolean flag representing that the entity does not want automatic relationship constraints.
 	 */
 	property name="_withoutRelationshipConstraints" persistent="false";
@@ -216,10 +226,12 @@ component accessors="true" {
 	 * Initializes the entity with default properties and optional metadata.
 	 *
 	 * @meta    An optional struct of metadata.  Used to avoid processing the metadata again.
+	 * @shallow When passed as true, the initial query instantiation and recursion in to child classes will not be performed
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function init( struct meta = {} ) {
+	public any function init( struct meta = {}, boolean shallow = false ) {
+		variables._loadShallow = arguments.shallow;
 		assignDefaultProperties();
 		variables._meta = arguments.meta;
 		return this;
@@ -247,6 +259,10 @@ component accessors="true" {
 		param variables._casterCache              = {};
 		param variables._loaded                   = false;
 		param variables._aliasPrefix              = "";
+		param variables._hasParentEntity          = false;
+		param variables._parentDefinition         = {};
+		param variables._discriminators           = [];
+		param variables._loadChildren             = true;
 		variables._asMemento                      = false;
 		variables._asMementoSettings              = {};
 		return this;
@@ -259,9 +275,11 @@ component accessors="true" {
 	 */
 	public void function onDIComplete() {
 		metadataInspection();
-		resetQuery();
-		setUpMementifier();
-		fireEvent( "instanceReady", { entity : this } );
+		if ( !variables._loadShallow ) {
+			resetQuery();
+			setUpMementifier();
+			fireEvent( "instanceReady", { entity : this } );
+		}
 	}
 
 	/**
@@ -444,7 +462,13 @@ component accessors="true" {
 			if ( value.virtual && !withVirtualAttributes ) {
 				return items;
 			}
-			items.append( asColumnNames ? value.column : key );
+			items.append(
+				asColumnNames
+				 ? value.isParentColumn
+				 ? ( getParentDefinition().meta.table & "." & value.column )
+				 : value.column
+				 : key
+			);
 			return items;
 		}, [] );
 	}
@@ -617,9 +641,7 @@ component accessors="true" {
 	 */
 	public any function hydrate( required struct attributes, boolean ignoreNonExistentAttributes = false ) {
 		guardAgainstMissingKeys( arguments.attributes );
-		fill( argumentCollection = arguments );
-		markLoaded();
-		return this;
+		return fill( argumentCollection = arguments ).assignOriginalAttributes( arguments.attributes ).markLoaded();
 	}
 
 	/**
@@ -931,7 +953,9 @@ component accessors="true" {
 	 */
 	public any function first() {
 		activateGlobalScopes();
+
 		var attrs = retrieveQuery().first();
+
 		return structIsEmpty( attrs ) ? javacast( "null", "" ) : handleTransformations( loadEntity( attrs ) );
 	}
 
@@ -1093,7 +1117,7 @@ component accessors="true" {
 	public any function findOrFail( required any id, any errorMessage ) {
 		var entity = variables.find( arguments.id );
 		if ( isNull( entity ) ) {
-			param arguments.errorMessage = "No [#entityName()#] found with id [#arguments.id#]";
+			param arguments.errorMessage = "No [#entityName()#] found with id [#( isArray( arguments.id ) ? arguments.id.toList() : arguments.id )#]";
 			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
 				arguments.errorMessage = arguments.errorMessage( this, arguments.id );
 			}
@@ -1165,10 +1189,28 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	private any function loadEntity( required struct data ) {
-		return newEntity()
-			.assignAttributesData( arguments.data )
-			.assignOriginalAttributes( arguments.data )
-			.markLoaded();
+		if (
+			variables._loadChildren
+			&&
+			isDiscriminatedParent()
+			&&
+			structKeyExists( getDiscriminations(), data[ variables._meta.localMetadata.discriminatorColumn ] )
+		) {
+			var childClass = variables._wirebox.getInstance(
+				getDiscriminations()[ data[ variables._meta.localMetadata.discriminatorColumn ] ].mapping
+			);
+
+			keyNames().each( function( key, i ) {
+				data[ childClass.keyNames()[ i ] ] = data[ key ];
+			} );
+
+			return childClass.hydrate( data, true );
+		} else {
+			return newEntity()
+				.assignAttributesData( arguments.data )
+				.assignOriginalAttributes( arguments.data )
+				.markLoaded();
+		}
 	}
 
 	/**
@@ -1322,6 +1364,24 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function save() {
+		if ( hasParentEntity() ) {
+			var parentDefinition = getParentDefinition();
+			if ( isLoaded() ) {
+				var parent = variables._wirebox
+					.getInstance( parentDefinition.meta.fullName )
+					.set_LoadChildren( false )
+					.findOrFail( keyValues() );
+			} else {
+				var parent = variables._wirebox.getInstance( parentDefinition.meta.fullName );
+			}
+
+			parent.fill( getMemento(), true ).save();
+
+			assignAttributesData( {
+				"#parentDefinition.key#"        : parent.keyValues()[ 1 ],
+				"#parentDefinition.joinColumn#" : parent.keyValues()[ 1 ]
+			} );
+		}
 		guardNoAttributes();
 		guardReadOnly();
 		mergeAttributesFromCastCache();
@@ -1360,7 +1420,12 @@ component accessors="true" {
 					return generateQueryParamStruct( key, isNull( value ) ? javacast( "null", "" ) : value );
 				} );
 			guardEmptyAttributeData( attrs );
+
 			var result = retrieveQuery().insert( attrs );
+
+			if ( hasParentEntity() ) {
+				result.result[ getParentDefinition().joincolumn ] = variables._data[ getParentDefinition().joinColumn ];
+			}
 			retrieveKeyType().postInsert( this, result );
 			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
@@ -1388,6 +1453,7 @@ component accessors="true" {
 			"This instance is not loaded so it cannot be deleted. " &
 			"Did you maybe mean to use `deleteAll`?"
 		);
+
 		newQuery()
 			.where( function( q ) {
 				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
@@ -1395,6 +1461,18 @@ component accessors="true" {
 				} );
 			} )
 			.delete();
+
+		if ( hasParentEntity() ) {
+			var parentEntity = variables._wirebox
+				.getInstance( getParentDefinition().meta.fullName )
+				.set_LoadChildren( false )
+				.find( keyValues() );
+
+			if ( !isNull( parentEntity ) ) {
+				parentEntity.delete();
+			}
+		}
+
 		variables._loaded = false;
 		fireEvent( "postDelete", { entity : this } );
 		return this;
@@ -2383,10 +2461,10 @@ component accessors="true" {
 		retrieveQuery().from( tableName() );
 		return variables._builder
 			.setEntity( this )
+			.newQuery()
 			.setReturnFormat( "array" )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() )
-			.newQuery()
 			.select( retrieveQualifiedColumns() );
 	}
 
@@ -2920,7 +2998,7 @@ component accessors="true" {
 		}
 
 		if ( !isArray( arguments.entity ) ) {
-			return entity.getMemento( argumentCollection = variables._asMementoSettings );
+			return arguments.entity.getMemento( argumentCollection = variables._asMementoSettings );
 		}
 
 		return arguments.entity.map( function( e ) {
@@ -2982,17 +3060,48 @@ component accessors="true" {
 							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
 						);
 					}
-					meta[ "fullName" ]                     = meta.originalMetadata.fullname;
-					param meta.originalMetadata.mapping    = listLast( meta.originalMetadata.fullname, "." );
-					meta[ "mapping" ]                      = meta.originalMetadata.mapping;
-					param meta.originalMetadata.entityName = listLast( meta.originalMetadata.name, "." );
-					meta[ "entityName" ]                   = meta.originalMetadata.entityName;
-					param meta.originalMetadata.table      = variables._str.plural( variables._str.snake( meta.entityName ) );
-					meta[ "table" ]                        = meta.originalMetadata.table;
-					param meta.originalMetadata.readonly   = false;
-					meta[ "readonly" ]                     = meta.originalMetadata.readonly;
-					param meta.originalMetadata.functions  = [];
-					var baseEntityFunctionNames            = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
+					meta[ "fullName" ]                             = meta.originalMetadata.fullname;
+					param meta.originalMetadata.mapping            = listLast( meta.originalMetadata.fullname, "." );
+					meta[ "mapping" ]                              = meta.originalMetadata.mapping;
+					param meta.originalMetadata.entityName         = listLast( meta.originalMetadata.name, "." );
+					meta[ "entityName" ]                           = meta.originalMetadata.entityName;
+					param meta.originalMetadata.table              = variables._str.plural( variables._str.snake( meta.entityName ) );
+					meta[ "table" ]                                = meta.originalMetadata.table;
+					param meta.originalMetadata.readonly           = false;
+					meta[ "readonly" ]                             = meta.originalMetadata.readonly;
+					param meta.originalMetadata.joincolumn         = "";
+					param meta.originalMetadata.discriminatorValue = "";
+					param meta.originalMetadata.extends            = "";
+					param meta.originalMetadata.functions          = [];
+					meta[ "hasParentEntity" ]                      = !!len( meta.originalMetadata.joincolumn );
+					if ( meta.hasParentEntity ) {
+						var reference = variables._wirebox.getInstance(
+							name          = meta.localMetadata.extends.fullName,
+							initArguments = { "meta" : {}, "shallow" : true }
+						);
+
+						meta[ "parentDefinition" ] = {
+							"meta"       : reference.get_Meta(),
+							"key"        : reference.keyNames()[ 1 ],
+							"joincolumn" : meta.originalMetadata.joincolumn
+						};
+
+						if ( len( meta.originalMetadata.discriminatorValue ) ) {
+							try {
+								var parentMeta                                 = getComponentMetadata( meta.parentDefinition.meta.fullName );
+								meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
+								meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
+							} catch ( any e ) {
+								throw(
+									type    = "QuickChildInstantiationException",
+									message = "Failed to instantiate child entity [#meta.fullName#]. This may be due to a configuration error in the parent/child relationships. The root cause was #e.message#",
+									detail  = e.detail
+								);
+							}
+						}
+					}
+
+					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
 						return arrayReduce(
 							getComponentMetadata( "quick.models.BaseEntity" ).functions,
 							function( acc, func ) {
@@ -3008,13 +3117,19 @@ component accessors="true" {
 					);
 
 					param meta.originalMetadata.properties = [];
-					meta[ "attributes" ]                   = generateAttributesFromProperties( meta.originalMetadata.properties );
-					for ( var key in keyNames() ) {
+
+					meta[ "attributes" ] = generateAttributesFromProperties(
+						meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
+					);
+					if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
+						meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
+					}
+					arrayWrap( variables._key ).each( function( key ) {
 						if ( !meta.attributes.keyExists( key ) ) {
 							var keyProp                     = paramAttribute( { "name" : key } );
 							meta.attributes[ keyProp.name ] = keyProp;
 						}
-					}
+					} );
 					meta[ "casts" ] = generateCastsFromProperties( meta.originalMetadata.properties );
 					guardKeyHasNoDefaultValue( meta.attributes );
 					return meta;
@@ -3022,9 +3137,16 @@ component accessors="true" {
 			);
 		}
 
-		variables._fullName           = variables._meta.fullName;
-		variables._entityName         = variables._meta.entityName;
-		variables._table              = variables._meta.table;
+		variables._fullName        = variables._meta.fullName;
+		variables._entityName      = variables._meta.entityName;
+		variables._table           = variables._meta.table;
+		variables._hasParentEntity = variables._meta.hasParentEntity;
+
+		if ( variables._hasParentEntity ) {
+			variables._parentDefinition = variables._meta.parentDefinition;
+			variables._key              = variables._parentDefinition.joincolumn;
+		}
+
 		param variables._queryOptions = {};
 		if ( variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists( "datasource" ) ) {
 			variables._queryOptions = { datasource : variables._meta.originalMetadata.datasource };
@@ -3104,6 +3226,10 @@ component accessors="true" {
 		return variables._attributes[ retrieveAliasForColumn( arguments.name ) ].virtual;
 	}
 
+	public boolean function isParentAttribute( required string column ) {
+		return variables._attributes[ retrieveAliasForColumn( arguments.column ) ].isParentColumn;
+	}
+
 	/**
 	 * Creates the internal attribute struct from an existing struct.
 	 * The only required field on the passed in struct is `name`.
@@ -3113,17 +3239,18 @@ component accessors="true" {
 	 * @return  An attribute struct with all the keys needed.
 	 */
 	private struct function paramAttribute( required struct attr ) {
-		param attr.column        = arguments.attr.name;
-		param attr.persistent    = true;
-		param attr.nullValue     = "";
-		param attr.convertToNull = true;
-		param attr.casts         = "";
-		param attr.readOnly      = false;
-		param attr.sqltype       = "";
-		param attr.insert        = true;
-		param attr.update        = true;
-		param attr.virtual       = false;
-		param attr.exclude       = false;
+		param attr.column         = arguments.attr.name;
+		param attr.persistent     = true;
+		param attr.nullValue      = "";
+		param attr.convertToNull  = true;
+		param attr.casts          = "";
+		param attr.readOnly       = false;
+		param attr.sqltype        = "";
+		param attr.insert         = true;
+		param attr.update         = true;
+		param attr.virtual        = false;
+		param attr.exclude        = false;
+		param attr.isParentColumn = false;
 		return arguments.attr;
 	}
 
@@ -3140,7 +3267,95 @@ component accessors="true" {
 				variables._nullValues[ alias ] = options.nullValue;
 			}
 		}
+
+		if ( hasParentEntity() ) {
+			explodeParentAttributes();
+		}
+
 		return this;
+	}
+
+	/*=================================
+    =       Subclass Inheritance      =
+    =================================*/
+
+	public boolean function hasParentEntity() {
+		return variables._hasParentEntity;
+	}
+
+	public boolean function isDiscriminatedChild() {
+		return hasParentEntity() && variables._meta.localMetadata.keyExists( "discriminatorValue" );
+	}
+
+	public boolean function isDiscriminatedParent() {
+		return variables._meta.localMetadata.keyExists( "discriminatorColumn" )
+		&& variables._discriminators.len();
+	}
+
+	public function getParentDefinition() {
+		return hasParentEntity() ? variables._parentDefinition : javacast( "null", 0 );
+	}
+
+	public function getDiscriminations() {
+		return variables._cache.getOrSet( "quick-metadata:#variables._mapping#-discriminations", function() {
+			return variables._discriminators.reduce( function( acc, dsl ) {
+				var childClass = variables._wirebox.getInstance(
+					dsl           = dsl,
+					initArguments = { "meta" : {}, "shallow" : true }
+				);
+				var childMeta = childClass.get_Meta().localMetaData;
+				if ( !structKeyExists( childMeta, "joincolumn" ) || !structKeyExists( childMeta, "discriminatorValue" ) ) {
+					throw(
+						type    = "QuickParentInstantiationException",
+						message = "Failed to instantiate the parent entity [#variables._meta.fullName#]. The discriminated child class [#childMeta.fullName#] did not contain either a `joinColumn` or `discriminatorValue` attribute"
+					);
+				}
+				var childAttributes = childClass
+					.get_Attributes()
+					.reduce( function( acc, attr, data ) {
+						if ( !data.isParentColumn && !data.virtual && !data.exclude ) {
+							acc.append( data );
+						}
+						return acc;
+					}, [] );
+
+				acc[ childMeta.discriminatorValue ] = {
+					"mapping"    : childMeta.fullName,
+					"table"      : childMeta.table,
+					"joincolumn" : childMeta.joinColumn,
+					"attributes" : childAttributes
+				};
+				return acc;
+			}, {} );
+		} );
+	}
+
+	/**
+	 * Appends parent attributes as first class attributes
+	 **/
+	private function explodeParentAttributes() {
+		if ( !hasParentEntity() ) return;
+
+		var parentDefinition = getParentDefinition();
+
+		variables._attributes[ parentDefinition.joincolumn ] = paramAttribute( { "name" : parentDefinition.joincolumn } );
+
+		parentDefinition.meta.attributes
+			.keyArray()
+			.each( function( alias ) {
+				// Note: bracket notation here on `attributes` as ACF 2016 will sometimes show a null for the dot notation key
+				variables._attributes[ alias ] = duplicate( parentDefinition.meta[ "attributes" ][ alias ] );
+				variables._attributes[ alias ].isParentColumn = true;
+			} );
+
+		if ( isDiscriminatedChild() ) {
+			variables._attributes[ parentDefinition.discriminatorColumn ] = paramAttribute( {
+				"name"           : parentDefinition.discriminatorColumn,
+				"column"         : parentDefinition.discriminatorColumn,
+				"isParentColumn" : true
+			} );
+			assignAttribute( parentDefinition.discriminatorColumn, parentDefinition.discriminatorValue );
+		}
 	}
 
 	/*=================================
@@ -3221,8 +3436,8 @@ component accessors="true" {
 	 */
 	private boolean function isReadOnlyAttribute( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._meta.attributes.keyExists( alias ) &&
-		variables._meta.attributes[ alias ].readOnly;
+		return variables._attributes.keyExists( alias ) &&
+		variables._attributes[ alias ].readOnly;
 	}
 
 	/**
@@ -3391,8 +3606,8 @@ component accessors="true" {
 	 */
 	private boolean function attributeHasSqlType( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._meta.attributes.keyExists( alias ) &&
-		variables._meta.attributes[ alias ].sqltype != "";
+		return variables._attributes.keyExists( alias ) &&
+		variables._attributes[ alias ].sqltype != "";
 	}
 
 	/**
@@ -3404,7 +3619,7 @@ component accessors="true" {
 	 */
 	private string function retrieveSqlTypeForAttribute( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._meta.attributes[ alias ].sqltype;
+		return variables._attributes[ alias ].sqltype;
 	}
 
 	/**
@@ -3570,8 +3785,9 @@ component accessors="true" {
 	 */
 	private boolean function canUpdateAttribute( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._meta.attributes.keyExists( alias ) &&
-		variables._meta.attributes[ alias ].update;
+		return variables._attributes.keyExists( alias ) &&
+		variables._attributes[ alias ].update &&
+		!variables._attributes[ alias ].isParentColumn;
 	}
 
 	/**
@@ -3583,8 +3799,9 @@ component accessors="true" {
 	 */
 	private boolean function canInsertAttribute( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._meta.attributes.keyExists( alias ) &&
-		variables._meta.attributes[ alias ].insert;
+		return variables._attributes.keyExists( alias ) &&
+		variables._attributes[ alias ].insert &&
+		!variables._attributes[ alias ].isParentColumn;
 	}
 
 	/**

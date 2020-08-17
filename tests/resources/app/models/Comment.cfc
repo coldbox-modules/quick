@@ -1,4 +1,8 @@
-component extends="quick.models.BaseEntity" accessors="true" {
+component 
+    extends="quick.models.BaseEntity"
+    discriminatorColumn="designation" 
+    accessors="true" 
+{
 
     property name="id";
     property name="body";
@@ -7,6 +11,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
     property name="userId" column="user_id";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
+
+    variables._discriminators = [
+        "InternalComment"
+    ];
 
     function commentable() {
         return polymorphicBelongsTo( "commentable" );

@@ -22,11 +22,11 @@ component extends="quick.models.BaseEntity" accessors="true" {
     }
 
     function comments() {
-        return hasManyThrough( [ "users", "posts", "comments" ] );
+        return hasManyThrough( [ "users", "posts", "comments" ] ).where( 'designation', 'public' );
     }
 
     function commentsUsingHasManyThrough() {
-        return hasManyThrough( [ "posts", "comments" ] );
+        return hasManyThrough( [ "posts", "comments" ] ).where( 'designation', 'public' );
     }
 
     function roles() {

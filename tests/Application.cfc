@@ -20,7 +20,10 @@ component {
     this.datasource = "quick";
 
     function onRequestStart() {
+        setting requestTimeout="180";
         structDelete( application, "cbController" );
+        structDelete( application, "wirebox" );
+        URL.coverageEnabled = false;
         setUpDatabase();
     }
 
@@ -252,6 +255,7 @@ component {
               `body` text NOT NULL,
               `commentable_id` int(11) NOT NULL,
               `commentable_type` varchar(50) NOT NULL,
+              `designation` varchar(50) NOT NULL default 'public',
               `user_id` int(11) NOT NULL,
               `created_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `modified_date` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -267,6 +271,25 @@ component {
         queryExecute( "
             INSERT INTO `comments` (`id`, `body`, `commentable_id`, `commentable_type`, `user_id`, `created_date`, `modified_date`) VALUES (3, 'What a great video! So fun!', 1245, 'Video', 1, '2017-07-02 04:14:22', '2017-07-02 04:14:22')
         " );
+
+        queryExecute( "
+            CREATE TABLE `internalComments` (
+                `FK_comment` int(11) NOT NULL,
+                `reason`  text,
+                FOREIGN KEY (FK_comment)
+                    REFERENCES comments(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE
+            )
+        " );
+
+        queryExecute( "
+            INSERT INTO `comments` (`id`, `body`, `commentable_id`, `designation`, `commentable_type`, `user_id`, `created_date`, `modified_date`) VALUES (4, 'This is an internal comment. It is very, very private.', 1245, 'internal', 'Post', 1, '2017-07-02 04:14:22', '2017-07-02 04:14:22' )
+        " );
+
+        queryExecute( "
+            INSERT INTO `internalComments` ( `FK_comment`, `reason` ) VALUES ( 4, 'Utra private, ya know?' );
+        ");
+
         queryExecute( "
             CREATE TABLE `tags` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -327,6 +350,25 @@ component {
         queryExecute( "
             INSERT INTO `songs` (`id`, `title`, `download_url`, `created_date`, `modified_date`) VALUES (2, 'Open Arms', 'https://open.spotify.com/track/1m2INxep6LfNa25OEg5jZl', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
         " );
+
+        queryExecute( "
+            CREATE TABLE `jingles` (
+                `FK_song` int(11) NOT NULL,
+                `catchiness`  int(11),
+                FOREIGN KEY (FK_song)
+                    REFERENCES songs(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE
+            )
+        " );
+
+        queryExecute( "
+            INSERT INTO `songs` (`id`, `title`, `download_url`, `created_date`, `modified_date`) VALUES (3, 'I Wish I Was an Oscar Mayer Weiner', 'https://open.spotify.com/track/2wyg2ln6p4gEkdqM2mueLn?si=kWBpdUz1TLymdmTro-xjtw', '2017-07-28 02:07:00', '2017-07-28 02:07:00')
+        " );
+
+        queryExecute( "
+            INSERT INTO `jingles` ( `FK_song`, `catchiness` ) VALUES ( 3, 3 );
+        ");
+
         queryExecute( "
             CREATE TABLE `phone_numbers` (
               `id` int(11) NOT NULL AUTO_INCREMENT,

@@ -4,6 +4,7 @@
 /node_modules
 /modules
 
+.vscode
 !.engine/
 .engine/*
 !.engine/WEB-INF/

@@ -3297,7 +3297,7 @@ component accessors="true" {
 	}
 
 	public function getDiscriminations() {
-		return variables._cache.getOrSet( "quick-metadata:discriminations-#tableName()#", function() {
+		return variables._cache.getOrSet( "quick-metadata:#variables._mapping#-discriminations", function() {
 			return variables._discriminators.reduce( function( acc, dsl ) {
 				var childClass = variables._wirebox.getInstance(
 					dsl           = dsl,

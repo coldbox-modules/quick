@@ -5,9 +5,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
         getController().getModuleService()
             .registerAndActivateModule( "quick", "testingModuleRoot" );
-        
-        getController().getInterceptorService()
-            .processState( "afterAspectsLoad" );
+            
     }
 
     /**

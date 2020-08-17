@@ -69,48 +69,6 @@ component {
         controller.getCachebox().getCache( settings.metadataCache.name ).clearAll();
     }
 
-    /**
-     * This interception ensures that quick entity parent/child relationships are available to discriminated entities
-     * @event          The current request context
-     * @interceptData  The intercept data for `afterAspectsLoad`.
-     */
-    function afterAspectsLoad( event, interceptData ){
-        param application.quickMeta = {};
-        param application.quickMeta.discriminators = {};
-        
-        binder.getMappings().each( function( key, mapping ){
-            if( !mapping.isDiscovered() ){
-                mapping.process( binder, application.wirebox );
-            }
-            var meta = mapping.getObjectMetadata();
-            if( structKeyExists( meta, "joincolumn" ) && structKeyExists( meta, "discriminatorValue" ) ){
-                // retrieve the inheritance metadata and attributes
-                var childClass = application.wirebox.getInstance( meta.fullName );
-                var childAttributes = childClass.get_Attributes().reduce( function( acc, attr, data ){ 
-                    if( !data.isParentColumn && !data.virtual && !data.exclude ){
-                        acc.append( data );
-                    }
-                    return acc;
-                 }, [] );
-                var meta = childClass.get_Meta();
-                var parentMeta = meta.parentDefinition.meta;
-                
-                if( !structKeyExists( parentMeta, "table" ) ) parentMeta = application.wirebox.getInstance( parentMeta.fullName ).get_Meta();
-                
-                if( !structKeyExists( application.quickMeta.discriminators, parentMeta.table ) ){
-                    application.quickMeta.discriminators[ parentMeta.table ] = {};
-                }
-
-                application.quickMeta.discriminators[ parentMeta.table ][ meta.parentDefinition.discriminatorValue ] = {
-                    "mapping" : meta.fullName,
-                    "table" : meta.table,
-                    "joincolumn" : meta.parentDefinition.joinColumn,
-                    "attributes" : childAttributes
-                };
-            }
-        } );
-        
-    }
 
     /**
      * This interceptor ensures that the `_mapping` property for a Quick entity

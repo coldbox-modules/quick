@@ -234,7 +234,6 @@ component accessors="true" {
 		variables._loadShallow = arguments.shallow;
 		assignDefaultProperties();
 		variables._meta         = arguments.meta;
-		variables._loadChildren = true;
 		return this;
 	}
 
@@ -263,6 +262,7 @@ component accessors="true" {
 		param variables._hasParentEntity          = false;
 		param variables._parentDefinition         = {};
 		param variables._discriminators           = [];
+		param variables._loadChildren 			  = true;
 		variables._asMemento                      = false;
 		variables._asMementoSettings              = {};
 		return this;

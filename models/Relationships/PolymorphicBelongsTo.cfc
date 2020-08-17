@@ -80,10 +80,10 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 *
 	 * @return    quick.models.Relationships.PolymorphicBelongsTo
 	 */
-	public PolymorphicBelongsTo function addEagerConstraints( required array entities ) {
+	public boolean function addEagerConstraints( required array entities ) {
 		variables.entities = arguments.entities;
 		buildDictionary();
-		return this;
+		return true;
 	}
 
 	/**
@@ -148,6 +148,12 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 		var instance = createModelByType( arguments.type ).with( variables.related.get_eagerLoad() );
 
 		var localKeys = variables.localKeys.isEmpty() ? instance.keyNames() : variables.localKeys;
+
+		var allKeys = gatherKeysByType( type );
+
+		if ( allKeys.isEmpty() ) {
+			return [];
+		}
 
 		return instance
 			.where( function( q1 ) {

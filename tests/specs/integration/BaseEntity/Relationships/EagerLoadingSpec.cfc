@@ -59,6 +59,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				}
 			} );
 
+			it( "does not eager load a belongs to relationship if there are no foreign keys available", function() {
+				var usersWithoutFavoritePosts = getInstance( "User" )
+					.whereNull( "favoritePost_id" )
+					.with( "favoritePost" )
+					.get();
+				expect( usersWithoutFavoritePosts ).toBeArray();
+				expect( usersWithoutFavoritePosts ).toHaveLength( 3, "3 users should have been loaded" );
+				if ( arrayLen( variables.queries ) != 1 ) {
+					expect( variables.queries ).toHaveLength(
+						1,
+						"Only one query should have been executed. #arrayLen( variables.queries )# were instead."
+					);
+				}
+			} );
+
 			it( "does not eager load a has many empty record set", function() {
 				var users = getInstance( "User" )
 					.whereNull( "createdDate" )

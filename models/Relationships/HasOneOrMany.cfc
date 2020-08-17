@@ -81,11 +81,16 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return    quick.models.Relationships.HasOneOrMany
 	 */
-	public HasOneOrMany function addEagerConstraints( required array entities ) {
+	public boolean function addEagerConstraints( required array entities ) {
+		var allKeys = getKeys( entities, variables.localKeys );
+		if ( allKeys.isEmpty() ) {
+			return false;
+		}
+
 		variables.related
 			.retrieveQuery()
 			.where( function( q ) {
-				getKeys( entities, variables.localKeys ).each( function( keys ) {
+				allKeys.each( function( keys ) {
 					q.orWhere( function( q2 ) {
 						arrayZipEach( [ variables.foreignKeys, keys ], function( foreignKey, keyValue ) {
 							q2.where(
@@ -96,7 +101,8 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					} );
 				} );
 			} );
-		return this;
+
+		return true;
 	}
 
 	/**

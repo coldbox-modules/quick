@@ -76,11 +76,11 @@ component extends="cfcollection.models.Collection" {
 	 * @return        void
 	 */
 	private void function eagerLoadRelation( required string relationName ) {
-		var relation = invoke( get( 1 ), arguments.relationName ).resetQuery();
-		relation.addEagerConstraints( get() );
+		var relation         = invoke( get( 1 ), arguments.relationName ).resetQuery();
+		var hasMatches       = relation.addEagerConstraints( get() );
 		variables.collection = relation.match(
 			relation.initRelation( get(), arguments.relationName ),
-			relation.getEager(),
+			hasMatches ? relation.getEager() : [],
 			arguments.relationName
 		);
 	}

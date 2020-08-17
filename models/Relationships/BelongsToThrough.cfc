@@ -105,7 +105,13 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	 *
 	 * @return    quick.models.Relationships.BelongsToThrough
 	 */
-	public BelongsToThrough function addEagerConstraints( required array entities ) {
+	public boolean function addEagerConstraints( required array entities ) {
+		var allKeys = getKeys( entities, variables.closestToParent.getLocalKeys() );
+
+		if ( allKeys.isEmpty() ) {
+			return false;
+		}
+
 		performJoin();
 		var foreignKeys             = variables.closestToParent.getForeignKeys();
 		var qualifiedForeignKeyList = foreignKeys
@@ -117,11 +123,20 @@ component extends="quick.models.Relationships.BaseRelationship" {
 				return acc;
 			}, [] )
 			.toList();
+
 		variables.related
-			.selectRaw( "CONCAT(#qualifiedForeignKeyList#) AS __QuickThroughKey__" )
+			.when(
+				( qualifiedForeignKeyList.listLen() > 1 ),
+				function( q1 ) {
+					q1.selectRaw( "CONCAT(#qualifiedForeignKeyList#) AS __QuickThroughKey__" );
+				},
+				function( q1 ) {
+					q1.addSelect( "#qualifiedForeignKeyList# AS __QuickThroughKey__" );
+				}
+			)
 			.appendVirtualAttribute( name = "__QuickThroughKey__", excludeFromMemento = true )
 			.where( function( q1 ) {
-				getKeys( entities, variables.closestToParent.getLocalKeys() ).each( function( keys ) {
+				allKeys.each( function( keys ) {
 					q1.orWhere( function( q2 ) {
 						arrayZipEach( [ foreignKeys, keys ], function( foreignKey, keyValue ) {
 							q2.where(
@@ -132,7 +147,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
 					} );
 				} );
 			} );
-		return this;
+
+		return true;
 	}
 
 	/**

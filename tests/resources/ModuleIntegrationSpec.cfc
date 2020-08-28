@@ -6,12 +6,12 @@ component extends="coldbox.system.testing.BaseTestCase" {
         getController().getModuleService()
             .registerAndActivateModule( "quick", "testingModuleRoot" );
 
+        param variables.fixtures = getFixtures();
         param url.reloadFixtures = false;
         if ( url.reloadFixtures ) {
             refreshDatabase();
             insertFixtures();
         }
-        param variables.fixtures = getFixtures();
     }
 
     /**
@@ -45,7 +45,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
     }
 
     private void function insertFixtures() {
-        getFixtures().seedDatabase();
+        variables.fixtures.seedDatabase();
     }
 
     private FixtureService function getFixtures() {

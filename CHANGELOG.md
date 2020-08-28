@@ -1,3 +1,16 @@
+# v4.1.0
+## 28 Aug 2020 — 20:59:11 UTC
+
+### feat
+
++ __BaseEntity:__ Allow for child entities included discriminated entities ([28bf5e2](https://github.com/coldbox-modules/quick/commit/28bf5e25bcf9182091190a3fe542bec1d3aa4247))
+
+### fix
+
++ __KeyType:__ Look up returning values by column name not by alias
+ ([f1a0832](https://github.com/coldbox-modules/quick/commit/f1a0832fc1bedf1b5ce42a174e59bfb1070064ca))
+
+
 # v4.0.2
 ## 13 Aug 2020 — 05:45:22 UTC
 

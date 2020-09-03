@@ -1,3 +1,17 @@
+# v4.1.1
+## 03 Sep 2020 — 03:48:53 UTC
+
+### chore
+
++ __Format:__ Format with CFFormat
+ ([621ce6c](https://github.com/coldbox-modules/quick/commit/621ce6c4dff3fe01746c64cef1256c007b1534c5))
+
+### fix
+
++ __Cast:__ Preserve casted value after saving
+ ([8680b1d](https://github.com/coldbox-modules/quick/commit/8680b1de20b95f8bb5d3c76ef731c7b3575647bc))
+
+
 # v4.1.0
 ## 28 Aug 2020 — 20:59:11 UTC
 

@@ -1439,7 +1439,7 @@ component accessors="true" {
 		// re-cast
 		for ( var key in variables._castCache ) {
 			variables._data[ retrieveColumnForAlias( key ) ] = variables._castCache[ key ];
-			variables[ retrieveAliasForColumn( key ) ] = variables._castCache[ key ];
+			variables[ retrieveAliasForColumn( key ) ]       = variables._castCache[ key ];
 		}
 
 		return this;

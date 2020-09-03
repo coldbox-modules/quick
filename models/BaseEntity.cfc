@@ -535,6 +535,7 @@ component accessors="true" {
 
 	/**
 	 * Assigns a struct of key / value pairs as the attributes data.
+	 * This method also marks an entity as not loaded if the attributes struct is empty.
 	 * This method does not:
 	 * 1. Use relationship setters
 	 * 2. Call custom attribute setters
@@ -551,6 +552,23 @@ component accessors="true" {
 			return this;
 		}
 
+		populateAttributes( arguments.attributes );
+
+		return this;
+	}
+
+	/**
+	 * Populates a struct of key / value pairs as the attributes data.
+	 * This method does not:
+	 * 1. Use relationship setters
+	 * 2. Call custom attribute setters
+	 * 3. Check for the existence of the attribute
+	 *
+	 * @attributes  The struct of key / value pairs to set.
+	 *
+	 * @return      quick.models.BaseEntity
+	 */
+	public any function populateAttributes( struct attributes = {} ) {
 		for ( var key in arguments.attributes ) {
 			variables._data[ retrieveColumnForAlias( key ) ] = (
 				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
@@ -559,8 +577,6 @@ component accessors="true" {
 				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
 			) ? javacast( "null", "" ) : castValueForGetter( key, arguments.attributes[ key ] );
 		}
-
-		return this;
 	}
 
 	/**
@@ -1437,10 +1453,7 @@ component accessors="true" {
 		fireEvent( "postSave", { entity : this } );
 
 		// re-cast
-		for ( var key in variables._castCache ) {
-			variables._data[ retrieveColumnForAlias( key ) ] = variables._castCache[ key ];
-			variables[ retrieveAliasForColumn( key ) ]       = variables._castCache[ key ];
-		}
+		populateAttributes( variables._castCache );
 
 		return this;
 	}

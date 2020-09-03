@@ -265,6 +265,7 @@ component accessors="true" {
 		param variables._loadChildren             = true;
 		variables._asMemento                      = false;
 		variables._asMementoSettings              = {};
+		variables._saving                         = false;
 		return this;
 	}
 
@@ -1386,6 +1387,7 @@ component accessors="true" {
 		guardReadOnly();
 		mergeAttributesFromCastCache();
 		fireEvent( "preSave", { entity : this } );
+		variables._saving = true;
 		if ( variables._loaded ) {
 			fireEvent( "preUpdate", { entity : this } );
 			newQuery()
@@ -1431,7 +1433,14 @@ component accessors="true" {
 			markLoaded();
 			fireEvent( "postInsert", { entity : this } );
 		}
+		variables._saving = false;
 		fireEvent( "postSave", { entity : this } );
+
+		// re-cast
+		for ( var key in variables._castCache ) {
+			variables._data[ retrieveColumnForAlias( key ) ] = variables._castCache[ key ];
+			variables[ retrieveAliasForColumn( key ) ] = variables._castCache[ key ];
+		}
 
 		return this;
 	}
@@ -3741,6 +3750,10 @@ component accessors="true" {
 	private any function castValueForSetter( required string key, any value ) {
 		if ( isNull( arguments.value ) ) {
 			return javacast( "null", "" );
+		}
+
+		if ( variables._saving ) {
+			return arguments.value;
 		}
 
 		arguments.key = retrieveAliasForColumn( arguments.key );

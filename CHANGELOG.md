@@ -1,3 +1,39 @@
+# v4.1.1
+## 03 Sep 2020 — 03:48:53 UTC
+
+### chore
+
++ __Format:__ Format with CFFormat
+ ([621ce6c](https://github.com/coldbox-modules/quick/commit/621ce6c4dff3fe01746c64cef1256c007b1534c5))
+
+### fix
+
++ __Cast:__ Preserve casted value after saving
+ ([8680b1d](https://github.com/coldbox-modules/quick/commit/8680b1de20b95f8bb5d3c76ef731c7b3575647bc))
+
+
+# v4.1.0
+## 28 Aug 2020 — 20:59:11 UTC
+
+### feat
+
++ __BaseEntity:__ Allow for child entities included discriminated entities ([28bf5e2](https://github.com/coldbox-modules/quick/commit/28bf5e25bcf9182091190a3fe542bec1d3aa4247))
+
+### fix
+
++ __KeyType:__ Look up returning values by column name not by alias
+ ([f1a0832](https://github.com/coldbox-modules/quick/commit/f1a0832fc1bedf1b5ce42a174e59bfb1070064ca))
+
+
+# v4.0.2
+## 13 Aug 2020 — 05:45:22 UTC
+
+### fix
+
++ __EagerLoading:__ Skip eager loading when no keys are found ([8b83529](https://github.com/coldbox-modules/quick/commit/8b835296de59c1b4fdd93981d6dd724591296305))
++ __Relationships:__ Only apply CONCAT when needed ([db220e2](https://github.com/coldbox-modules/quick/commit/db220e290db06b8604e15b631ac8301efea0bdaa))
+
+
 # v4.0.1
 ## 04 Aug 2020 — 21:26:55 UTC
 

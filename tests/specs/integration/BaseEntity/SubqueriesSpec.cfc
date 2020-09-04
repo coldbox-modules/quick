@@ -14,6 +14,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			it( "can add a subquery to an entity", function() {
 				var elpete = getInstance( "User" ).withLatestPostId().findOrFail( 1 );
 				expect( elpete.getLatestPostId() ).notToBeNull();
+
 				expect( elpete.getLatestPostId() ).toBe( 523526 );
 				expect( variables.queries ).toHaveLength(
 					1,

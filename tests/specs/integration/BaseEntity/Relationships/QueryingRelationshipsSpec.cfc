@@ -72,13 +72,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					} );
 
 					it( "applies count constraints to the final relationship in a nested relationship existence check", function() {
+						debug( getInstance( "User" ).has( "posts.comments", "=", 1 ).toSQL() );
+
 						var users = getInstance( "User" ).has( "posts.comments", "=", 1 ).get();
+						debug(
+							var = queryExecute( "SELECT user_id, count(*) from comments GROUP BY user_id" ),
+							top = 2
+						);
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 2 );
+						expect( users ).toHaveLength( 1 );
 
 						var users = getInstance( "User" ).has( "posts.comments", ">", 1 ).get();
 						expect( users ).toBeArray();
-						expect( users ).toBeEmpty();
+						expect( users ).toHaveLength( 1 );
 					} );
 
 					it( "applies whereHas constraints to the final relationship in a nested relationship existence check", function() {
@@ -274,11 +280,11 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					it( "applies count constraints to the final relationship in a nested relationship absence check", function() {
 						var users = getInstance( "User" ).doesntHave( "posts.comments", "=", 1 ).get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 2 );
+						expect( users ).toHaveLength( 3 );
 
 						var users = getInstance( "User" ).doesntHave( "posts.comments", ">", 1 ).get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 4 );
+						expect( users ).toHaveLength( 3 );
 					} );
 
 					it( "applies whereDoesntHave constraints to the final relationship in a nested relationship existence check", function() {

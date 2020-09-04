@@ -12,7 +12,7 @@ component implements="KeyType" {
 	 * @return   void
 	 */
 	public void function preInsert( required any entity ) {
-		arguments.entity.retrieveQuery().returning( arguments.entity.keyNames() );
+		arguments.entity.retrieveQuery().returning( arguments.entity.keyColumns() );
 	}
 
 	/**
@@ -25,9 +25,9 @@ component implements="KeyType" {
 	 */
 	public void function postInsert( required any entity, required struct result ) {
 		arguments.entity
-			.keyNames()
-			.each( function( keyName ) {
-				entity.assignAttribute( keyName, result.query[ keyName ] );
+			.keyColumns()
+			.each( function( keyColumn ) {
+				entity.assignAttribute( keyColumn, result.query[ keyColumn ] );
 			} );
 	}
 

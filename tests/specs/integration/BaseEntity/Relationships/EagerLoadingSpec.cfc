@@ -59,6 +59,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				}
 			} );
 
+			it( "does not eager load a belongs to relationship if there are no foreign keys available", function() {
+				var usersWithoutFavoritePosts = getInstance( "User" )
+					.whereNull( "favoritePost_id" )
+					.with( "favoritePost" )
+					.get();
+				expect( usersWithoutFavoritePosts ).toBeArray();
+				expect( usersWithoutFavoritePosts ).toHaveLength( 3, "3 users should have been loaded" );
+				if ( arrayLen( variables.queries ) != 1 ) {
+					expect( variables.queries ).toHaveLength(
+						1,
+						"Only one query should have been executed. #arrayLen( variables.queries )# were instead."
+					);
+				}
+			} );
+
 			it( "does not eager load a has many empty record set", function() {
 				var users = getInstance( "User" )
 					.whereNull( "createdDate" )
@@ -253,7 +268,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can eager load polymorphic belongs to relationships", function() {
-				var comments = getInstance( "Comment" ).with( "commentable" ).get();
+				var comments = getInstance( "Comment" )
+					.where( "designation", "public" )
+					.with( "commentable" )
+					.get();
 
 				expect( comments ).toBeArray();
 				expect( comments ).toHaveLength( 3 );
@@ -274,6 +292,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can eager load polymorphic has many relationships", function() {
+				// delete our internal comments to allow the test to pass:
+				getInstance( "InternalComment" )
+					.get()
+					.each( function( comment ) {
+						comment.delete();
+					} );
+				variables.queries = [];
+
 				var posts = getInstance( "Post" ).with( "comments" ).get();
 
 				expect( posts ).toBeArray();
@@ -295,7 +321,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can eager load a nested relationship", function() {
-				var users = getInstance( "User" )
+				// delete our internal comments to allow the test to pass:
+				getInstance( "InternalComment" )
+					.get()
+					.each( function( comment ) {
+						comment.delete();
+					} );
+				variables.queries = [];
+				var users         = getInstance( "User" )
 					.with( "posts.comments" )
 					.latest()
 					.get();

@@ -63,18 +63,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "updates the attributes of an existing row if it has been loaded", function() {
-				var existingUser = variables.fixtures.with( "user" ).asEntity().find( "elpete" );
-				/**
-				var existingUser = variables.fixtures.with( "user" ).findEntity( "elpete" );
-				var existingUsers = variables.fixtures.with( "user" ).getEntities( [ "elpete" ] );
-				var existingUsers = variables.fixtures.with( "user" ).allEntities();
-				variables.fixtures.with( "my_posts_tags" ).all();
-				variables.fixtures.with( "my_posts_tags" ).find( "elpete" );
-				variables.fixtures.with( "my_posts_tags" ).first( "elpete" );
-				variables.fixtures.with( "my_posts_tags" ).get( "awesome_programming" );
-				variables.fixtures.with( "my_posts_tags" ).get( "awesome_programming" ).getEntity();
-				variables.fixtures.with( "my_posts_tags" ).getEntity( "awesome_programming" );
-				**/
+				var existingUser = variables.fixtures
+					.with( "user" )
+					.asEntity()
+					.find( "elpete" );
 
 				existingUser.setUsername( "new_elpete_username" );
 				var userRowsPreSave = queryExecute( "SELECT * FROM users" );
@@ -175,7 +167,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				tag.setName( "miscellaneous" );
 				tag.save();
 
-				var post = variables.fixtures.post( key = "awesome", asEntity = true );
+				var post = variables.fixtures
+					.with( "Post" )
+					.asEntity()
+					.find( "awesome" );
 
 				expect( post.getTags().toArray() ).toBeArray();
 				expect( post.getTags().toArray() ).toHaveLength( 2 );

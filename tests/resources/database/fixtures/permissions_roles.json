@@ -1,0 +1,14 @@
+{
+    "admin_manage_users": {
+        "permissionId": 1,
+        "roleId": 1
+    },
+    "admin_approve_posts": {
+        "permissionId": 2,
+        "roleId": 1
+    },
+    "moderator_approve_posts": {
+        "permissionId": 2,
+        "roleId": 2
+    }
+}

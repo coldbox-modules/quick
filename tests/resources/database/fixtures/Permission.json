@@ -1,0 +1,10 @@
+{
+    "manageUsers": {
+        "id": 1,
+        "name": "MANAGE_USERS"
+    },
+    "approvePosts": {
+        "id": 2,
+        "name": "APPROVE_POSTS"
+    }
+}

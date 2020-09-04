@@ -1,0 +1,26 @@
+{
+    "elpete_admin": {
+        "roleId": 1,
+        "userId": 1
+    },
+    "elpete_user": {
+        "roleId": 3,
+        "userId": 1
+    },
+    "johndoe_user": {
+        "roleId": 3,
+        "userId": 2
+    },
+    "janedoe_user": {
+        "roleId": 3,
+        "userId": 3
+    },
+    "elpete2_moderator": {
+        "roleId": 2,
+        "userId": 4
+    },
+    "elpete2_user": {
+        "roleId": 3,
+        "userId": 4
+    }
+}

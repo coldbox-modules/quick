@@ -8,9 +8,11 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
         param variables.fixtures = getFixtures();
         param url.reloadFixtures = false;
-        if ( url.reloadFixtures ) {
+        param request.reloadFixtures = false;
+        if ( url.reloadFixtures && !request.reloadFixtures ) {
             refreshDatabase();
             insertFixtures();
+            request.reloadFixtures = true;
         }
     }
 

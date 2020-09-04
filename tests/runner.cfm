@@ -8,6 +8,7 @@
 <cfparam name="url.reportpath"          default="#expandPath( "/tests/results" )#">
 <cfparam name="url.propertiesFilename"  default="TEST.properties">
 <cfparam name="url.propertiesSummary"   default="false" type="boolean">
+<cfparam name="url.coverageEnabled"     default="false" type="boolean">
 
 <!--- Include the TestBox HTML Runner --->
 <cfinclude template="/testbox/system/runners/HTMLRunner.cfm" >

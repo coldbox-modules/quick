@@ -2,7 +2,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 	function run() {
 		describe( "Child Class Spec", function() {
-			it( "merges parent table and child table attributes int to entity", function() {
+			it( "merges parent table and child table attributes into the entity", function() {
 				var jingle = getInstance( "Jingle" ).first();
 
 				expect( jingle.isLoaded() ).toBeTrue();

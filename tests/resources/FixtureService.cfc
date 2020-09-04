@@ -16,11 +16,19 @@ component accessors="true" {
 
 		variables.fixtureDefinitions = directoryList( expandPath( getFixturesDirectory() ), false, "name" )
 			.reduce( function( acc, fileName ) {
-				acc[ listFirst( fileName, ". " ) ] = {
-					"fileName": fileName,
-					"contents": deserializeJSON( fileRead( expandPath( getFixturesDirectory() ) & "/#fileName#" ) )
-				};
-				return acc;
+				try {
+					acc[ listFirst( fileName, ". " ) ] = {
+						"fileName": fileName,
+						"contents": deserializeJSON( fileRead( expandPath( getFixturesDirectory() ) & "/#fileName#" ) )
+					};
+					return acc;
+				} catch ( any e ) {
+					throw(
+						message = "Error trying to deserialize [#fileName#]",
+						detail = e.message & " - " & e.detail
+					)
+				}
+				
 			}, {} );
 	 }
 
@@ -46,59 +54,25 @@ component accessors="true" {
 		}
 	}
 
-	public any function onMissingMethod( required string missingMethodName, struct missingMethodArguments = {} ) {
-		var mapping = arguments.missingMethodName;
-		var mappingFileName = mapping & ".json";
+	public FixtureQuery function with( required string mapping ) {
+		var mappingFileName = arguments.mapping & ".json";
 
-		if ( !variables.fixtureDefinitions.keyExists( mapping ) ) {
+		if ( !variables.fixtureDefinitions.keyExists( arguments.mapping ) ) {
 			throw( "No fixture definitions found for [#mapping#].  Define a [#mappingFileName#] inside [#getFixturesDirectory()#]." );
 		}
 
-		var entityDefinitions = variables.fixtureDefinitions[ mapping ];
-
-		if ( isNull( arguments.missingMethodArguments ) || structCount( arguments.missingMethodArguments ) == 0 ) {
-			// return all
-		}
-
-		if ( structCount( arguments.missingMethodArguments ) == 1 ) {
-			arguments.missingMethodArguments[ 2 ] = false; // asEntity
-		}
-
-		var asEntity = arguments.missingMethodArguments[ 2 ];
-
-		if (
-			!isArray( arguments.missingMethodArguments[ 1 ] ) ||
-			arrayLen( arguments.missingMethodArguments[ 1 ] == 1 )
-		) {
-			var key = isArray( arguments.missingMethodArguments[ 1 ] ) ?
-				arguments.missingMethodArguments[ 1 ][ 1 ] :
-				arguments.missingMethodArguments[ 1 ];
-
-			return asEntity ? loadEntity( mapping, key ) : entityDefinitions.contents[ key ];
-		}
-
-		return arguments.missingMethodArguments[ 1 ].map( function( key ) {
-			if ( !entityDefinitions.contents.keyExists( key ) ) {
-				throw( "No definition exists for [#key#] in the [#mappingFileName#] fixture file." );
-			}
-
-			return asEntity ? loadEntity( mapping, key ) : entityDefinitions.contents[ key ];
-		} );
+		return new FixtureQuery(
+			mapping = arguments.mapping,
+			mappingFileName = mappingFileName,
+			definitions = variables.fixtureDefinitions[ mapping ].contents,
+			entityService = getEntityService( arguments.mapping )
+		);
 	}
-
-	private any function loadEntity( mapping, key ) {
-		if ( !variables.entityMap.keyExists( mapping ) ) {
-			variables.entityMap[ mapping ] = {};
-		}
-		if ( !variables.entityMap[ mapping ].keyExists( key ) ) {
-			var entityService = variables.wirebox.getInstance( mapping );
-			var keyValues = entityService.keyNames().map( function( keyName ) {
-				return variables.fixtureDefinitions[ mapping ].contents[ key ][ keyName ];
-			} );
-			variables.entityMap[ mapping ][ key ] = entityService.findOrFail( keyValues );
-		}
-		return variables.entityMap[ mapping ][ key ];
-
+	
+	private any function getEntityService( required string mapping ) {
+		return variables.wirebox.containsInstance( arguments.mapping ) ?
+			variables.wirebox.getInstance( arguments.mapping ) :
+			javacast( "null", "" );
 	}
 
 }

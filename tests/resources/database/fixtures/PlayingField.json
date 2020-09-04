@@ -1,0 +1,12 @@
+{
+    "firstField": {
+        "fieldID": 1,
+        "clientID": 1,
+        "fieldName": "First Field"
+    },
+    "secondField": {
+        "fieldID": 1,
+        "clientID": 2,
+        "fieldName": "Second Field"
+    }
+}

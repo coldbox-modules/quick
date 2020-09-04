@@ -1,3 +1,12 @@
+# v4.1.2
+## 04 Sep 2020 — 15:33:44 UTC
+
+### fix
+
++ __Casts:__ Fix for retaining cast cache when creating entities
+ ([835beee](https://github.com/coldbox-modules/quick/commit/835beeea6439f74e0116f8693ef2f2712379a2f3))
+
+
 # v4.1.1
 ## 03 Sep 2020 — 03:48:53 UTC
 

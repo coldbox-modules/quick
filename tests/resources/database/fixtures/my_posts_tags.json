@@ -1,0 +1,18 @@
+{
+	"awesome_programming": {
+		"custom_post_pk": 1245,
+		"tag_id": 1
+	},
+	"awesome_music": {
+		"custom_post_pk": 1245,
+		"tag_id": 2
+	},
+	"second_programming": {
+		"custom_post_pk": 523526,
+		"tag_id": 1
+	},
+	"second_music": {
+		"custom_post_pk": 523526,
+		"tag_id": 2
+	}
+}

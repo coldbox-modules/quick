@@ -1,0 +1,12 @@
+{
+    "belongsToSecond": {
+        "id": 1,
+        "composite_a": 1,
+        "composite_b": 2
+    },
+    "belongsToNothing": {
+        "id": 2,
+        "composite_a": 2,
+        "composite_b": 2
+    }
+}

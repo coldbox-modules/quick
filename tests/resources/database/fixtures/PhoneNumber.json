@@ -1,0 +1,12 @@
+{
+    "active": {
+        "id": 1,
+        "number": "323-232-3232",
+        "active": 1
+    },
+    "inactive": {
+        "id": 2,
+        "number": "545-454-5454",
+        "active": 0
+    }
+}

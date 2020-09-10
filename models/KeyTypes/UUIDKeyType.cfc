@@ -14,7 +14,9 @@ component implements="KeyType" {
 		arguments.entity
 			.keyNames()
 			.each( function( keyName ) {
-				entity.assignAttribute( keyName, createUUID() );
+				if ( entity.isNullAttribute( keyName ) ) {
+					entity.assignAttribute( keyName, createUUID() );
+				}
 			} );
 	}
 

@@ -3,12 +3,18 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 	function run() {
 		describe( "Delete Spec", function() {
 			it( "can delete an entity", function() {
-				var user = getInstance( "User" ).findOrFail( 2 );
+				var user = variables.fixtures
+					.with( "User" )
+					.asEntity()
+					.find( "johndoe" );
 				user.delete();
 
 				expect( getInstance( "User" ).count() ).toBe( 3 );
 				expect( function() {
-					getInstance( "User" ).findOrFail( 2 );
+					variables.fixtures
+						.with( "User" )
+						.asEntity()
+						.find( "johndoe" );
 				} ).toThrow( type = "EntityNotFound" );
 			} );
 
@@ -29,7 +35,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				getInstance( "User" ).deleteAll( [ 2 ] );
 				expect( getInstance( "User" ).count() ).toBe( 3 );
 				expect( function() {
-					getInstance( "User" ).findOrFail( 2 );
+					variables.fixtures
+						.with( "User" )
+						.asEntity()
+						.find( "johndoe" );
 				} ).toThrow( type = "EntityNotFound" );
 			} );
 		} );

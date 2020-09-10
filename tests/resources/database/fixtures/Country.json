@@ -1,0 +1,14 @@
+{
+    "unitedStates": {
+        "id": "02B84D66-0AA0-F7FB-1F71AFC954843861",
+        "name": "United States",
+        "createdDate": "2017-07-28 02:07:00",
+        "modifiedDate": "2017-07-28 02:07:00"
+    },
+    "argentina": {
+        "id": "02BA2DB0-EB1E-3F85-5F283AB5E45608C6",
+        "name": "Argentina",
+        "createdDate": "2017-07-29 03:07:00",
+        "modifiedDate": "2017-07-29 03:07:00"
+    }
+}

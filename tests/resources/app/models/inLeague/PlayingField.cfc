@@ -6,6 +6,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 
 	variables._key = [ "fieldID", "clientID" ];
 
+	function keyType() {
+        return variables._wirebox.getInstance( "NullKeyType@quick" );
+    }
+
 	function field() {
 		return hasMany(
 			relationName = "Game",

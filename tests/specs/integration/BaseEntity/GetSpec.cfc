@@ -50,7 +50,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "throws an exception if no entity is found using find or fail", function() {
 				expect( function() {
-					getInstance( "User" ).findOrFail( 1 );
+					variables.fixtures
+						.with( "User" )
+						.asEntity()
+						.find( "elpete" );
 				} ).notToThrow();
 
 				expect( function() {

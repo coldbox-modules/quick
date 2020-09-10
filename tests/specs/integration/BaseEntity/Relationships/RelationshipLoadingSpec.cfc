@@ -1,10 +1,5 @@
 component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
-	function beforeAll() {
-		super.beforeAll();
-		controller.getInterceptorService().registerInterceptor( interceptorObject = this );
-	}
-
 	function run() {
 		describe( "Eager Loading Spec", function() {
 			beforeEach( function() {
@@ -16,16 +11,19 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.with( "User" )
 					.asEntity()
 					.find( "elpete" );
+				var elpete = getInstance( "User" ).findOrFail( 1 );
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeFalse();
 				elpete.loadRelationship( "posts" );
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeTrue();
 			} );
 
 			it( "does not reload an already loaded relationship", function() {
+				controller.getInterceptorService().registerInterceptor( interceptorObject = this );
 				var elpete = variables.fixtures
 					.with( "User" )
 					.asEntity()
 					.find( "elpete" );
+
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeFalse();
 				elpete.loadRelationship( "posts" );
 				elpete.loadRelationship( "posts" );
@@ -35,10 +33,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "does reload an already loaded relationship when using the forceLoadRelationship method", function() {
+				controller.getInterceptorService().registerInterceptor( interceptorObject = this );
 				var elpete = variables.fixtures
 					.with( "User" )
 					.asEntity()
 					.find( "elpete" );
+
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeFalse();
 				elpete.forceLoadRelationship( "posts" );
 				elpete.forceLoadRelationship( "posts" );

@@ -27,7 +27,7 @@
     },
     "devDependencies":{
         "coldbox":"stable",
-        "testbox":"^3.1.0+339",
+        "testbox":"^4",
         "cfcollection":"^3.6.1",
         "cfmigrations":"^2.0.9"
     },

@@ -10,7 +10,7 @@ component accessors="true" {
         required string mapping,
         required string mappingFileName,
         required struct definitions,
-        requied any entityService,
+        required any entityService,
         boolean asEntities = false
     ) {
         variables.mapping = arguments.mapping;

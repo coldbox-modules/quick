@@ -51,11 +51,8 @@ component extends="coldbox.system.testing.BaseTestCase" {
     }
 
     private FixtureService function getFixtures() {
-        if ( !structKeyExists( request, "fixtures" ) ) {
-            request.fixtures = application.wirebox.getInstance( "tests.resources.FixtureService" )
+        return application.wirebox.getInstance( "tests.resources.FixtureService" )
                 .setFixturesDirectory( "/tests/resources/database/fixtures" );
-        }
-        return request.fixtures;
     }
 
 }

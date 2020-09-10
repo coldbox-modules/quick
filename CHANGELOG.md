@@ -1,3 +1,11 @@
+# v4.1.3
+## 10 Sep 2020 — 16:11:22 UTC
+
+### chore
+
++ __Testing:__ Migrate to new database fixtures setup ([e65add5](https://github.com/coldbox-modules/quick/commit/e65add59c858f532fc6102318b9514ce6e783144))
+
+
 # v4.1.2
 ## 04 Sep 2020 — 15:33:44 UTC
 

@@ -47,6 +47,39 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( variables.queries ).toHaveLength( 3, "Only three queries should have been executed" );
 			} );
 		} );
+
+		describe( "Dynamic relationships", function() {
+			beforeEach( function() {
+				variables.queries = [];
+			} );
+
+			it( "can load a relationship based off of a subselect column", function() {
+				controller.getInterceptorService().registerInterceptor( interceptorObject = this );
+
+				var users = getInstance( "User" ).withLatestPost().orderByAsc( "id" ).get();
+				expect( users ).toHaveLength( 4 );
+
+				var elpete = users[ 1 ];
+				expect( elpete.getDynamicLatestPost() ).notToBeNull();
+				expect( elpete.getDynamicLatestPost().getPost_Pk() ).toBe( 523526 );
+				
+				var johndoe = users[ 2 ];
+				expect( johndoe.getDynamicLatestPost() ).toBeNull();
+				
+				var janedoe = users[ 3 ];
+				expect( janedoe.getDynamicLatestPost() ).toBeNull();
+
+				var elpete2 = users[ 4 ];
+				expect( elpete2.getDynamicLatestPost() ).notToBeNull();
+				expect( elpete2.getDynamicLatestPost().getPost_Pk() ).toBe( 321 );
+
+				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed" );
+
+				var postQuery = variables.queries[ 2 ];
+				expect( postQuery.result.sqlparameters ).toHaveLength( 2 );
+				expect( postQuery.result.sqlparameters ).toBe( [ 321, 523526 ] );
+			} );
+		} );
 	}
 
 	function preQBExecute(

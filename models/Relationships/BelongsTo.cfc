@@ -123,7 +123,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 				function( localKey, foreignKey ) {
 					q.where(
 						variables.related.qualifyColumn( localKey ),
-						variables.child.retrieveAttribute( foreignKey )
+						variables.related.generateQueryParamStruct(
+							localKey,
+							variables.child.retrieveAttribute( foreignKey )
+						)
 					);
 				}
 			);
@@ -439,7 +442,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 				function( foreignKey, localKey ) {
 					q.where(
 						variables.related.qualifyColumn( localKey ),
-						variables.child.retrieveAttribute( foreignKey )
+						variables.related.generateQueryParamStruct(
+							localKey,
+							variables.child.retrieveAttribute( foreignKey )
+						)
 					);
 				}
 			);

@@ -64,10 +64,19 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 		var base = variables.parent
 			.newQuery()
 			.reselectRaw( 1 )
-			.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
+			.where(
+				variables.related.qualifyColumn( variables.morphType ),
+				variables.related.generateQueryParamStruct( variables.morphType, variables.morphMapping )
+			);
 
 		variables.localKeys.each( function( localKey ) {
-			base.where( variables.parent.qualifyColumn( localKey ), variables.parent.retrieveAttribute( localKey ) );
+			base.where(
+				variables.parent.qualifyColumn( localKey ),
+				variables.parent.generateQueryParamStruct(
+					localKey,
+					variables.parent.retrieveAttribute( localKey )
+				)
+			);
 		} );
 
 		arrayZipEach(
@@ -98,7 +107,10 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 	 */
 	public void function applyThroughConstraints( required any base ) {
 		arguments.base
-			.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping )
+			.where(
+				variables.related.qualifyColumn( variables.morphType ),
+				variables.related.generateQueryParamStruct( variables.morphType, variables.morphMapping )
+			)
 			.where( function( q ) {
 				arrayZipEach(
 					[
@@ -108,7 +120,10 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 					function( foreignKey, localKey ) {
 						q.where(
 							variables.related.qualifyColumn( foreignKey ),
-							variables.parent.retrieveAttribute( localKey )
+							variables.related.generateQueryParamStruct(
+								foreignKey,
+								variables.parent.retrieveAttribute( localKey )
+							)
 						);
 					}
 				);

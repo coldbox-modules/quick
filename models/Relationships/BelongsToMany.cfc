@@ -703,8 +703,8 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 				function( localKey, parentKey ) {
 					q.where(
 						variables.related.qualifyColumn( localKey ),
-						variables.parent.generateQueryParamStruct(
-							parentKey,
+						variables.related.generateQueryParamStruct(
+							localKey,
 							variables.parent.retrieveAttribute( parentKey )
 						)
 					);

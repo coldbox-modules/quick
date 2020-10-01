@@ -160,7 +160,10 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 				gatherKeysByType( type ).each( function( keys ) {
 					q1.orWhere( function( q2 ) {
 						arrayZipEach( [ localKeys, keys ], function( localKey, keyValue ) {
-							q2.where( localKey, keyValue );
+							q2.where(
+								instance.qualifyColumn( arguments.localKey ),
+								instance.generateQueryParamStruct( arguments.localKey, arguments.keyValue )
+							);
 						} );
 					} );
 				} );
@@ -247,7 +250,10 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 			function( localKey, foreignKey ) {
 				base.where(
 					variables.related.qualifyColumn( localKey ),
-					variables.parent.retrieveAttribute( foreignKey )
+					variables.related.generateQueryParamStruct(
+						localKey,
+						variables.parent.retrieveAttribute( foreignKey )
+					)
 				);
 			}
 		);

@@ -67,7 +67,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					getParentKeys()
 				],
 				function( keyName, parentKey ) {
-					q.where( keyName, parentKey ).whereNotNull( keyName );
+					q.where(
+						variables.related.qualifyColumn( keyName ),
+						variables.related.generateQueryParamStruct( keyName, parentKey )
+					).whereNotNull( keyName );
 				}
 			);
 		} );

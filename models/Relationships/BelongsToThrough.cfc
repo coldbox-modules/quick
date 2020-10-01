@@ -298,8 +298,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
 				function( foreignKey, localKey ) {
 					q.where(
 						variables.related.qualifyColumn( foreignKey ),
-						variables.parent.generateQueryParamStruct(
-							localKey,
+						variables.related.generateQueryParamStruct(
+							foreignKey,
 							variables.parent.retrieveAttribute( localKey )
 						)
 					);

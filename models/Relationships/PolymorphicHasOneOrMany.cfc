@@ -71,7 +71,10 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	 */
 	public PolymorphicHasOneOrMany function addConstraints() {
 		super.addConstraints();
-		variables.related.where( variables.morphType, variables.morphMapping );
+		variables.related.where(
+			variables.related.qualifyColumn( variables.morphType ),
+			variables.related.generateQueryParamStruct( variables.morphType, variables.morphMapping )
+		);
 		return this;
 	}
 
@@ -86,7 +89,10 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 		if ( !super.addEagerConstraints( arguments.entities ) ) {
 			return false;
 		}
-		variables.related.where( variables.morphType, variables.morphMapping );
+		variables.related.where(
+			variables.related.qualifyColumn( variables.morphType ),
+			variables.related.generateQueryParamStruct( variables.morphType, variables.morphMapping )
+		);
 		return true;
 	}
 
@@ -99,7 +105,10 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	 */
 	public any function addCompareConstraints( any base = variables.related ) {
 		return tap( super.addCompareConstraints( arguments.base ), function( q ) {
-			q.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
+			q.where(
+				variables.related.qualifyColumn( variables.morphType ),
+				variables.related.generateQueryParamStruct( variables.morphType, variables.morphMapping )
+			);
 		} );
 	}
 
@@ -119,7 +128,10 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 				],
 				function( foreignKey, localKey ) {
 					j.on( variables.related.qualifyColumn( foreignKey ), variables.parent.qualifyColumn( localKey ) );
-					j.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
+					j.where(
+						variables.related.qualifyColumn( variables.morphType ),
+						variables.related.generateQueryParamStruct( variables.morphType, variables.morphMapping )
+					);
 				}
 			);
 		} );

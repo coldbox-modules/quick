@@ -72,10 +72,7 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 		variables.localKeys.each( function( localKey ) {
 			base.where(
 				variables.parent.qualifyColumn( localKey ),
-				variables.parent.generateQueryParamStruct(
-					localKey,
-					variables.parent.retrieveAttribute( localKey )
-				)
+				variables.parent.generateQueryParamStruct( localKey, variables.parent.retrieveAttribute( localKey ) )
 			);
 		} );
 

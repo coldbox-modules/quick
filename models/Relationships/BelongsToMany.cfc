@@ -156,7 +156,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 							keys,
 							variables.parentKeys
 						],
-						function( foreignPivotKeyName, keyValue, parentKey ) {
+						function(
+							foreignPivotKeyName,
+							keyValue,
+							parentKey
+						) {
 							q2.where(
 								foreignPivotKeyName,
 								variables.parent.generateQueryParamStruct( parentKey, keyValue )
@@ -343,7 +347,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 						foreignPivotKeyValues,
 						variables.parentKeys
 					],
-					function( foreignPivotKey, foreignPivotKeyValue, parentKey ) {
+					function(
+						foreignPivotKey,
+						foreignPivotKeyValue,
+						parentKey
+					) {
 						q.where(
 							foreignPivotKey,
 							variables.parent.generateQueryParamStruct( parentKey, foreignPivotKeyValue )
@@ -354,17 +362,19 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 			.where( function( q1 ) {
 				parseIds( arrayWrap( id ) ).each( function( ids ) {
 					q1.orWhere( function( q2 ) {
-						arrayZipEach( [
-							variables.relatedPivotKeys,
-							ids,
-							variables.relatedKeys
-						],
-						function( relatedPivotKey, id, relatedKey ) {
-							q2.where(
-								relatedPivotKey,
-								variables.related.generateQueryParamStruct( relatedKey, id )
-							);
-						} );
+						arrayZipEach(
+							[
+								variables.relatedPivotKeys,
+								ids,
+								variables.relatedKeys
+							],
+							function( relatedPivotKey, id, relatedKey ) {
+								q2.where(
+									relatedPivotKey,
+									variables.related.generateQueryParamStruct( relatedKey, id )
+								);
+							}
+						);
 					} );
 				} );
 			} )
@@ -411,7 +421,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 						foreignPivotKeyValues,
 						variables.foreignKeys
 					],
-					function( foreignPivotKey, foreignPivotKeyValue, foreignKey ) {
+					function(
+						foreignPivotKey,
+						foreignPivotKeyValue,
+						foreignKey
+					) {
 						q.where(
 							foreignPivotKey,
 							variables.parent.generateQueryParamStruct( foreignKey, foreignPivotKeyValue )
@@ -491,7 +505,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					val,
 					relatedKey
 				) {
-					insertRecord[ foreignPivotKey ] = variables.parent.generateQueryParamStruct( foreignKey, foreignPivotKeyValue );
+					insertRecord[ foreignPivotKey ] = variables.parent.generateQueryParamStruct(
+						foreignKey,
+						foreignPivotKeyValue
+					);
 					insertRecord[ relatedPivotKey ] = variables.related.generateQueryParamStruct( relatedKey, val );
 				}
 			);

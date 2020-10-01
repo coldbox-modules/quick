@@ -1087,10 +1087,7 @@ component accessors="true" {
 			.where( function( q ) {
 				var allKeyNames = keyNames();
 				for ( var i = 1; i <= allKeyNames.len(); i++ ) {
-					q.where(
-						allKeyNames[ i ],
-						generateQueryParamStruct( allKeyNames[ i ], id[ i ] )
-					);
+					q.where( allKeyNames[ i ], generateQueryParamStruct( allKeyNames[ i ], id[ i ] ) );
 				}
 			} )
 			.first();

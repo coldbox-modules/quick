@@ -2607,6 +2607,7 @@ component accessors="true" {
 						return invoke( this, relationName )
 							.addCompareConstraints()
 							.when( true, callback )
+							.clearOrders()
 							.reselectRaw( "COUNT(*)" );
 					} );
 				} )

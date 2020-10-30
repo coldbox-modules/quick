@@ -60,29 +60,4 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 		return matchMany( argumentCollection = arguments );
 	}
 
-	/**
-	 * Applies the constraints for the final relationship in a `hasManyThrough` chain.
-	 *
-	 * @return  void
-	 */
-	public QueryBuilder function initialThroughConstraints() {
-		return variables.related
-			.newQuery()
-			.reselectRaw( 1 )
-			.where( function( q ) {
-				arrayZipEach(
-					[
-						variables.foreignKeys,
-						variables.localKeys
-					],
-					function( foreignKey, localKey ) {
-						q.where(
-							variables.related.qualifyColumn( foreignKey ),
-							variables.parent.retrieveAttribute( localKey )
-						);
-					}
-				);
-			} );
-	}
-
 }

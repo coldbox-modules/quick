@@ -1,3 +1,16 @@
+# v4.1.4
+## 30 Oct 2020 — 18:35:59 UTC
+
+### chore
+
++ __Tests:__ Add test for dynamic subselect relationships
+ ([fdf97eb](https://github.com/coldbox-modules/quick/commit/fdf97ebf857f3a21c68653a83cca85e1c7d7ba14))
+
+### fix
+
++ __Relationship:__ Don't include orders when doing a count on a relationship (#126) ([313c594](https://github.com/coldbox-modules/quick/commit/313c594b7cc39aaaadd8e8136852727f35686cc4))
+
+
 # v4.1.3
 ## 10 Sep 2020 — 16:11:22 UTC
 

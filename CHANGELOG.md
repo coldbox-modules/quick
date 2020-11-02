@@ -1,3 +1,12 @@
+# v4.1.5
+## 02 Nov 2020 — 12:24:13 UTC
+
+### fix
+
++ __HasOne:__ Provide initialThroughConstraints for hasOne relationships
+ ([7b3b8d0](https://github.com/coldbox-modules/quick/commit/7b3b8d0bb9a6f4f7993d227dea6c1908ec930f64))
+
+
 # v4.1.4
 ## 30 Oct 2020 — 18:35:59 UTC
 

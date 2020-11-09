@@ -123,7 +123,6 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  void
 	 */
 	public void function addConstraints() {
-		variables.related.select(); // clear select
 		performJoin();
 		addWhereConstraints();
 	}

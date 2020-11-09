@@ -1,0 +1,95 @@
+name: PRs and Branches
+
+on:
+  push:
+    branches-ignore:
+      - "main"
+      - "master"
+      - "development"
+  pull_request:
+    branches:
+      - main
+      - master
+      - development
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    name: Tests
+    strategy:
+      fail-fast: true
+      matrix:
+        cfengine: ["lucee@5", "adobe@2016", "adobe@2018"]
+        coldbox: ["coldbox@5", "coldbox@6"]
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_RANDOM_ROOT_PASSWORD: yes
+          MYSQL_USER: quick
+          MYSQL_PASSWORD: quick
+          MYSQL_DATABASE: quick
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 11 
+
+      - name: Set Up CommandBox
+        uses: elpete/setup-commandbox@v1.0.0
+      
+      - name: Install dependencies
+        run: |
+          box install
+          box config set modules.commandbox-dotenv.checkEnvPreServerStart=false
+          box install ${{ matrix.coldbox }} --noSave
+      
+      - name: Start server
+        env:
+          DB_HOST: localhost
+          DB_PORT: ${{ job.services.mysql.ports[3306] }}
+          DB_NAME: quick
+          DB_USER: quick
+          DB_PASSWORD: quick
+        run: box server start cfengine=${{ matrix.cfengine }}
+
+      - name: Run TestBox Tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: ${{ job.services.mysql.ports[3306] }}
+          DB_NAME: quick
+          DB_USER: quick
+          DB_PASSWORD: quick
+        run: box testbox run
+
+  format:
+    runs-on: ubuntu-latest
+    name: Format
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 11 
+
+      - name: Set Up CommandBox
+        uses: elpete/setup-commandbox@v1.0.0
+      
+      - name: Install CFFormat
+        run: box install commandbox-cfformat
+      
+      - name: Run CFFormat
+        run: box run-script format
+
+      - name: Commit Format Changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Apply cfformat changes

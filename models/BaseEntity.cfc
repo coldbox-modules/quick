@@ -963,6 +963,21 @@ component accessors="true" {
 	}
 
 	/**
+	 * Returns a Simple Pagination Collection of entities.
+	 *
+	 * @page     The page of results to return.
+	 * @maxRows  The number of rows to return.
+	 *
+	 * @return   A Simple Pagination Collection object of the entities.
+	 */
+	public any function simplePaginate( numeric page = 1, numeric maxRows = 25 ) {
+		activateGlobalScopes();
+		return tap( retrieveQuery().simplePaginate( page, maxRows ), function( p ) {
+			p.results = handleTransformations( eagerLoadRelations( p.results.map( variables.loadEntity ) ) );
+		} );
+	}
+
+	/**
 	 * Returns the first matching entity for the configured query.
 	 * If no records are found, it returns null instead.
 	 *

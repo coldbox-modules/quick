@@ -146,12 +146,38 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 				var p = getInstance( "A" ).orderBy( "id" ).paginate();
 				expect( p.pagination.page ).toBe( 1, "Page number should be 1" );
+				expect( p.pagination.totalRecords ).toBe( 45 );
+				expect( p.pagination.totalPages ).toBe( 2 );
 				expect( p.results ).toHaveLength( 25 );
 				expect( p.results[ 1 ].getId() ).toBe( 1, "First entity id should be 1" );
 				expect( p.results[ p.results.len() ].getId() ).toBe( 25 );
 
 				p = getInstance( "A" ).orderBy( "id" ).paginate( 2 );
 				expect( p.pagination.page ).toBe( 2, "Page number should be 2" );
+				expect( p.pagination.totalRecords ).toBe( 45 );
+				expect( p.pagination.totalPages ).toBe( 2 );
+				expect( p.results ).toHaveLength( 20 );
+				expect( p.results[ 1 ].getId() ).toBe( 26, "First entity id should be 26" );
+				expect( p.results[ p.results.len() ].getId() ).toBe( 45 );
+			} );
+
+			it( "can simple paginate a Quick query", function() {
+				queryExecute( "TRUNCATE TABLE `a`" );
+				for ( var i = 1; i <= 45; i++ ) {
+					// create A
+					var a = getInstance( "A" ).create( { "name" : "Instance #i#" } );
+				}
+
+				var p = getInstance( "A" ).orderBy( "id" ).simplePaginate();
+				expect( p.pagination.page ).toBe( 1, "Page number should be 1" );
+				expect( p.pagination.hasMore ).toBeTrue( "Pagination should indicate there are more records" );
+				expect( p.results ).toHaveLength( 25 );
+				expect( p.results[ 1 ].getId() ).toBe( 1, "First entity id should be 1" );
+				expect( p.results[ p.results.len() ].getId() ).toBe( 25 );
+
+				p = getInstance( "A" ).orderBy( "id" ).simplePaginate( 2 );
+				expect( p.pagination.page ).toBe( 2, "Page number should be 2" );
+				expect( p.pagination.hasMore ).toBeFalse( "Pagination should indicate there are no more records" );
 				expect( p.results ).toHaveLength( 20 );
 				expect( p.results[ 1 ].getId() ).toBe( 26, "First entity id should be 26" );
 				expect( p.results[ p.results.len() ].getId() ).toBe( 45 );

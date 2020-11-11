@@ -104,9 +104,11 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return super.first();
 	}
 
-	function get( id = 0, returnNew = true ) {
-		if ( ( isNull( arguments.id ) || arguments.id == 0 ) && arguments.returnNew ) {
+	function get( id, returnNew = false ) {
+		if ( isNull( arguments.id ) && arguments.returnNew ) {
 			return newEntity();
+		} else if( isNull( arguments.id ) ){
+			return super.get();
 		}
 		// This is written this way to avoid conflicts with the BIF `find`
 		return invoke( this, "find", { id : arguments.id } );

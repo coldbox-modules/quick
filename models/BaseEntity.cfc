@@ -1300,13 +1300,31 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function newEntity( string name ) {
-		if ( isNull( arguments.name ) ) {
-			return variables._wirebox.getInstance(
-				name          = mappingName(),
-				initArguments = { meta : duplicate( variables._meta ) }
-			);
+
+		if( isNull( arguments.name ) ){
+			if( !structKeyExists( this, "prototypeState" ) ){
+				var newEntity = variables._wirebox.getInstance( variables._mapping );
+				this.prototypeState = newEntity.getObjectState();
+			} else {
+				var newEntity = createObject( "component", variables._meta.fullName );
+				newEntity.injectState( this.prototypeState );
+			}
+		} else {
+			var newEntity = variables._wirebox.getInstance( arguments.name );
 		}
-		return variables._wirebox.getInstance( arguments.name );
+		
+
+		return newEntity;
+	}
+
+	function injectState( state ){
+		structAppend( variables, arguments.state, true );
+		return this;
+	};
+
+	function getObjectState(){
+		var exclusions = [ "_builder" ]
+		return variables.filter( ( k, v ) => !exclusions.contains( k) && !isCustomFunction( v ) && !isClosure( v ) );
 	}
 
 	/**

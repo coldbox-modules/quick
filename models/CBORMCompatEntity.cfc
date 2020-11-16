@@ -157,6 +157,52 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return CBORMCriteriaBuilderCompat.setEntity( this );
 	}
 
+	/**
+	 * This method listens to non-existent method to create fluently:
+	 *
+	 * 1) FindByXXX operations
+	 * 2) FindAllByXXX operations
+	 * 3) countByXXX operations
+	 *
+	 */
+	any function onMissingMethod( string missingMethodName, struct missingMethodArguments ) {
+		var method = arguments.missingMethodName;
+		var args   = arguments.missingMethodArguments;
+
+		// Dynamic Find Unique Finders
+		if ( left( method, 6 ) eq "findBy" and len( method ) GT 6 ) {
+
+			listToArray( right( method, len( method ) - 6 ), "and", false, true ).each( function( prop, index ){
+				this.resetQuery().where( prop, args[ index ] );
+			} );
+
+			return super.first();		
+		}
+		// Dynamic find All Finders
+		if ( left( method, 9 ) eq "findAllBy" and len( method ) GT 9 ) {
+
+			listToArray( right( method, len( method ) - 9 ), "and", false, true ).each( function( prop, index ){
+				this.resetQuery().where( prop, args[ index ] );
+			} );
+
+			return super.get();
+
+		}
+		// Dynamic countBy Finders
+		if ( left( method, 7 ) eq "countBy" and len( method ) GT 7 ) {
+			
+			listToArray( right( method, len( method ) - 7 ), "and", false, true ).each( function( prop, index ){
+				this.resetQuery().where( prop, args[ index ] );
+			} );
+
+			return super.count();
+			
+		}
+
+		return super.onMissingMethod( argumentCollection=arguments );
+	}
+	
+
 	private void function guardAgainstCompositePrimaryKeys() {
 		if ( keyNames().len() > 1 ) {
 			throw(

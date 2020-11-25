@@ -3261,7 +3261,8 @@ component accessors="true" {
 	}
 
 	public boolean function isVirtualAttribute( name ) {
-		return variables._attributes[ retrieveAliasForColumn( arguments.name ) ].virtual;
+		return variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) &&
+		variables._attributes[ retrieveAliasForColumn( arguments.name ) ].virtual;
 	}
 
 	public boolean function isParentAttribute( required string column ) {

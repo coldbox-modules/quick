@@ -2502,7 +2502,7 @@ component accessors="true" {
 			.setReturnFormat( "array" )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() )
-			.select( retrieveQualifiedColumns() );
+			.addSelect( retrieveQualifiedColumns() );
 	}
 
 	/**
@@ -3358,10 +3358,15 @@ component accessors="true" {
 					}, [] );
 
 				acc[ childMeta.discriminatorValue ] = {
-					"mapping"    : childMeta.fullName,
-					"table"      : childMeta.table,
-					"joincolumn" : childMeta.joinColumn,
-					"attributes" : childAttributes
+					"mapping"      : childMeta.fullName,
+					"table"        : childMeta.table,
+					"joincolumn"   : childClass.qualifyColumn( childMeta.joinColumn ),
+					"attributes"   : childAttributes,
+					"childColumns" : childClass
+						.retrieveQualifiedColumns()
+						.filter( function( column ) {
+							return listFirst( column, "." ) == childMeta.table;
+						} )
 				};
 				return acc;
 			}, {} );

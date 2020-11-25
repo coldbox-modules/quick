@@ -724,6 +724,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 						data.joincolumn,
 						"left outer"
 					);
+					builder.addSelect( data.childColumns );
 				} );
 		}
 	}

@@ -3357,16 +3357,17 @@ component accessors="true" {
 						return acc;
 					}, [] );
 
+				var childColumns = childClass
+					.retrieveQualifiedColumns()
+					.filter( function( column ) {
+						return listFirst( column, "." ) == childMeta.table;
+					} );
 				acc[ childMeta.discriminatorValue ] = {
 					"mapping"      : childMeta.fullName,
 					"table"        : childMeta.table,
 					"joincolumn"   : childClass.qualifyColumn( childMeta.joinColumn ),
 					"attributes"   : childAttributes,
-					"childColumns" : childClass
-						.retrieveQualifiedColumns()
-						.filter( function( column ) {
-							return listFirst( column, "." ) == childMeta.table;
-						} )
+					"childColumns" : childColumns
 				};
 				return acc;
 			}, {} );

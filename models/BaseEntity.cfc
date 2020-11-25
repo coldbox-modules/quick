@@ -421,7 +421,7 @@ component accessors="true" {
 			if ( withoutKey && arrayContainsNoCase( keyNames(), retrieveAliasForColumn( key ) ) ) {
 				return acc;
 			}
-			if ( isNull( value ) || ( isNullValue( key, value ) && withNulls ) ) {
+			if ( isNull( value ) || ( isNullAttribute( key ) && withNulls ) ) {
 				acc[ aliased ? retrieveAliasForColumn( key ) : retrieveColumnForAlias( key ) ] = javacast( "null", "" );
 			} else {
 				acc[ aliased ? retrieveAliasForColumn( key ) : retrieveColumnForAlias( key ) ] = value;
@@ -570,6 +570,9 @@ component accessors="true" {
 	 */
 	public any function populateAttributes( struct attributes = {} ) {
 		for ( var key in arguments.attributes ) {
+			if ( !hasAttribute( key ) ) {
+				continue;
+			}
 			variables._data[ retrieveColumnForAlias( key ) ] = (
 				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
 			) ? javacast( "null", "" ) : castValueForGetter( key, arguments.attributes[ key ] );
@@ -2502,7 +2505,7 @@ component accessors="true" {
 			.setReturnFormat( "array" )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() )
-			.select( retrieveQualifiedColumns() );
+			.addSelect( retrieveQualifiedColumns() );
 	}
 
 	/**
@@ -3261,7 +3264,8 @@ component accessors="true" {
 	}
 
 	public boolean function isVirtualAttribute( name ) {
-		return variables._attributes[ retrieveAliasForColumn( arguments.name ) ].virtual;
+		return variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) &&
+		variables._attributes[ retrieveAliasForColumn( arguments.name ) ].virtual;
 	}
 
 	public boolean function isParentAttribute( required string column ) {
@@ -3357,11 +3361,17 @@ component accessors="true" {
 						return acc;
 					}, [] );
 
+				var childColumns = childClass
+					.retrieveQualifiedColumns()
+					.filter( function( column ) {
+						return listFirst( column, "." ) == childMeta.table;
+					} );
 				acc[ childMeta.discriminatorValue ] = {
-					"mapping"    : childMeta.fullName,
-					"table"      : childMeta.table,
-					"joincolumn" : childMeta.joinColumn,
-					"attributes" : childAttributes
+					"mapping"      : childMeta.fullName,
+					"table"        : childMeta.table,
+					"joincolumn"   : childClass.qualifyColumn( childMeta.joinColumn ),
+					"attributes"   : childAttributes,
+					"childColumns" : childColumns
 				};
 				return acc;
 			}, {} );
@@ -3732,6 +3742,9 @@ component accessors="true" {
 	public boolean function isNullValue( required string key, any value ) {
 		param arguments.value = invoke( this, "get" & arguments.key );
 		var alias             = retrieveAliasForColumn( arguments.key );
+		if ( !isSimpleValue( arguments.value ) ) {
+			return false;
+		}
 		return variables._nullValues.keyExists( alias ) &&
 		compare( variables._nullValues[ alias ], arguments.value ) == 0;
 	}

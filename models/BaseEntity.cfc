@@ -421,7 +421,7 @@ component accessors="true" {
 			if ( withoutKey && arrayContainsNoCase( keyNames(), retrieveAliasForColumn( key ) ) ) {
 				return acc;
 			}
-			if ( isNull( value ) || ( isNullValue( key, value ) && withNulls ) ) {
+			if ( isNull( value ) || ( isNullAttribute( key ) && withNulls ) ) {
 				acc[ aliased ? retrieveAliasForColumn( key ) : retrieveColumnForAlias( key ) ] = javacast( "null", "" );
 			} else {
 				acc[ aliased ? retrieveAliasForColumn( key ) : retrieveColumnForAlias( key ) ] = value;
@@ -570,6 +570,9 @@ component accessors="true" {
 	 */
 	public any function populateAttributes( struct attributes = {} ) {
 		for ( var key in arguments.attributes ) {
+			if ( !hasAttribute( key ) ) {
+				continue;
+			}
 			variables._data[ retrieveColumnForAlias( key ) ] = (
 				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
 			) ? javacast( "null", "" ) : castValueForGetter( key, arguments.attributes[ key ] );

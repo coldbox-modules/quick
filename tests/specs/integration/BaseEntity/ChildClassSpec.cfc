@@ -324,7 +324,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				var internalComments = parentClass.where( "designation", "internal" ).get();
 				internalComments.each( function( comment ) {
 					expect( comment ).toBeInstanceOf( "InternalComment" );
-					expect( comment.hasAttribute( "reason" ) ).toBeTrue( "InternalComments should have a reason field." );
+					expect( comment.hasAttribute( "reason" ) ).toBeTrue(
+						"InternalComments should have a reason field."
+					);
 					expect( comment.isNullAttribute( "reason" ) ).toBeFalse( "The reason field should not be null." );
 				} );
 			} );

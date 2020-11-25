@@ -3742,6 +3742,9 @@ component accessors="true" {
 	public boolean function isNullValue( required string key, any value ) {
 		param arguments.value = invoke( this, "get" & arguments.key );
 		var alias             = retrieveAliasForColumn( arguments.key );
+		if ( !isSimpleValue( arguments.value ) ) {
+			return false;
+		}
 		return variables._nullValues.keyExists( alias ) &&
 		compare( variables._nullValues[ alias ], arguments.value ) == 0;
 	}

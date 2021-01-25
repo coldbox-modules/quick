@@ -113,3 +113,7 @@ Quick is backed by [qb](https://www.forgebox.io/view/qb). Without qb, there is n
 Quick is inspired heavily by [Eloquent in Laravel](https://laravel.com/docs/5.6/eloquent). Thank you Taylor Otwell and the Laravel community for a great library.
 
 Development of Quick is sponsored by Ortus Solutions. Thank you Ortus Solutions for investing in the future of CFML.
+
+
+## Community and Support
+Join us in our Ortus Community and become a valuable member of this project [Quick ORM](https://community.ortussolutions.com/c/communities/quick-orm/23). We will looking forward to hearing from you!!

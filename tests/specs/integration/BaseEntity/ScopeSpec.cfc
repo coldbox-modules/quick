@@ -4,11 +4,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 		describe( "Scope Spec", function() {
 			it( "looks for missing methods as scopes", function() {
 				var users = getInstance( "User" ).latest().get();
-				expect( users ).toHaveLength( 4, "Four users should exist in the database and be returned." );
-				expect( users[ 1 ].getUsername() ).toBe( "elpete2" );
-				expect( users[ 2 ].getUsername() ).toBe( "janedoe" );
-				expect( users[ 3 ].getUsername() ).toBe( "johndoe" );
-				expect( users[ 4 ].getUsername() ).toBe( "elpete" );
+				expect( users ).toHaveLength( 5, "Five users should exist in the database and be returned." );
+				expect( users[ 1 ].getUsername() ).toBe( "michaelscott" );
+				expect( users[ 2 ].getUsername() ).toBe( "elpete2" );
+				expect( users[ 3 ].getUsername() ).toBe( "janedoe" );
+				expect( users[ 4 ].getUsername() ).toBe( "johndoe" );
+				expect( users[ 5 ].getUsername() ).toBe( "elpete" );
 			} );
 
 			it( "sends through extra parameters as arguments", function() {
@@ -19,9 +20,10 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "allows for default arguments if none are passed in", function() {
 				var users = getInstance( "User" ).ofType().get();
-				expect( users ).toHaveLength( 2, "Two users should exist in the database and be returned." );
+				expect( users ).toHaveLength( 3, "Two users should exist in the database and be returned." );
 				expect( users[ 1 ].getUsername() ).toBe( "johndoe" );
 				expect( users[ 2 ].getUsername() ).toBe( "janedoe" );
+				expect( users[ 3 ].getUsername() ).toBe( "michaelscott" );
 			} );
 
 			it( "can return values from scopes as well as instances", function() {

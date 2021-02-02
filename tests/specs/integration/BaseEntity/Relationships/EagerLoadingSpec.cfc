@@ -65,7 +65,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.with( "favoritePost" )
 					.get();
 				expect( usersWithoutFavoritePosts ).toBeArray();
-				expect( usersWithoutFavoritePosts ).toHaveLength( 3, "3 users should have been loaded" );
+				expect( usersWithoutFavoritePosts ).toHaveLength( 4, "4 users should have been loaded" );
 				if ( arrayLen( variables.queries ) != 1 ) {
 					expect( variables.queries ).toHaveLength(
 						1,
@@ -95,24 +95,29 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.latest()
 					.get();
 				expect( users ).toBeArray();
-				expect( users ).toHaveLength( 4, "Four users should be returned" );
+				expect( users ).toHaveLength( 5, "Five users should be returned" );
 
-				var elpete2 = users[ 1 ];
+				var michaelscott = users[ 1 ];
+				expect( michaelscott.getUsername() ).toBe( "michaelscott" );
+				expect( michaelscott.getPosts() ).toBeArray();
+				expect( michaelscott.getPosts() ).toHaveLength( 0, "No posts should belong to michaelscott" );
+
+				var elpete2 = users[ 2 ];
 				expect( elpete2.getUsername() ).toBe( "elpete2" );
 				expect( elpete2.getPosts() ).toBeArray();
 				expect( elpete2.getPosts() ).toHaveLength( 1, "One post should belong to elpete2" );
 
-				var janedoe = users[ 2 ];
+				var janedoe = users[ 3 ];
 				expect( janedoe.getUsername() ).toBe( "janedoe" );
 				expect( janedoe.getPosts() ).toBeArray();
 				expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
 
-				var johndoe = users[ 3 ];
+				var johndoe = users[ 4 ];
 				expect( johndoe.getUsername() ).toBe( "johndoe" );
 				expect( johndoe.getPosts() ).toBeArray();
 				expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-				var elpete = users[ 4 ];
+				var elpete = users[ 5 ];
 				expect( elpete.getUsername() ).toBe( "elpete" );
 				expect( elpete.getPosts() ).toBeArray();
 				expect( elpete.getPosts() ).toHaveLength( 2, "Two posts should belong to elpete" );
@@ -127,9 +132,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.get();
 
 				expect( users ).toBeArray();
-				expect( users ).toHaveLength( 4, "Four users should be returned" );
+				expect( users ).toHaveLength( 5, "Five users should be returned" );
 
-				var elpete2 = users[ 1 ];
+				var michaelscott = users[ 1 ];
+				expect( michaelscott.getUsername() ).toBe( "michaelscott" );
+				expect( michaelscott.getPublishedPosts() ).toBeArray();
+				expect( michaelscott.getPublishedPosts() ).toHaveLength(
+					0,
+					"No posts should belong to michaelscott. Instead got #michaelscott.getPublishedPosts().len()#."
+				);
+
+				var elpete2 = users[ 2 ];
 				expect( elpete2.getUsername() ).toBe( "elpete2" );
 				expect( elpete2.getPublishedPosts() ).toBeArray();
 				expect( elpete2.getPublishedPosts() ).toHaveLength(
@@ -137,7 +150,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					"One post should belong to elpete2. Instead got #elpete2.getPublishedPosts().len()#."
 				);
 
-				var janedoe = users[ 2 ];
+				var janedoe = users[ 3 ];
 				expect( janedoe.getUsername() ).toBe( "janedoe" );
 				expect( janedoe.getPublishedPosts() ).toBeArray();
 				expect( janedoe.getPublishedPosts() ).toHaveLength(
@@ -145,7 +158,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					"No posts should belong to janedoe. Instead got #janedoe.getPublishedPosts().len()#."
 				);
 
-				var johndoe = users[ 3 ];
+				var johndoe = users[ 4 ];
 				expect( johndoe.getUsername() ).toBe( "johndoe" );
 				expect( johndoe.getPublishedPosts() ).toBeArray();
 				expect( johndoe.getPublishedPosts() ).toHaveLength(
@@ -153,7 +166,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					"No posts should belong to johndoe. Instead got #johndoe.getPublishedPosts().len()#."
 				);
 
-				var elpete = users[ 4 ];
+				var elpete = users[ 5 ];
 				expect( elpete.getUsername() ).toBe( "elpete" );
 				expect( elpete.getPublishedPosts() ).toBeArray();
 				expect( elpete.getPublishedPosts() ).toHaveLength(
@@ -173,17 +186,25 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.latest()
 					.get();
 				expect( users ).toBeArray();
-				expect( users ).toHaveLength( 4, "Four users should be returned" );
+				expect( users ).toHaveLength( 5, "Five users should be returned" );
 
-				var janedoe = users[ 2 ];
+				var michaelscott = users[ 1 ];
+				expect( michaelscott.getUsername() ).toBe( "michaelscott" );
+				expect( michaelscott.getLatestPost() ).toBeNull();
+
+				var elpete2 = users[ 2 ];
+				expect( elpete2.getUsername() ).toBe( "elpete2" );
+				expect( elpete2.getLatestPost() ).notToBeNull();
+
+				var janedoe = users[ 3 ];
 				expect( janedoe.getUsername() ).toBe( "janedoe" );
 				expect( janedoe.getLatestPost() ).toBeNull();
 
-				var johndoe = users[ 3 ];
+				var johndoe = users[ 4 ];
 				expect( johndoe.getUsername() ).toBe( "johndoe" );
 				expect( johndoe.getLatestPost() ).toBeNull();
 
-				var elpete = users[ 4 ];
+				var elpete = users[ 5 ];
 				expect( elpete.getUsername() ).toBe( "elpete" );
 				expect( elpete.getLatestPost() ).notToBeNull();
 
@@ -333,9 +354,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.latest()
 					.get();
 				expect( users ).toBeArray();
-				expect( users ).toHaveLength( 4, "Four users should be returned" );
+				expect( users ).toHaveLength( 5, "Five users should be returned" );
 
-				var elpete2 = users[ 1 ];
+				var michaelscott = users[ 1 ];
+				expect( michaelscott.getUsername() ).toBe( "michaelscott" );
+				expect( michaelscott.getPosts() ).toBeArray();
+				expect( michaelscott.getPosts() ).toHaveLength( 0, "No posts should belong to michaelscott" );
+
+				var elpete2 = users[ 2 ];
 				expect( elpete2.getUsername() ).toBe( "elpete2" );
 				expect( elpete2.getPosts() ).toBeArray();
 				expect( elpete2.getPosts() ).toHaveLength( 1, "One post should belong to elpete2" );
@@ -347,17 +373,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					"I thought this post was not so good"
 				);
 
-				var janedoe = users[ 2 ];
+				var janedoe = users[ 3 ];
 				expect( janedoe.getUsername() ).toBe( "janedoe" );
 				expect( janedoe.getPosts() ).toBeArray();
 				expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
 
-				var johndoe = users[ 3 ];
+				var johndoe = users[ 4 ];
 				expect( johndoe.getUsername() ).toBe( "johndoe" );
 				expect( johndoe.getPosts() ).toBeArray();
 				expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-				var elpete = users[ 4 ];
+				var elpete = users[ 5 ];
 				expect( elpete.getUsername() ).toBe( "elpete" );
 
 				expect( elpete.getPosts() ).toBeArray();
@@ -387,19 +413,24 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.get();
 
 				expect( users ).toBeArray();
-				expect( users ).toHaveLength( 4, "Four users should be returned" );
+				expect( users ).toHaveLength( 5, "Five users should be returned" );
 
-				var janedoe = users[ 2 ];
+				var michaelscott = users[ 1 ];
+				expect( michaelscott.getUsername() ).toBe( "michaelscott" );
+				expect( michaelscott.getPosts() ).toBeArray();
+				expect( michaelscott.getPosts() ).toHaveLength( 0, "No posts should belong to michaelscott" );
+
+				var janedoe = users[ 3 ];
 				expect( janedoe.getUsername() ).toBe( "janedoe" );
 				expect( janedoe.getPosts() ).toBeArray();
 				expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
 
-				var johndoe = users[ 3 ];
+				var johndoe = users[ 4 ];
 				expect( johndoe.getUsername() ).toBe( "johndoe" );
 				expect( johndoe.getPosts() ).toBeArray();
 				expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-				var elpete = users[ 4 ];
+				var elpete = users[ 5 ];
 				expect( elpete.getUsername() ).toBe( "elpete" );
 				expect( elpete.getPosts() ).toBeArray();
 				expect( elpete.getPosts() ).toHaveLength( 1, "One post should belong to elpete" );
@@ -421,9 +452,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.latest()
 					.get();
 				expect( users ).toBeArray();
-				expect( users ).toHaveLength( 4, "Four users should be returned" );
+				expect( users ).toHaveLength( 5, "Five users should be returned" );
 
-				var elpete2 = users[ 1 ];
+				var michaelscott = users[ 1 ];
+				expect( michaelscott.getUsername() ).toBe( "michaelscott" );
+				expect( michaelscott.getPosts() ).toBeArray();
+				expect( michaelscott.getPosts() ).toHaveLength( 0, "No posts should belong to michaelscott" );
+
+				var elpete2 = users[ 2 ];
 				expect( elpete2.getUsername() ).toBe( "elpete2" );
 				expect( elpete2.getPosts() ).toBeArray();
 				expect( elpete2.getPosts() ).toHaveLength( 1, "One post should belong to elpete2" );
@@ -435,17 +471,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					"I thought this post was not so good"
 				);
 
-				var janedoe = users[ 2 ];
+				var janedoe = users[ 3 ];
 				expect( janedoe.getUsername() ).toBe( "janedoe" );
 				expect( janedoe.getPosts() ).toBeArray();
 				expect( janedoe.getPosts() ).toHaveLength( 0, "No posts should belong to janedoe" );
 
-				var johndoe = users[ 3 ];
+				var johndoe = users[ 4 ];
 				expect( johndoe.getUsername() ).toBe( "johndoe" );
 				expect( johndoe.getPosts() ).toBeArray();
 				expect( johndoe.getPosts() ).toHaveLength( 0, "No posts should belong to johndoe" );
 
-				var elpete = users[ 4 ];
+				var elpete = users[ 5 ];
 				expect( elpete.getUsername() ).toBe( "elpete" );
 				expect( elpete.getPosts() ).toBeArray();
 				expect( elpete.getPosts() ).toHaveLength( 2, "Two posts should belong to elpete" );
@@ -453,8 +489,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( elpete.getPosts()[ 1 ].getPost_Pk() ).toBe( 523526 );
 				expect( elpete.getPosts()[ 1 ].getComments() ).toBeArray();
 				expect( elpete.getPosts()[ 1 ].getComments() ).toBeEmpty();
-
-
 
 				expect( elpete.getPosts()[ 2 ].getPost_Pk() ).toBe( 1245 );
 				expect( elpete.getPosts()[ 2 ].getComments() ).toBeArray();

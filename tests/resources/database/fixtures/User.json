@@ -74,5 +74,24 @@
 		"state": "UT",
 		"zip": "84123",
 		"favoritePost_id": ""
+	},
+	"michaelScott": {
+		"id": 5,
+		"username": "michaelscott",
+		"firstName": "Michael",
+		"lastName": "Scott",
+		"password": "5F4DCC3B5AA765D61D8327DEB882CF99",
+		"countryId": "02BA2DB0-EB1E-3F85-5F283AB5E45608C6",
+		"teamId": 3,
+		"createdDate": "2020-01-14 12:29:36",
+		"modifiedDate": "2020-06-22 12:29:36",
+		"type": "limited",
+		"externalId": "",
+		"streetOne": "1725 Slough Avenue",
+		"streetTwo": "",
+		"city": "Scranton",
+		"state": "PA",
+		"zip": "18501",
+		"favoritePost_id": ""
 	}
 }

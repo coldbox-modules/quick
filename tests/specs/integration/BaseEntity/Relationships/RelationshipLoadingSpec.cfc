@@ -60,7 +60,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.withLatestPost()
 					.orderByAsc( "id" )
 					.get();
-				expect( users ).toHaveLength( 4 );
+				expect( users ).toHaveLength( 5 );
 
 				var elpete = users[ 1 ];
 				expect( elpete.getDynamicLatestPost() ).notToBeNull();
@@ -75,6 +75,9 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				var elpete2 = users[ 4 ];
 				expect( elpete2.getDynamicLatestPost() ).notToBeNull();
 				expect( elpete2.getDynamicLatestPost().getPost_Pk() ).toBe( 321 );
+
+				var michaelscott = users[ 5 ];
+				expect( michaelscott.getDynamicLatestPost() ).toBeNull();
 
 				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed" );
 

@@ -104,12 +104,29 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 
 	public QuickBuilder function applyThroughExists( required QuickBuilder base ) {
 		var selectedColumns = variables.related.getColumns();
-		return addNestedWhereExists(
-			variables.closestToParent
-				.getRelated()
-				.newQuery()
-				.reselectRaw( 1 )
-		).whereExists( arguments.base ).select( selectedColumns );
+
+		var joiningQuery = variables.closestToParent
+			.getRelated()
+			.newQuery()
+			.reselectRaw( 1 )
+			.whereExists(
+				arguments.base.where( function( q ) {
+					arrayZipEach(
+						[
+							variables.parent.keyNames(),
+							variables.closestToParent.getForeignKeys()
+						],
+						function( localKey, foreignKey ) {
+							q.whereColumn(
+								variables.parent.qualifyColumn( localKey ),
+								variables.closestToParent.qualifyColumn( foreignKey )
+							);
+						}
+					);
+				} )
+			);
+
+		return addNestedWhereExists( joiningQuery ).select( selectedColumns );
 	}
 
 	/**

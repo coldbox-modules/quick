@@ -13,7 +13,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			it( "can run a query without a global scope", function() {
 				var admins = getInstance( "Admin" ).withoutGlobalScope( "ofType" ).all();
 				expect( admins ).toBeArray();
-				expect( admins ).toHaveLength( 4 );
+				expect( admins ).toHaveLength( 5 );
 			} );
 
 			it( "does not prevent adding a scope that was prevented from being global", function() {

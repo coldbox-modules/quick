@@ -9,7 +9,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					.find( "johndoe" );
 				user.delete();
 
-				expect( getInstance( "User" ).count() ).toBe( 3 );
+				expect( getInstance( "User" ).count() ).toBe( 4 );
 				expect( function() {
 					variables.fixtures
 						.with( "User" )
@@ -25,7 +25,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "can delete off of a query", function() {
 				getInstance( "User" ).whereUsername( "johndoe" ).deleteAll();
-				expect( getInstance( "User" ).count() ).toBe( 3 );
+				expect( getInstance( "User" ).count() ).toBe( 4 );
 				expect( function() {
 					getInstance( "User" ).whereUsername( "johndoe" ).firstOrFail();
 				} ).toThrow( type = "EntityNotFound" );
@@ -33,7 +33,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "can delete multiple ids at once", function() {
 				getInstance( "User" ).deleteAll( [ 2 ] );
-				expect( getInstance( "User" ).count() ).toBe( 3 );
+				expect( getInstance( "User" ).count() ).toBe( 4 );
 				expect( function() {
 					variables.fixtures
 						.with( "User" )

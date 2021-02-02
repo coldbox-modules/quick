@@ -4,7 +4,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 		describe( "Query Spec", function() {
 			it( "returns all records as array", function() {
 				var users = getInstance( "User" ).all();
-				expect( users ).toHaveLength( 4, "Four users should exist in the database and be returned." );
+				expect( users ).toHaveLength( 5, "Five users should exist in the database and be returned." );
 				expect( users[ 1 ].getId() ).toBe( 1 );
 				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
 				expect( users[ 2 ].getId() ).toBe( 2 );
@@ -13,6 +13,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( users[ 3 ].getUsername() ).toBe( "janedoe" );
 				expect( users[ 4 ].getId() ).toBe( 4 );
 				expect( users[ 4 ].getUsername() ).toBe( "elpete2" );
+				expect( users[ 5 ].getId() ).toBe( 5 );
+				expect( users[ 5 ].getUsername() ).toBe( "michaelscott" );
 			} );
 
 			it( "can execute an arbitrary get query", function() {

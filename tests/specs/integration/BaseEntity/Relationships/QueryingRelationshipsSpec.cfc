@@ -120,7 +120,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 							.get();
 
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 3 );
+						expect( users ).toHaveLength( 4 );
 					} );
 
 					it( "can apply counts to a whereHas constraint", function() {
@@ -235,17 +235,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					it( "can find only entities that do not have one or more related entities", function() {
 						var users = getInstance( "User" ).doesntHave( "posts" ).get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 2 );
+						expect( users ).toHaveLength( 3 );
 					} );
 
 					it( "can constrain the count of the doesntHave check", function() {
 						var users = getInstance( "User" ).doesntHave( "posts", ">=", 2 ).get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 3 );
+						expect( users ).toHaveLength( 4 );
 
 						var users = getInstance( "User" ).doesntHave( "posts", "=", 1 ).get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 3 );
+						expect( users ).toHaveLength( 4 );
 					} );
 
 					it( "can constrain a has query using whereDoesntHave", function() {
@@ -255,7 +255,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 							} )
 							.get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 3 );
+						expect( users ).toHaveLength( 4 );
 					} );
 
 					it( "can constrain a has query using whereDoesntHave and orWhereDoesntHave", function() {
@@ -268,23 +268,23 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 							} )
 							.get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 4 );
+						expect( users ).toHaveLength( 5 );
 					} );
 
 					it( "can check nested relationships for absence", function() {
 						var users = getInstance( "User" ).doesntHave( "posts.comments" ).get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 2 );
+						expect( users ).toHaveLength( 3 );
 					} );
 
 					it( "applies count constraints to the final relationship in a nested relationship absence check", function() {
 						var users = getInstance( "User" ).doesntHave( "posts.comments", "=", 1 ).get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 3 );
+						expect( users ).toHaveLength( 4 );
 
 						var users = getInstance( "User" ).doesntHave( "posts.comments", ">", 1 ).get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 3 );
+						expect( users ).toHaveLength( 4 );
 					} );
 
 					it( "applies whereDoesntHave constraints to the final relationship in a nested relationship existence check", function() {
@@ -295,7 +295,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 							.get();
 
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 3 );
+						expect( users ).toHaveLength( 4 );
 					} );
 
 					it( "can apply counts to a whereDoesntHave constraint", function() {
@@ -310,7 +310,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 							)
 							.get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 4 );
+						expect( users ).toHaveLength( 5 );
 					} );
 
 					it( "can apply counts to nested whereDoesntHave constraint", function() {
@@ -326,7 +326,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 							.get();
 
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 4 );
+						expect( users ).toHaveLength( 5 );
 					} );
 				} );
 
@@ -358,7 +358,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					it( "can find only entities that do not have a related hasOne entity", function() {
 						var users = getInstance( "User" ).doesntHave( "latestPost" ).get();
 						expect( users ).toBeArray();
-						expect( users ).toHaveLength( 2 );
+						expect( users ).toHaveLength( 3 );
 					} );
 				} );
 			} );

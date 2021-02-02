@@ -9,12 +9,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			it( "list (without arguments)", function() {
 				var users = user.list();
 				expect( users ).toBeQuery();
-				expect( users ).toHaveLength( 4, "Four users should exist in the database and be returned." );
+				expect( users ).toHaveLength( 5, "Five users should exist in the database and be returned." );
 			} );
 
 			it( "list (as objects)", function() {
 				var users = user.list( asQuery = false );
-				expect( users ).toHaveLength( 4, "Four users should exist in the database and be returned." );
+				expect( users ).toHaveLength( 5, "Five users should exist in the database and be returned." );
 				expect( users[ 1 ].getId() ).toBe( 1 );
 				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
 				expect( users[ 2 ].getId() ).toBe( 2 );
@@ -39,7 +39,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "count", function() {
-				expect( user.count() ).toBe( 4 );
+				expect( user.count() ).toBe( 5 );
 			} );
 
 			it( "countWhere", function() {
@@ -79,7 +79,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			it( "exists", function() {
 				expect( user.exists() ).toBeTrue();
 				expect( user.exists( 1 ) ).toBeTrue();
-				expect( user.exists( 5 ) ).toBeFalse();
+				expect( user.exists( 6 ) ).toBeFalse();
 			} );
 
 			it( "findAllWhere", function() {
@@ -137,12 +137,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "getAll (sort order)", function() {
 				var users = user.getAll( sortOrder = "username desc" );
-				expect( users[ 1 ].getId() ).toBe( 2 );
-				expect( users[ 1 ].getUsername() ).toBe( "johndoe" );
-				expect( users[ 2 ].getId() ).toBe( 3 );
-				expect( users[ 2 ].getUsername() ).toBe( "janedoe" );
-				expect( users[ 3 ].getId() ).toBe( 4 );
-				expect( users[ 3 ].getUsername() ).toBe( "elpete2" );
+				expect( users[ 1 ].getId() ).toBe( 5 );
+				expect( users[ 1 ].getUsername() ).toBe( "michaelscott" );
+				expect( users[ 2 ].getId() ).toBe( 2 );
+				expect( users[ 2 ].getUsername() ).toBe( "johndoe" );
+				expect( users[ 3 ].getId() ).toBe( 3 );
+				expect( users[ 3 ].getUsername() ).toBe( "janedoe" );
+				expect( users[ 4 ].getId() ).toBe( 4 );
+				expect( users[ 4 ].getUsername() ).toBe( "elpete2" );
 			} );
 
 			it( "getAll (id list)", function() {

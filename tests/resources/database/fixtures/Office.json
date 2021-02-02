@@ -2,5 +2,9 @@
     "acme": {
         "id": 1,
         "name": "Acme"
+    },
+    "scranton": {
+        "id": 2,
+        "name": "Scranton"
     }
 }

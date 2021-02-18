@@ -119,12 +119,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( user.get().get( 21234124 ) ).toBeNull();
 			} );
 
-			it( "get( 0 ) returns a new entity", function() {
-				// this is a double get because user is a provider
-				var newUser = user.get().get( 0 );
-				expect( newUser.isLoaded() ).toBeFalse();
-			} );
-
 			it( "getAll", function() {
 				var users = user.getAll();
 				expect( users[ 1 ].getId() ).toBe( 1 );

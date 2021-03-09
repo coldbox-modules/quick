@@ -991,7 +991,10 @@ component accessors="true" {
 
 		var attrs = retrieveQuery().first();
 
-		return structIsEmpty( attrs ) ? javacast( "null", "" ) : handleTransformations( loadEntity( attrs ) );
+		return structIsEmpty( attrs ) ? javacast( "null", "" ) : handleTransformations(
+			// wrap the single entity in an array to eager load, then grab it out again
+			eagerLoadRelations( [ loadEntity( attrs ) ] )[ 1 ]
+		);
 	}
 
 	/**
@@ -1017,7 +1020,10 @@ component accessors="true" {
 
 			throw( type = "EntityNotFound", message = arguments.errorMessage );
 		}
-		return handleTransformations( loadEntity( attrs ) );
+		return handleTransformations(
+			// wrap the single entity in an array to eager load, then grab it out again
+			eagerLoadRelations( [ loadEntity( attrs ) ] )[ 1 ]
+		);
 	}
 
 	/**
@@ -1114,7 +1120,10 @@ component accessors="true" {
 			return javacast( "null", "" );
 		}
 
-		return handleTransformations( loadEntity( data ) );
+		return handleTransformations(
+			// wrap the single entity in an array to eager load, then grab it out again
+			eagerLoadRelations( [ loadEntity( data ) ] )[ 1 ]
+		);
 	}
 
 	/**

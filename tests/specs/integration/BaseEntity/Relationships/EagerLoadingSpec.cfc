@@ -496,6 +496,21 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 				expect( variables.queries ).toHaveLength( 3, "Only three queries should have been executed." );
 			} );
+
+			it( "can eager load a find or first call", function() {
+				var post     = getInstance( "Post" ).with( "comments.author" ).findOrFail( 1245 );
+				var comments = post.getComments();
+				expect( comments ).toHaveLength( 2 );
+				for ( var comment in comments ) {
+					expect( comment.getAuthor() ).notToBeNull();
+				}
+				if ( arrayLen( variables.queries ) != 3 ) {
+					expect( variables.queries ).toHaveLength(
+						3,
+						"Only three queries should have been executed. #arrayLen( variables.queries )# were instead."
+					);
+				}
+			} );
 		} );
 	}
 

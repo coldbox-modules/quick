@@ -1,14 +1,25 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "offices", function( table ) {
-            table.increments( "id" );
-            table.string( "name" );
+    function up( sb, qb ) {
+        sb.create( "offices", function( t ) {
+            t.increments( "id" );
+            t.string( "name" );
         } );
+
+        qb.table( "offices" ).insert( [
+            {
+                "id": 1,
+                "name": "Acme"
+            },
+            {
+                "id": 2,
+                "name": "Scranton"
+            }
+        ] );
     }
 
-    function down( schema, query ) {
-        schema.drop( "offices" );
+    function down( sb, qb ) {
+        sb.drop( "offices" );
     }
 
 }

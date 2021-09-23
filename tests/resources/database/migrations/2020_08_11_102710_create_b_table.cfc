@@ -1,15 +1,15 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "b", function( table ) {
-            table.increments( "id" );
-            table.unsignedInteger( "a_id" ).nullable();
-            table.string( "name" );
+    function up( sb, qb ) {
+        sb.create( "b", function( t ) {
+            t.increments( "id" );
+            t.unsignedInteger( "a_id" ).nullable();
+            t.string( "name" );
         } );
     }
 
-    function down( schema, query ) {
-        schema.drop( "b" );
+    function down( sb, qb ) {
+        sb.drop( "b" );
     }
 
 }

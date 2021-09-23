@@ -1,16 +1,25 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "children", function( table ) {
-            table.increments( "childID" );
-            table.unsignedInteger( "familyID" );
-            table.string( "firstname" );
-            table.string( "lastname" );
+    function up( sb, qb ) {
+        sb.create( "children", function( t ) {
+            t.increments( "childID" );
+            t.unsignedInteger( "familyID" );
+            t.string( "firstname" );
+            t.string( "lastname" );
         } );
+        
+        qb.table( "children" ).insert( [
+            {
+                "childID": 1,
+                "familyID": 1,
+                "firstName": "River",
+                "lastName": "Song"
+            }
+        ] );
     }
 
-    function down( schema, query ) {
-        schema.drop( "children" );
+    function down( sb, qb ) {
+        sb.drop( "children" );
     }
 
 }

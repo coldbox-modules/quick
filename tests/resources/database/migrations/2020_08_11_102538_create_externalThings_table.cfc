@@ -1,16 +1,16 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "externalThings", function( table ) {
-            table.increments( "thingId" );
-            table.unsignedInteger( "userId" );
-            table.string( "externalId" );
-            table.string( "value" ).nullable();
+    function up( sb, qb ) {
+        sb.create( "externalThings", function( t ) {
+            t.increments( "thingId" );
+            t.unsignedInteger( "userId" );
+            t.string( "externalId" );
+            t.string( "value" ).nullable();
         } );
     }
 
-    function down( schema, query ) {
-        schema.drop( "externalThings" );
+    function down( sb, qb ) {
+        sb.drop( "externalThings" );
     }
 
 }

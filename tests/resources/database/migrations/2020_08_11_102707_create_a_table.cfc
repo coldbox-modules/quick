@@ -1,14 +1,14 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "a", function( table ) {
-            table.increments( "id" );
-            table.string( "name" );
+    function up( sb, qb ) {
+        sb.create( "a", function( t ) {
+            t.increments( "id" );
+            t.string( "name" );
         } );
     }
 
-    function down( schema, query ) {
-        schema.drop( "a" );
+    function down( sb, qb ) {
+        sb.drop( "a" );
     }
 
 }

@@ -32,10 +32,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can use multiple attributes for casting", function() {
-				var user = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "elpete" );
+				var user = getInstance( "User" ).findOrFail( 1 );
 				expect( user.getAddress() ).notToBeNull();
 				var address = user.getAddress();
 				expect( address.fullStreet() ).toBe( "123 Elm Street" );
@@ -51,10 +48,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can assign multiple attributes from a cast when saving to the database", function() {
-				var user = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "elpete" );
+				var user    = getInstance( "User" ).findOrFail( 1 );
 				var address = user.getAddress();
 				address.setState( "TX" );
 				user.save();

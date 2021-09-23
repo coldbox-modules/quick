@@ -1,19 +1,23 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "jingles", function( table ) {
-            table.unsignedInteger( "FK_song" )
+    function up( sb, qb ) {
+        sb.create( "jingles", function( t ) {
+            t.unsignedInteger( "FK_song" )
                 .references( "id" )
                 .onTable( "songs" )
                 .onUpdate( "CASCADE" )
                 .onDelete( "CASCADE" );
-            table.integer( "catchiness" );
-            table.primaryKey( "FK_song" );
+            t.integer( "catchiness" );
+            t.primaryKey( "FK_song" );
         } );
+
+        qb.table( "jingles" ).insert( [
+            { "FK_song": 3, "catchiness": 3 }
+        ] );
     }
 
-    function down( schema, query ) {
-        schema.drop( "jingles" );
+    function down( sb, qb ) {
+        sb.drop( "jingles" );
     }
 
 }

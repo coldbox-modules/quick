@@ -1,15 +1,22 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "my_posts_tags", function( table ) {
-            table.unsignedInteger( "custom_post_pk" );
-            table.unsignedInteger( "tag_id" );
-            table.primaryKey( [ "custom_post_pk", "tag_id" ] );
+    function up( sb, qb ) {
+        sb.create( "my_posts_tags", function( t ) {
+            t.unsignedInteger( "custom_post_pk" );
+            t.unsignedInteger( "tag_id" );
+            t.primaryKey( [ "custom_post_pk", "tag_id" ] );
         } );
+
+        qb.table( "my_posts_tags" ).insert( [
+            { "custom_post_pk": 1245, "tag_id": 1 },
+            { "custom_post_pk": 1245, "tag_id": 2 },
+            { "custom_post_pk": 523526, "tag_id": 1 },
+            { "custom_post_pk": 523526, "tag_id": 2 }
+        ] );
     }
 
-    function down( schema, query ) {
-        schema.drop( "my_posts_tags" );
+    function down( sb, qb ) {
+        sb.drop( "my_posts_tags" );
     }
 
 }

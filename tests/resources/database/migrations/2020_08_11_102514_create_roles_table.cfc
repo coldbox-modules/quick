@@ -1,14 +1,29 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "roles", function( table ) {
-            table.increments( "id" );
-            table.string( "name" );
+    function up( sb, qb ) {
+        sb.create( "roles", function( t ) {
+            t.increments( "id" );
+            t.string( "name" );
         } );
+
+        qb.table( "roles" ).insert( [
+            {
+                "id": 1,
+                "name": "ADMIN"
+            },
+            {
+                "id": 2,
+                "name": "MODERATOR"
+            },
+            {
+                "id": 3,
+                "name": "USER"
+            }
+        ] );
     }
 
-    function down( schema, query ) {
-        schema.drop( "roles" );
+    function down( sb, qb ) {
+        sb.drop( "roles" );
     }
 
 }

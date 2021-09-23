@@ -1,14 +1,21 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "registrations", function( table ) {
-            table.increments( "registrationID" );
-            table.unsignedInteger( "childID" );
+    function up( sb, qb ) {
+        sb.create( "registrations", function( t ) {
+            t.increments( "registrationID" );
+            t.unsignedInteger( "childID" );
         } );
+
+        qb.table( "registrations" ).insert( [
+            {
+                "registrationID": 1,
+                "childID": 1
+            }
+        ] );
     }
 
-    function down( schema, query ) {
-        schema.drop( "registrations" );
+    function down( sb, qb ) {
+        sb.drop( "registrations" );
     }
 
 }

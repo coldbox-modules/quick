@@ -1,13 +1,13 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "empty", function( table ) {
-            table.increments( "id" );
+    function up( sb, qb ) {
+        sb.create( "empty", function( t ) {
+            t.increments( "id" );
         } );
     }
 
-    function down( schema, query ) {
-        schema.drop( "empty" );
+    function down( sb, qb ) {
+        sb.drop( "empty" );
     }
 
 }

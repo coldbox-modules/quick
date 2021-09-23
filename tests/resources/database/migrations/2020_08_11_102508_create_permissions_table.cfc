@@ -1,14 +1,25 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "permissions", function( table ) {
-            table.increments( "id" );
-            table.string( "name" );
+    function up( sb, qb ) {
+        sb.create( "permissions", function( t ) {
+            t.increments( "id" );
+            t.string( "name" );
         } );
+        
+        qb.table( "permissions" ).insert( [
+            {
+                "id": 1,
+                "name": "MANAGE_USERS"
+            },
+            {
+                "id": 2,
+                "name": "APPROVE_POSTS"
+            }
+        ] );
     }
 
-    function down( schema, query ) {
-        schema.drop( "permissions" );
+    function down( sb, qb ) {
+        sb.drop( "permissions" );
     }
 
 }

@@ -14,21 +14,15 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( countryA.getPosts()[ 2 ].getPost_Pk() ).toBe( 523526 );
 				expect( countryA.getPosts()[ 2 ].getBody() ).toBe( "My second awesome post body" );
 
-				var countryB = variables.fixtures
-					.with( "Country" )
-					.asEntity()
-					.find( "argentina" );
+				var countryB = getInstance( "Country" ).findOrFail( "02BA2DB0-EB1E-3F85-5F283AB5E45608C6" );
 				expect( countryB.getPosts() ).toHaveLength( 1 );
 				expect( countryB.getPosts()[ 1 ].getPost_Pk() ).toBe( 321 );
 				expect( countryB.getPosts()[ 1 ].getBody() ).toBe( "My post with a different author" );
 			} );
 
 			it( "can get the related entities through any number of intermediate entities including a belongsToMany relationship", function() {
-				var country = variables.fixtures
-					.with( "Country" )
-					.asEntity()
-					.find( "unitedStates" );
-				var tags = country.getTags();
+				var country = getInstance( "Country" ).findOrFail( "02B84D66-0AA0-F7FB-1F71AFC954843861" );
+				var tags    = country.getTags();
 				expect( tags ).toBeArray();
 				expect( tags ).toHaveLength( 2 );
 				expect( tags[ 1 ].getId() ).toBe( 1 );
@@ -38,20 +32,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can get the related entities starting with a belongsToMany relationship", function() {
-				var user = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "elpete" );
+				var user        = getInstance( "User" ).findOrFail( 1 );
 				var permissions = user.getPermissions();
 				expect( permissions ).toBeArray();
 				expect( permissions ).toHaveLength( 2 );
 			} );
 
 			it( "can get the related entities starting with a hasManyThrough relationship", function() {
-				var country = variables.fixtures
-					.with( "Country" )
-					.asEntity()
-					.find( "argentina" );
+				var country     = getInstance( "Country" ).findOrFail( "02BA2DB0-EB1E-3F85-5F283AB5E45608C6" );
 				var permissions = country.getPermissions();
 				expect( permissions ).toBeArray();
 				expect( permissions ).toHaveLength( 1 );
@@ -59,10 +47,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can get the related entities starting with a polymorphicHasMany relationship", function() {
-				var post = variables.fixtures
-					.with( "Post" )
-					.asEntity()
-					.find( "awesome" );
+				var post            = getInstance( "Post" ).findOrFail( 1245 );
 				var commentingUsers = post.getCommentingUsers();
 				expect( commentingUsers ).toBeArray();
 				expect( commentingUsers ).toHaveLength( 1 );
@@ -71,20 +56,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can get the related entities through a polymorphicBelongsTo relationship", function() {
-				var comment = variables.fixtures
-					.with( "Comment" )
-					.asEntity()
-					.find( "great" );
-				var tags = comment.getTags();
+				var comment = getInstance( "Comment" ).findOrFail( 1 );
+				var tags    = comment.getTags();
 				expect( tags ).toBeArray();
 				expect( tags ).toHaveLength( 2 );
 			} );
 
 			it( "can get the related entities through any number of intermediate entities including a polymorphicHasMany relationship", function() {
-				var country = variables.fixtures
-					.with( "Country" )
-					.asEntity()
-					.find( "unitedStates" );
+				var country  = getInstance( "Country" ).findOrFail( "02B84D66-0AA0-F7FB-1F71AFC954843861" );
 				var comments = country.getComments();
 				expect( comments ).toBeArray();
 				expect( comments ).toHaveLength( 2 );
@@ -97,10 +76,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can go up and down belongsTo and hasMany relationships", function() {
-				var user = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "elpete" );
+				var user      = getInstance( "User" ).findOrFail( 1 );
 				var teammates = user.getTeammates();
 				expect( teammates ).toBeArray();
 				expect( teammates ).toHaveLength( 2 );
@@ -109,10 +85,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can go up and down many belongsTo and hasMany relationships", function() {
-				var user = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "johndoe" );
+				var user        = getInstance( "User" ).findOrFail( 2 );
 				var officemates = user.getOfficemates();
 				expect( officemates ).toBeArray();
 				expect( officemates ).toHaveLength( 3 );
@@ -122,10 +95,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can go up and down many belongsTo and hasMany even hasManyThrough relationships", function() {
-				var user = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "johndoe" );
+				var user        = getInstance( "User" ).findOrFail( 2 );
 				var officemates = user.getOfficematesAlternate();
 				expect( officemates ).toBeArray();
 				expect( officemates ).toHaveLength( 3 );

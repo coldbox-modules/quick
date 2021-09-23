@@ -1,15 +1,15 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "family_parents", function( table ) {
-            table.unsignedInteger( "parentID" );
-            table.unsignedInteger( "familyID" );
-            table.primaryKey( [ "parentID", "familyID" ] );
+    function up( sb, qb ) {
+        sb.create( "family_parents", function( t ) {
+            t.unsignedInteger( "parentID" );
+            t.unsignedInteger( "familyID" );
+            t.primaryKey( [ "parentID", "familyID" ] );
         } );
     }
 
-    function down( schema, query ) {
-        schema.drop( "family_parents" );
+    function down( sb, qb ) {
+        sb.drop( "family_parents" );
     }
 
 }

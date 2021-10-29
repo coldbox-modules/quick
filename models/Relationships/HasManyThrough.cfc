@@ -38,7 +38,7 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 	 */
 	public array function initRelation( required array entities, required string relation ) {
 		return arguments.entities.map( function( entity ) {
-			return arguments.entity.assignRelationship( relation, [] );
+			return arguments.entity.assignRelationship( relation, variables.related.newCollection() );
 		} );
 	}
 

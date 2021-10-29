@@ -218,7 +218,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		required string type
 	) {
 		var value = arguments.dictionary[ arguments.key ];
-		return arguments.type == "one" ? value[ 1 ] : value;
+		return arguments.type == "one" ? value[ 1 ] : variables.related.newCollection( value );
 	}
 
 	/**

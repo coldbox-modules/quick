@@ -182,6 +182,11 @@ component accessors="true" {
 	property name="_withoutRelationshipConstraints" persistent="false";
 
 	/**
+	 * A boolean flag representing that the entity should not use custom collections.
+	 */
+	property name="_disableCustomCollections " persistent="false";
+
+	/**
 	 * A boolean flag representing that the entity is currently applying global scopes.
 	 */
 	property name="_applyingGlobalScopes" persistent="false";
@@ -250,6 +255,7 @@ component accessors="true" {
 		param variables._relationshipsLoaded      = {};
 		param variables._eagerLoad                = [];
 		variables._withoutRelationshipConstraints = false;
+		variables._disableCustomCollections       = false;
 		variables._applyingGlobalScopes           = false;
 		variables._globalScopesApplied            = false;
 		variables._ignoreNotLoadedGuard           = false;
@@ -673,11 +679,10 @@ component accessors="true" {
 	 *                               the non-existent attribute.
 	 */
 	public any function hydrateAll( array mementos = [], boolean ignoreNonExistentAttributes = false ) {
-		return newCollection(
-			arguments.mementos.map( function( memento ) {
-				return newEntity().hydrate( memento, ignoreNonExistentAttributes );
-			} )
-		);
+		var hydratedEntities = arguments.mementos.map( function( memento ) {
+			return newEntity().hydrate( memento, ignoreNonExistentAttributes );
+		} );
+		return variables._disableCustomCollections ? hydratedEntities : newCollection( hydratedEntities );
 	}
 
 	/**
@@ -947,7 +952,8 @@ component accessors="true" {
 	 * @return  The result of `newCollection` with the retrieved entities.
 	 */
 	public any function get() {
-		return newCollection( handleTransformations( eagerLoadRelations( getEntities() ) ) );
+		var entities = handleTransformations( eagerLoadRelations( getEntities() ) );
+		return variables._disableCustomCollections ? entities : newCollection( entities );
 	}
 
 	/**
@@ -2962,6 +2968,20 @@ component accessors="true" {
 			variables._globalScopeExclusions.append( lCase( n ) );
 		}
 		return this;
+	}
+
+	/**
+	 * Temporarily disables custom collections for the duration of the callback.
+	 *
+	 * @callback The callback to execute while custom collections are disabled.
+	 *
+	 * @return   any
+	 */
+	public any function withoutCustomCollections( required function callback ) {
+		variables._disableCustomCollections = true;
+		var result                          = arguments.callback();
+		variables._disableCustomCollections = false;
+		return isNull( result ) ? javacast( "null", "" ) : result;
 	}
 
 	/**

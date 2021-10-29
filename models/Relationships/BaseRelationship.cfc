@@ -105,7 +105,9 @@ component accessors="true" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function getEager() {
-		return variables.related.get();
+		return variables.related.withoutCustomCollections( function() {
+			return variables.related.get();
+		} );
 	}
 
 	/**

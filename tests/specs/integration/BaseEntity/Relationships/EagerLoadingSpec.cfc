@@ -511,6 +511,45 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					);
 				}
 			} );
+
+			it( "can eager load an entity with a custom collection", function() {
+				var users = getInstance( "User" )
+					.with( "postsInCustomCollection" )
+					.latest()
+					.get();
+				expect( users ).toBeArray();
+				expect( users ).toHaveLength( 5, "Five users should be returned" );
+
+				var michaelscott = users[ 1 ];
+				expect( michaelscott.getUsername() ).toBe( "michaelscott" );
+				expect( michaelscott.getPostsInCustomCollection() ).notToBeArray();
+				expect( michaelscott.getPostsInCustomCollection().size() ).toBe(
+					0,
+					"No posts should belong to michaelscott"
+				);
+
+				var elpete2 = users[ 2 ];
+				expect( elpete2.getUsername() ).toBe( "elpete2" );
+				expect( elpete2.getPostsInCustomCollection() ).notToBeArray();
+				expect( elpete2.getPostsInCustomCollection().size() ).toBe( 1, "One post should belong to elpete2" );
+
+				var janedoe = users[ 3 ];
+				expect( janedoe.getUsername() ).toBe( "janedoe" );
+				expect( janedoe.getPostsInCustomCollection() ).notToBeArray();
+				expect( janedoe.getPostsInCustomCollection().size() ).toBe( 0, "No posts should belong to janedoe" );
+
+				var johndoe = users[ 4 ];
+				expect( johndoe.getUsername() ).toBe( "johndoe" );
+				expect( johndoe.getPostsInCustomCollection() ).notToBeArray();
+				expect( johndoe.getPostsInCustomCollection().size() ).toBe( 0, "No posts should belong to johndoe" );
+
+				var elpete = users[ 5 ];
+				expect( elpete.getUsername() ).toBe( "elpete" );
+				expect( elpete.getPostsInCustomCollection() ).notToBeArray();
+				expect( elpete.getPostsInCustomCollection().size() ).toBe( 2, "Two posts should belong to elpete" );
+
+				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+			} );
 		} );
 	}
 

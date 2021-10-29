@@ -188,4 +188,8 @@ component extends="quick.models.BaseEntity" accessors="true" {
 			} );
 	}
 
+	function postsInCustomCollection() {
+		return hasMany( "CollectionPost", "user_id" ).latest();
+	}
+
 }

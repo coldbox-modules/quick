@@ -54,7 +54,7 @@
             "allowUpdate":true,
             "blob":false,
             "blobBuffer":64000,
-            "class":"com.mysql.jdbc.Driver",
+            "class":"com.mysql.cj.jdbc.Driver",
             "clientApplicationName":false,
             "clientApplicationNamePrefix":"",
             "clientHostname":false,

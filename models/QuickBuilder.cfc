@@ -547,6 +547,15 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 	}
 
 	/**
+	 * `super.with` is shadowed by the preceding `with` definition, but we'd like to expose CTE functionality to quick models
+	 * This is effectively an alias for `super.with`
+	 * Callers from within Quick models must call `retrieveQuery().withCte(<args>)`
+	 */
+	public any function withCte() {
+		return super.with( argumentCollection = arguments );
+	}
+
+	/**
 	 * Orders the query by a field in a relationship.
 	 * Uses subquery ordering to accomplish this.
 	 *

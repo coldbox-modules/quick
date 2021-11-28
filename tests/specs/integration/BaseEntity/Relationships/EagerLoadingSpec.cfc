@@ -511,6 +511,20 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					);
 				}
 			} );
+
+			// demonstrates issue #166 https://github.com/coldbox-modules/quick/issues/166
+			it( "respects low-level data type when retrieving keys via getKeys()", function() {
+				var post	= getInstance( "Post" ).where( "post_pk", 1245 ).get();
+				var allKeys = post[1].tags().getKeys( post, [ "post_pk" ] );
+				// See: qb::/models/Query/QueryUtils.cfc@checkIsActuallyNumeric()
+				var typeBefore = listLast( getMetaData( post[1].getPost_Pk() ), ". " );
+				var typeAfter = listLast( getMetaData( allKeys[1][1] ), ". " );
+				expect( typeAfter ).toBe(
+					typeBefore,
+				 	"Expected type information for PK to be retained after getKeys() call."
+				);
+			} );
+
 		} );
 	}
 

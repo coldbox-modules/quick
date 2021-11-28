@@ -196,12 +196,10 @@ component accessors="true" {
 					}
 					keyValues.append( entity.retrieveAttribute( key ) );
 				}
-				acc.append( keyValues.toList() );
+				acc.append( keyValues );
 				return acc;
 			}, [] )
-		).map( function( key ) {
-			return key.listToArray();
-		} );
+		);
 	}
 
 	/**

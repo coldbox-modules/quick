@@ -20,7 +20,7 @@ component {
     this.datasource = "quick";
 
     function onApplicationStart() {
-        param url.reloadFixtures = true;
+        param url.reloadDatabase = true;
     }
 
     function onRequestStart() {

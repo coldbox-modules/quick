@@ -63,11 +63,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "updates the attributes of an existing row if it has been loaded", function() {
-				var existingUser = variables.fixtures
-					.with( "user" )
-					.asEntity()
-					.find( "elpete" );
-
+				var existingUser = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				existingUser.setUsername( "new_elpete_username" );
 				var userRowsPreSave = queryExecute( "SELECT * FROM users" );
 				expect( userRowsPreSave ).toHaveLength( 5 );
@@ -167,10 +163,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				tag.setName( "miscellaneous" );
 				tag.save();
 
-				var post = variables.fixtures
-					.with( "Post" )
-					.asEntity()
-					.find( "awesome" );
+				var post = getInstance( "Post" ).findOrFail( 1245 );
 
 				expect( post.getTags().toArray() ).toBeArray();
 				expect( post.getTags().toArray() ).toHaveLength( 2 );

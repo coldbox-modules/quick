@@ -1,14 +1,22 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "games", function( table ) {
-            table.increments( "ID" );
-            table.unsignedInteger( "fieldID" ).nullable();
-            table.unsignedInteger( "clientID" ).nullable();
+    function up( schema, qb ) {
+        schema.create( "games", function( t ) {
+            t.increments( "ID" );
+            t.unsignedInteger( "fieldID" ).nullable();
+            t.unsignedInteger( "clientID" ).nullable();
         } );
+
+        qb.table( "games" ).insert( [
+            {
+                "ID": 1,
+                "fieldID": 1,
+                "clientID": 2
+            }
+        ] );
     }
 
-    function down( schema, query ) {
+    function down( schema, qb ) {
         schema.drop( "games" );
     }
 

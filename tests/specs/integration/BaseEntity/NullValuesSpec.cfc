@@ -9,10 +9,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "saves a column containing an empty string as null in the database by default", function() {
-				var user = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "elpete" );
+				var user = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				user.setCountryId( "" );
 				user.save();
 				expect(

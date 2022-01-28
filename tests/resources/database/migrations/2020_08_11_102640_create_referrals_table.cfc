@@ -1,15 +1,24 @@
 component {
 
-    function up( schema, query ) {
-        schema.create( "referrals", function( table ) {
-            table.increments( "id" );
-            table.string( "type" );
-            table.timestamp( "created_date" ).withCurrent();
-            table.timestamp( "modified_date" ).withCurrent();
+    function up( schema, qb ) {
+        schema.create( "referrals", function( t ) {
+            t.increments( "id" );
+            t.string( "type" );
+            t.timestamp( "created_date" ).withCurrent();
+            t.timestamp( "modified_date" ).withCurrent();
         } );
+
+        qb.table( "referrals" ).insert( [
+            {
+                "id": 1,
+                "type": "external",
+                "created_date": "2017-07-28 02:07:00",
+                "modified_date": "2017-07-28 02:07:00"
+            }
+        ] );
     }
 
-    function down( schema, query ) {
+    function down( schema, qb ) {
         schema.drop( "referrals" );
     }
 

@@ -7,11 +7,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can load a relationship for an entity", function() {
-				var elpete = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "elpete" );
-				var elpete = getInstance( "User" ).findOrFail( 1 );
+				var elpete = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeFalse();
 				elpete.loadRelationship( "posts" );
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeTrue();
@@ -19,11 +15,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "does not reload an already loaded relationship", function() {
 				controller.getInterceptorService().registerInterceptor( interceptorObject = this );
-				var elpete = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "elpete" );
 
+				var elpete = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeFalse();
 				elpete.loadRelationship( "posts" );
 				elpete.loadRelationship( "posts" );
@@ -34,11 +27,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "does reload an already loaded relationship when using the forceLoadRelationship method", function() {
 				controller.getInterceptorService().registerInterceptor( interceptorObject = this );
-				var elpete = variables.fixtures
-					.with( "User" )
-					.asEntity()
-					.find( "elpete" );
 
+				var elpete = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeFalse();
 				elpete.forceLoadRelationship( "posts" );
 				elpete.forceLoadRelationship( "posts" );

@@ -6,13 +6,11 @@ component extends="coldbox.system.testing.BaseTestCase" {
         getController().getModuleService()
             .registerAndActivateModule( "quick", "testingModuleRoot" );
 
-        param variables.fixtures = getFixtures();
-        param url.reloadFixtures = false;
-        param request.reloadFixtures = false;
-        if ( url.reloadFixtures && !request.reloadFixtures ) {
+        param url.reloadDatabase = false;
+        param request.reloadDatabase = false;
+        if ( url.reloadDatabase && !request.reloadDatabase ) {
             refreshDatabase();
-            insertFixtures();
-            request.reloadFixtures = true;
+            request.reloadDatabase = true;
         }
     }
 
@@ -42,17 +40,10 @@ component extends="coldbox.system.testing.BaseTestCase" {
         var migrationService = application.wirebox.getInstance( "MigrationService@cfmigrations" );
         migrationService.setMigrationsDirectory( "/tests/resources/database/migrations" );
         migrationService.setDefaultGrammar( "MySQLGrammar@qb" );
+        migrationService.setSchema( "quick" );
         migrationService.reset();
+        migrationService.install();
         migrationService.up();
-    }
-
-    private void function insertFixtures() {
-        variables.fixtures.seedDatabase();
-    }
-
-    private FixtureService function getFixtures() {
-        return application.wirebox.getInstance( "tests.resources.FixtureService" )
-                .setFixturesDirectory( "/tests/resources/database/fixtures" );
     }
 
 }

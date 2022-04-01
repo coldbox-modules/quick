@@ -713,19 +713,7 @@ component accessors="true" {
 	 */
 	public any function assignOriginalAttributes( required struct attributes ) {
 		variables._originalAttributes = arguments.attributes;
-		return assignOriginalAttributesHash( arguments.attributes );
-	}
-
-	/**
-	 * Stores a hash of the attributes to detect changes to the entity.
-	 * You can check if an entity has changed since saving using the `isDirty` method.
-	 *
-	 * @attributes  A struct of attributes data to store as the original attributes hash.
-	 *
-	 * @return      quick.models.BaseEntity
-	 */
-	public any function assignOriginalAttributesHash( required struct attributes ) {
-		variables._originalAttributesHash = computeAttributesHash( arguments.attributes );
+		structDelete( variables, "_originalAttributesHash" );
 		return this;
 	}
 
@@ -776,6 +764,7 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function isDirty() {
+		param variables._originalAttributesHash = computeAttributesHash( variables._originalAttributes );
 		return compare( variables._originalAttributesHash, computeAttributesHash( retrieveAttributesData() ) ) != 0;
 	}
 
@@ -925,7 +914,9 @@ component accessors="true" {
 	 */
 	public any function reset( boolean toNew = false ) {
 		assignAttributesData( arguments.toNew ? {} : variables._originalAttributes );
-		assignOriginalAttributes( arguments.toNew ? {} : variables._originalAttributes );
+		if ( arguments.toNew ) {
+			assignOriginalAttributes( {} );
+		}
 		variables._relationshipsData   = {};
 		variables._relationshipsLoaded = {};
 		variables._eagerLoad           = [];
@@ -940,15 +931,8 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function resetToNew() {
-		resetQuery();
-		assignAttributesData( {} );
-		assignOriginalAttributes( {} );
-		variables._relationshipsData   = {};
-		variables._relationshipsLoaded = {};
-		variables._eagerLoad           = [];
-		variables._loaded              = false;
-
-		return this;
+		arguments.toNew = true;
+		return reset( argumentCollection = arguments );
 	}
 
 	/**

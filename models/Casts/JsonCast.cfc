@@ -1,4 +1,4 @@
-component implements="CastsAttribute" {
+component singleton {
 
 	/**
 	 * Casts the given value from the database to the target cast type.
@@ -18,7 +18,7 @@ component implements="CastsAttribute" {
 			return javacast( "null", "" );
 		}
 
-		return isJSON( arguments.value ) ? deserializeJSON( arguments.value ) : arguments.value;
+		return deserializeJSON( arguments.value );
 	}
 
 	/**

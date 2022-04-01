@@ -138,11 +138,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				} ).toThrow( "EntityNotFound" );
 			} );
 
+			// is this behaving how we want? Should this get all the posts for User #1 or all the posts in general?
 			it( "can call `all` off of the relationship", function() {
 				var user  = getInstance( "User" ).find( 1 );
 				var posts = user.posts().all();
 				expect( posts ).toBeArray();
-				expect( posts ).toHaveLength( 4 );
+				expect( posts ).toHaveLength( 2 );
 			} );
 		} );
 	}

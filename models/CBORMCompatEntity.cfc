@@ -3,11 +3,6 @@
  */
 component extends="quick.models.BaseEntity" accessors="true" {
 
-	property
-		name      ="CBORMCriteriaBuilderCompat"
-		inject    ="provider:CBORMCriteriaBuilderCompat@quick"
-		persistent="false";
-
 	/**
 	 * Creates an internal attribute struct for each persistent property
 	 * on the entity.
@@ -36,96 +31,105 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		boolean ignoreCase,
 		boolean asQuery = true
 	) {
+		var builder = newQuery();
 		structEach( criteria, function( key, value ) {
-			retrieveQuery().where( retrieveColumnForAlias( key ), value );
+			builder.where( retrieveColumnForAlias( key ), value );
 		} );
 		if ( !isNull( sortOrder ) ) {
-			retrieveQuery().orderBy( sortOrder );
+			builder.orderBy( sortOrder );
 		}
 		if ( !isNull( offset ) && offset > 0 ) {
-			retrieveQuery().offset( offset );
+			builder.offset( offset );
 		}
 		if ( !isNull( max ) && max > 0 ) {
-			retrieveQuery().limit( max );
+			builder.limit( max );
 		}
 		if ( asQuery ) {
-			return retrieveQuery().setReturnFormat( "query" ).get();
+			return builder
+				.getQB()
+				.setReturnFormat( "query" )
+				.get();
 		} else {
-			return super.get();
+			return builder.get();
 		}
 	}
 
 	function countWhere() {
+		var builder = newQuery();
 		for ( var key in arguments ) {
-			retrieveQuery().where( retrieveColumnForAlias( key ), arguments[ key ] );
+			builder.where( retrieveColumnForAlias( key ), arguments[ key ] );
 		}
-		return retrieveQuery().count();
+		return builder.count();
 	}
 
 	function deleteById( id ) {
 		guardAgainstCompositePrimaryKeys();
 		arguments.id = isArray( arguments.id ) ? arguments.id : [ arguments.id ];
-		retrieveQuery().whereIn( keyNames()[ 1 ], arguments.id ).delete();
+		newQuery().whereIn( keyNames()[ 1 ], arguments.id ).delete();
 		return this;
 	}
 
 	function deleteWhere() {
+		var builder = newQuery();
 		for ( var key in arguments ) {
-			retrieveQuery().where( retrieveColumnForAlias( key ), arguments[ key ] );
+			builder.where( retrieveColumnForAlias( key ), arguments[ key ] );
 		}
-		return this.deleteAll();
+		return builder.deleteAll();
 	}
 
 	function exists( id ) {
+		var builder = newQuery();
 		if ( !isNull( id ) ) {
 			guardAgainstCompositePrimaryKeys();
-			retrieveQuery().where( keyNames()[ 1 ], arguments.id );
+			builder.where( keyNames()[ 1 ], arguments.id );
 		}
-		return retrieveQuery().exists();
+		return builder.exists();
 	}
 
 	function findAllWhere( criteria = {}, sortOrder ) {
+		var builder = newQuery();
 		structEach( criteria, function( key, value ) {
-			retrieveQuery().where( retrieveColumnForAlias( key ), value );
+			builder.where( retrieveColumnForAlias( key ), value );
 		} );
 		if ( !isNull( sortOrder ) ) {
 			var sorts = listToArray( sortOrder, "," ).map( function( sort ) {
 				return replace( sort, " ", "|", "ALL" );
 			} );
-			retrieveQuery().orderBy( sorts );
+			builder.orderBy( sorts );
 		}
-		return super.get();
+		return builder.get();
 	}
 
 	function findWhere( criteria = {} ) {
+		var builder = newQuery();
 		structEach( criteria, function( key, value ) {
-			retrieveQuery().where( retrieveColumnForAlias( key ), value );
+			builder.where( retrieveColumnForAlias( key ), value );
 		} );
-		return super.first();
+		return builder.first();
 	}
 
 	function get( id = 0, returnNew = true ) {
 		if ( ( isNull( arguments.id ) || arguments.id == 0 ) && arguments.returnNew ) {
 			return newEntity();
 		}
-		// This is written this way to avoid conflicts with the BIF `find`
-		return invoke( this, "find", { id : arguments.id } );
+		return newQuery().find( arguments.id );
 	}
 
 	function getAll( id, sortOrder ) {
+		var builder = newQuery();
 		if ( isNull( id ) ) {
 			if ( !isNull( sortOrder ) ) {
 				var sorts = listToArray( sortOrder, "," ).map( function( sort ) {
 					return replace( sort, " ", "|", "ALL" );
 				} );
-				retrieveQuery().orderBy( sorts );
+				builder.orderBy( sorts );
 			}
-			return super.get();
+			return builder.get();
 		}
 		guardAgainstCompositePrimaryKeys();
 		var ids = isArray( id ) ? id : listToArray( id, "," );
-		retrieveQuery().whereIn( keyNames()[ 1 ], ids );
-		return super.get();
+		builder.whereIn( keyNames()[ 1 ], ids );
+		return builder.get();
 	}
 
 	function new( properties = {} ) {
@@ -152,7 +156,13 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	}
 
 	function newCriteria() {
-		return CBORMCriteriaBuilderCompat.setEntity( this );
+		return variables._wirebox
+			.getInstance( "CBORMCriteriaBuilderCompat@quick" )
+			.setEntity( this )
+			.setReturnFormat( "array" )
+			.setDefaultOptions( variables._queryOptions )
+			.from( tableName() )
+			.addSelect( retrieveQualifiedColumns() );
 	}
 
 	private void function guardAgainstCompositePrimaryKeys() {

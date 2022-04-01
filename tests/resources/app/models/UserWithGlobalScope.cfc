@@ -1,10 +1,10 @@
 component extends="User" table="users"  accessors="true" {
 
-    function scopeWithCountryName( query ) {
-        addSubselect( "countryName", "country.name" );
+    function scopeWithCountryName( qb ) {
+        qb.addSubselect( "countryName", "country.name" );
     }
 
-    function applyGlobalScopes() {
-        this.withCountryName();
+    function applyGlobalScopes( qb ) {
+        qb.withCountryName();
     }
 }

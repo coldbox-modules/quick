@@ -26,7 +26,7 @@ component extends="quick.models.Relationships.HasOneOrMany" {
 		var result = (
 			fieldsAreNull( entity = variables.parent, fields = variables.localKeys )
 			 ? javacast( "null", "" )
-			 : variables.related.first()
+			 : variables.relationshipBuilder.first()
 		);
 
 		if ( !isNull( result ) ) {

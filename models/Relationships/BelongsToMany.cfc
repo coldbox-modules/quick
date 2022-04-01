@@ -114,7 +114,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function getResults() {
-		return variables.related.get();
+		return variables.relationshipBuilder.get();
 	}
 
 	/**
@@ -142,11 +142,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 
 		performJoin();
 		variables.foreignPivotKeys.each( function( foreignPivotKey ) {
-			variables.related.addSelect( listLast( variables.table, " " ) & "." & foreignPivotKey );
-			variables.related.appendVirtualAttribute( name = foreignPivotKey, excludeFromMemento = true );
+			variables.relationshipBuilder.addSelect( listLast( variables.table, " " ) & "." & foreignPivotKey );
+			variables.relationshipBuilder.appendVirtualAttribute( name = foreignPivotKey, excludeFromMemento = true );
 		} );
 
-		variables.related.where( function( q1 ) {
+		variables.relationshipBuilder.where( function( q1 ) {
 			allKeys.each( function( keys ) {
 				q1.orWhere( function( q2 ) {
 					arrayZipEach(
@@ -238,7 +238,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  quick.models.Relationships.BelongsToMany
 	 */
-	public BelongsToMany function performJoin( any base = variables.related ) {
+	public BelongsToMany function performJoin( any base = variables.relationshipBuilder ) {
 		arguments.base.join( variables.table, function( j ) {
 			arrayZipEach(
 				[
@@ -259,7 +259,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  quick.models.Relationships.BelongsToMany
 	 */
 	public BelongsToMany function addWhereConstraints() {
-		variables.related.where( function( q ) {
+		variables.relationshipBuilder.where( function( q ) {
 			arrayZipEach(
 				[
 					getQualifiedForeignPivotKeyNames(),
@@ -482,7 +482,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 
 		return arguments.base
 			.newQuery()
-			.select( variables.parent.raw( 1 ) )
+			.select( arguments.base.raw( 1 ) )
 			.from( variables.table )
 			.where( function( q ) {
 				arrayZipEach(
@@ -499,7 +499,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 
 	public any function addNestedCompareConstraints( required any base, required any nested ) {
 		return arguments.base
-			.select( variables.related.raw( 1 ) )
+			.select( arguments.base.raw( 1 ) )
 			.whereExists( function( q ) {
 				q.selectRaw( 1 ).from( variables.table );
 				arrayZipEach(
@@ -512,7 +512,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					}
 				);
 
-				var nestedQuery = isBoolean( nested ) ? q : nested.clone().select( variables.parent.raw( 1 ) );
+				var nestedQuery = isBoolean( nested ) ? q : nested.clone().select( base.raw( 1 ) );
 				arrayZipEach(
 					[
 						getQualifiedForeignKeyNames(),
@@ -529,6 +529,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 
 				if ( structKeyExists( nestedQuery, "retrieveQuery" ) ) {
 					nestedQuery = nestedQuery.retrieveQuery();
+				}
+
+				if ( structKeyExists( nestedQuery, "getQB" ) ) {
+					nestedQuery = nestedQuery.getQB();
 				}
 
 				q.whereExists( nestedQuery );
@@ -584,7 +588,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		return variables.related
 			.newQuery()
 			.reselectRaw( 1 )
-			.whereExists( base );
+			.whereExists( structKeyExists( base, "isBuilder" ) ? base : base.getQB() );
 	}
 
 	/**
@@ -611,7 +615,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 			.newQuery()
 			.reselectRaw( 1 )
 			.from( variables.table )
-			.whereExists( arguments.base );
+			.whereExists( structKeyExists( arguments.base, "isBuilder" ) ? arguments.base : arguments.base.getQB() );
 
 		// apply compare constraints for base table
 		arrayZipEach(
@@ -628,7 +632,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		return variables.related
 			.newQuery()
 			.reselectRaw( 1 )
-			.whereExists( arguments.base );
+			.whereExists( structKeyExists( arguments.base, "isBuilder" ) ? arguments.base : arguments.base.getQB() );
 	}
 
 	/**

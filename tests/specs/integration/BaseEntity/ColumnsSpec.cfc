@@ -42,10 +42,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( john.getId() ).toBe( 2 );
 				expect( john.getUsername() ).toBe( "johndoe" );
 
-				var bindings = getInstance( "User" )
-					.where( "firstName", "firstName" )
-					.retrieveQuery()
-					.getBindings();
+				var bindings = getInstance( "User" ).where( "firstName", "firstName" ).getBindings();
 				expect( bindings ).toBeArray();
 				expect( bindings ).toHaveLength( 1 );
 				expect( bindings[ 1 ] ).toBeStruct();

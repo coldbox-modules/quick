@@ -27,7 +27,7 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function getResults() {
-		return variables.related.get();
+		return variables.relationshipBuilder.get();
 	}
 
 	/**
@@ -86,7 +86,7 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 		return variables.related
 			.newQuery()
 			.reselectRaw( 1 )
-			.whereExists( base );
+			.whereExists( structKeyExists( base, "isBuilder" ) ? base : base.getQB() );
 	}
 
 	/**
@@ -113,7 +113,6 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 					}
 				);
 			} );
-		// abort;
 	}
 
 }

@@ -1,4 +1,4 @@
-component implements="quick.models.Casts.CastsAttribute" {
+component singleton {
 
     property name="wirebox" inject="wirebox";
 

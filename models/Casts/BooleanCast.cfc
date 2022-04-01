@@ -1,4 +1,4 @@
-component implements="CastsAttribute" {
+component singleton {
 
 	/**
 	 * Casts the given value from the database to the target cast type.

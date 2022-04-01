@@ -232,6 +232,7 @@ component accessors="true" {
 		param variables._loadChildren             = true;
 		param variables._queryOptions             = {};
 		param variables._attributes               = {};
+		param variables._columns                  = {};
 		variables._saving                         = false;
 		return this;
 	}
@@ -497,7 +498,9 @@ component accessors="true" {
 		if ( arguments.force ) {
 			var alias = retrieveAliasForColumn( arguments.name );
 			if ( !variables._attributes.keyExists( alias ) ) {
-				variables._attributes[ arguments.name ]      = paramAttribute( { "name" : arguments.name } );
+				var clearedAttr                              = paramAttribute( { "name" : arguments.name } );
+				variables._attributes[ clearedAttr.name ]    = clearedAttr;
+				variables._columns[ clearedAttr.column ]     = clearedAttr;
 				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 				variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
 			}
@@ -695,12 +698,7 @@ component accessors="true" {
 	 * @return  string
 	 */
 	public string function retrieveAliasForColumn( required string column ) {
-		for ( var alias in variables._attributes ) {
-			if ( arguments.column == variables._attributes[ alias ].column ) {
-				return alias;
-			}
-		}
-		return arguments.column;
+		return variables._columns.keyExists( arguments.column ) ? variables._columns[ arguments.column ].name : arguments.column;
 	}
 
 	/**
@@ -837,7 +835,9 @@ component accessors="true" {
 	) {
 		if ( arguments.force ) {
 			if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
-				variables._attributes[ arguments.name ]      = paramAttribute( { "name" : arguments.name } );
+				var attr                                     = paramAttribute( { "name" : arguments.name } );
+				variables._attributes[ attr.name ]           = attr;
+				variables._columns[ attr.column ]            = attr;
 				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 				variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
 			}
@@ -2493,11 +2493,13 @@ component accessors="true" {
 	 */
 	public any function appendVirtualAttribute( required string name, boolean excludeFromMemento = false ) {
 		if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
-			variables._attributes[ arguments.name ] = paramAttribute( {
+			var attr = paramAttribute( {
 				"name"    : arguments.name,
 				"virtual" : true,
 				"exclude" : arguments.excludeFromMemento
 			} );
+			variables._attributes[ attr.name ]           = attr;
+			variables._columns[ attr.column ]            = attr;
 			variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 			variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
 		}
@@ -2548,10 +2550,11 @@ component accessors="true" {
 	 */
 	private any function explodeAttributesMetadata( required struct attributes ) {
 		for ( var alias in arguments.attributes ) {
-			var options                    = arguments.attributes[ alias ];
-			variables._attributes[ alias ] = options;
-			if ( options.convertToNull ) {
-				variables._nullValues[ alias ] = options.nullValue;
+			var attr                           = paramAttribute( arguments.attributes[ alias ] );
+			variables._attributes[ attr.name ] = attr;
+			variables._columns[ attr.column ]  = attr;
+			if ( attr.convertToNull ) {
+				variables._nullValues[ alias ] = attr.nullValue;
 			}
 		}
 
@@ -2631,22 +2634,28 @@ component accessors="true" {
 
 		var parentDefinition = getParentDefinition();
 
-		variables._attributes[ parentDefinition.joincolumn ] = paramAttribute( { "name" : parentDefinition.joincolumn } );
+		var attr                           = paramAttribute( { "name" : parentDefinition.joincolumn } );
+		variables._attributes[ attr.name ] = attr;
+		variables._columns[ attr.column ]  = attr;
 
 		parentDefinition.meta.attributes
 			.keyArray()
 			.each( function( alias ) {
 				// Note: bracket notation here on `attributes` as ACF 2016 will sometimes show a null for the dot notation key
-				variables._attributes[ alias ] = duplicate( parentDefinition.meta[ "attributes" ][ alias ] );
-				variables._attributes[ alias ].isParentColumn = true;
+				var duplicateAttr                           = structCopy( parentDefinition.meta[ "attributes" ][ alias ] );
+				duplicateAttr.isParentColumn                = true;
+				variables._attributes[ duplicateAttr.name ] = duplicateAttr;
+				variables._columns[ duplicateAttr.column ]  = duplicateAttr;
 			} );
 
 		if ( isDiscriminatedChild() ) {
-			variables._attributes[ parentDefinition.discriminatorColumn ] = paramAttribute( {
+			var discriminatorAttr = paramAttribute( {
 				"name"           : parentDefinition.discriminatorColumn,
 				"column"         : parentDefinition.discriminatorColumn,
 				"isParentColumn" : true
 			} );
+			variables._attributes[ discriminatorAttr.name ] = discriminatorAttr;
+			variables._columns[ discriminatorAttr.column ]  = discriminatorAttr;
 			assignAttribute( parentDefinition.discriminatorColumn, parentDefinition.discriminatorValue );
 		}
 	}

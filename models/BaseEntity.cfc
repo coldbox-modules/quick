@@ -832,7 +832,7 @@ component accessors="true" {
 		required string name,
 		any value,
 		boolean force = false,
-		boolean cast = true
+		boolean cast  = true
 	) {
 		if ( arguments.force ) {
 			if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
@@ -3047,7 +3047,11 @@ component accessors="true" {
 				attrs = { "#key#" : attrs };
 			}
 			for ( var column in attrs ) {
-				assignAttribute( name = column, value = attrs[ column ], cast = false );
+				assignAttribute(
+					name  = column,
+					value = attrs[ column ],
+					cast  = false
+				);
 			}
 		}
 		return this;

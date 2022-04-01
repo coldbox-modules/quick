@@ -10,14 +10,6 @@ component accessors="true" {
     ====================================*/
 
 	/**
-	 * The underlying qb Query Builder for the entity.
-	 */
-	property
-		name      ="_builder"
-		inject    ="QuickBuilder@quick"
-		persistent="false";
-
-	/**
 	 * The WireBox injector.  Used to inject other entities.
 	 */
 	property
@@ -39,14 +31,6 @@ component accessors="true" {
 	property
 		name      ="_str"
 		inject    ="Str@str"
-		persistent="false";
-
-	/**
-	 * The configured module settings for Quick.
-	 */
-	property
-		name      ="_settings"
-		inject    ="coldbox:modulesettings:quick"
 		persistent="false";
 
 	/**
@@ -162,11 +146,6 @@ component accessors="true" {
 	property name="_relationshipsLoaded" persistent="false";
 
 	/**
-	 * An array of relationships to eager load.
-	 */
-	property name="_eagerLoad" persistent="false";
-
-	/**
 	 * Discriminated chilrent property
 	 **/
 	property name="_discriminations" persistent="false";
@@ -182,16 +161,6 @@ component accessors="true" {
 	property name="_withoutRelationshipConstraints" persistent="false";
 
 	/**
-	 * A boolean flag representing that the entity is currently applying global scopes.
-	 */
-	property name="_applyingGlobalScopes" persistent="false";
-
-	/**
-	 * A boolean flag representing that the entity has already applied global scopes.
-	 */
-	property name="_globalScopesApplied" persistent="false";
-
-	/**
 	 * A boolean flag representing that guarding against not loaded entities should be skipped..
 	 */
 	property name="_ignoreNotLoadedGuard" persistent="false";
@@ -204,10 +173,7 @@ component accessors="true" {
 		persistent="false"
 		default   ="false";
 
-	/**
-	 * An array of global scopes to exclude from being applied. Added using the `withoutGlobalScope` method.
-	 */
-	property name="_globalScopeExclusions" persistent="false";
+
 
 	/**
 	 * The current alias version used for hasManyThrough aliases
@@ -244,6 +210,7 @@ component accessors="true" {
 		assignAttributesData( {} );
 		assignOriginalAttributes( {} );
 		variables._globalScopeExclusions          = [];
+		param variables._key                      = "id";
 		param variables._meta                     = {};
 		param variables._data                     = {};
 		param variables._relationshipsData        = {};
@@ -263,8 +230,8 @@ component accessors="true" {
 		param variables._parentDefinition         = {};
 		param variables._discriminators           = [];
 		param variables._loadChildren             = true;
-		variables._asMemento                      = false;
-		variables._asMementoSettings              = {};
+		param variables._queryOptions             = {};
+		param variables._attributes               = {};
 		variables._saving                         = false;
 		return this;
 	}
@@ -277,7 +244,6 @@ component accessors="true" {
 	public void function onDIComplete() {
 		metadataInspection();
 		if ( !variables._loadShallow ) {
-			resetQuery();
 			setUpMementifier();
 			fireEvent( "instanceReady", { entity : this } );
 		}
@@ -341,17 +307,30 @@ component accessors="true" {
 		return variables._table;
 	}
 
-	/**
-	 * Sets an alias for the current table name.
-	 *
-	 * @alias   The alias to use.
-	 *
-	 * @return  quick.models.BaseEntity
-	 */
 	public any function withAlias( required string alias ) {
-		variables._table = "#variables._table# #alias#";
-		retrieveQuery().from( variables._table );
+		variables._table = "#variables._table# #arguments.alias#";
 		return this;
+	}
+
+	/**
+	 * Qualifies a column with the entity's table name.
+	 *
+	 * @column  The column to qualify.
+	 *
+	 * @return  string
+	 */
+	public string function qualifyColumn( required string column, string tableName = tableName() ) {
+		if (
+			findNoCase( ".", arguments.column ) != 0 ||
+			!hasAttribute( arguments.column ) ||
+			isVirtualAttribute( arguments.column )
+		) {
+			return arguments.column;
+		}
+
+		return isParentAttribute( arguments.column )
+		 ? variables._meta.parentDefinition.meta.table & "." & retrieveColumnForAlias( arguments.column )
+		 : listLast( arguments.tableName, " " ) & "." & retrieveColumnForAlias( arguments.column );
 	}
 
 	/**
@@ -920,390 +899,6 @@ component accessors="true" {
     =====================================*/
 
 	/**
-	 * Executes the configured query and returns the entities in an array.
-	 *
-	 * @doc_generic  quick.models.BaseEntity
-	 * @return       [quick.models.BaseEntity]
-	 */
-	private array function getEntities() {
-		return retrieveQuery().get().map( variables.loadEntity );
-	}
-
-	/**
-	 * Retrieves all the entities.
-	 * It does this by resetting the configured query before retrieving the results.
-	 *
-	 * @return  The result of `newCollection` with the retrieved entities.
-	 */
-	public any function all() {
-		resetQuery();
-		return variables.get();
-	}
-
-	/**
-	 * Executes the configured query, eager loads any relations, and returns
-	 * the entities in a new collection.
-	 *
-	 * @return  The result of `newCollection` with the retrieved entities.
-	 */
-	public any function get() {
-		return newCollection( handleTransformations( eagerLoadRelations( getEntities() ) ) );
-	}
-
-	/**
-	 * Returns a Pagination Collection of entities.
-	 *
-	 * @page     The page of results to return.
-	 * @maxRows  The number of rows to return.
-	 *
-	 * @return   A Pagination Collection object of the entities.
-	 */
-	public any function paginate( numeric page = 1, numeric maxRows = 25 ) {
-		activateGlobalScopes();
-		return tap( retrieveQuery().paginate( page, maxRows ), function( p ) {
-			p.results = handleTransformations( eagerLoadRelations( p.results.map( variables.loadEntity ) ) );
-		} );
-	}
-
-	/**
-	 * Returns a Simple Pagination Collection of entities.
-	 *
-	 * @page     The page of results to return.
-	 * @maxRows  The number of rows to return.
-	 *
-	 * @return   A Simple Pagination Collection object of the entities.
-	 */
-	public any function simplePaginate( numeric page = 1, numeric maxRows = 25 ) {
-		activateGlobalScopes();
-		return tap( retrieveQuery().simplePaginate( page, maxRows ), function( p ) {
-			p.results = handleTransformations( eagerLoadRelations( p.results.map( variables.loadEntity ) ) );
-		} );
-	}
-
-	/**
-	 * Returns the first matching entity for the configured query.
-	 * If no records are found, it returns null instead.
-	 *
-	 * @return  quick.models.BaseEntity || null
-	 */
-	public any function first() {
-		activateGlobalScopes();
-
-		var attrs = retrieveQuery().first();
-
-		return structIsEmpty( attrs ) ? javacast( "null", "" ) : handleTransformations(
-			// wrap the single entity in an array to eager load, then grab it out again
-			eagerLoadRelations( [ loadEntity( attrs ) ] )[ 1 ]
-		);
-	}
-
-	/**
-	 * Returns the first matching entity for the configured query.
-	 * If no records are found, it throws an `EntityNotFound` exception.
-	 *
-	 * @errorMessage  An optional string error message or callback to produce
-	 *                a string error message.  If a callback is used, it is
-	 *                passed the unloaded entity as the only argument.
-	 *
-	 * @throws        EntityNotFound
-	 *
-	 * @return        quick.models.BaseEntity
-	 */
-	public any function firstOrFail( any errorMessage ) {
-		activateGlobalScopes();
-		var attrs = retrieveQuery().first();
-		if ( structIsEmpty( attrs ) ) {
-			param arguments.errorMessage = "No [#entityName()#] found with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
-			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
-				arguments.errorMessage = arguments.errorMessage( this );
-			}
-
-			throw( type = "EntityNotFound", message = arguments.errorMessage );
-		}
-		return handleTransformations(
-			// wrap the single entity in an array to eager load, then grab it out again
-			eagerLoadRelations( [ loadEntity( attrs ) ] )[ 1 ]
-		);
-	}
-
-	/**
-	 * Finds the first matching record or returns an unloaded new entity.
-	 *
-	 * @attributes                   A struct of attributes to restrict the query. If no entity is
-	 *                               found the attributes are filled on the new entity returned.
-	 * @newAttributes                A struct of attributes to fill on the new entity if no entity
-	 *                               is found. These attributes are combined with `attributes`.
-	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
-	 *                               attribute does not exist.  Instead, it skips
-	 *                               the non-existent attribute.
-	 *
-	 * @return                       quick.models.BaseEntity
-	 */
-	public any function firstOrNew(
-		struct attributes                   = {},
-		struct newAttributes                = {},
-		boolean ignoreNonExistentAttributes = false
-	) {
-		try {
-			for ( var key in arguments.attributes ) {
-				retrieveQuery().where( key, arguments.attributes[ key ] );
-			}
-			return firstOrFail();
-		} catch ( EntityNotFound e ) {
-			arguments.attributes.append( arguments.newAttributes, true );
-			return handleTransformations(
-				newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes )
-			);
-		}
-	}
-
-	/**
-	 * Finds the first matching record or creates a new entity.
-	 *
-	 * @attributes                   A struct of attributes to restrict the query. If no entity is
-	 *                               found the attributes are filled on the new entity created.
-	 * @newAttributes                A struct of attributes to fill on the created entity if no entity
-	 *                               is found. These attributes are combined with `attributes`.
-	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
-	 *                               attribute does not exist.  Instead, it skips
-	 *                               the non-existent attribute.
-	 *
-	 * @return                       quick.models.BaseEntity
-	 */
-	public any function firstOrCreate(
-		struct attributes                   = {},
-		struct newAttributes                = {},
-		boolean ignoreNonExistentAttributes = false
-	) {
-		for ( var key in arguments.attributes ) {
-			retrieveQuery().where( key, arguments.attributes[ key ] );
-		}
-
-		try {
-			return firstOrFail();
-		} catch ( EntityNotFound e ) {
-			arguments.attributes.append( arguments.newAttributes, true );
-			return handleTransformations( create( arguments.attributes, arguments.ignoreNonExistentAttributes ) );
-		}
-	}
-
-	/**
-	 * Returns the entity with the id value as the primary key.
-	 * If no record is found, it returns null instead.
-	 *
-	 * @id      The id value to find.
-	 *
-	 * @return  quick.models.BaseEntity || null
-	 */
-	public any function find( required any id ) {
-		arguments.id = arrayWrap( arguments.id );
-		guardAgainstKeyLengthMismatch( arguments.id );
-		fireEvent(
-			"preLoad",
-			{
-				id       : arguments.id,
-				metadata : variables._meta
-			}
-		);
-		activateGlobalScopes();
-		var data = retrieveQuery()
-			.from( tableName() )
-			.where( function( q ) {
-				var allKeyNames = keyNames();
-				for ( var i = 1; i <= allKeyNames.len(); i++ ) {
-					q.where( allKeyNames[ i ], id[ i ] );
-				}
-			} )
-			.first();
-
-		if ( structIsEmpty( data ) ) {
-			return javacast( "null", "" );
-		}
-
-		return handleTransformations(
-			// wrap the single entity in an array to eager load, then grab it out again
-			eagerLoadRelations( [ loadEntity( data ) ] )[ 1 ]
-		);
-	}
-
-	/**
-	 * Adds a basic where clause to the query and returns the first result.
-	 *
-	 * @column      The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
-	 * @operator    The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
-	 * @value       The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
-	 * @combinator  The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-	 *
-	 * @return      quick.models.BaseEntity
-	 */
-	public any function firstWhere(
-		any column,
-		any operator,
-		any value,
-		string combinator = "and"
-	) {
-		return this.where( argumentCollection = arguments ).first();
-	}
-
-	/**
-	 * Returns the entity with the id value as the primary key.
-	 * If no record is found, it throws an `EntityNotFound` exception.
-	 *
-	 * @id            The id value to find.
-	 * @errorMessage  An optional string error message or callback to produce
-	 *                a string error message.  If a callback is used, it is
-	 *                passed the unloaded entity as the only argument.
-	 *
-	 * @throws        EntityNotFound
-	 *
-	 * @return        quick.models.BaseEntity
-	 */
-	public any function findOrFail( required any id, any errorMessage ) {
-		var entity = variables.find( arguments.id );
-		if ( isNull( entity ) ) {
-			param arguments.errorMessage = "No [#entityName()#] found with id [#( isArray( arguments.id ) ? arguments.id.toList() : arguments.id )#]";
-			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
-				arguments.errorMessage = arguments.errorMessage( this, arguments.id );
-			}
-
-			throw( type = "EntityNotFound", message = arguments.errorMessage );
-		}
-		return entity;
-	}
-
-	/**
-	 * Returns the entity with the id value as the primary key.
-	 * If no record is found, it returns a new unloaded entity.
-	 *
-	 * @id                           The id value to find.
-	 * @attributes                   A struct of attributes to fill on the new entity if no entity is found.
-	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
-	 *                               attribute does not exist.  Instead, it skips
-	 *                               the non-existent attribute.
-	 *
-	 * @return      quick.models.BaseEntity
-	 */
-	public any function findOrNew(
-		required any id,
-		struct attributes                   = {},
-		boolean ignoreNonExistentAttributes = false
-	) {
-		try {
-			return findOrFail( arguments.id );
-		} catch ( EntityNotFound e ) {
-			return handleTransformations(
-				newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes )
-			);
-		}
-	}
-
-	/**
-	 * Returns the entity with the id value as the primary key.
-	 * If no record is found, it returns a newly created entity.
-	 *
-	 * @id                           The id value to find.
-	 * @attributes                   A struct of attributes to use when creating the new entity
-	 *                               if no entity is found.
-	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
-	 *                               attribute does not exist.  Instead, it skips
-	 *                               the non-existent attribute.
-	 *
-	 * @return  quick.models.BaseEntity
-	 */
-	public any function findOrCreate(
-		required any id,
-		struct attributes                   = {},
-		boolean ignoreNonExistentAttributes = false
-	) {
-		try {
-			return findOrFail( arguments.id );
-		} catch ( EntityNotFound e ) {
-			return handleTransformations( create( arguments.attributes, arguments.ignoreNonExistentAttributes ) );
-		}
-	}
-
-	/**
-	 * Loads up an entity with data from the database.
-	 * 1. Assigns the key / value pairs.
-	 * 2. Assigns the original attributes hash.
-	 * 3. Marks the entity as loaded.
-	 *
-	 * @data    A struct of key / value pairs to load.
-	 *
-	 * @return  quick.models.BaseEntity
-	 */
-	private any function loadEntity( required struct data ) {
-		if (
-			variables._loadChildren
-			&&
-			isDiscriminatedParent()
-			&&
-			structKeyExists( getDiscriminations(), data[ variables._meta.localMetadata.discriminatorColumn ] )
-		) {
-			var childClass = variables._wirebox.getInstance(
-				getDiscriminations()[ data[ variables._meta.localMetadata.discriminatorColumn ] ].mapping
-			);
-
-			keyNames().each( function( key, i ) {
-				data[ childClass.keyNames()[ i ] ] = data[ key ];
-			} );
-
-			return childClass.hydrate( data, true );
-		} else {
-			return newEntity()
-				.assignAttributesData( arguments.data )
-				.assignOriginalAttributes( arguments.data )
-				.markLoaded();
-		}
-	}
-
-	/**
-	 * Returns if any entities exist with the configured query.
-	 *
-	 * @id      An optional id to check if it exists.
-	 *
-	 * @return  Boolean
-	 */
-	public boolean function exists( any id ) {
-		activateGlobalScopes();
-		if ( !isNull( arguments.id ) ) {
-			arguments.id = arrayWrap( arguments.id );
-			guardAgainstKeyLengthMismatch( arguments.id );
-			retrieveQuery().where( function( q ) {
-				for ( var keyColumn in keyColumns() ) {
-					q.where( keyColumn, id[ 1 ] );
-				}
-			} );
-		}
-		return retrieveQuery().exists();
-	}
-
-	/**
-	 * Returns true if any entities exist with the configured query.
-	 * If no entities exist, it throws an EntityNotFound exception.
-	 *
-	 * @id            An optional id to check if it exists.
-	 * @errorMessage  An optional string error message or callback to produce
-	 *                a string error message.  If a callback is used, it is
-	 *                passed the unloaded entity as the only argument.
-	 *
-	 * @throws        EntityNotFound
-	 *
-	 * @return        Boolean
-	 */
-	public boolean function existsOrFail( any id, any errorMessage ) {
-		if ( !variables.exists( argumentCollection = arguments ) ) {
-			param arguments.errorMessage = "No [#entityName()#] exists with constraints [#serializeJSON( retrieveQuery().getBindings() )#]";
-			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
-				arguments.errorMessage = arguments.errorMessage( this );
-			}
-
-			throw( type = "EntityNotFound", message = arguments.errorMessage );
-		}
-		return true;
-	}
-
-	/**
 	 * Creates a new entity.  If no name is passed, the current entity is duplicated.
 	 *
 	 * @name    An optional name of an entity to create.  If no name is provided,
@@ -1329,7 +924,6 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function reset( boolean toNew = false ) {
-		resetQuery();
 		assignAttributesData( arguments.toNew ? {} : variables._originalAttributes );
 		assignOriginalAttributes( arguments.toNew ? {} : variables._originalAttributes );
 		variables._relationshipsData   = {};
@@ -1364,8 +958,7 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function fresh() {
-		return variables
-			.resetQuery()
+		return newQuery()
 			.where( function( q ) {
 				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
 					q.where( keyName, keyValue );
@@ -1392,6 +985,7 @@ component accessors="true" {
 					} );
 				} )
 				.first()
+				.retrieveAttributesData()
 		);
 		return this;
 	}
@@ -1431,9 +1025,10 @@ component accessors="true" {
 		mergeAttributesFromCastCache();
 		fireEvent( "preSave", { entity : this } );
 		variables._saving = true;
+		var builder       = newQuery();
 		if ( variables._loaded ) {
 			fireEvent( "preUpdate", { entity : this } );
-			newQuery()
+			builder
 				.where( function( q ) {
 					arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
 						q.where( keyName, keyValue );
@@ -1443,14 +1038,16 @@ component accessors="true" {
 					retrieveAttributesData( withoutKey = true )
 						.filter( canUpdateAttribute )
 						.map( function( key, value, attributes ) {
-							return generateQueryParamStruct( key, isNull( value ) ? javacast( "null", "" ) : value );
+							return builder.generateQueryParamStruct(
+								key,
+								isNull( value ) ? javacast( "null", "" ) : value
+							);
 						} )
 				);
 			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
 			fireEvent( "postUpdate", { entity : this } );
 		} else {
-			resetQuery();
 			retrieveKeyType().preInsert( this );
 			fireEvent(
 				"preInsert",
@@ -1462,11 +1059,11 @@ component accessors="true" {
 			var attrs = retrieveAttributesData()
 				.filter( canInsertAttribute )
 				.map( function( key, value, attributes ) {
-					return generateQueryParamStruct( key, isNull( value ) ? javacast( "null", "" ) : value );
+					return builder.generateQueryParamStruct( key, isNull( value ) ? javacast( "null", "" ) : value );
 				} );
 			guardEmptyAttributeData( attrs );
 
-			var result = retrieveQuery().insert( attrs );
+			var result = builder.insert( attrs );
 
 			if ( hasParentEntity() ) {
 				result.result[ getParentDefinition().joincolumn ] = variables._data[ getParentDefinition().joinColumn ];
@@ -1547,46 +1144,6 @@ component accessors="true" {
 		);
 		fill( arguments.attributes, arguments.ignoreNonExistentAttributes );
 		return save();
-	}
-
-	/**
-	 * Updates an existing record or creates a new record with the given attributes.
-	 *
-	 * @attributes                   A struct of attributes to restrict the query. If no entity is
-	 *                               found the attributes are filled on the new entity created.
-	 * @newAttributes                A struct of attributes to update on the found entity or the
-	 *                               new entity if no entity is found.
-	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
-	 *                               attribute does not exist.  Instead, it skips
-	 *                               the non-existent attribute.
-	 *
-	 * @return         quick.models.BaseEntity
-	 */
-	public any function updateOrCreate(
-		struct attributes                   = {},
-		struct newAttributes                = {},
-		boolean ignoreNonExistentAttributes = false
-	) {
-		return tap( firstOrNew( arguments.attributes ), function( entity ) {
-			arguments.entity.fill( newAttributes, ignoreNonExistentAttributes ).save();
-		} );
-	}
-
-	/**
-	 * Forwards on the call to `updateOrCreate`.
-	 *
-	 * @values                       A struct of column and value pairs to update or insert.
-	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
-	 *                               attribute does not exist.  Instead, it skips
-	 *                               the non-existent attribute.
-	 *
-	 * @return quick.models.BaseEntity
-	 */
-	public any function updateOrInsert( required struct values, boolean ignoreNonExistentAttributes = false ) {
-		return updateOrCreate(
-			newAttributes               = arguments.values,
-			ignoreNonExistentAttributes = arguments.ignoreNonExistentAttributes
-		);
 	}
 
 	/**
@@ -2380,123 +1937,9 @@ component accessors="true" {
 		);
 	}
 
-	/**
-	 * Add an relation or an array of relations to be eager loaded.
-	 * Eager loaded relations are retrieved at the same time as loading
-	 * the original query decreasing the number of queries that need
-	 * to be ran for the same data.
-	 *
-	 * @relationName  A single relation name or array of relation
-	 *                names to eager load.
-	 *
-	 * @return        quick.models.BaseEntity
-	 */
-	public any function with( required any relationName ) {
-		if ( isSimpleValue( arguments.relationName ) && arguments.relationName == "" ) {
-			return this;
-		}
-
-		arrayAppend(
-			variables._eagerLoad,
-			arrayWrap( arguments.relationName ),
-			true
-		);
-
-		return this;
-	}
-
-	/**
-	 * Eager loads the configured relations for the retrieved entities.
-	 * Returns the retrieved entities eager loaded with the configured
-	 * relationships.
-	 *
-	 * @entities     The retrieved entities to eager load.
-	 *
-	 * @doc_generic  quick.models.BaseEntity
-	 * @return       [quick.models.BaseEntity]
-	 */
-	private array function eagerLoadRelations( required array entities ) {
-		if ( arguments.entities.isEmpty() || variables._eagerLoad.isEmpty() ) {
-			return arguments.entities;
-		}
-
-		// This is a workaround for grammars with a parameter limit.  If the grammar
-		// has a `parameterLimit` public property, it is used to slice up the array
-		// and work it in chunks.
-		if ( structKeyExists( arguments.entities[ 1 ].retrieveQuery().getGrammar(), "parameterLimit" ) ) {
-			var parameterLimit = arguments.entities[ 1 ].retrieveQuery().getGrammar().parameterLimit;
-			if ( arguments.entities.len() > parameterLimit ) {
-				for ( var i = 1; i < arguments.entities.len(); i += parameterLimit ) {
-					var length = min( arguments.entities.len() - i + 1, parameterLimit );
-					var slice  = arraySlice( arguments.entities, i, length );
-					eagerLoadRelations( slice );
-				}
-				return arguments.entities;
-			}
-		}
-
-		arrayEach( variables._eagerLoad, function( relationName ) {
-			entities = eagerLoadRelation( arguments.relationName, entities );
-		} );
-
-		return arguments.entities;
-	}
-
-	/**
-	 * Eager loads the given relation for the retrieved entities.
-	 * Returns the retrieved entities eager loaded with the given relation.
-	 *
-	 * @relationName  The relationship to eager load.
-	 * @entities      The retrieved entities to eager load the relationship.
-	 *
-	 * @doc_generic   quick.models.BaseEntity
-	 * @return        [quick.models.BaseEntity]
-	 */
-	private array function eagerLoadRelation( required any relationName, required array entities ) {
-		var callback = function() {
-		};
-		if ( !isSimpleValue( arguments.relationName ) ) {
-			if ( !isStruct( arguments.relationName ) ) {
-				throw(
-					type    = "QuickInvalidEagerLoadParameter",
-					message = "Only strings or structs are supported eager load parameters.  You passed [#serializeJSON( arguments.relationName )#"
-				);
-			}
-			for ( var key in arguments.relationName ) {
-				callback               = arguments.relationName[ key ];
-				arguments.relationName = key;
-				break;
-			}
-		}
-		var currentRelationship = listFirst( arguments.relationName, "." );
-		var relation            = ignoreLoadedGuard( function() {
-			return withoutRelationshipConstraints( function() {
-				return invoke( this, currentRelationship );
-			} );
-		} );
-		callback( relation );
-		var hasMatches = relation.addEagerConstraints( arguments.entities );
-		relation.with( listRest( arguments.relationName, "." ) );
-		return relation.match(
-			relation.initRelation( arguments.entities, currentRelationship ),
-			hasMatches ? relation.getEager() : [],
-			currentRelationship
-		);
-	}
-
 	/*=======================================
     =            QB Utilities            =
     =======================================*/
-
-	/**
-	 * Resets the configured query builder to new.
-	 *
-	 * @returns  quick.models.BaseEntity
-	 */
-	public any function resetQuery() {
-		variables._builder = newQuery();
-		return this;
-	}
 
 	/**
 	 * Configures a new query builder and returns it.
@@ -2504,144 +1947,21 @@ component accessors="true" {
 	 * @return  quick.models.QuickBuilder
 	 */
 	public any function newQuery() {
-		if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
-			variables._builder.setGrammar( variables._wirebox.getInstance( variables._meta.originalMetadata.grammar ) );
-		}
-		retrieveQuery().from( tableName() );
-		return variables._builder
+		var newBuilder = variables._wirebox
+			.getInstance( "QuickBuilder@quick" )
 			.setEntity( this )
-			.newQuery()
 			.setReturnFormat( "array" )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() )
 			.addSelect( retrieveQualifiedColumns() );
-	}
 
-	/**
-	 * Populates this entity's query bulider with the passed in query builder.
-	 *
-	 * @query    The query to use as this entity's query.
-	 *
-	 * @returns  quick.models.BaseEntity
-	 */
-	public any function populateQuery( required any query ) {
-		variables._builder = arguments.query;
-		return this;
-	}
-
-	/**
-	 * Retrieves the current query builder instance.
-	 *
-	 * @return  qb.models.Query.QueryBuilder
-	 */
-	public QueryBuilder function retrieveQuery() {
-		return variables._builder;
-	}
-
-	/**
-	 * Adds a subselect query with the given name to the entity.
-	 * Useful for computed properties and computed relationship keys.
-	 *
-	 * @name       The name to use for the subselect result on the entity.
-	 * @subselect  The subselect query builder instance or closure to configure
-	 *             the subselect.
-	 *
-	 * @return     quick.models.BaseEntity
-	 */
-	public any function addSubselect( required string name, required any subselect ) {
-		appendVirtualAttribute( arguments.name );
-
-		if (
-			retrieveQuery().getColumns().isEmpty() ||
-			(
-				retrieveQuery().getColumns().len() == 1 &&
-				isSimpleValue( retrieveQuery().getColumns()[ 1 ] ) &&
-				retrieveQuery().getColumns()[ 1 ] == "*"
-			)
-		) {
-			retrieveQuery().select( retrieveQuery().getFrom() & ".*" );
+		if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
+			newBuilder.setGrammar( variables._wirebox.getInstance( variables._meta.originalMetadata.grammar ) );
 		}
 
-		var subselectQuery = arguments.subselect;
-		if ( isClosure( subselectQuery ) || isCustomFunction( subselectQuery ) ) {
-			subselectQuery = retrieveQuery().newQuery();
-			subselectQuery = arguments.subselect( subselectQuery );
-		} else if ( isSimpleValue( subselectQuery ) && listLen( subselectQuery, "." ) > 1 ) {
-			var column = subselectQuery;
-			var q      = javacast( "null", "" );
-			while ( listLen( column, "." ) > 1 ) {
-				var relationshipName = listFirst( column, "." );
-				if ( isNull( q ) ) {
-					q = ignoreLoadedGuard( function() {
-						return withoutRelationshipConstraints( function() {
-							return invoke( this, relationshipName ).addCompareConstraints();
-						} );
-					} );
-				} else {
-					var relationship = q.ignoreLoadedGuard( function() {
-						return q.withoutRelationshipConstraints( function() {
-							return invoke( q, relationshipName );
-						} );
-					} );
-					q = relationship.whereExists(
-						relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).retrieveQuery()
-					);
-				}
-				column = listRest( column, "." );
-			}
-			subselectQuery = q.select( q.qualifyColumn( column ) ).retrieveQuery();
-		}
+		newBuilder.applyInheritanceJoins();
 
-		retrieveQuery().subselect( name, subselectQuery.limit( 1 ) );
-		return this;
-	}
-
-	/**
-	 * Adds a count of related entities as a subselect property.
-	 * Relationships can be constrained at runtime by passing a
-	 * struct where the key is the relationship name and the value
-	 * is a function to constrain the query.
-	 *
-	 * @relation  A single relation name or array of relation names to load counts.
-	 *
-	 * @return    quick.models.BaseEntity
-	 */
-	public any function withCount( required any relation ) {
-		for ( var r in arrayWrap( arguments.relation ) ) {
-			var relationName = r;
-			var callback     = function() {
-			};
-
-			if ( isStruct( r ) ) {
-				for ( var key in r ) {
-					relationName = key;
-					callback     = r[ key ];
-					break;
-				}
-			}
-
-			var subselectName = variables._str.camel( relationName & " Count" );
-			if ( findNoCase( " as ", relationName ) ) {
-				var parts     = relationName.split( "\s(?:A|a)(?:S|s)\s" );
-				relationName  = parts[ 1 ];
-				subselectName = parts[ 2 ];
-			}
-
-			addSubselect(
-				subselectName,
-				this.ignoreLoadedGuard( function() {
-					return this.withoutRelationshipConstraints( function() {
-						return invoke( this, relationName )
-							.addCompareConstraints()
-							.when( true, callback )
-							.clearOrders()
-							.reselectRaw( "COUNT(*)" );
-					} );
-				} )
-			);
-		}
-
-		return this;
+		return newBuilder;
 	}
 
 	/**
@@ -2734,8 +2054,8 @@ component accessors="true" {
 					],
 					" "
 				),
-				detail = serializeJSON( e )
-			)
+				extendedInfo = serializeJSON( e )
+			);
 		}
 	}
 
@@ -2892,18 +2212,17 @@ component accessors="true" {
 	public any function tryScopes(
 		required string missingMethodName,
 		struct missingMethodArguments = {},
-		any builder                   = this
+		any builder                   = this,
+		array exclusions              = []
 	) {
 		if ( !structKeyExists( variables, "scope#arguments.missingMethodName#" ) ) {
 			return;
 		}
 
-		if (
-			variables._applyingGlobalScopes &&
-			arrayContains( variables._globalScopeExclusions, lCase( arguments.missingMethodName ) )
-		) {
+		if ( arrayContains( arguments.exclusions, lCase( arguments.missingMethodName ) ) ) {
 			return this;
 		}
+
 		var scopeArgs = { "1" : arguments.builder };
 		// this is to allow default arguments to be set for scopes
 		if ( !structIsEmpty( arguments.missingMethodArguments ) ) {
@@ -2921,7 +2240,7 @@ component accessors="true" {
 			);
 		} );
 
-		return isNull( result ) ? this : result;
+		return isNull( result ) ? arguments.builder : result;
 	}
 
 	/**
@@ -2936,35 +2255,6 @@ component accessors="true" {
 	}
 
 	/**
-	 * Activates the global scopes while checking for excluded global scopes.
-	 *
-	 * @return  quick.models.BaseEntity
-	 */
-	public any function activateGlobalScopes() {
-		if ( !variables._globalScopesApplied ) {
-			variables._applyingGlobalScopes = true;
-			applyGlobalScopes();
-			variables._applyingGlobalScopes = false;
-			variables._globalScopesApplied  = true;
-		}
-		return this;
-	}
-
-	/**
-	 * Allows a query to override one or more global scopes for one execution.
-	 *
-	 * @name    The name of the global scope to override.
-	 *
-	 * @return  quick.models.BaseEntity
-	 */
-	public any function withoutGlobalScope( required any name ) {
-		for ( var n in arrayWrap( arguments.name ) ) {
-			variables._globalScopeExclusions.append( lCase( n ) );
-		}
-		return this;
-	}
-
-	/**
 	 * Forwards a missing method call on to qb.
 	 *
 	 * @missingMethodName       The potential scope name.
@@ -2973,20 +2263,11 @@ component accessors="true" {
 	 * @return                  any
 	 */
 	private any function forwardToQB( required string missingMethodName, struct missingMethodArguments = {} ) {
-		var result = invoke(
-			retrieveQuery(),
+		return invoke(
+			newQuery(),
 			arguments.missingMethodName,
 			arguments.missingMethodArguments
 		);
-
-		if (
-			isStruct( result ) &&
-			( structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isBuilder" ) )
-		) {
-			return this;
-		}
-
-		return result;
 	}
 
 	/**
@@ -3026,37 +2307,6 @@ component accessors="true" {
 	}
 
 	/**
-	 * Automatically converts the entities found from a query to mementos.
-	 *
-	 * @return  quick.models.BaseEntity
-	 */
-	public any function asMemento() {
-		variables._asMemento         = true;
-		variables._asMementoSettings = arguments;
-		return this;
-	}
-
-	/**
-	 * Converts an entity or array of entities to mementos
-	 * if asked for via the `asMemento` function.
-	 *
-	 * @return any
-	 */
-	private any function handleTransformations( entity ) {
-		if ( !variables._asMemento ) {
-			return arguments.entity;
-		}
-
-		if ( !isArray( arguments.entity ) ) {
-			return arguments.entity.getMemento( argumentCollection = variables._asMementoSettings );
-		}
-
-		return arguments.entity.map( function( e ) {
-			return e.getMemento( argumentCollection = variables._asMementoSettings );
-		} );
-	}
-
-	/**
 	 * Special ColdBox method that is called and rendered if this component
 	 * is returned from a handler action method.
 	 *
@@ -3092,99 +2342,97 @@ component accessors="true" {
 	 * through creating new entities and executing queries.
 	 */
 	private void function metadataInspection() {
-		param variables._key = "id";
+		param variables._table = variables._str.plural( variables._str.snake( listFirst( variables._mapping, "@" ) ) );
 
 		if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
-			variables._meta = duplicate(
-				variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
-					var util                   = createObject( "component", "coldbox.system.core.util.Util" );
-					var meta                   = {};
-					meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
-					meta[ "localMetadata" ]    = getMetadata( this );
-					if (
-						!meta[ "localMetadata" ].keyExists( "accessors" ) ||
-						meta[ "localMetadata" ].accessors == false
-					) {
-						throw(
-							type    = "QuickAccessorsMissing",
-							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
-						);
-					}
-					meta[ "fullName" ]                             = meta.originalMetadata.fullname;
-					param meta.originalMetadata.mapping            = listLast( meta.originalMetadata.fullname, "." );
-					meta[ "mapping" ]                              = meta.originalMetadata.mapping;
-					param meta.originalMetadata.entityName         = listLast( meta.originalMetadata.name, "." );
-					meta[ "entityName" ]                           = meta.originalMetadata.entityName;
-					param meta.originalMetadata.table              = variables._str.plural( variables._str.snake( meta.entityName ) );
-					meta[ "table" ]                                = meta.originalMetadata.table;
-					param meta.originalMetadata.readonly           = false;
-					meta[ "readonly" ]                             = meta.originalMetadata.readonly;
-					param meta.originalMetadata.joincolumn         = "";
-					param meta.originalMetadata.discriminatorValue = "";
-					param meta.originalMetadata.extends            = "";
-					param meta.originalMetadata.functions          = [];
-					meta[ "hasParentEntity" ]                      = !!len( meta.originalMetadata.joincolumn );
-					if ( meta.hasParentEntity ) {
-						var reference = variables._wirebox.getInstance(
-							name          = meta.localMetadata.extends.fullName,
-							initArguments = { "meta" : {}, "shallow" : true }
-						);
-
-						meta[ "parentDefinition" ] = {
-							"meta"       : reference.get_Meta(),
-							"key"        : reference.keyNames()[ 1 ],
-							"joincolumn" : meta.originalMetadata.joincolumn
-						};
-
-						if ( len( meta.originalMetadata.discriminatorValue ) ) {
-							try {
-								var parentMeta                                 = getComponentMetadata( meta.parentDefinition.meta.fullName );
-								meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
-								meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
-							} catch ( any e ) {
-								throw(
-									type    = "QuickChildInstantiationException",
-									message = "Failed to instantiate child entity [#meta.fullName#]. This may be due to a configuration error in the parent/child relationships. The root cause was #e.message#",
-									detail  = e.detail
-								);
-							}
-						}
-					}
-
-					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
-						return arrayReduce(
-							getComponentMetadata( "quick.models.BaseEntity" ).functions,
-							function( acc, func ) {
-								arguments.acc[ arguments.func.name ] = "";
-								return arguments.acc;
-							},
-							{}
-						);
-					} );
-					meta[ "functionNames" ] = generateFunctionNameArray(
-						from    = meta.originalMetadata.functions,
-						without = baseEntityFunctionNames
+			variables._meta = variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
+				var util                   = createObject( "component", "coldbox.system.core.util.Util" );
+				var meta                   = {};
+				meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
+				meta[ "localMetadata" ]    = getMetadata( this );
+				if (
+					!meta[ "localMetadata" ].keyExists( "accessors" ) ||
+					meta[ "localMetadata" ].accessors == false
+				) {
+					throw(
+						type    = "QuickAccessorsMissing",
+						message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
+					);
+				}
+				meta[ "fullName" ]                             = meta.originalMetadata.fullname;
+				param meta.originalMetadata.mapping            = listLast( meta.originalMetadata.fullname, "." );
+				meta[ "mapping" ]                              = meta.originalMetadata.mapping;
+				param meta.originalMetadata.entityName         = listLast( meta.originalMetadata.name, "." );
+				meta[ "entityName" ]                           = meta.originalMetadata.entityName;
+				param meta.originalMetadata.table              = variables._str.plural( variables._str.snake( meta.entityName ) );
+				meta[ "table" ]                                = meta.originalMetadata.table;
+				param meta.originalMetadata.readonly           = false;
+				meta[ "readonly" ]                             = meta.originalMetadata.readonly;
+				param meta.originalMetadata.joincolumn         = "";
+				param meta.originalMetadata.discriminatorValue = "";
+				param meta.originalMetadata.extends            = "";
+				param meta.originalMetadata.functions          = [];
+				meta[ "hasParentEntity" ]                      = !!len( meta.originalMetadata.joincolumn );
+				if ( meta.hasParentEntity ) {
+					var reference = variables._wirebox.getInstance(
+						name          = meta.localMetadata.extends.fullName,
+						initArguments = { "meta" : {}, "shallow" : true }
 					);
 
-					param meta.originalMetadata.properties = [];
+					meta[ "parentDefinition" ] = {
+						"meta"       : reference.get_Meta(),
+						"key"        : reference.keyNames()[ 1 ],
+						"joincolumn" : meta.originalMetadata.joincolumn
+					};
 
-					meta[ "attributes" ] = generateAttributesFromProperties(
-						meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
-					);
-					if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
-						meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
-					}
-					arrayWrap( variables._key ).each( function( key ) {
-						if ( !meta.attributes.keyExists( key ) ) {
-							var keyProp                     = paramAttribute( { "name" : key } );
-							meta.attributes[ keyProp.name ] = keyProp;
+					if ( len( meta.originalMetadata.discriminatorValue ) ) {
+						try {
+							var parentMeta                                 = getComponentMetadata( meta.parentDefinition.meta.fullName );
+							meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
+							meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
+						} catch ( any e ) {
+							throw(
+								type    = "QuickChildInstantiationException",
+								message = "Failed to instantiate child entity [#meta.fullName#]. This may be due to a configuration error in the parent/child relationships. The root cause was #e.message#",
+								detail  = e.detail
+							);
 						}
-					} );
-					meta[ "casts" ] = generateCastsFromProperties( meta.originalMetadata.properties );
-					guardKeyHasNoDefaultValue( meta.attributes );
-					return meta;
-				} )
-			);
+					}
+				}
+
+				var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
+					return arrayReduce(
+						getComponentMetadata( "quick.models.BaseEntity" ).functions,
+						function( acc, func ) {
+							arguments.acc[ arguments.func.name ] = "";
+							return arguments.acc;
+						},
+						{}
+					);
+				} );
+				meta[ "functionNames" ] = generateFunctionNameArray(
+					from    = meta.originalMetadata.functions,
+					without = baseEntityFunctionNames
+				);
+
+				param meta.originalMetadata.properties = [];
+
+				meta[ "attributes" ] = generateAttributesFromProperties(
+					meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
+				);
+				if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
+					meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
+				}
+				arrayWrap( variables._key ).each( function( key ) {
+					if ( !meta.attributes.keyExists( key ) ) {
+						var keyProp                     = paramAttribute( { "name" : key } );
+						meta.attributes[ keyProp.name ] = keyProp;
+					}
+				} );
+				meta[ "casts" ] = generateCastsFromProperties( meta.originalMetadata.properties );
+				guardKeyHasNoDefaultValue( meta.attributes );
+				return meta;
+			} );
 		}
 
 		variables._fullName        = variables._meta.fullName;
@@ -3270,6 +2518,10 @@ component accessors="true" {
 			variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
 		}
 		return this;
+	}
+
+	public any function addSubselect( required string name, required any subselect ) {
+		return newQuery().addSubselect( argumentCollection = arguments );
 	}
 
 	public boolean function isVirtualAttribute( name ) {
@@ -3629,7 +2881,7 @@ component accessors="true" {
 	 * @eventName  The name of the lifecycle event to announce.
 	 * @eventData  The data associated with the lifecycle event.
 	 */
-	private void function fireEvent( required string eventName, struct eventData = {} ) {
+	public void function fireEvent( required string eventName, struct eventData = {} ) {
 		arguments.eventData.entityName = entityName();
 		if ( eventMethodExists( arguments.eventName ) ) {
 			invoke(
@@ -3661,7 +2913,7 @@ component accessors="true" {
 	 *
 	 * @return  Boolean
 	 */
-	private boolean function attributeHasSqlType( required string name ) {
+	public boolean function attributeHasSqlType( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
 		return variables._attributes.keyExists( alias ) &&
 		variables._attributes[ alias ].sqltype != "";
@@ -3674,53 +2926,9 @@ component accessors="true" {
 	 *
 	 * @return  String
 	 */
-	private string function retrieveSqlTypeForAttribute( required string name ) {
+	public string function retrieveSqlTypeForAttribute( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
 		return variables._attributes[ alias ].sqltype;
-	}
-
-	/**
-	 * Returns a query param struct for the column and value.
-	 * This ensures that custom sql types on columns are honored.
-	 *
-	 * @column  The column or alias name.
-	 * @value   The value being bound to the column.
-	 *
-	 * @return  { "value": any, "cfsqltype": string, "null": boolean, "nulls": boolean }
-	 */
-	public struct function generateQueryParamStruct(
-		required string column,
-		any value,
-		boolean checkNullValues = true
-	) {
-		// If that value is already a struct, pass it back unchanged.
-		if ( !isNull( arguments.value ) && isStruct( arguments.value ) ) {
-			return arguments.value;
-		}
-
-		if ( arguments.checkNullValues ) {
-			return {
-				"value"     : ( isNull( arguments.value ) || isNullValue( arguments.column, arguments.value ) ) ? "" : arguments.value,
-				"cfsqltype" : attributeHasSqlType( arguments.column ) ? retrieveSqlTypeForAttribute( arguments.column ) : (
-					isNull( arguments.value ) ? "CF_SQL_VARCHAR" : retrieveQuery()
-						.getUtils()
-						.inferSqlType( arguments.value )
-				),
-				"null"  : isNull( arguments.value ) || isNullValue( arguments.column, arguments.value ),
-				"nulls" : isNull( arguments.value ) || isNullValue( arguments.column, arguments.value )
-			};
-		} else {
-			return {
-				"value"     : isNull( arguments.value ) ? "" : arguments.value,
-				"cfsqltype" : attributeHasSqlType( arguments.column ) ? retrieveSqlTypeForAttribute( arguments.column ) : (
-					isNull( arguments.value ) ? "CF_SQL_VARCHAR" : retrieveQuery()
-						.getUtils()
-						.inferSqlType( arguments.value )
-				),
-				"null"  : isNull( arguments.value ),
-				"nulls" : isNull( arguments.value )
-			};
-		}
 	}
 
 	/**
@@ -3749,6 +2957,9 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function isNullValue( required string key, any value ) {
+		if ( isNull( arguments.value ) ) {
+			return true;
+		}
 		param arguments.value = invoke( this, "get" & arguments.key );
 		var alias             = retrieveAliasForColumn( arguments.key );
 		if ( !isSimpleValue( arguments.value ) ) {

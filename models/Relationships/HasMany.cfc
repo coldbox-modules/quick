@@ -23,7 +23,7 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function getResults() {
-		return variables.related.get();
+		return variables.relationshipBuilder.get();
 	}
 
 	/**

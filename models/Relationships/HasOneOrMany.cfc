@@ -60,7 +60,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  quick.models.Relationships.HasOneOrMany
 	 */
 	public HasOneOrMany function addConstraints() {
-		variables.related.where( function( q ) {
+		variables.relationshipBuilder.where( function( q ) {
 			arrayZipEach(
 				[
 					getQualifiedForeignKeyNames(),
@@ -87,20 +87,18 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 			return false;
 		}
 
-		variables.related
-			.retrieveQuery()
-			.where( function( q ) {
-				allKeys.each( function( keys ) {
-					q.orWhere( function( q2 ) {
-						arrayZipEach( [ variables.foreignKeys, keys ], function( foreignKey, keyValue ) {
-							q2.where(
-								variables.related.qualifyColumn( foreignKey ),
-								variables.related.generateQueryParamStruct( foreignKey, keyValue )
-							);
-						} );
+		variables.relationshipBuilder.where( function( q ) {
+			allKeys.each( function( keys ) {
+				q.orWhere( function( q2 ) {
+					arrayZipEach( [ variables.foreignKeys, keys ], function( foreignKey, keyValue ) {
+						q2.where(
+							variables.related.qualifyColumn( foreignKey ),
+							variables.relationshipBuilder.generateQueryParamStruct( foreignKey, keyValue )
+						);
 					} );
 				} );
 			} );
+		} );
 
 		return true;
 	}
@@ -244,7 +242,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return        [quick.models.BaseEntity]
 	 */
 	public array function applySetter() {
-		variables.related.updateAll(
+		variables.relationshipBuilder.updateAll(
 			attributes = variables.foreignKeys.reduce( function( acc, foreignKey ) {
 				acc[ foreignKey ] = {
 					"value"     : "",
@@ -352,7 +350,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 */
 	public array function getQualifiedForeignKeyNames() {
 		return variables.foreignKeys.map( function( foreignKey ) {
-			return variables.related.qualifyColumn( foreignKey );
+			return variables.relationshipBuilder.qualifyColumn( foreignKey );
 		} );
 	}
 
@@ -363,7 +361,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  void
 	 */
-	public QuickBuilder function applyThroughExists( any base = variables.related ) {
+	public QuickBuilder function applyThroughExists( any base = variables.relationshipBuilder ) {
 		// apply compare constraints
 		arrayZipEach(
 			[
@@ -382,7 +380,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		return variables.related
 			.newQuery()
 			.reselectRaw( 1 )
-			.whereExists( arguments.base );
+			.whereExists( structKeyExists( arguments.base, "isBuilder" ) ? arguments.base : arguments.base.getQB() );
 	}
 
 	/**
@@ -411,7 +409,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  void
 	 */
-	public QueryBuilder function initialThroughConstraints() {
+	public QuickBuilder function initialThroughConstraints() {
 		return variables.related
 			.newQuery()
 			.reselectRaw( 1 )

@@ -33,7 +33,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					offset    = 1,
 					asQuery   = false
 				);
-				expect( users ).toHaveLength( 1, "One users should be returned." );
+				expect( users ).toHaveLength( 1 );
 				expect( users[ 1 ].getId() ).toBe( 2 );
 				expect( users[ 1 ].getUsername() ).toBe( "johndoe" );
 			} );

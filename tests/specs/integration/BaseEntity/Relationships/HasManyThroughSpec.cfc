@@ -22,7 +22,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "can get the related entities through any number of intermediate entities including a belongsToMany relationship", function() {
 				var country = getInstance( "Country" ).where( "name", "United States" ).firstOrFail();
-				var tags = country.getTags();
+				var tags    = country.getTags();
 				expect( tags ).toBeArray();
 				expect( tags ).toHaveLength( 2 );
 				expect( tags[ 1 ].getId() ).toBe( 1 );
@@ -32,14 +32,14 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can get the related entities starting with a belongsToMany relationship", function() {
-				var user = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
+				var user        = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				var permissions = user.getPermissions();
 				expect( permissions ).toBeArray();
 				expect( permissions ).toHaveLength( 2 );
 			} );
 
 			it( "can get the related entities starting with a hasManyThrough relationship", function() {
-				var country = getInstance( "Country" ).where( "name", "Argentina" ).firstOrFail();
+				var country     = getInstance( "Country" ).where( "name", "Argentina" ).firstOrFail();
 				var permissions = country.getPermissions();
 				expect( permissions ).toBeArray();
 				expect( permissions ).toHaveLength( 1 );
@@ -47,7 +47,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can get the related entities starting with a polymorphicHasMany relationship", function() {
-				var post = getInstance( "Post" ).findOrFail( 1245 );
+				var post            = getInstance( "Post" ).findOrFail( 1245 );
 				var commentingUsers = post.getCommentingUsers();
 				expect( commentingUsers ).toBeArray();
 				expect( commentingUsers ).toHaveLength( 1 );
@@ -57,13 +57,13 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 			it( "can get the related entities through a polymorphicBelongsTo relationship", function() {
 				var comment = getInstance( "Comment" ).findOrFail( 1 );
-				var tags = comment.getTags();
+				var tags    = comment.getTags();
 				expect( tags ).toBeArray();
 				expect( tags ).toHaveLength( 2 );
 			} );
 
 			it( "can get the related entities through any number of intermediate entities including a polymorphicHasMany relationship", function() {
-				var country = getInstance( "Country" ).where( "name", "United States" ).firstOrFail();
+				var country  = getInstance( "Country" ).where( "name", "United States" ).firstOrFail();
 				var comments = country.getComments();
 				expect( comments ).toBeArray();
 				expect( comments ).toHaveLength( 2 );
@@ -76,7 +76,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can go up and down belongsTo and hasMany relationships", function() {
-				var user = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
+				var user      = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				var teammates = user.getTeammates();
 				expect( teammates ).toBeArray();
 				expect( teammates ).toHaveLength( 2 );
@@ -85,7 +85,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can go up and down many belongsTo and hasMany relationships", function() {
-				var user = getInstance( "User" ).where( "username", "johndoe" ).firstOrFail();
+				var user        = getInstance( "User" ).where( "username", "johndoe" ).firstOrFail();
 				var officemates = user.getOfficemates();
 				expect( officemates ).toBeArray();
 				expect( officemates ).toHaveLength( 3 );
@@ -95,7 +95,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can go up and down many belongsTo and hasMany even hasManyThrough relationships", function() {
-				var user = getInstance( "User" ).where( "username", "johndoe" ).firstOrFail();
+				var user        = getInstance( "User" ).where( "username", "johndoe" ).firstOrFail();
 				var officemates = user.getOfficematesAlternate();
 				expect( officemates ).toBeArray();
 				expect( officemates ).toHaveLength( 3 );

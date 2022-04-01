@@ -74,10 +74,11 @@ component accessors="true" {
 		variables.returnDefaultEntity = false;
 		variables.defaultAttributes   = {};
 
-		variables.related            = arguments.related.resetQuery();
-		variables.relationName       = arguments.relationName;
-		variables.relationMethodName = arguments.relationMethodName;
-		variables.parent             = arguments.parent;
+		variables.related             = arguments.related;
+		variables.relationshipBuilder = arguments.related.newQuery();
+		variables.relationName        = arguments.relationName;
+		variables.relationMethodName  = arguments.relationMethodName;
+		variables.parent              = arguments.parent;
 
 		if ( arguments.withConstraints ) {
 			variables.addConstraints();
@@ -105,7 +106,7 @@ component accessors="true" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function getEager() {
-		return variables.related.get();
+		return variables.relationshipBuilder.get();
 	}
 
 	/**
@@ -115,7 +116,7 @@ component accessors="true" {
 	 * @return   quick.models.BaseEntity
 	 */
 	public any function first() {
-		return variables.related.first();
+		return variables.relationshipBuilder.first();
 	}
 
 	/**
@@ -127,7 +128,7 @@ component accessors="true" {
 	 * @return   quick.models.BaseEntity
 	 */
 	public any function firstOrFail() {
-		return variables.related.firstOrFail();
+		return variables.relationshipBuilder.firstOrFail();
 	}
 
 	/**
@@ -139,7 +140,7 @@ component accessors="true" {
 	 * @return   quick.models.BaseEntity
 	 */
 	public any function find( required any id ) {
-		return variables.related.find( arguments.id );
+		return variables.relationshipBuilder.find( arguments.id );
 	}
 
 	/**
@@ -153,7 +154,7 @@ component accessors="true" {
 	 * @return   quick.models.BaseEntity
 	 */
 	public any function findOrFail( required any id ) {
-		return variables.related.findOrFail( arguments.id );
+		return variables.relationshipBuilder.findOrFail( arguments.id );
 	}
 
 	/**
@@ -164,7 +165,7 @@ component accessors="true" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function all() {
-		return variables.related.all();
+		return variables.relationshipBuilder.all();
 	}
 
 	/**
@@ -227,9 +228,9 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
-	public any function addCompareConstraints( any base = variables.related ) {
+	public any function addCompareConstraints( any base = variables.relationshipBuilder ) {
 		return arguments.base
-			.select( variables.related.raw( 1 ) )
+			.select( variables.relationshipBuilder.raw( 1 ) )
 			.where( function( q ) {
 				arrayZipEach(
 					[
@@ -244,7 +245,9 @@ component accessors="true" {
 	}
 
 	public any function nestCompareConstraints( required any base, required any nested ) {
-		return arguments.base.whereExists( arguments.nested );
+		return arguments.base.whereExists(
+			structKeyExists( arguments.nested, "isBuilder" ) ? arguments.nested : arguments.nested.getQB()
+		);
 	}
 
 	/**
@@ -303,7 +306,7 @@ component accessors="true" {
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
 	public BaseRelationship function applyAliasSuffix( required string suffix ) {
-		variables.related.withAlias( variables.related.tableName() & arguments.suffix );
+		variables.relationshipBuilder.withAlias( variables.related.tableName() & arguments.suffix );
 		return this;
 	}
 
@@ -313,7 +316,7 @@ component accessors="true" {
 	 * @return  qb.models.Query.QueryBuilder
 	 */
 	public QuickBuilder function retrieveQuery() {
-		return variables.related.retrieveQuery();
+		return variables.relationshipBuilder;
 	}
 
 	/**
@@ -325,8 +328,12 @@ component accessors="true" {
 	 * @return                  any
 	 */
 	function onMissingMethod( missingMethodName, missingMethodArguments ) {
+		if ( structKeyExists( variables.relationshipBuilder, "getQuickBuilder" ) ) {
+			variables.relationshipBuilder = variables.relationshipBuilder.getQuickBuilder();
+		}
+
 		var result = invoke(
-			variables.related,
+			variables.relationshipBuilder,
 			missingMethodName,
 			missingMethodArguments
 		);
@@ -334,7 +341,7 @@ component accessors="true" {
 		if (
 			isStruct( result ) &&
 			!structKeyExists( result, "relationshipClass" ) &&
-			( structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isBuilder" ) )
+			( structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isQuickBuilder" ) )
 		) {
 			return this;
 		}

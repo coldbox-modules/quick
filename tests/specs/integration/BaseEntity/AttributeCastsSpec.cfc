@@ -48,7 +48,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can assign multiple attributes from a cast when saving to the database", function() {
-				var user = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
+				var user    = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				var address = user.getAddress();
 				address.setState( "TX" );
 				user.save();

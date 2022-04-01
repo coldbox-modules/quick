@@ -138,7 +138,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				queryExecute( "TRUNCATE TABLE `a`" );
 				for ( var i = 1; i <= 45; i++ ) {
 					// create A
-					var a = getInstance( "A" ).create( { "name" : "Instance #i#" } );
+					queryExecute( "INSERT INTO `a` (`name`) VALUES (?)", [ "Instance #i#" ] );
 				}
 
 				var p = getInstance( "A" ).orderBy( "id" ).paginate();
@@ -162,7 +162,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				queryExecute( "TRUNCATE TABLE `a`" );
 				for ( var i = 1; i <= 45; i++ ) {
 					// create A
-					var a = getInstance( "A" ).create( { "name" : "Instance #i#" } );
+					queryExecute( "INSERT INTO `a` (`name`) VALUES (?)", [ "Instance #i#" ] );
 				}
 
 				var p = getInstance( "A" ).orderBy( "id" ).simplePaginate();

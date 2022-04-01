@@ -45,8 +45,8 @@ component {
 
 	function onLoad() {
 		binder
-			.map( alias = "QuickBuilder@quick", force = true )
-			.to( "#moduleMapping#.models.QuickBuilder" )
+			.map( alias = "QuickQB@quick", force = true )
+			.to( "#moduleMapping#.models.QuickQB" )
 			.initArg( name = "grammar", dsl = settings.defaultGrammar )
 			.initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
 			.initArg( name = "utils", dsl = "QueryUtils@qb" )

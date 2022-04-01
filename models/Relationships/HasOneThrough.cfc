@@ -23,7 +23,7 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function getResults() {
-		var result = variables.related.first();
+		var result = variables.relationshipBuilder.first();
 
 		if ( !isNull( result ) ) {
 			return result;

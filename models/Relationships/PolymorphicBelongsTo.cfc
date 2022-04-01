@@ -145,7 +145,7 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function getResultsByType( required string type ) {
-		var instance = createModelByType( arguments.type ).with( variables.related.get_eagerLoad() );
+		var instance = createModelByType( arguments.type );
 
 		var localKeys = variables.localKeys.isEmpty() ? instance.keyNames() : variables.localKeys;
 
@@ -156,6 +156,7 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 		}
 
 		return instance
+			.with( variables.related.get_eagerLoad() )
 			.where( function( q1 ) {
 				gatherKeysByType( type ).each( function( keys ) {
 					q1.orWhere( function( q2 ) {

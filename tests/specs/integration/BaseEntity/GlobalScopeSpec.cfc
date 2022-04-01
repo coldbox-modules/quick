@@ -27,8 +27,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( admins[ 2 ].getId() ).toBe( 4 );
 			} );
 
-			it( "applies scopes at the beginning so you can execute in qb and it still has been applied", function() {
-				var admins = getInstance( "Admin" ).retrieveQuery().get();
+			xit( "applies scopes at the beginning so you can execute in qb and it still has been applied", function() {
+				var admins = getInstance( "Admin" ).getQB().get();
 				expect( admins ).toBeArray();
 				expect( admins ).toHaveLength( 2 );
 				expect( admins[ 1 ].id ).toBe( 1 );

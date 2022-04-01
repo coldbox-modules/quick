@@ -88,7 +88,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		var result = (
 			fieldsAreNull( entity = variables.child, fields = variables.foreignKeys )
 			 ? javacast( "null", "" )
-			 : variables.related.first()
+			 : variables.relationshipBuilder.first()
 		);
 
 		if ( !isNull( result ) ) {
@@ -114,7 +114,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  void
 	 */
 	public void function addConstraints() {
-		variables.related.where( function( q ) {
+		variables.relationshipBuilder.where( function( q ) {
 			arrayZipEach(
 				[
 					variables.localKeys,
@@ -142,7 +142,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		if ( allKeys.isEmpty() ) {
 			return false;
 		}
-		variables.related.where( function( q1 ) {
+		variables.relationshipBuilder.where( function( q1 ) {
 			allKeys.each( function( keys ) {
 				q1.orWhere( function( q2 ) {
 					arrayZipEach( [ variables.localKeys, keys ], function( localKey, key ) {
@@ -379,7 +379,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		return variables.related
 			.newQuery()
 			.reselectRaw( 1 )
-			.whereExists( arguments.base );
+			.whereExists( structKeyExists( arguments.base, "isBuilder" ) ? arguments.base : arguments.base.getQB() );
 	}
 
 	public QuickBuilder function initialThroughConstraints() {

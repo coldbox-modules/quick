@@ -1,7 +1,7 @@
 /**
  * A proxy object from cbORM's CriteriaBuilder methods to their Quick equivalent.
  */
-component accessors="true" {
+component extends="quick.models.QuickBuilder" accessors="true" {
 
 	property name="entity";
 
@@ -9,141 +9,139 @@ component accessors="true" {
 		if ( !isNull( arguments.entity ) ) {
 			variables.entity = arguments.entity;
 		}
-		return this;
+		return super.init();
 	}
 
 	function getSQL() {
-		return getEntity().retrieveQuery().toSQL();
+		return variables.qb.toSQL();
 	}
 
 	function between( column, start, end ) {
-		getEntity().retrieveQuery().whereBetween( column, start, end );
+		variables.qb.whereBetween( column, start, end );
 		return this;
 	}
 
 	function eqProperty( left, right ) {
-		getEntity().retrieveQuery().whereColumn( left, right );
+		variables.qb.whereColumn( left, right );
 		return this;
 	}
 
 	function isEQ( column, value ) {
-		getEntity().retrieveQuery().where( column, "=", value );
+		variables.qb.where( column, "=", value );
 		return this;
 	}
 
 	function isGT( column, value ) {
-		getEntity().retrieveQuery().where( column, ">", value );
+		variables.qb.where( column, ">", value );
 		return this;
 	}
 
 	function gtProperty( left, right ) {
-		getEntity().retrieveQuery().whereColumn( left, ">", right );
+		variables.qb.whereColumn( left, ">", right );
 		return this;
 	}
 
 	function isGE( column, value ) {
-		getEntity().retrieveQuery().where( column, ">=", value );
+		variables.qb.where( column, ">=", value );
 		return this;
 	}
 
 	function geProperty( left, right ) {
-		getEntity().retrieveQuery().whereColumn( left, ">=", right );
+		variables.qb.whereColumn( left, ">=", right );
 		return this;
 	}
 
 	function idEQ( id ) {
 		guardAgainstCompositePrimaryKeys();
-		getEntity().retrieveQuery().where( getEntity().keyNames()[ 1 ], id );
+		variables.qb.where( getEntity().keyNames()[ 1 ], id );
 		return this;
 	}
 
 	function like( column, value ) {
-		getEntity().retrieveQuery().where( column, "like", value );
+		variables.qb.where( column, "like", value );
 		return this;
 	}
 
 	function ilike( column, value ) {
-		getEntity().retrieveQuery().where( column, "ilike", value );
+		variables.qb.where( column, "ilike", value );
 		return this;
 	}
 
 	function isIn( column, values ) {
-		getEntity().retrieveQuery().whereIn( column, values );
+		variables.qb.whereIn( column, values );
 		return this;
 	}
 
 	function isNull( column ) {
-		getEntity().retrieveQuery().whereNull( column );
+		variables.qb.whereNull( column );
 		return this;
 	}
 
 	function isNotNull( column ) {
-		getEntity().retrieveQuery().whereNotNull( column );
+		variables.qb.whereNotNull( column );
 		return this;
 	}
 
 	function isLT( column, value ) {
-		getEntity().retrieveQuery().where( column, "<", value );
+		variables.qb.where( column, "<", value );
 		return this;
 	}
 
 	function ltProperty( left, right ) {
-		getEntity().retrieveQuery().whereColumn( left, "<", right );
+		variables.qb.whereColumn( left, "<", right );
 		return this;
 	}
 
 	function neProperty( left, right ) {
-		getEntity().retrieveQuery().whereColumn( left, "<>", right );
+		variables.qb.whereColumn( left, "<>", right );
 		return this;
 	}
 
 	function isLE( column, value ) {
-		getEntity().retrieveQuery().where( column, "<=", value );
+		variables.qb.where( column, "<=", value );
 		return this;
 	}
 
 	function leProperty( left, right ) {
-		getEntity().retrieveQuery().whereColumn( left, "<=", right );
+		variables.qb.whereColumn( left, "<=", right );
 		return this;
 	}
 
 	function maxResults( max ) {
-		getEntity().retrieveQuery().limit( max );
+		variables.qb.limit( max );
 		return this;
 	}
 
 	function firstResult( offset ) {
-		getEntity().retrieveQuery().offset( offset );
+		variables.qb.offset( offset );
 		return this;
 	}
 
 	function order( orders ) {
 		arguments.orders = isArray( arguments.orders ) ? arguments.orders : listToArray( arguments.orders, "," );
-		getEntity()
-			.retrieveQuery()
-			.orderBy(
-				arguments.orders.map( function( order ) {
-					return replace( order, " ", "|" );
-				} )
-			);
+		variables.qb.orderBy(
+			arguments.orders.map( function( order ) {
+				return replace( order, " ", "|" );
+			} )
+		);
 		return this;
 	}
 
 	function list() {
-		return getEntity().getAll();
+		return super.get();
 	}
 
 	function get() {
-		return getEntity().first();
+		return super.first();
 	}
 
 	function count() {
-		return getEntity().count();
+		return variables.qb.count();
 	}
 
 	function onMissingMethod( missingMethodName, missingMethodArguments ) {
 		invoke(
-			variables._builder,
+			variables.qb,
 			missingMethodName,
 			missingMethodArguments
 		);

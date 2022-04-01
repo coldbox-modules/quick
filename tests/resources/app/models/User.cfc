@@ -60,8 +60,8 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return qb.updateAll( { "password" : "" } ).result.recordcount;
 	}
 
-	function scopeWithLatestPostId() {
-		addSubselect(
+	function scopeWithLatestPostId( qb ) {
+		qb.addSubselect(
 			"latestPostId",
 			newEntity( "Post" )
 				.select( "post_pk" )
@@ -83,8 +83,8 @@ component extends="quick.models.BaseEntity" accessors="true" {
         */
 	}
 
-	function scopeWithLatestPostIdRelationship() {
-		addSubselect(
+	function scopeWithLatestPostIdRelationship( qb ) {
+		qb.addSubselect(
 			"latestPostId",
 			this.ignoreLoadedGuard( function() {
 				return this.withoutRelationshipConstraints( function() {
@@ -98,8 +98,8 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		);
 	}
 
-	function scopeWithLatestPostIdRelationshipShortcut() {
-		addSubselect( "latestPostId", "posts.post_pk" );
+	function scopeWithLatestPostIdRelationshipShortcut( qb ) {
+		qb.addSubselect( "latestPostId", "posts.post_pk" );
 	}
 
 	function country() {
@@ -160,8 +160,8 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return hasOne( "Post", "user_id" ).latest();
 	}
 
-	function scopeWithLatestPost() {
-		addSubselect( "latestPostId", "posts.post_pk" ).with( "dynamicLatestPost" );
+	function scopeWithLatestPost( qb ) {
+		qb.addSubselect( "latestPostId", "posts.post_pk" ).with( "dynamicLatestPost" );
 	}
 
 	function dynamicLatestPost() {

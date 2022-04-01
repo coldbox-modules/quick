@@ -165,8 +165,8 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 				var post = getInstance( "Post" ).findOrFail( 1245 );
 
-				expect( post.getTags().toArray() ).toBeArray();
-				expect( post.getTags().toArray() ).toHaveLength( 2 );
+				expect( post.getTags() ).toBeArray();
+				expect( post.getTags() ).toHaveLength( 2 );
 
 				post.tags().attach( tag.getId() );
 

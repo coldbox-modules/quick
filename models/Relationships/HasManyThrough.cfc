@@ -24,7 +24,7 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function getResults() {
-		return variables.related.get();
+		return variables.relationshipBuilder.get();
 	}
 
 	/**

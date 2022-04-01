@@ -81,10 +81,10 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return  quick.models.Relationships.HasOneOrManyThrough
 	 */
 	public HasOneOrManyThrough function addConstraints() {
-		var selectedColumns = variables.related.getColumns();
+		var selectedColumns = variables.relationshipBuilder.getColumns();
 		var base            = initialThroughConstraints();
 		base.select( selectedColumns );
-		variables.related.populateQuery( base );
+		variables.relationshipBuilder.populateQuery( base );
 		return this;
 	}
 
@@ -103,27 +103,29 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	}
 
 	public QuickBuilder function applyThroughExists( required QuickBuilder base ) {
-		var selectedColumns = variables.related.getColumns();
+		var selectedColumns = variables.relationshipBuilder.getColumns();
 
 		var joiningQuery = variables.closestToParent
 			.getRelated()
 			.newQuery()
 			.reselectRaw( 1 )
 			.whereExists(
-				arguments.base.where( function( q ) {
-					arrayZipEach(
-						[
-							variables.parent.keyNames(),
-							variables.closestToParent.getForeignKeys()
-						],
-						function( localKey, foreignKey ) {
-							q.whereColumn(
-								variables.parent.qualifyColumn( localKey ),
-								variables.closestToParent.qualifyColumn( foreignKey )
-							);
-						}
-					);
-				} )
+				arguments.base
+					.where( function( q ) {
+						arrayZipEach(
+							[
+								variables.parent.keyNames(),
+								variables.closestToParent.getForeignKeys()
+							],
+							function( localKey, foreignKey ) {
+								q.whereColumn(
+									variables.parent.qualifyColumn( localKey ),
+									variables.closestToParent.qualifyColumn( foreignKey )
+								);
+							}
+						);
+					} )
+					.getQB()
 			);
 
 		return addNestedWhereExists( joiningQuery ).select( selectedColumns );
@@ -134,7 +136,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  quick.models.Relationships.HasOneOrManyThrough
 	 */
-	public HasOneOrManyThrough function performJoin( any base = variables.related ) {
+	public HasOneOrManyThrough function performJoin( any base = variables.relationshipBuilder ) {
 		// no arrayReverse in ACF means for loops. :-(
 		for ( var index = variables.relationships.len(); index > 0; index-- ) {
 			var relationshipName = variables.relationships[ index ];
@@ -168,7 +170,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 				return acc;
 			}, [] )
 			.toList();
-		variables.related
+		variables.relationshipBuilder
 			.when(
 				( qualifiedForeignKeyList.listLen() > 1 ),
 				function( q1 ) {
@@ -221,14 +223,14 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
-	public any function addCompareConstraints( any base = variables.related ) {
+	public any function addCompareConstraints( any base = variables.relationshipBuilder ) {
 		if (
 			variables.closestToParent.relationshipClass == "HasOneOrManyThrough" ||
 			variables.closestToParent.relationshipClass == "BelongsToThrough"
 		) {
 			return variables.closestToParent.nestCompareConstraints(
 				base   = arguments.base,
-				nested = variables.closestToParent.addCompareConstraints().retrieveQuery()
+				nested = variables.closestToParent.addCompareConstraints()
 			);
 		}
 

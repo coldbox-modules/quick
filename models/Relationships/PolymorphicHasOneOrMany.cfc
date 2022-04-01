@@ -71,7 +71,7 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	 */
 	public PolymorphicHasOneOrMany function addConstraints() {
 		super.addConstraints();
-		variables.related.where( variables.morphType, variables.morphMapping );
+		variables.relationshipBuilder.where( variables.morphType, variables.morphMapping );
 		return this;
 	}
 
@@ -86,7 +86,7 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 		if ( !super.addEagerConstraints( arguments.entities ) ) {
 			return false;
 		}
-		variables.related.where( variables.morphType, variables.morphMapping );
+		variables.relationshipBuilder.where( variables.morphType, variables.morphMapping );
 		return true;
 	}
 
@@ -97,7 +97,7 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	 *
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
-	public any function addCompareConstraints( any base = variables.related ) {
+	public any function addCompareConstraints( any base = variables.relationshipBuilder ) {
 		return tap( super.addCompareConstraints( arguments.base ), function( q ) {
 			q.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
 		} );

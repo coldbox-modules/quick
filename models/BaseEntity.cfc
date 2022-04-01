@@ -831,7 +831,8 @@ component accessors="true" {
 	public any function assignAttribute(
 		required string name,
 		any value,
-		boolean force = false
+		boolean force = false,
+		boolean cast = true
 	) {
 		if ( arguments.force ) {
 			if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
@@ -857,14 +858,14 @@ component accessors="true" {
 			arguments.value = castValueForSetter( arguments.name, arguments.value.keyValues()[ 1 ] );
 		}
 
-		variables._data[ retrieveColumnForAlias( arguments.name ) ] = castValueForSetter(
+		variables._data[ retrieveColumnForAlias( arguments.name ) ] = arguments.cast ? castValueForSetter(
 			arguments.name,
 			isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
-		);
-		variables[ retrieveAliasForColumn( arguments.name ) ] = castValueForSetter(
+		) : ( isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value );
+		variables[ retrieveAliasForColumn( arguments.name ) ] = arguments.cast ? castValueForSetter(
 			arguments.name,
 			isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
-		);
+		) : ( isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value );
 
 		return this;
 	}
@@ -2976,9 +2977,15 @@ component accessors="true" {
 	 */
 	private any function castValueForGetter( required string key, any value ) {
 		arguments.key = retrieveAliasForColumn( arguments.key );
+
+		if ( structKeyExists( variables._castCache, arguments.key ) ) {
+			return variables._castCache[ arguments.key ]
+		}
+
 		if ( !structKeyExists( variables._casts, arguments.key ) ) {
 			return arguments.value;
 		}
+
 		var castMapping = variables._casts[ arguments.key ];
 		if ( !variables._casterCache.keyExists( arguments.key ) ) {
 			variables._casterCache[ arguments.key ] = variables._wirebox.getInstance( dsl = castMapping );
@@ -3016,6 +3023,7 @@ component accessors="true" {
 		if ( !structKeyExists( variables._casts, arguments.key ) ) {
 			return arguments.value;
 		}
+
 		variables._castCache[ arguments.key ] = arguments.value;
 		return variables._castCache[ arguments.key ];
 	}
@@ -3039,7 +3047,7 @@ component accessors="true" {
 				attrs = { "#key#" : attrs };
 			}
 			for ( var column in attrs ) {
-				assignAttribute( column, attrs[ column ] );
+				assignAttribute( name = column, value = attrs[ column ], cast = false );
 			}
 		}
 		return this;

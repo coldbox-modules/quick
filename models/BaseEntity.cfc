@@ -2979,7 +2979,7 @@ component accessors="true" {
 		arguments.key = retrieveAliasForColumn( arguments.key );
 
 		if ( structKeyExists( variables._castCache, arguments.key ) ) {
-			return variables._castCache[ arguments.key ]
+			return variables._castCache[ arguments.key ];
 		}
 
 		if ( !structKeyExists( variables._casts, arguments.key ) ) {

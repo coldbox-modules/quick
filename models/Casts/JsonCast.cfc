@@ -18,7 +18,16 @@ component singleton {
 			return javacast( "null", "" );
 		}
 
+		if ( arguments.value == "" ) {
+			return "";
+		}
+
+		// try {
 		return deserializeJSON( arguments.value );
+		// } catch ( any e ) {
+		// writeDump( var = key );
+		// writeDump( var = arguments.value, abort = true );
+		// }
 	}
 
 	/**

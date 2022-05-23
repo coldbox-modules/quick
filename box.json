@@ -9,6 +9,12 @@
         "type":"git",
         "URL":"https://github.com/coldbox-modules/quick"
     },
+    "license":[
+        {
+            "type":"MIT",
+            "URL":"https://github.com/coldbox-modules/quick/LICENSE"
+        }
+    ],
     "bugs":"https://github.com/coldbox-modules/quick/issues",
     "slug":"quick",
     "shortDescription":"A ColdBox ORM Engine",

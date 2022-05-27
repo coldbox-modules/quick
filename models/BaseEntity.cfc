@@ -1776,10 +1776,6 @@ component accessors="true" {
 	) {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
-		guardAgainstNotLoaded(
-			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
-		);
-
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
 		// ACF doesn't let us use param with functions. ¯\_(ツ)_/¯
@@ -1836,10 +1832,6 @@ component accessors="true" {
 	) {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
-		guardAgainstNotLoaded(
-			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
-		);
-
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
 		if ( isNull( arguments.foreignKey ) ) {
@@ -1890,10 +1882,6 @@ component accessors="true" {
 		string relationMethodName
 	) {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-
-		guardAgainstNotLoaded(
-			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
-		);
 
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
@@ -1963,10 +1951,6 @@ component accessors="true" {
 		string relationMethodName
 	) {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-
-		guardAgainstNotLoaded(
-			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
-		);
 
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
@@ -2063,10 +2047,6 @@ component accessors="true" {
 
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
-		guardAgainstNotLoaded(
-			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
-		);
-
 		// this is set here for the first case where the previousEntity is
 		// `this` entity and we don't want to double prefix
 		var aliasPrefix      = variables._aliasPrefix;
@@ -2134,10 +2114,6 @@ component accessors="true" {
 
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
-		guardAgainstNotLoaded(
-			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
-		);
-
 		// this is set here for the first case where the previousEntity is
 		// `this` entity and we don't want to double prefix
 		var aliasPrefix      = variables._aliasPrefix;
@@ -2204,10 +2180,6 @@ component accessors="true" {
 		}
 
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-
-		guardAgainstNotLoaded(
-			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
-		);
 
 		// this is set here for the first case where the previousEntity is
 		// `this` entity and we don't want to double prefix
@@ -2279,10 +2251,6 @@ component accessors="true" {
 	) {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
-		guardAgainstNotLoaded(
-			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
-		);
-
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
 		param arguments.type     = arguments.name & "_type";
@@ -2335,10 +2303,6 @@ component accessors="true" {
 	) {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 		param arguments.name               = arguments.relationMethodName;
-
-		guardAgainstNotLoaded(
-			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the related polymorphic entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
-		);
 
 		param arguments.type = arguments.name & "_type";
 		param arguments.id   = arguments.name & "_id";
@@ -3749,7 +3713,10 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function isNullValue( required string key, any value ) {
-		param arguments.value = invoke( this, "get" & arguments.key );
+		if ( isNull( arguments.value ) ) {
+			return true;
+		}
+        param arguments.value = invoke( this, "get" & arguments.key );
 		var alias             = retrieveAliasForColumn( arguments.key );
 		if ( !isSimpleValue( arguments.value ) ) {
 			return false;

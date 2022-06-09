@@ -2342,7 +2342,7 @@ component accessors="true" {
 				) {
 					throw(
 						type    = "QuickAccessorsMissing",
-						message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
+						message = 'This instance of #meta.originalMetadata.fullname# is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
 					);
 				}
 				meta[ "fullName" ]                             = meta.originalMetadata.fullname;

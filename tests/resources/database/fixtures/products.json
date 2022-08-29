@@ -1,0 +1,16 @@
+{
+    "LordOfTheRings": {
+        "id": 1,
+        "name": "The Lord Of The Rings",
+        "type": "book",
+        "isbn": "9780544003415",
+        "user_id": 2
+    },
+    "PearlJamJeremy": {
+        "id": 2,
+        "name": "Jeremy",
+        "type": "music",
+        "artist": "Pearl Jam",
+        "user_id": 1
+    }
+}

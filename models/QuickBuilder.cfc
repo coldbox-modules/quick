@@ -547,8 +547,8 @@ component accessors="true" {
 
 	function applyInheritanceJoins() {
 		var entity = getEntity();
-		// Apply and append any inheritance joins/colu
-		if ( entity.hasParentEntity() ) {
+		// Apply and append any inheritance joins/columns
+		if ( entity.hasParentEntity() && !entity.isSingleTableInheritance() ) {
 			var parentDefinition = entity.getParentDefinition();
 			variables.qb.join(
 				parentDefinition.meta.table,
@@ -559,13 +559,16 @@ component accessors="true" {
 			entity
 				.getDiscriminations()
 				.each( function( discriminator, data ) {
-					variables.qb.join(
-						data.table,
-						getEntity().qualifyColumn( getEntity().keyNames()[ 1 ] ),
-						"=",
-						data.joincolumn,
-						"left outer"
-					);
+					// only join if this is a polymorphicn association
+					if ( !entity.isSingleTableInheritance() ) {
+						variables.qb.join(
+							data.table,
+							getEntity().qualifyColumn( getEntity().keyNames()[ 1 ] ),
+							"=",
+							data.joincolumn,
+							"left outer"
+						);
+					}
 					variables.qb.addSelect( data.childColumns );
 				} );
 		}
@@ -1105,12 +1108,12 @@ component accessors="true" {
 			&&
 			structKeyExists(
 				getEntity().getDiscriminations(),
-				arguments.data[ getEntity().get_meta().localMetadata.discriminatorColumn ]
+				arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]
 			)
 		) {
 			var childClass = variables._wirebox.getInstance(
 				getEntity().getDiscriminations()[
-					arguments.data[ getEntity().get_meta().localMetadata.discriminatorColumn ]
+					arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]
 				].mapping
 			);
 

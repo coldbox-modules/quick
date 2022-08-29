@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "adobe@2016", "adobe@2018"]
+        cfengine: ["lucee@5", "adobe@2018", "adobe@2021"]
         coldbox: ["coldbox@5", "coldbox@6"]
     services:
       mysql:
@@ -57,7 +57,12 @@ jobs:
           DB_NAME: quick
           DB_USER: quick
           DB_PASSWORD: quick
-        run: box server start cfengine=${{ matrix.cfengine }}
+        run: |
+          box server start cfengine=${{ matrix.cfengine }}
+          # Install Adobe 2021 cfpm modules
+          if [[ "${{ matrix.cfengine }}" == "adobe@2021" ]] ; then
+            box run-script install:2021
+          fi
 
       - name: Run TestBox Tests
         env:

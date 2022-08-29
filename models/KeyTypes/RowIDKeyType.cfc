@@ -13,10 +13,7 @@ component implements="KeyType" {
 	 */
 	public void function preInsert( required any entity ) {
 		if ( arguments.entity.keyNames().len() > 1 ) {
-			throw(
-				type    = "InvalidKeyLength",
-				message = "RowIDKeyType cannot be used with composite primary keys."
-			);
+			throw( type = "InvalidKeyLength", message = "RowIDKeyType cannot be used with composite primary keys." );
 		}
 		return;
 	}
@@ -30,11 +27,15 @@ component implements="KeyType" {
 	 * @return   void
 	 */
 	public void function postInsert( required any entity, required struct result ) {
-		var keyName      = arguments.entity.keyNames()[ 1 ];
-		var rowID = arguments.result.result.keyExists( keyName ) ? arguments.result.result[ keyName ] : arguments.result.result.keyExists(
+		var keyName = arguments.entity.keyNames()[ 1 ];
+		var rowID   = arguments.result.result.keyExists( keyName ) ? arguments.result.result[ keyName ] : arguments.result.result.keyExists(
 			"generated_key"
 		) ? arguments.result.result[ "generated_key" ] : arguments.result.result[ "generatedKey" ];
-        var generatedKey = arguments.entity.newQuery().retrieveQuery().where( "ROWID", rowID ).value( keyName );
+		var generatedKey = arguments.entity
+			.newQuery()
+			.retrieveQuery()
+			.where( "ROWID", rowID )
+			.value( keyName );
 		arguments.entity.assignAttribute( keyName, generatedKey );
 	}
 

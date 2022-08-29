@@ -131,14 +131,35 @@ component accessors="true" {
 									return invoke( q.getEntity(), relationshipName );
 								} );
 						} );
-					q = relationship.whereExists( relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).getQB() );
+					q.select( q.raw( 1 ) );
+					if ( structKeyExists( qb, "isQuickBuilder" ) ) {
+						q.getQB();
+					}
+					var relationshipQuery = relationship.addCompareConstraints( q );
+					if ( structKeyExists( relationshipQuery, "getRelationshipBuilder" ) ) {
+						relationshipQuery = relationshipQuery.getRelationshipBuilder();
+					}
+					if ( structKeyExists( relationshipQuery, "isQuickBuilder" ) ) {
+						relationshipQuery = relationshipQuery.getQB();
+					}
+					q = relationship.whereExists( relationshipQuery );
 				}
 				column = listRest( column, "." );
 			}
 			subselectQuery = q.select( q.qualifyColumn( column ) );
 		}
 
-		variables.qb.subselect( name, subselectQuery.limit( 1 ) );
+		subselectQuery.limit( 1 )
+
+		if ( structKeyExists( subselectQuery, "getRelationshipBuilder" ) ) {
+			subselectQuery = subselectQuery.getRelationshipBuilder();
+		}
+
+		if ( structKeyExists( subselectQuery, "isQuickBuilder" ) ) {
+			subselectQuery = subselectQuery.getQB();
+		}
+
+		variables.qb.subselect( name, subselectQuery );
 		return this;
 	}
 
@@ -464,12 +485,13 @@ component accessors="true" {
 							} );
 					} );
 
-				q = relationship.whereExists(
-					relationship
-						.addCompareConstraints( q.select( q.raw( 1 ) ) )
-						.clearOrders()
-						.getQB()
-				);
+				var existsQuery = relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).clearOrders();
+
+				if ( structKeyExists( existsQuery, "isQuickBuilder" ) ) {
+					existsQuery = existsQuery.getQB();
+				}
+
+				q = relationship.whereExists( existsQuery );
 			}
 			arguments.relationshipName = listRest( arguments.relationshipName, "." );
 		}
@@ -589,7 +611,7 @@ component accessors="true" {
 			// the entity. Otherwise return whatever came back from the scope.
 			if (
 				isStruct( result ) &&
-				( structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isBuilder" ) )
+				structKeyExists( result, "isBuilder" )
 			) {
 				variables.qb = result;
 				return this;
@@ -609,7 +631,7 @@ component accessors="true" {
 			// the entity. Otherwise return whatever came back from the scope.
 			if (
 				isStruct( result ) &&
-				( structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isBuilder" ) )
+				structKeyExists( result, "isBuilder" )
 			) {
 				variables.qb = result;
 				return this;
@@ -1049,12 +1071,6 @@ component accessors="true" {
 	 * @return  quick.models.QuickBuilder
 	 */
 	public any function newQuery() {
-		// if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
-		// 	variables._builder.setGrammar( variables._wirebox.getInstance( variables._meta.originalMetadata.grammar ) );
-		// }
-		// retrieveQuery().from( tableName() );
-		// 	applyInheritanceJoins( builder );
-
 		return variables._wirebox
 			.getInstance( "QuickQB@quick" )
 			.setQuickBuilder( this )

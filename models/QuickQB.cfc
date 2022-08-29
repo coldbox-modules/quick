@@ -76,6 +76,9 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			}
 
 			var nested = hasNested( argumentCollection = arguments );
+			if ( structKeyExists( nested, "getQB" ) ) {
+				nested = nested.getQB();
+			}
 			whereExists(
 				query      = nested,
 				combinator = arguments.combinator,
@@ -208,7 +211,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 				arguments.relationQuery,
 				"whereExists",
 				{ "query" : q }
-			).getQB();
+			);
 		}
 
 		var q = relation.addCompareConstraints();
@@ -228,7 +231,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		);
 
 		var result = hasNested( argumentCollection = arguments );
-		return structKeyExists( result, "isQuickBuilder" ) ? result.getQB() : result;
+		return structKeyExists( result, "getQB" ) ? result.getQB() : result;
 	}
 
 	/**
@@ -264,12 +267,18 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		if ( listLen( arguments.relationshipName, "." ) > 1 ) {
 			arguments.relationshipName = listRest( arguments.relationshipName, "." );
 
-			if ( structKeyExists( arguments.relationQuery, "retrieveQuery" ) ) {
-				arguments.relationQuery = arguments.relationQuery.retrieveQuery();
+			if ( structKeyExists( arguments.relationQuery, "getQB" ) ) {
+				arguments.relationQuery = arguments.relationQuery.getQB();
+			}
+
+			var nestedQuery = whereHasNested( argumentCollection = arguments );
+
+			if ( structKeyExists( nestedQuery, "getQB" ) ) {
+				nestedQuery = nestedQuery.getQB();
 			}
 
 			whereExists(
-				query      = whereHasNested( argumentCollection = arguments ),
+				query      = nestedQuery,
 				combinator = arguments.combinator,
 				negate     = arguments.negate
 			);
@@ -371,7 +380,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 
 			var result = relation.nestCompareConstraints( base = arguments.relationQuery, nested = q );
 
-			return structKeyExists( result, "isQuickBuilder" ) ? result.getQB() : result;
+			return structKeyExists( result, "getQB" ) ? result.getQB() : result;
 		}
 
 		var q = relation.addCompareConstraints().clearOrders();
@@ -395,7 +404,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 			)
 		);
 
-		return structKeyExists( result, "isQuickBuilder" ) ? result.getQB() : result;
+		return structKeyExists( result, "getQB" ) ? result.getQB() : result;
 	}
 
 	/**

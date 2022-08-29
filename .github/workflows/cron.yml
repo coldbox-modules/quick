@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Tests
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         cfengine: ["lucee@5", "lucee@be", "adobe@2016", "adobe@2018", "adobe@be"]
         coldbox: ["coldbox@5", "coldbox@6", "coldbox@be"]
@@ -32,17 +32,17 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v1.4.3
         with:
-          java-version: 11 
+          java-version: 11
 
       - name: Set Up CommandBox
         uses: elpete/setup-commandbox@v1.0.0
-      
+
       - name: Install dependencies
         run: |
           box install
           box config set modules.commandbox-dotenv.checkEnvPreServerStart=false
           box install ${{ matrix.coldbox }} --noSave
-      
+
       - name: Start server
         env:
           DB_HOST: localhost

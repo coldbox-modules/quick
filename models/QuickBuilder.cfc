@@ -1067,6 +1067,10 @@ component accessors="true" {
 			.from( getEntity().tableName() );
 	}
 
+	public any function retrieveQuery() {
+		return variables.qb;
+	}
+
 	/**
 	 * Loads up an entity with data from the database.
 	 * 1. Assigns the key / value pairs.

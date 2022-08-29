@@ -25,6 +25,11 @@ component accessors="true" {
 	property name="defaultAttributes";
 
 	/**
+	 * The QuickBuilder for the relationship.
+	 */
+	property name="relationshipBuilder";
+
+	/**
 	 * The related model we are ultimately fetching with this relationship.
 	 * If a User `hasMany` Posts then Post is the related entity.
 	 * s

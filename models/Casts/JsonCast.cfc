@@ -22,12 +22,7 @@ component singleton {
 			return "";
 		}
 
-		// try {
 		return deserializeJSON( arguments.value );
-		// } catch ( any e ) {
-		// writeDump( var = key );
-		// writeDump( var = arguments.value, abort = true );
-		// }
 	}
 
 	/**

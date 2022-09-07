@@ -331,6 +331,133 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				} );
 			} );
 		} );
+
+		describe( "Single Table Inheritence Class Spec", function() {
+			it( "does not fail when it does not find an entity", function() {
+				expect( function() {
+					var game = getInstance( "BaseProduct" ).where( "type", "game" ).first();
+				} ).notToThrow();
+			} );
+
+			it( "Will fetch a discriminated entity and merge properties", function() {
+				// Grab a productbook (child) entity from the BaseProduct by specifying the type (discriminator column)
+				var book = getInstance( "BaseProduct" ).where( "type", "book" ).first();
+
+				expect( book.isLoaded() ).toBeTrue();
+				expect( book ).toBeInstanceOf( "ProductBook" );
+
+				var memento = book.getMemento();
+
+				expect( book.getID() ).toBe( 1 );
+				expect( book.getName() ).toBe( "The Lord of the Rings" );
+				expect( book.getType() ).toBe( "book" );
+				expect( book.getISBN() ).toBe( "9780544003415" );
+				expect( book.getUser_ID() ).toBe( 2 );
+				expect( book.hasAttribute( "artist" ) ).toBeFalse();
+
+				// do the same thing with a musicproduct entity now
+				var music = getInstance( "BaseProduct" ).where( "type", "music" ).first();
+
+				expect( music.isLoaded() ).toBeTrue();
+				expect( music ).toBeInstanceOf( "ProductMusic" );
+
+				expect( music.getID() ).toBe( 2 );
+				expect( music.getName() ).toBe( "Jeremy" );
+				expect( music.getType() ).toBe( "music" );
+				expect( music.getArtist() ).toBe( "Pearl Jam" );
+				expect( music.getUser_ID() ).toBe( 1 );
+				expect( music.hasAttribute( "isbn" ) ).toBeFalse();
+			} );
+
+			it( "loads the correct entity based on the discriminator value", function() {
+				// Grab a productbook (child) entity from the BaseProduct by specifying the type (discriminator column)
+				var products = getInstance( "BaseProduct" ).orderByAsc( "ID" ).get();
+
+				var book = products[ 1 ];
+
+				expect( book.isLoaded() ).toBeTrue();
+				expect( book ).toBeInstanceOf( "ProductBook" );
+
+				expect( book.getID() ).toBe( 1 );
+				expect( book.getName() ).toBe( "The Lord of the Rings" );
+				expect( book.getType() ).toBe( "book" );
+				expect( book.getISBN() ).toBe( "9780544003415" );
+				expect( book.getUser_ID() ).toBe( 2 );
+				expect( book.hasAttribute( "artist" ) ).toBeFalse();
+
+				var music = products[ 2 ];
+
+				expect( music.isLoaded() ).toBeTrue();
+				expect( music ).toBeInstanceOf( "ProductMusic" );
+
+				expect( music.getID() ).toBe( 2 );
+				expect( music.getName() ).toBe( "Jeremy" );
+				expect( music.getType() ).toBe( "music" );
+				expect( music.getArtist() ).toBe( "Pearl Jam" );
+				expect( music.getUser_ID() ).toBe( 1 );
+				expect( music.hasAttribute( "isbn" ) ).toBeFalse();
+			} );
+
+			it( "applies the discriminator value as a filter when querying by the child entity", function() {
+				var book = getInstance( "ProductBook" ).first();
+
+				expect( book.isLoaded() ).toBeTrue();
+				expect( book ).toBeInstanceOf( "ProductBook" );
+
+				expect( book.getID() ).toBe( 1 );
+				expect( book.getName() ).toBe( "The Lord of the Rings" );
+				expect( book.getType() ).toBe( "book" );
+				expect( book.getISBN() ).toBe( "9780544003415" );
+				expect( book.getUser_ID() ).toBe( 2 );
+				expect( book.hasAttribute( "artist" ) ).toBeFalse();
+			} );
+
+			it( "Can load the relationships of the parent through the discriminated child", function() {
+				var book = getInstance( "BaseProduct" ).where( "type", "book" ).first();
+
+				expect( book.getCreator() ).toBeInstanceOf( "User" );
+				expect( book.getCreator().isLoaded() ).toBeTrue();
+			} );
+
+			it( "Can create a new instance of a child entity by specifying discriminator value", function() {
+				var book = getInstance( "BaseProduct" ).newChildEntity( "book" );
+
+				expect( book ).toBeInstanceOf( "ProductBook" );
+				expect( book.isLoaded() ).toBeFalse();
+			} );
+
+			it( "Can query on parent values through the child", function() {
+				var newMusic = getInstance( "ProductMusic" )
+					.fill( {
+						"type"   : "music",
+						"name"   : "Call on Me",
+						"artist" : "Eric Prydz",
+						"userId" : getInstance( "User" ).first().getId()
+					} )
+					.save();
+
+				var entity = getInstance( "BaseProduct" ).where( "name", "Call on Me" ).get();
+
+				expect( entity ).toBeArray().toHaveLength( 1 );
+				expect( entity[ 1 ] ).toBeInstanceOf( "ProductMusic" );
+			} );
+
+			it( "Can query on child entity values", function() {
+				var newMusic = getInstance( "ProductMusic" )
+					.fill( {
+						"type"   : "music",
+						"name"   : "Free Fallin",
+						"artist" : "Tom Petty",
+						"userId" : getInstance( "User" ).first().getId()
+					} )
+					.save();
+
+				var entity = getInstance( "BaseProduct" ).where( "artist", "Tom Petty" ).get();
+
+				expect( entity ).toBeArray().toHaveLength( 1 );
+				expect( entity[ 1 ] ).toBeInstanceOf( "ProductMusic" );
+			} );
+		} );
 	}
 
 }

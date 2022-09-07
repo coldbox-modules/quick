@@ -903,7 +903,35 @@ component accessors="true" {
 				initArguments = { meta : structCopy( variables._meta ) }
 			);
 		}
+		// Custom named instance
 		return variables._wirebox.getInstance( arguments.name );
+	}
+
+	/**
+	 * Creates a new child entity for a discriminated parent.
+	 *
+	 * @discriminatorValue  The value to indentify the child entity.
+	 *
+	 * @return  quick.models.BaseEntity
+	 */
+	public any function newChildEntity( required string discriminatorValue ) {
+		if ( !isDiscriminatedParent() ) {
+			throw(
+				type    = "QuickNonDiscriminatedParent",
+				message = "Entity [#entityName()#] is not a discriminated parent entity, so no child entities can be defined.",
+				detail  = "Add a [discriminatorColumn] metadata attribute to the component to make it a discriminated parent."
+			);
+		}
+
+		if ( !structKeyExists( getDiscriminations(), arguments.discriminatorValue ) ) {
+			throw(
+				type    = "QuickMissingDiscriminator",
+				message = "Discriminator value [#arguments.discriminatorValue#] is not defined on parent entity [#entityName()#].",
+				detail  = "Available discriminations are: #structKeyList( getDiscriminations(), ", " )#"
+			);
+		}
+
+		return variables._wirebox.getInstance( name = getDiscriminations()[ arguments.discriminatorValue ].mapping );
 	}
 
 	/**
@@ -1159,7 +1187,6 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function hasRelationship( required string name ) {
-		// TODO: Make a struct
 		for ( var functionName in variables._meta.functionNames ) {
 			if ( compareNoCase( functionName, arguments.name ) == 0 ) {
 				return true;
@@ -2345,20 +2372,21 @@ component accessors="true" {
 						message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
 					);
 				}
-				meta[ "fullName" ]                             = meta.originalMetadata.fullname;
-				param meta.originalMetadata.mapping            = listLast( meta.originalMetadata.fullname, "." );
-				meta[ "mapping" ]                              = meta.originalMetadata.mapping;
-				param meta.originalMetadata.entityName         = listLast( meta.originalMetadata.name, "." );
-				meta[ "entityName" ]                           = meta.originalMetadata.entityName;
-				param meta.originalMetadata.table              = variables._str.plural( variables._str.snake( meta.entityName ) );
-				meta[ "table" ]                                = meta.originalMetadata.table;
-				param meta.originalMetadata.readonly           = false;
-				meta[ "readonly" ]                             = meta.originalMetadata.readonly;
-				param meta.originalMetadata.joincolumn         = "";
-				param meta.originalMetadata.discriminatorValue = "";
-				param meta.originalMetadata.extends            = "";
-				param meta.originalMetadata.functions          = [];
-				meta[ "hasParentEntity" ]                      = !!len( meta.originalMetadata.joincolumn );
+				meta[ "fullName" ]                                 = meta.originalMetadata.fullname;
+				param meta.originalMetadata.mapping                = listLast( meta.originalMetadata.fullname, "." );
+				meta[ "mapping" ]                                  = meta.originalMetadata.mapping;
+				param meta.originalMetadata.entityName             = listLast( meta.originalMetadata.name, "." );
+				meta[ "entityName" ]                               = meta.originalMetadata.entityName;
+				param meta.originalMetadata.table                  = variables._str.plural( variables._str.snake( meta.entityName ) );
+				meta[ "table" ]                                    = meta.originalMetadata.table;
+				param meta.originalMetadata.readonly               = false;
+				meta[ "readonly" ]                                 = meta.originalMetadata.readonly;
+				param meta.originalMetadata.joincolumn             = "";
+				param meta.originalMetadata.discriminatorValue     = "";
+				param meta.originalMetadata.singleTableInheritance = false;
+				param meta.originalMetadata.extends                = "";
+				param meta.originalMetadata.functions              = [];
+				meta[ "hasParentEntity" ]                          = !!len( meta.originalMetadata.joincolumn );
 				if ( meta.hasParentEntity ) {
 					var reference = variables._wirebox.getInstance(
 						name          = meta.localMetadata.extends.fullName,
@@ -2581,7 +2609,7 @@ component accessors="true" {
 
 	public boolean function isDiscriminatedParent() {
 		return variables._meta.localMetadata.keyExists( "discriminatorColumn" )
-		&& variables._discriminators.len();
+		&& variables._discriminators.len() > 0;
 	}
 
 	public function getParentDefinition() {
@@ -2596,7 +2624,14 @@ component accessors="true" {
 					initArguments = { "meta" : {}, "shallow" : true }
 				);
 				var childMeta = childClass.get_Meta().localMetaData;
-				if ( !structKeyExists( childMeta, "joincolumn" ) || !structKeyExists( childMeta, "discriminatorValue" ) ) {
+				// Ensure if polymorphic association that a join column and discriminator value are passed.
+				// Can be ignored for singleTableInheritance since there's no join
+				if (
+					!isSingleTableInheritance() && (
+						!structKeyExists( childMeta, "joincolumn" ) ||
+						!structKeyExists( childMeta, "discriminatorValue" )
+					)
+				) {
 					throw(
 						type    = "QuickParentInstantiationException",
 						message = "Failed to instantiate the parent entity [#variables._meta.fullName#]. The discriminated child class [#childMeta.fullName#] did not contain either a `joinColumn` or `discriminatorValue` attribute"
@@ -2614,12 +2649,16 @@ component accessors="true" {
 				var childColumns = childClass
 					.retrieveQualifiedColumns()
 					.filter( function( column ) {
-						return listFirst( column, "." ) == childMeta.table;
+						return listFirst( column, "." ) == (
+							childMeta.keyExists( "table" ) ? childMeta.table : variables._meta.table
+						);
 					} );
 				acc[ childMeta.discriminatorValue ] = {
-					"mapping"      : childMeta.fullName,
-					"table"        : childMeta.table,
-					"joincolumn"   : childClass.qualifyColumn( childMeta.joinColumn ),
+					"mapping"    : childMeta.fullName,
+					"table"      : ( childMeta.keyExists( "table" ) ? childMeta.table : variables._meta.table ),
+					"joincolumn" : (
+						childMeta.keyExists( "joinColumn" ) ? childClass.qualifyColumn( childMeta.joinColumn ) : ""
+					),
 					"attributes"   : childAttributes,
 					"childColumns" : childColumns
 				};
@@ -3146,6 +3185,15 @@ component accessors="true" {
 	 */
 	public array function unique( required array items ) {
 		return arraySlice( createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(), 1 );
+	}
+
+	/**
+	 * Returns true if the object wants to use single table inheritence (STI)
+	 * which is similar to discriminated entities, however there won't be a join column
+	 * since the data for each sub entity originates from a single table
+	 */
+	public boolean function isSingleTableInheritance() {
+		return variables._meta.originalMetadata.singleTableInheritance;
 	}
 
 }

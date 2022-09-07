@@ -1106,6 +1106,8 @@ component accessors="true" {
 			&&
 			getEntity().isDiscriminatedParent()
 			&&
+			structKeyExists( arguments.data, listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) )
+			&&
 			structKeyExists(
 				getEntity().getDiscriminations(),
 				arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]

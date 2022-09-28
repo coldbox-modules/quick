@@ -8,10 +8,11 @@ component implements="KeyType" {
 	 * Does nothing as the key will be set by the database.
 	 *
 	 * @entity   The entity that is being inserted.
+	 * @builder  The builder that is doing the inserting.
 	 *
 	 * @return   void
 	 */
-	public void function preInsert( required any entity ) {
+	public void function preInsert( required any entity, required any builder ) {
 		if ( arguments.entity.keyNames().len() > 1 ) {
 			throw(
 				type    = "InvalidKeyLength",

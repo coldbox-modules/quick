@@ -8,10 +8,11 @@ interface displayname="KeyType" {
 	 * Receives the entity as the only argument.
 	 *
 	 * @entity   The entity that is being inserted.
+	 * @builder  The builder that is doing the inserting.
 	 *
 	 * @return   void
 	 */
-	public void function preInsert( required any entity );
+	public void function preInsert( required any entity, required any builder );
 
 	/**
 	 * Called to handle any tasks after inserting into the database.

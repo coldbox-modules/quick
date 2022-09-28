@@ -1061,11 +1061,12 @@ component accessors="true" {
 			markLoaded();
 			fireEvent( "postUpdate", { entity : this } );
 		} else {
-			retrieveKeyType().preInsert( this );
+			retrieveKeyType().preInsert( this, builder );
 			fireEvent(
 				"preInsert",
 				{
 					entity     : this,
+					builder    : builder,
 					attributes : retrieveAttributesData()
 				}
 			);

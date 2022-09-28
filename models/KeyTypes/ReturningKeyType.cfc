@@ -11,8 +11,8 @@ component implements="KeyType" {
 	 *
 	 * @return   void
 	 */
-	public void function preInsert( required any entity ) {
-		arguments.entity.retrieveQuery().returning( arguments.entity.keyColumns() );
+	public void function preInsert( required any entity, required any builder ) {
+		arguments.builder.returning( arguments.entity.keyColumns() );
 	}
 
 	/**

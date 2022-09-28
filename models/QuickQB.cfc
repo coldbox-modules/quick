@@ -585,6 +585,7 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		);
 		newBuilder.setQuickBuilder( getQuickBuilder() );
 		newBuilder.setEntity( getEntity() );
+		newBuilder.setFrom( getFrom() );
 		return newBuilder;
 	}
 

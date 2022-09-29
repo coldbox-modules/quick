@@ -35,7 +35,7 @@ component implements="KeyType" {
 		var generatedKey = arguments.result.result.keyExists( keyName ) ? arguments.result.result[ keyName ] : arguments.result.result.keyExists(
 			"generated_key"
 		) ? arguments.result.result[ "generated_key" ] : arguments.result.result[ "generatedKey" ];
-		arguments.entity.assignAttribute( keyName, generatedKey );
+		arguments.entity.assignAttribute( keyName, val( generatedKey ) );
 	}
 
 }

@@ -579,9 +579,34 @@ component accessors="true" {
 	 *
 	 * @return                       quick.models.BaseEntity
 	 */
-	public any function fill( struct attributes = {}, boolean ignoreNonExistentAttributes = false ) {
+	public any function fill(
+		struct attributes                   = {},
+		boolean ignoreNonExistentAttributes = false,
+		any include                         = [],
+		any exclude                         = []
+	) {
+		// if they passed in a list instead of an array for include or exclude, convert it to an array
+		if ( isSimpleValue( arguments.include ) ) {
+			arguments.include = listToArray( arguments.include );
+		}
+
+		if ( isSimpleValue( arguments.exclude ) ) {
+			arguments.exclude = listToArray( arguments.exclude );
+		}
+
 		for ( var key in arguments.attributes ) {
+			// Include List?
+			if ( include.len() && !include.findNoCase( key ) ) {
+				continue;
+			}
+
+			// exclude list?
+			if ( exclude.len() && exclude.findNoCase( key ) ) {
+				continue;
+			}
+
 			guardAgainstReadOnlyAttribute( key );
+
 			if ( isNull( arguments.attributes[ key ] ) || !structKeyExists( arguments.attributes, key ) ) {
 				if ( hasAttribute( key ) ) {
 					clearAttribute( key, true );

@@ -320,8 +320,8 @@ component accessors="true" {
 	 *
 	 * @return  qb.models.Query.QueryBuilder
 	 */
-	public QuickBuilder function retrieveQuery() {
-		return variables.relationshipBuilder;
+	public any function retrieveQuery() {
+		return variables.relationshipBuilder.retrieveQuery();
 	}
 
 	/**

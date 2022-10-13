@@ -2293,6 +2293,20 @@ component accessors="true" {
 		return this;
 	}
 
+
+    /**
+	 * If the quickbuilder instance exists return it, else create it, cache it and return it
+	 *
+	 * @return  quick.models.QuickBuilder
+	 */
+	public QuickBuilder function getQuickBuilder() {
+		if(!isDefined('variables._quickBuilder')){
+			variables._quickBuilder = newQuery();
+		}
+
+		return variables._quickBuilder;
+	}
+
 	/**
 	 * Forwards a missing method call on to qb.
 	 *
@@ -2303,7 +2317,8 @@ component accessors="true" {
 	 */
 	private any function forwardToQB( required string missingMethodName, struct missingMethodArguments = {} ) {
 		return invoke(
-			newQuery(),
+            //create the builder instance if it has not be instantiated yet
+			getQuickBuilder(),
 			arguments.missingMethodName,
 			arguments.missingMethodArguments
 		);

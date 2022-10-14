@@ -364,7 +364,7 @@ component accessors="true" {
 			true
 		);
 
-		return this;
+		return getEntity();
 	}
 
 	/**

@@ -350,7 +350,12 @@ component accessors="true" {
 		if (
 			isStruct( result ) &&
 			!structKeyExists( result, "relationshipClass" ) &&
-			( structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isQuickBuilder" ) || structKeyExists( result, "isQuickEntity" ) )
+			(
+				structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isQuickBuilder" ) || structKeyExists(
+					result,
+					"isQuickEntity"
+				)
+			)
 		) {
 			return this;
 		}

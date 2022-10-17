@@ -511,6 +511,12 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 					);
 				}
 			} );
+
+			it( "can eager load in a relationship", function() {
+				expect( function() {
+					var result = getInstance( "RMME_A" ).with( "B" ).get();
+				} ).notToThrow();
+			} );
 		} );
 	}
 

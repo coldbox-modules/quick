@@ -339,14 +339,23 @@ component accessors="true" {
 
 		var result = invoke(
 			variables.relationshipBuilder,
-			missingMethodName,
-			missingMethodArguments
+			arguments.missingMethodName,
+			arguments.missingMethodArguments
 		);
+
+		if ( arguments.missingMethodName == "getEntity" ) {
+			return result;
+		}
 
 		if (
 			isStruct( result ) &&
 			!structKeyExists( result, "relationshipClass" ) &&
-			( structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isQuickBuilder" ) )
+			(
+				structKeyExists( result, "retrieveQuery" ) || structKeyExists( result, "isQuickBuilder" ) || structKeyExists(
+					result,
+					"isQuickEntity"
+				)
+			)
 		) {
 			return this;
 		}

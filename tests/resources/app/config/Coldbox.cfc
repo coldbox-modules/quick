@@ -47,7 +47,8 @@
 
 		moduleSettings = {
 			"quick" = {
-				"defaultGrammar" = "MySQLGrammar@qb"
+				"defaultGrammar" = "MySQLGrammar@qb",
+				"defaultReturnFormat" = 'query'
             }
 		};
 

@@ -41,7 +41,7 @@ component accessors="true" {
 	/**
 	 * Default return format to use when calling .retrieveQuery on the qb instance
 	 */
-	property name="_defaultReturnFormat" default="array";	
+	property name="_returnFormat" default="array";	
 
 	property name="_asMemento" default="false";
 	property name="_asMementoSettings";
@@ -52,14 +52,13 @@ component accessors="true" {
 	 */
 	this.isQuickBuilder = true;
 
-
 	function init(defaultReturnFormat) {
 		variables._eagerLoad             = [];
 		variables._globalScopesApplied   = false;
 		variables._asMemento             = false;
 		variables._asMementoSettings     = {};
 		variables._globalScopeExclusions = [];
-		variables._defaultReturnFormat = arguments.defaultReturnFormat;
+		variables._returnFormat = arguments.defaultReturnFormat;
 		return this;
 	}
 
@@ -1103,13 +1102,13 @@ component accessors="true" {
 	 * @return  QuickBuilder
 	 */
 	public any function setReturnFormat(required string format) {
-		variables._defaultReturnFormat = arguments.format;
+		variables._returnFormat = arguments.format;
 		return this;
 	}
 
 
 	public any function retrieveQuery() {
-		variables.qb.setReturnFormat(variables._defaultReturnFormat);
+		variables.qb.setReturnFormat(variables._returnFormat);
 		return variables.qb;
 	}
 

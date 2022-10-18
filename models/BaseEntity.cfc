@@ -1989,7 +1989,6 @@ component accessors="true" {
 		var newBuilder = variables._wirebox
 			.getInstance( "QuickBuilder@quick" )
 			.setEntity( this )
-			.setReturnFormat( "array" )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() )
 			.addSelect( retrieveQualifiedColumns() );

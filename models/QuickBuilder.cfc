@@ -38,6 +38,11 @@ component accessors="true" {
 	 */
 	property name="_wirebox" inject="wirebox";
 
+	/**
+	 * Default return format to use when calling .retrieveQuery on the qb instance
+	 */
+	property name="_defaultReturnFormat" default="array";	
+
 	property name="_asMemento" default="false";
 	property name="_asMementoSettings";
 
@@ -47,12 +52,14 @@ component accessors="true" {
 	 */
 	this.isQuickBuilder = true;
 
-	function init() {
+
+	function init(defaultReturnFormat) {
 		variables._eagerLoad             = [];
 		variables._globalScopesApplied   = false;
 		variables._asMemento             = false;
 		variables._asMementoSettings     = {};
 		variables._globalScopeExclusions = [];
+		variables._defaultReturnFormat = arguments.defaultReturnFormat;
 		return this;
 	}
 
@@ -1086,7 +1093,23 @@ component accessors="true" {
 			.from( getEntity().tableName() );
 	}
 
+
+
+	/**
+	 * Sets the returnFormet for retrieveQuery. This will not change the underlying qb instance returnFormat as quick needs this to be an array.
+	 *
+	 * @format The return format. Query or Array.
+	 *
+	 * @return  QuickBuilder
+	 */
+	public any function setReturnFormat(required string format) {
+		variables._defaultReturnFormat = arguments.format;
+		return this;
+	}
+
+
 	public any function retrieveQuery() {
+		variables.qb.setReturnFormat(variables._defaultReturnFormat);
 		return variables.qb;
 	}
 

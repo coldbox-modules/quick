@@ -9,6 +9,7 @@ component {
 	function configure() {
 		settings = {
 			"defaultGrammar"        : "AutoDiscover@qb",
+			"defaultReturnFormat"	: "array",
 			"preventDuplicateJoins" : true,
 			"metadataCache"         : {
 				"name"       : "quickMeta",
@@ -44,6 +45,14 @@ component {
 	}
 
 	function onLoad() {
+
+		//bind QuickBuilder model
+		binder
+			.map( alias = "QuickBuilder@quick", force = true )
+			.to( "#moduleMapping#.models.QuickBuilder" )
+			.initArg( name = "defaultReturnFormat", value = settings.defaultReturnFormat );
+
+		//bind QuickQB model
 		binder
 			.map( alias = "QuickQB@quick", force = true )
 			.to( "#moduleMapping#.models.QuickQB" )

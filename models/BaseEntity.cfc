@@ -38,7 +38,7 @@ component accessors="true" {
 	 */
 	property
 		name      ="_interceptorService"
-		inject    ="coldbox:interceptorService"
+		inject    ="box:interceptorService"
 		persistent="false";
 
 	/*===========================================

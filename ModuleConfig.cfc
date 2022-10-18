@@ -68,12 +68,12 @@ component {
 		if ( settings.metadataCache.name != "quickMeta" ) {
 			binder.map( "cachebox:quickMeta" ).toDSL( "cachebox:#settings.metadataCache.name#" );
 		} else {
-			controller.getCachebox().createCache( argumentCollection = settings.metadataCache );
+			wirebox.getCachebox().createCache( argumentCollection = settings.metadataCache );
 		}
 	}
 
 	function onUnload() {
-		controller
+		wirebox
 			.getCachebox()
 			.getCache( settings.metadataCache.name )
 			.clearAll();

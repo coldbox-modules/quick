@@ -30,7 +30,7 @@
     "dependencies":{
         "qb":"^8.9.0",
         "str":"^3.0.0",
-        "mementifier":"^2.8.0"
+        "mementifier":"^3.0.0"
     },
     "devDependencies":{
         "coldbox":"stable",

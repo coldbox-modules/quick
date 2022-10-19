@@ -159,7 +159,6 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return variables._wirebox
 			.getInstance( "CBORMCriteriaBuilderCompat@quick" )
 			.setEntity( this )
-			.setReturnFormat( "array" )
 			.setDefaultOptions( variables._queryOptions )
 			.from( tableName() )
 			.addSelect( retrieveQualifiedColumns() );

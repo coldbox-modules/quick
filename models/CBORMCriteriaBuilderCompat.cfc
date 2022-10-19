@@ -5,11 +5,11 @@ component extends="quick.models.QuickBuilder" accessors="true" {
 
 	property name="entity";
 
-	function init( entity, query ) {
+	function init( entity, query, defaultReturnFormat='array' ) {
 		if ( !isNull( arguments.entity ) ) {
 			variables.entity = arguments.entity;
 		}
-		return super.init();
+		return super.init(defaultReturnFormat);
 	}
 
 	function getSQL() {

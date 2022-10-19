@@ -52,7 +52,7 @@ component accessors="true" {
 	 */
 	this.isQuickBuilder = true;
 
-	function init(defaultReturnFormat) {
+	function init( defaultReturnFormat='array' ) {
 		variables._eagerLoad             = [];
 		variables._globalScopesApplied   = false;
 		variables._asMemento             = false;

@@ -52,6 +52,13 @@ component {
 			.to( "#moduleMapping#.models.QuickBuilder" )
 			.initArg( name = "defaultReturnFormat", value = settings.defaultReturnFormat );
 
+		//bind CBORMCriteriaBuilderCompat model
+		binder
+			.map( alias = "CBORMCriteriaBuilderCompat@quick", force = true )
+			.to( "#moduleMapping#.models.CBORMCriteriaBuilderCompat" )
+			.initArg( name = "defaultReturnFormat", value = settings.defaultReturnFormat );
+
+
 		//bind QuickQB model
 		binder
 			.map( alias = "QuickQB@quick", force = true )

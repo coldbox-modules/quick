@@ -2578,7 +2578,7 @@ component accessors="true" {
 	}
 
 	public any function addSubselect( required string name, required any subselect ) {
-		return newQuery().addSubselect( argumentCollection = arguments );
+		return getQuickBuilder().addSubselect( argumentCollection = arguments );
 	}
 
 	public boolean function isVirtualAttribute( name ) {

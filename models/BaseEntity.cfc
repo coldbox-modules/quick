@@ -3032,7 +3032,10 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function isNullValue( required string key, any value ) {
-		param arguments.value = invoke( this, "get" & arguments.key );
+		try {
+            		param arguments.value = invoke( this, "get" & arguments.key );
+        	} catch( any e ) {
+		}
 		if ( isNull( arguments.value ) ) {
 			return true;
 		}

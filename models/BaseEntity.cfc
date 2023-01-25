@@ -3032,7 +3032,14 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function isNullValue( required string key, any value ) {
-		param arguments.value = invoke( this, "get" & arguments.key );
+
+		if(!isDefined('arguments.value')){
+			//There is potential for the value of a column to be an actuall null value
+			//We must use isDefined instead of cfparam as returning a null value from invoke
+			//into the 'default' argument of cfparam will raise an exception
+			arguments.value = invoke( this, "get" & arguments.key );
+		}
+
 		if ( isNull( arguments.value ) ) {
 			return true;
 		}

@@ -114,14 +114,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					.where( function( q ) {
 						arrayZipEach(
 							[
-								variables.parent.keyNames(),
+								variables.closestToParent.getQualifiedLocalKeys(),
 								variables.closestToParent.getForeignKeys()
 							],
 							function( localKey, foreignKey ) {
-								q.whereColumn(
-									variables.parent.qualifyColumn( localKey ),
-									variables.closestToParent.qualifyColumn( foreignKey )
-								);
+								q.whereColumn( localKey, variables.closestToParent.qualifyColumn( foreignKey ) );
 							}
 						);
 					} )

@@ -2400,7 +2400,7 @@ component accessors="true" {
 
 		if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
 			variables._meta = variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
-				var util                   = createObject( "component", "coldbox.system.core.util.Util" );
+				var util                   = variables._wirebox.getUtility();
 				var meta                   = {};
 				meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
 				meta[ "localMetadata" ]    = getMetadata( this );

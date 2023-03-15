@@ -161,9 +161,14 @@ component accessors="true" {
 	property name="_withoutRelationshipConstraints" persistent="false";
 
 	/**
-	 * A boolean flag representing that guarding against not loaded entities should be skipped..
+	 * A boolean flag representing that guarding against not loaded entities should be skipped.
 	 */
 	property name="_ignoreNotLoadedGuard" persistent="false";
+
+	/**
+	 * A boolean flag representing that events should not be fired.
+	 */
+	property name="_withoutFiringEvents" persistent="false";
 
 	/**
 	 * A boolean flag indicating that the entity has been loaded from the database.
@@ -220,6 +225,7 @@ component accessors="true" {
 		variables._applyingGlobalScopes           = false;
 		variables._globalScopesApplied            = false;
 		variables._ignoreNotLoadedGuard           = false;
+		variables._withoutFiringEvents            = false;
 		param variables._nullValues               = {};
 		param variables._casts                    = {};
 		param variables._castCache                = {};
@@ -1233,6 +1239,20 @@ component accessors="true" {
 			return arguments.callback();
 		} finally {
 			variables._withoutRelationshipConstraints = false;
+		}
+	}
+
+	/**
+	 * Does not fire events for the duration of the callback.
+	 *
+	 * @callback  The callback to run without any events firing.
+	 */
+	public any function withoutFiringEvents( required any callback ) {
+		variables._withoutFiringEvents = true;
+		try {
+			return arguments.callback();
+		} finally {
+			variables._withoutFiringEvents = false;
 		}
 	}
 
@@ -2957,6 +2977,10 @@ component accessors="true" {
 	 * @eventData  The data associated with the lifecycle event.
 	 */
 	public void function fireEvent( required string eventName, struct eventData = {} ) {
+		if ( variables._withoutFiringEvents ) {
+			return;
+		}
+
 		arguments.eventData.entityName = entityName();
 		if ( eventMethodExists( arguments.eventName ) ) {
 			invoke(

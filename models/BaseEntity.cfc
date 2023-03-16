@@ -2010,7 +2010,7 @@ component accessors="true" {
 			.getInstance( "QuickBuilder@quick" )
 			.setEntity( this )
 			.setReturnFormat( "array" )
-			.setDefaultOptions( variables._queryOptions )
+			.mergeDefaultOptions( variables._queryOptions )
 			.from( tableName() )
 			.addSelect( retrieveQualifiedColumns() );
 

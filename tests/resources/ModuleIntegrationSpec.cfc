@@ -37,13 +37,20 @@ component extends="coldbox.system.testing.BaseTestCase" {
     private void function refreshDatabase() {
         getController().getModuleService()
             .registerAndActivateModule( "cfmigrations", "testingModuleRoot" );
+        var migrationManager = getWireBox().getInstance( "QBMigrationManager@cfmigrations" );
         var migrationService = application.wirebox.getInstance( "MigrationService@cfmigrations" );
-        migrationService.setMigrationsDirectory( "/tests/resources/database/migrations" );
-        migrationService.setDefaultGrammar( "MySQLGrammar@qb" );
-        migrationService.setSchema( "quick" );
+		migrationService.setMigrationsDirectory( "/tests/resources/database/migrations" );
+		migrationService.setSeedsDirectory( "/tests/resources/database/seeds" );
+		migrationService.setSeedEnvironments( [ "development", "testing" ] );
+		migrationService.setManager(
+			migrationManager
+				.setDefaultGrammar( "MySQLGrammar@qb" )
+				.setDatasource( "quick" )
+				.setSchema( "quick" )
+		);
+		migrationService.install();
         migrationService.reset();
-        migrationService.install();
-        migrationService.up();
+        migrationService.runAllMigrations( "up" );
     }
 
 }

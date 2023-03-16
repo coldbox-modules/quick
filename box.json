@@ -28,7 +28,7 @@
     },
     "type":"modules",
     "dependencies":{
-        "qb":"^9.0.0",
+        "qb":"^9.1.0",
         "str":"^3.0.0",
         "mementifier":"^3.0.0"
     },
@@ -36,7 +36,7 @@
         "coldbox":"stable",
         "testbox":"^4.0.0",
         "cfcollection":"^3.6.4",
-        "cfmigrations":"^2.0.9"
+        "cfmigrations":"^4.0.0"
     },
     "installPaths":{
         "testbox":"testbox/",

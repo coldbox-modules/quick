@@ -3068,10 +3068,14 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function isNullValue( required string key, any value ) {
-		param arguments.value = invoke( this, "get" & arguments.key );
+		if ( isNull( arguments.value ) ) {
+			arguments.value = invoke( this, "get" & arguments.key );
+		}
+
 		if ( isNull( arguments.value ) ) {
 			return true;
 		}
+
 		var alias = retrieveAliasForColumn( arguments.key );
 		if ( !isSimpleValue( arguments.value ) ) {
 			return false;

@@ -1108,19 +1108,7 @@ component accessors="true" {
 				} );
 			guardEmptyAttributeData( attrs );
 
-			// Lucee does not return generated keys if the return type is array. :-/
-			if ( server.keyExists( "lucee" ) ) {
-				var result = builder.withReturnFormat(
-					returnFormat = function( q ) {
-						return builder.getQB().getUtils().queryToArrayOfStructs( q );
-					},
-					callback = function() {
-						return builder.insert( attrs );
-					}
-				);
-			} else {
-				var result = builder.insert( attrs );
-			}
+			var result = builder.insert( attrs );
 
 			if ( hasParentEntity() ) {
 				result.result[ getParentDefinition().joincolumn ] = variables._data[ getParentDefinition().joinColumn ];

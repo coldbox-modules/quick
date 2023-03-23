@@ -1028,6 +1028,27 @@ component accessors="true" {
 		return this;
 	}
 
+
+
+	/**
+	 * Return a clone of this entity of this entity. 
+	 *
+	 * @markLoaded   If true, marks the entity as loaded. If this is true the postLoad event will NOT be fired.
+	 *
+	 * @return 	quick.models.BaseEntity
+	 */
+	public any function cloneEntity( boolean markLoaded = false ) {
+		var entityClone = this.newEntity().fill( this.retrieveAttributesData() );
+		if( arguments.markLoaded ){
+			// do not us markLoaded() here as I do not want to fire the postLoad event
+			entityClone.set_loaded( true );
+		}
+
+		return entityClone;
+	}
+
+
+
 	/*===========================================
     =            Persistence Methods            =
     ===========================================*/

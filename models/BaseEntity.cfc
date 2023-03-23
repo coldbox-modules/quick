@@ -1031,7 +1031,7 @@ component accessors="true" {
 
 
 	/**
-	 * Return a clone of this entity of this entity. 
+	 * Return a clone of this entity. 
 	 *
 	 * @markLoaded   If true, marks the entity as loaded. If this is true the postLoad event will NOT be fired.
 	 *

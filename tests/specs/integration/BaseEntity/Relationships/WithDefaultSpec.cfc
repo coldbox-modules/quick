@@ -1,7 +1,7 @@
 component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 	function run() {
-		describe( "Belongs To Spec", function() {
+		describe( "WithDefault Spec", function() {
 			beforeEach( function() {
 				variables.queries = [];
 			} );

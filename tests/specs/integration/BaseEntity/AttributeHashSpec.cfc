@@ -1,7 +1,7 @@
 component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 
 	function run() {
-		describe( "Clone Spec", function() {
+		describe( "Attribute Hash Spec", function() {
 
 			it( "can compute attributes hash", function() {
 				var user = getInstance( "User" ).find( 1 );

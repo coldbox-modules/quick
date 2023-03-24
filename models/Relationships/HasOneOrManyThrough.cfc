@@ -114,14 +114,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					.where( function( q ) {
 						arrayZipEach(
 							[
-								variables.parent.keyNames(),
+								variables.closestToParent.getQualifiedLocalKeys(),
 								variables.closestToParent.getForeignKeys()
 							],
 							function( localKey, foreignKey ) {
-								q.whereColumn(
-									variables.parent.qualifyColumn( localKey ),
-									variables.closestToParent.qualifyColumn( foreignKey )
-								);
+								q.whereColumn( localKey, variables.closestToParent.qualifyColumn( foreignKey ) );
 							}
 						);
 					} )
@@ -138,7 +135,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 */
 	public HasOneOrManyThrough function performJoin( any base = variables.relationshipBuilder ) {
 		// no arrayReverse in ACF means for loops. :-(
-		for ( var index = variables.relationships.len(); index > 0; index-- ) {
+		for ( var index = variables.relationships.len(); index > 1; index-- ) {
 			var relationshipName = variables.relationships[ index ];
 			var relation         = variables.relationshipsMap[ relationshipName ];
 			relation.applyThroughJoin( arguments.base );
@@ -160,6 +157,12 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		}
 
 		performJoin();
+
+		// perform final join for eager loading
+		var relationshipName = variables.relationships[ 1 ];
+		var relation         = variables.relationshipsMap[ relationshipName ];
+		relation.applyThroughJoin( variables.relationshipBuilder );
+
 		var foreignKeys             = variables.parent.keyNames();
 		var qualifiedForeignKeyList = foreignKeys
 			.reduce( function( acc, foreignKey, i ) {

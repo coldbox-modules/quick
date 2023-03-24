@@ -69,6 +69,17 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				);
 				structDelete( request, "postSaveCalled" );
 			} );
+
+			it( "skips events when called inside a withoutFiringEvents callback", function() {
+				var song = getInstance( "Song" ).findOrFail( 1 );
+				expect( song.getDownloadUrl() ).toBe( "https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV" );
+
+				song.withoutFiringEvents( () => {
+					song.update( { "downloadUrl" : "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" } );
+				} );
+
+				expect( request ).notToHaveKey( "postSaveCalled" );
+			} );
 		} );
 	}
 

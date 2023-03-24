@@ -1079,7 +1079,7 @@ component accessors="true" {
 			.setQuickBuilder( this )
 			.setEntity( getEntity() )
 			.setReturnFormat( "array" )
-			.setDefaultOptions( getEntity().get_queryOptions() )
+			.mergeDefaultOptions( getEntity().get_queryOptions() )
 			.setColumnFormatter( function( column ) {
 				return qualifyColumn( column );
 			} )

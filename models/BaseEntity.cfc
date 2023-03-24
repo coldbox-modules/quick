@@ -161,9 +161,14 @@ component accessors="true" {
 	property name="_withoutRelationshipConstraints" persistent="false";
 
 	/**
-	 * A boolean flag representing that guarding against not loaded entities should be skipped..
+	 * A boolean flag representing that guarding against not loaded entities should be skipped.
 	 */
 	property name="_ignoreNotLoadedGuard" persistent="false";
+
+	/**
+	 * A boolean flag representing that events should not be fired.
+	 */
+	property name="_withoutFiringEvents" persistent="false";
 
 	/**
 	 * A boolean flag indicating that the entity has been loaded from the database.
@@ -220,6 +225,7 @@ component accessors="true" {
 		variables._applyingGlobalScopes           = false;
 		variables._globalScopesApplied            = false;
 		variables._ignoreNotLoadedGuard           = false;
+		variables._withoutFiringEvents            = false;
 		param variables._nullValues               = {};
 		param variables._casts                    = {};
 		param variables._castCache                = {};
@@ -1256,6 +1262,20 @@ component accessors="true" {
 	}
 
 	/**
+	 * Does not fire events for the duration of the callback.
+	 *
+	 * @callback  The callback to run without any events firing.
+	 */
+	public any function withoutFiringEvents( required any callback ) {
+		variables._withoutFiringEvents = true;
+		try {
+			return arguments.callback();
+		} finally {
+			variables._withoutFiringEvents = false;
+		}
+	}
+
+	/**
 	 * Loads a single relationship or an array of relationships by name.
 	 * Use this method if you need to load the relationship, but don't
 	 * need the relationship value returned.  If the relationship is already
@@ -2009,7 +2029,7 @@ component accessors="true" {
 			.getInstance( "QuickBuilder@quick" )
 			.setEntity( this )
 			.setReturnFormat( "array" )
-			.setDefaultOptions( variables._queryOptions )
+			.mergeDefaultOptions( variables._queryOptions )
 			.from( tableName() )
 			.addSelect( retrieveQualifiedColumns() );
 
@@ -2419,7 +2439,7 @@ component accessors="true" {
 
 		if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
 			variables._meta = variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
-				var util                   = createObject( "component", "coldbox.system.core.util.Util" );
+				var util                   = variables._wirebox.getUtility();
 				var meta                   = {};
 				meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
 				meta[ "localMetadata" ]    = getMetadata( this );
@@ -2976,6 +2996,10 @@ component accessors="true" {
 	 * @eventData  The data associated with the lifecycle event.
 	 */
 	public void function fireEvent( required string eventName, struct eventData = {} ) {
+		if ( variables._withoutFiringEvents ) {
+			return;
+		}
+
 		arguments.eventData.entityName = entityName();
 		if ( eventMethodExists( arguments.eventName ) ) {
 			invoke(
@@ -3051,7 +3075,6 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function isNullValue( required string key, any value ) {
-
 		if(!isDefined('arguments.value')){
 			//There is potential for the value of an attribute to be an actuall null value
 			//We must use isDefined instead of cfparam as returning a null value from invoke
@@ -3062,6 +3085,7 @@ component accessors="true" {
 		if ( isNull( arguments.value ) ) {
 			return true;
 		}
+
 		var alias = retrieveAliasForColumn( arguments.key );
 		if ( !isSimpleValue( arguments.value ) ) {
 			return false;

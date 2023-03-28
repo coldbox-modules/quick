@@ -611,7 +611,7 @@ component accessors="true" {
 
 		if ( !isNull( result ) ) {
 			// If a query is returned, set it as the current query and return
-			// the quickBuilder. Otherwise return whatever came back from the scope.
+			// the entity. Otherwise return whatever came back from the scope.
 			if (
 				isStruct( result ) &&
 				structKeyExists( result, "isBuilder" )
@@ -619,14 +619,6 @@ component accessors="true" {
 				variables.qb = result;
 				return this;
 			}
-
-			// If the quick builder is returned, return the entity
-			if (
-				isStruct( result ) &&
-				structKeyExists( result, "isQuickBuilder" )
-			) {
-				return this.getEntity();
-			}			
 
 			return result;
 		}

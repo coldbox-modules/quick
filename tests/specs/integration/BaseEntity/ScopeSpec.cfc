@@ -18,6 +18,34 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
 			} );
 
+
+			it( "can chain methods when using scopes", function() {
+
+				// call scope first, then an entity method
+				var users = getInstance( "User" )
+					.ofType( "admin" )
+					.fill({
+						'username': 'Ryan'
+					})
+					.get();
+
+				expect( users ).toHaveLength( 2, "Two users should exist in the database and be returned." );
+				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
+
+				// call entity method first, then a scope.
+				var users = getInstance( "User" )
+					.fill({
+						'username': 'Ryan'
+					})
+					.ofType( "admin" )
+					.get();
+
+				expect( users ).toHaveLength( 2, "Two users should exist in the database and be returned." );
+				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
+
+			} );
+
+
 			it( "allows for default arguments if none are passed in", function() {
 				var users = getInstance( "User" ).ofType().get();
 				expect( users ).toHaveLength( 3, "Two users should exist in the database and be returned." );

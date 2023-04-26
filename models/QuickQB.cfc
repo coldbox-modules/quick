@@ -617,4 +617,28 @@ component extends="qb.models.Query.QueryBuilder" accessors="true" {
 		return super.onMissingMethod( argumentCollection = arguments );
 	}
 
+	// override's super impl
+	// keep in sync with `super.whereNested`, or merge them somehow
+	public QueryBuilder function whereNested( required callback, combinator = "and" ) {
+		// We descend into a new QueryBuilder, but it is not an isolated thing and requires a fresh context,
+		// but it will by default inherit the current context.
+		// "relevant context" is assumed to be exactly "the available QueryBuilder object", we can push/pop it.
+
+		// common with super
+		var query = forNestedWhere();
+
+		// unique to this
+		var saved_QB = this.getQuickBuilder().getQB();
+		this.getQuickBuilder().setQB( query );
+
+		// common with super
+		callback( query );
+
+		// unique to this
+		this.getQuickBuilder().setQB( saved_QB );
+
+		// common with super
+		return addNestedWhereQuery( query, combinator );
+	}
+
 }

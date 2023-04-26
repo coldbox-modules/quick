@@ -188,4 +188,17 @@ component extends="quick.models.BaseEntity" accessors="true" {
 			} );
 	}
 
+	function scopeWithNestedWheresCombinedViaOr( qb ) {
+		qb.orWhere( ( User ) => User.withTwoFlatWheresCombinedViaAnd( "a", "b" ) )
+			.orWhere( ( User ) => User.withTwoFlatWheresCombinedViaAnd( "c", "d" ) )
+	}
+
+	function scopeWithTwoFlatWheresCombinedViaAnd(
+		qb,
+		required string firstName,
+		required string lastName
+	) {
+		qb.whereFirstName( firstName ).whereLastName( lastName );
+	}
+
 }

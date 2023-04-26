@@ -1035,7 +1035,7 @@ component accessors="true" {
 	}
 
 	/**
-	 * Return a clone of this entity. 
+	 * Return a clone of this entity.
 	 *
 	 * @markLoaded   If true, marks the entity as loaded. If this is true the postLoad event will NOT be fired.
 	 *
@@ -1043,7 +1043,7 @@ component accessors="true" {
 	 */
 	public any function clone( boolean markLoaded = false ) {
 		var entityClone = this.newEntity().fill( this.retrieveAttributesData() );
-		if( arguments.markLoaded ){
+		if ( arguments.markLoaded ) {
 			// do not us markLoaded() here as I do not want to fire the postLoad event
 			entityClone.set_loaded( true );
 		}
@@ -3075,10 +3075,10 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function isNullValue( required string key, any value ) {
-		if(!isDefined('arguments.value')){
-			//There is potential for the value of an attribute to be an actuall null value
-			//We must use isDefined instead of cfparam as returning a null value from invoke
-			//into the 'default' argument of cfparam will raise an exception
+		if ( !isDefined( "arguments.value" ) ) {
+			// There is potential for the value of an attribute to be an actuall null value
+			// We must use isDefined instead of cfparam as returning a null value from invoke
+			// into the 'default' argument of cfparam will raise an exception
 			arguments.value = invoke( this, "get" & arguments.key );
 		}
 

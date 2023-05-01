@@ -62,8 +62,8 @@ jobs:
         run: |
           box server start cfengine=${{ matrix.cfengine }}
           # Install Adobe 2021 cfpm modules
-          if [[ "${{ matrix.cfengine }}" == "adobe@2021" ]] ; then
-            box run-script install:2021
+          if [[ "${{ matrix.cfengine }}" == *adobe@202* ]]; then
+            box run-script install:cfpm
           fi
 
       - name: Run TestBox Tests

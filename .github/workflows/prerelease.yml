@@ -6,67 +6,11 @@ on:
       - development
 
 jobs:
+
   tests:
-    name: Tests
     if: "!contains(github.event.head_commit.message, '__SEMANTIC RELEASE VERSION UPDATE__')"
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        cfengine: ["lucee@5", "adobe@2018", "adobe@2021"]
-        coldbox: ["coldbox@5", "coldbox@6"]
-    services:
-      mysql:
-        image: mysql:5.7
-        env:
-          MYSQL_RANDOM_ROOT_PASSWORD: yes
-          MYSQL_USER: quick
-          MYSQL_PASSWORD: quick
-          MYSQL_DATABASE: quick
-        ports:
-          - 3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@v1.4.3
-        with:
-          java-version: 11
-
-      - name: Set Up CommandBox
-        uses: elpete/setup-commandbox@v1.0.0
-
-      - name: Install dependencies
-        run: |
-          box install
-          box config set modules.commandbox-dotenv.checkEnvPreServerStart=false
-          box install ${{ matrix.coldbox }} --noSave
-
-      - name: Start server
-        env:
-          DB_HOST: localhost
-          DB_PORT: ${{ job.services.mysql.ports[3306] }}
-          DB_NAME: quick
-          DB_USER: quick
-          DB_PASSWORD: quick
-        run: |
-          box server start cfengine=${{ matrix.cfengine }}
-          # Install Adobe 2021 cfpm modules
-          if [[ "${{ matrix.cfengine }}" == "adobe@2021" ]] ; then
-            box run-script install:2021
-          fi
-
-      - name: Run TestBox Tests
-        env:
-          DB_HOST: localhost
-          DB_PORT: ${{ job.services.mysql.ports[3306] }}
-          DB_NAME: quick
-          DB_USER: quick
-          DB_PASSWORD: quick
-        run: box testbox run
-
+    uses: ./.github/workflows/tests.yml
+    
   # release:
   #   name: Semantic Release
   #   if: "!contains(github.event.head_commit.message, '__SEMANTIC RELEASE VERSION UPDATE__')"

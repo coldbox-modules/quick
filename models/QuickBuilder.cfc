@@ -11,7 +11,7 @@ component accessors="true" {
 	/**
 	 * The QueryBuilder instance associated with this QuickBuilder
 	 */
-	property name="qb" inject="QuickQB@quick";
+	property name="qb";
 
 	/**
 	 * A boolean flag representing that the entity is currently applying global scopes.
@@ -57,6 +57,7 @@ component accessors="true" {
 	}
 
 	function onDIComplete() {
+		variables.qb = variables._wirebox.getInstance( "QuickQB@quick" );
 		variables.qb.setQuickBuilder( this );
 		variables.qb.setColumnFormatter( function( column ) {
 			return qualifyColumn( column );

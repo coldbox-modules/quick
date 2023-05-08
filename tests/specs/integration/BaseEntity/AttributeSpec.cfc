@@ -97,7 +97,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "shows all the attributes in the memento of a newly created object", function() {
 				var memento = getInstance( "User" ).getMemento();
-				if ( memento.len() != 18 ) {
+				if ( structCount( memento ) != 18 ) {
 					var expected = [
 						"id",
 						"username",

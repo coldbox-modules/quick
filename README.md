@@ -26,7 +26,7 @@ Quick is an ORM \(Object Relational Mapper\) written in CFML for CFML. It provid
 You need the following configured before using Quick:
 
 -   Configure a default datasource in your CFML engine
--   ColdBox 4.3+
+-   ColdBox 6+
 -   Add a mapping for `quick` in your `Application.cfc`
 -   Configure your `BaseGrammar` in `config/ColdBox.cfc`
 

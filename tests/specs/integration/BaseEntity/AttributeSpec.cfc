@@ -2,6 +2,21 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Attributes Spec", function() {
+			it( "does not put virtual attributes in the cache", function() {
+				var virtualAttributeEntity   = getInstance( "User" ).appendVirtualAttribute( "latestPostId" );
+				var attributesAfterSubselect = virtualAttributeEntity.retrieveAttributeNames(
+					withVirtualAttributes = true
+				);
+				var newEntityFromVirtualAttributeEntity = virtualAttributeEntity.newEntity();
+				var attributesFromNewEntity             = newEntityFromVirtualAttributeEntity.retrieveAttributeNames(
+					withVirtualAttributes = true
+				);
+				var attributesFromFresh = getInstance( "User" ).retrieveAttributeNames( withVirtualAttributes = true );
+				expect( attributesAfterSubselect ).toInclude( "latestPostId" );
+				expect( attributesFromNewEntity ).toInclude( "latestPostId" );
+				expect( attributesFromFresh ).notToInclude( "latestPostId" );
+			} );
+
 			it( "can get any attribute using the `getColumnName` magic methods", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getId() ).toBe( 1 );
@@ -81,26 +96,80 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "shows all the attributes in the memento of a newly created object", function() {
-				expect( getInstance( "User" ).getMemento() ).toBe( {
-					"id"              : "",
-					"username"        : "",
-					"firstName"       : "",
-					"lastName"        : "",
-					"password"        : "",
-					"countryId"       : "",
-					"teamId"          : "",
-					"createdDate"     : "",
-					"modifiedDate"    : "",
-					"type"            : "",
-					"email"           : "",
-					"externalId"      : "",
-					"streetOne"       : "",
-					"streetTwo"       : "",
-					"city"            : "",
-					"state"           : "",
-					"zip"             : "",
-					"favoritePost_id" : ""
-				} );
+				var memento = getInstance( "User" ).getMemento();
+				if ( memento.len() != 18 ) {
+					var expected = [
+						"id",
+						"username",
+						"firstName",
+						"lastName",
+						"password",
+						"countryId",
+						"teamId",
+						"createdDate",
+						"modifiedDate",
+						"type",
+						"email",
+						"externalID",
+						"streetOne",
+						"streetTwo",
+						"city",
+						"state",
+						"zip",
+						"favoritePost_id"
+					];
+					var missing = duplicate( expected );
+					var extra   = [];
+					for ( var key in memento ) {
+						var existed = arrayDelete( missing, key );
+						if ( !existed ) {
+							extra.append( key );
+						}
+					}
+					debug( {
+						"actual"   : memento.keyArray(),
+						"expected" : expected,
+						"missing"  : missing,
+						"extra"    : extra
+					} );
+					expect( memento.len() ).toHaveLength( 18 );
+				}
+				expect( memento ).toHaveKey( "id" );
+				expect( memento[ "id" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "username" );
+				expect( memento[ "username" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "firstName" );
+				expect( memento[ "firstName" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "lastName" );
+				expect( memento[ "lastName" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "password" );
+				expect( memento[ "password" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "countryId" );
+				expect( memento[ "countryId" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "teamId" );
+				expect( memento[ "teamId" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "createdDate" );
+				expect( memento[ "createdDate" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "modifiedDate" );
+				expect( memento[ "modifiedDate" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "type" );
+				expect( memento[ "type" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "email" );
+				expect( memento[ "email" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "externalId" );
+				expect( memento[ "externalId" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "streetOne" );
+				expect( memento[ "streetOne" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "streetTwo" );
+				expect( memento[ "streetTwo" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "city" );
+				expect( memento[ "city" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "state" );
+				expect( memento[ "state" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "zip" );
+				expect( memento[ "zip" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "favoritePost_id" );
+				expect( memento[ "favoritePost_id" ] ).toBe( "" );
 			} );
 
 			it( "shows all the attributes in the component casing", function() {

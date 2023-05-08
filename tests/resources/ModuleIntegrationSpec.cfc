@@ -1,10 +1,5 @@
 component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 
-    // Load on first test
-	this.loadColdBox   = true;
-	// Never unload until the request dies
-	this.unloadColdBox = true;
-
     /*********************************** LIFE CYCLE Methods ***********************************/
 
     function beforeAll() {

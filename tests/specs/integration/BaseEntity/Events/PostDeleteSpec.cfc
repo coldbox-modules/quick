@@ -2,8 +2,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function beforeAll() {
 		super.beforeAll();
-		var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
-		interceptorService.registerInterceptor( interceptorObject = this );
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "PostDeleteSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "PostDeleteSpec" );
+		super.afterAll();
 	}
 
 	function run() {

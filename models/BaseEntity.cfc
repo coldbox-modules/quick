@@ -53,7 +53,10 @@ component accessors="true" {
 	/**
 	 * The WireBox mapping for the entity. This is added by a beforeInstanceAutowire interception point.
 	 */
-	property name="_mapping" persistent="false";
+	property
+		name      ="_mapping"
+		persistent="false"
+		inject    ="wirebox:targetId";
 
 	/**
 	 * The full name of the entity.

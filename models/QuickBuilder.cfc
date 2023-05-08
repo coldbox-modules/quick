@@ -1,7 +1,7 @@
 /**
  *  QueryBuilder super-type to add additional Quick-only features like relationship querying and ordering to qb queries.
  */
-component accessors="true" transientCache="false"{
+component accessors="true" transientCache="false" {
 
 	/**
 	 * The entity associated with this builder.

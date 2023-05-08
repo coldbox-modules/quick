@@ -2,7 +2,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function beforeAll() {
 		super.beforeAll();
-		controller.getInterceptorService().registerInterceptor( interceptorObject = this );
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "SubqueriesSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "SubqueriesSpec" );
+		super.afterAll();
 	}
 
 	function run() {

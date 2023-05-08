@@ -2,8 +2,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function beforeAll() {
 		super.beforeAll();
-		var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
-		interceptorService.registerInterceptor( interceptorObject = this );
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "PreInsertSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "PreInsertSpec" );
+		super.afterAll();
 	}
 
 	function run() {

@@ -1,5 +1,17 @@
 component extends="tests.resources.ModuleIntegrationSpec" {
 
+	function beforeAll() {
+		super.beforeAll();
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "BelongsToSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "BelongsToSpec" );
+		super.afterAll();
+	}
+
 	function run() {
 		describe( "Belongs To Spec", function() {
 			beforeEach( function() {
@@ -14,7 +26,6 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "caches the result of fetching the owning entity", function() {
-				controller.getInterceptorService().registerInterceptor( interceptorObject = this );
 				var post = getInstance( "Post" ).find( 1245 );
 				post.getAuthor();
 				post.getAuthor();

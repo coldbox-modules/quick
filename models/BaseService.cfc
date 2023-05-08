@@ -9,7 +9,7 @@
  * property name="userService" inject="quickService:User";
  * ```
  */
-component transientCache="false"{
+component transientCache="false" {
 
 	/**
 	 * The WireBox injector.  Used to inject other entities.

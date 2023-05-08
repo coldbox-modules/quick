@@ -132,7 +132,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						"missing"  : missing,
 						"extra"    : extra
 					} );
-					expect( memento.len() ).toHaveLength( 18 );
+					expect( structCount( memento ) ).toHaveLength( 18 );
 				}
 				expect( memento ).toHaveKey( "id" );
 				expect( memento[ "id" ] ).toBe( "" );

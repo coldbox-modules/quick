@@ -1,6 +1,6 @@
 {
     "app":{
-        "cfengine":"lucee@5"
+        "cfengine":"adobe@2018"
     },
     "web":{
         "http":{

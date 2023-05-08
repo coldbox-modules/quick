@@ -1,4 +1,4 @@
-component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
+component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function beforeAll() {
 		super.beforeAll();

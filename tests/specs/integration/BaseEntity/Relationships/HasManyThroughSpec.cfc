@@ -1,4 +1,4 @@
-component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
+component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Has Many Through Spec", function() {

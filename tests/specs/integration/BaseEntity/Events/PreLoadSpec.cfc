@@ -1,9 +1,15 @@
-component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
+component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function beforeAll() {
 		super.beforeAll();
-		var interceptorService = getWireBox().getInstance( dsl = "coldbox:interceptorService" );
-		interceptorService.registerInterceptor( interceptorObject = this );
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "PreLoadSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "PreLoadSpec" );
+		super.afterAll();
 	}
 
 	function run() {

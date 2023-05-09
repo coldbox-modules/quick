@@ -1,4 +1,4 @@
-component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
+component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Module Activation", function() {

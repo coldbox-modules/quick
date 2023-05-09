@@ -1,7 +1,7 @@
 /**
  *  QueryBuilder super-type to add additional Quick-only features like relationship querying and ordering to qb queries.
  */
-component accessors="true" {
+component accessors="true" transientCache="false" {
 
 	/**
 	 * The entity associated with this builder.
@@ -582,7 +582,8 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function appendVirtualAttribute( required string name, boolean excludeFromMemento = false ) {
-		return getEntity().appendVirtualAttribute( argumentCollection = arguments );
+		getEntity().appendVirtualAttribute( argumentCollection = arguments );
+		return this;
 	}
 
 	/**

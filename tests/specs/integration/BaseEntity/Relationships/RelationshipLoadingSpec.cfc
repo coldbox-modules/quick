@@ -1,4 +1,16 @@
-component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
+component extends="tests.resources.ModuleIntegrationSpec" {
+
+	function beforeAll() {
+		super.beforeAll();
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "RelationshipLoadingSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "RelationshipLoadingSpec" );
+		super.afterAll();
+	}
 
 	function run() {
 		describe( "Eager Loading Spec", function() {
@@ -14,8 +26,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "does not reload an already loaded relationship", function() {
-				controller.getInterceptorService().registerInterceptor( interceptorObject = this );
-
 				var elpete = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeFalse();
 				elpete.loadRelationship( "posts" );
@@ -26,8 +36,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "does reload an already loaded relationship when using the forceLoadRelationship method", function() {
-				controller.getInterceptorService().registerInterceptor( interceptorObject = this );
-
 				var elpete = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeFalse();
 				elpete.forceLoadRelationship( "posts" );
@@ -44,8 +52,6 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 			} );
 
 			it( "can load a relationship based off of a subselect column", function() {
-				controller.getInterceptorService().registerInterceptor( interceptorObject = this );
-
 				var users = getInstance( "User" )
 					.withLatestPost()
 					.orderByAsc( "id" )

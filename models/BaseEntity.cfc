@@ -53,7 +53,10 @@ component accessors="true" {
 	/**
 	 * The WireBox mapping for the entity. This is added by a beforeInstanceAutowire interception point.
 	 */
-	property name="_mapping" persistent="false";
+	property
+		name      ="_mapping"
+		persistent="false"
+		inject    ="wirebox:targetId";
 
 	/**
 	 * The full name of the entity.
@@ -2438,95 +2441,97 @@ component accessors="true" {
 		param variables._table = variables._str.plural( variables._str.snake( listFirst( variables._mapping, "@" ) ) );
 
 		if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
-			variables._meta = variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
-				var util                   = variables._wirebox.getUtility();
-				var meta                   = {};
-				meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
-				meta[ "localMetadata" ]    = getMetadata( this );
-				if (
-					!meta[ "localMetadata" ].keyExists( "accessors" ) ||
-					meta[ "localMetadata" ].accessors == false
-				) {
-					throw(
-						type    = "QuickAccessorsMissing",
-						message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
-					);
-				}
-				meta[ "fullName" ]                                 = meta.originalMetadata.fullname;
-				param meta.originalMetadata.mapping                = listLast( meta.originalMetadata.fullname, "." );
-				meta[ "mapping" ]                                  = meta.originalMetadata.mapping;
-				param meta.originalMetadata.entityName             = listLast( meta.originalMetadata.name, "." );
-				meta[ "entityName" ]                               = meta.originalMetadata.entityName;
-				param meta.originalMetadata.table                  = variables._str.plural( variables._str.snake( meta.entityName ) );
-				meta[ "table" ]                                    = meta.originalMetadata.table;
-				param meta.originalMetadata.readonly               = false;
-				meta[ "readonly" ]                                 = meta.originalMetadata.readonly;
-				param meta.originalMetadata.joincolumn             = "";
-				param meta.originalMetadata.discriminatorValue     = "";
-				param meta.originalMetadata.singleTableInheritance = false;
-				param meta.originalMetadata.extends                = "";
-				param meta.originalMetadata.functions              = [];
-				meta[ "hasParentEntity" ]                          = !!len( meta.originalMetadata.joincolumn );
-				if ( meta.hasParentEntity ) {
-					var reference = variables._wirebox.getInstance(
-						name          = meta.localMetadata.extends.fullName,
-						initArguments = { "meta" : {}, "shallow" : true }
-					);
+			variables._meta = duplicate(
+				variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
+					var util                   = variables._wirebox.getUtility();
+					var meta                   = {};
+					meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
+					meta[ "localMetadata" ]    = getMetadata( this );
+					if (
+						!meta[ "localMetadata" ].keyExists( "accessors" ) ||
+						meta[ "localMetadata" ].accessors == false
+					) {
+						throw(
+							type    = "QuickAccessorsMissing",
+							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
+						);
+					}
+					meta[ "fullName" ]                                 = meta.originalMetadata.fullname;
+					param meta.originalMetadata.mapping                = listLast( meta.originalMetadata.fullname, "." );
+					meta[ "mapping" ]                                  = meta.originalMetadata.mapping;
+					param meta.originalMetadata.entityName             = listLast( meta.originalMetadata.name, "." );
+					meta[ "entityName" ]                               = meta.originalMetadata.entityName;
+					param meta.originalMetadata.table                  = variables._str.plural( variables._str.snake( meta.entityName ) );
+					meta[ "table" ]                                    = meta.originalMetadata.table;
+					param meta.originalMetadata.readonly               = false;
+					meta[ "readonly" ]                                 = meta.originalMetadata.readonly;
+					param meta.originalMetadata.joincolumn             = "";
+					param meta.originalMetadata.discriminatorValue     = "";
+					param meta.originalMetadata.singleTableInheritance = false;
+					param meta.originalMetadata.extends                = "";
+					param meta.originalMetadata.functions              = [];
+					meta[ "hasParentEntity" ]                          = !!len( meta.originalMetadata.joincolumn );
+					if ( meta.hasParentEntity ) {
+						var reference = variables._wirebox.getInstance(
+							name          = meta.localMetadata.extends.fullName,
+							initArguments = { "meta" : {}, "shallow" : true }
+						);
 
-					meta[ "parentDefinition" ] = {
-						"meta"       : reference.get_Meta(),
-						"key"        : reference.keyNames()[ 1 ],
-						"joincolumn" : meta.originalMetadata.joincolumn
-					};
+						meta[ "parentDefinition" ] = {
+							"meta"       : reference.get_Meta(),
+							"key"        : reference.keyNames()[ 1 ],
+							"joincolumn" : meta.originalMetadata.joincolumn
+						};
 
-					if ( len( meta.originalMetadata.discriminatorValue ) ) {
-						try {
-							var parentMeta                                 = getComponentMetadata( meta.parentDefinition.meta.fullName );
-							meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
-							meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
-						} catch ( any e ) {
-							throw(
-								type    = "QuickChildInstantiationException",
-								message = "Failed to instantiate child entity [#meta.fullName#]. This may be due to a configuration error in the parent/child relationships. The root cause was #e.message#",
-								detail  = e.detail
-							);
+						if ( len( meta.originalMetadata.discriminatorValue ) ) {
+							try {
+								var parentMeta                                 = getComponentMetadata( meta.parentDefinition.meta.fullName );
+								meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
+								meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
+							} catch ( any e ) {
+								throw(
+									type    = "QuickChildInstantiationException",
+									message = "Failed to instantiate child entity [#meta.fullName#]. This may be due to a configuration error in the parent/child relationships. The root cause was #e.message#",
+									detail  = e.detail
+								);
+							}
 						}
 					}
-				}
 
-				var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
-					return arrayReduce(
-						getComponentMetadata( "quick.models.BaseEntity" ).functions,
-						function( acc, func ) {
-							arguments.acc[ arguments.func.name ] = "";
-							return arguments.acc;
-						},
-						{}
+					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
+						return arrayReduce(
+							getComponentMetadata( "quick.models.BaseEntity" ).functions,
+							function( acc, func ) {
+								arguments.acc[ arguments.func.name ] = "";
+								return arguments.acc;
+							},
+							{}
+						);
+					} );
+					meta[ "functionNames" ] = generateFunctionNameArray(
+						from    = meta.originalMetadata.functions,
+						without = baseEntityFunctionNames
 					);
-				} );
-				meta[ "functionNames" ] = generateFunctionNameArray(
-					from    = meta.originalMetadata.functions,
-					without = baseEntityFunctionNames
-				);
 
-				param meta.originalMetadata.properties = [];
+					param meta.originalMetadata.properties = [];
 
-				meta[ "attributes" ] = generateAttributesFromProperties(
-					meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
-				);
-				if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
-					meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
-				}
-				arrayWrap( variables._key ).each( function( key ) {
-					if ( !meta.attributes.keyExists( key ) ) {
-						var keyProp                     = paramAttribute( { "name" : key } );
-						meta.attributes[ keyProp.name ] = keyProp;
+					meta[ "attributes" ] = generateAttributesFromProperties(
+						meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
+					);
+					if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
+						meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
 					}
-				} );
-				meta[ "casts" ] = generateCastsFromProperties( meta.originalMetadata.properties );
-				guardKeyHasNoDefaultValue( meta.attributes );
-				return meta;
-			} );
+					arrayWrap( variables._key ).each( function( key ) {
+						if ( !meta.attributes.keyExists( key ) ) {
+							var keyProp                     = paramAttribute( { "name" : key } );
+							meta.attributes[ keyProp.name ] = keyProp;
+						}
+					} );
+					meta[ "casts" ] = generateCastsFromProperties( meta.originalMetadata.properties );
+					guardKeyHasNoDefaultValue( meta.attributes );
+					return meta;
+				} )
+			);
 		}
 
 		variables._fullName        = variables._meta.fullName;

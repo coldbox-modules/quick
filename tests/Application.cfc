@@ -6,6 +6,9 @@ component {
     this.sessionTimeout     = createTimeSpan( 0, 0, 15, 0 );
     this.applicationTimeout = createTimeSpan( 0, 0, 15, 0 );
 
+    // Turn on/off white space management
+	this.whiteSpaceManagement = "smart";
+
     testsPath = getDirectoryFromPath( getCurrentTemplatePath() );
     this.mappings[ "/tests" ] = testsPath;
     rootPath = REReplaceNoCase( this.mappings[ "/tests" ], "tests(\\|/)", "" );
@@ -25,8 +28,29 @@ component {
 
     function onRequestStart() {
         setting requestTimeout="180";
-        structDelete( application, "cbController" );
-        structDelete( application, "wirebox" );
+
+        // New ColdBox Virtual Application Starter
+		request.coldBoxVirtualApp = new coldbox.system.testing.VirtualApp( appMapping = "/app" );
+
+		// If hitting the runner or specs, prep our virtual app and database
+		if ( getBaseTemplatePath().replace( expandPath( "/tests" ), "" ).reFindNoCase( "(runner|specs)" ) ) {
+			request.coldBoxVirtualApp.startup();
+		}
+
+		// ORM Reload for fresh results
+		if( structKeyExists( url, "fwreinit" ) || structKeyExists( url, "reloadDatabase" )){
+			if( structKeyExists( server, "lucee" ) ){
+				pagePoolClear();
+			}
+			request.coldBoxVirtualApp.restart();
+		}
+
+        return true;
     }
+
+    public void function onRequestEnd( required targetPage ) {
+		request.coldBoxVirtualApp.shutdown();
+	}
+
 
 }

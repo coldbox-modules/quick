@@ -1,7 +1,11 @@
 /**
  * A proxy object from cbORM's CriteriaBuilder methods to their Quick equivalent.
  */
-component extends="quick.models.QuickBuilder" accessors="true" {
+component
+	extends       ="quick.models.QuickBuilder"
+	accessors     ="true"
+	transientCache="false"
+{
 
 	property name="entity";
 

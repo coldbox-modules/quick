@@ -582,7 +582,8 @@ component accessors="true" transientCache="false" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function appendVirtualAttribute( required string name, boolean excludeFromMemento = false ) {
-		return getEntity().appendVirtualAttribute( argumentCollection = arguments );
+		getEntity().appendVirtualAttribute( argumentCollection = arguments );
+		return this;
 	}
 
 	/**

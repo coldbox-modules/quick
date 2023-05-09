@@ -1,34 +1,28 @@
-component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
+component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "BaseService Spec", function() {
 			describe( "instantiation", function() {
 				it( "can be instantiated with an entity", function() {
 					var user    = getInstance( "User" );
-					var service = getWireBox().getInstance(
-						name          = "BaseService@quick",
-						initArguments = { entity : user }
-					);
+					var service = getInstance( name = "BaseService@quick", initArguments = { entity : user } );
 					expect( service.entityName() ).toBe( "User" );
 				} );
 
 				it( "can be instantiated with a wirebox mapping", function() {
-					var service = getWireBox().getInstance(
-						name          = "BaseService@quick",
-						initArguments = { entity : "User" }
-					);
+					var service = getInstance( name = "BaseService@quick", initArguments = { entity : "User" } );
 					expect( service.entityName() ).toBe( "User" );
 				} );
 
 				it( "can inject a service using the wirebox dsl", function() {
-					var service = getWireBox().getInstance( dsl = "quickService:User" );
+					var service = getInstance( dsl = "quickService:User" );
 					expect( service.entityName() ).toBe( "User" );
 				} );
 			} );
 
 			describe( "retriving records", function() {
 				beforeEach( function() {
-					variables.service = getWireBox().getInstance( dsl = "quickService:User" );
+					variables.service = getInstance( dsl = "quickService:User" );
 				} );
 
 				afterEach( function() {

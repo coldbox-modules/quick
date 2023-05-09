@@ -1,8 +1,15 @@
-component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
+component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function beforeAll() {
 		super.beforeAll();
-		controller.getInterceptorService().registerInterceptor( interceptorObject = this );
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "EagerLoadingSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "EagerLoadingSpec" );
+		super.afterAll();
 	}
 
 	function run() {

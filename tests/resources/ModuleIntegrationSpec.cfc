@@ -1,4 +1,6 @@
-component extends="coldbox.system.testing.BaseTestCase" {
+component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
+
+    /*********************************** LIFE CYCLE Methods ***********************************/
 
     function beforeAll() {
         super.beforeAll();
@@ -52,5 +54,9 @@ component extends="coldbox.system.testing.BaseTestCase" {
         migrationService.reset();
         migrationService.runAllMigrations( "up" );
     }
+
+    function shutdownColdBox(){
+		getColdBoxVirtualApp().shutdown();
+	}
 
 }

@@ -16,7 +16,7 @@ component extends="tests.resources.ModuleIntegrationSpec" appMapping="/app" {
 				var averageDurationInMicroseconds = times.sum() / times.len();
 				var averageDuration               = averageDurationInMicroseconds / 1000;
 				debug( "Average duration: #averageDuration# ms" );
-				debug( times );
+				// debug( times );
 			} );
 
 			it( "can retrieve 1000 records", function() {

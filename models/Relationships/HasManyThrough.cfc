@@ -38,7 +38,12 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 	 */
 	public array function initRelation( required array entities, required string relation ) {
 		return arguments.entities.map( function( entity ) {
-			return arguments.entity.assignRelationship( relation, [] );
+			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.assignRelationship( relation, [] );
+			} else {
+				arguments.entity[ relation ] = [];
+			}
+			return arguments.entity;
 		} );
 	}
 
@@ -63,11 +68,17 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 			var key = variables.closestToParent
 				.getLocalKeys()
 				.map( function( localKey ) {
-					return entity.retrieveAttribute( localKey );
+					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
+						localKey
+					];
 				} )
 				.toList();
 			if ( structKeyExists( dictionary, key ) ) {
-				entity.assignRelationship( relation, dictionary[ key ] );
+				if ( structKeyExists( entity, "isQuickEntity" ) ) {
+					entity.assignRelationship( relation, dictionary[ key ] );
+				} else {
+					entity[ relation ] = dictionary[ key ];
+				}
 			}
 		} );
 		return arguments.entities;

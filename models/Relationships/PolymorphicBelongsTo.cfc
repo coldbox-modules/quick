@@ -80,9 +80,9 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 *
 	 * @return    quick.models.Relationships.PolymorphicBelongsTo
 	 */
-	public boolean function addEagerConstraints( required array entities ) {
+	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
 		variables.entities = arguments.entities;
-		buildDictionary();
+		buildDictionary( arguments.baseEntity );
 		return true;
 	}
 
@@ -93,15 +93,15 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 *
 	 * @return  {string: {any: quick.models.BaseEntity}}
 	 */
-	public struct function buildDictionary() {
+	public struct function buildDictionary( required any baseEntity ) {
 		variables.dictionary = variables.entities.reduce( function( dict, entity ) {
-			var type = arguments.entity.retrieveAttribute( variables.morphType );
+			var type = retrieveMorphType( arguments.entity, baseEntity );
 			if ( !structKeyExists( arguments.dict, type ) ) {
 				arguments.dict[ type ] = {};
 			}
 			var key = variables.foreignKeys
 				.map( function( foreignKey ) {
-					return entity.retrieveAttribute( foreignKey );
+					return entityRetrieveAttribute( entity, foreignKey, baseEntity );
 				} )
 				.toList();
 			if ( !structKeyExists( arguments.dict[ type ], key ) ) {
@@ -128,9 +128,19 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 * @doc_generic  quick.models.BaseEntity
 	 * @return       [quick.models.BaseEntity]
 	 */
-	public array function getEager() {
+	public array function getEager( boolean asQuery = false, boolean withAliases = false ) {
 		structKeyArray( variables.dictionary ).each( function( type ) {
-			matchToMorphParents( arguments.type, getResultsByType( arguments.type ) );
+			var instance = createModelByType( arguments.type );
+			matchToMorphParents(
+				arguments.type,
+				instance,
+				getResultsByType(
+					arguments.type,
+					instance,
+					asQuery,
+					withAliases
+				)
+			);
 		} );
 
 		return variables.entities;
@@ -144,10 +154,13 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 * @doc_generic  quick.models.BaseEntity
 	 * @return       [quick.models.BaseEntity]
 	 */
-	public array function getResultsByType( required string type ) {
-		var instance = createModelByType( arguments.type );
-
-		var localKeys = variables.localKeys.isEmpty() ? instance.keyNames() : variables.localKeys;
+	public array function getResultsByType(
+		required string type,
+		required any instance,
+		boolean asQuery     = false,
+		boolean withAliases = false
+	) {
+		var localKeys = variables.localKeys.isEmpty() ? arguments.instance.keyNames() : variables.localKeys;
 
 		var allKeys = gatherKeysByType( type );
 
@@ -155,8 +168,11 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 			return [];
 		}
 
-		return instance
+		return arguments.instance
 			.with( variables.related.get_eagerLoad() )
+			.when( arguments.asQuery, function( qb ) {
+				qb.asQuery( withAliases );
+			} )
 			.where( function( q1 ) {
 				gatherKeysByType( type ).each( function( keys ) {
 					q1.orWhere( function( q2 ) {
@@ -187,7 +203,7 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 						arguments.acc,
 						variables.foreignKeys
 							.map( function( foreignKey ) {
-								return entity.retrieveAttribute( foreignKey );
+								return entityRetrieveAttribute( entity, foreignKey, variables.parent );
 							} )
 							.toList()
 					);
@@ -219,9 +235,17 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 *
 	 * @return   quick.models.Relationships.PolymorphicBelongsTo
 	 */
-	public PolymorphicBelongsTo function matchToMorphParents( required string type, required array results ) {
+	public PolymorphicBelongsTo function matchToMorphParents(
+		required string type,
+		required any morphParent,
+		required array results
+	) {
 		for ( var result in arguments.results ) {
-			var localDictionaryKey = variables.localKeys.isEmpty() ? result.keyValues().toList() : variables.localKeys
+			var localDictionaryKey = variables.localKeys.isEmpty() ? entityRetrieveKeyValues(
+				type,
+				result,
+				morphParent
+			).toList() : variables.localKeys
 				.map( function( localKey ) {
 					return result.retrieveAttribute( localKey );
 				} )
@@ -230,7 +254,11 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 			if ( variables.dictionary[ arguments.type ].keyExists( localDictionaryKey ) ) {
 				var entities = variables.dictionary[ arguments.type ][ localDictionaryKey ];
 				for ( var entity in entities ) {
-					entity.assignRelationship( variables.relationMethodName, result );
+					if ( structKeyExists( entity, "isQuickEntity" ) ) {
+						entity.assignRelationship( variables.relationMethodName, result );
+					} else {
+						entity[ variables.relationMethodName ] = result;
+					}
 				}
 			}
 		}
@@ -254,6 +282,34 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 		);
 
 		return base;
+	}
+
+	private string function retrieveMorphType( required any entity, required any baseEntity ) {
+		if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+			return arguments.entity.retrieveAttribute( variables.morphType );
+		}
+
+		if ( structKeyExists( arguments.entity, variables.morphType ) ) {
+			return arguments.entity[ variables.morphType ];
+		}
+
+		return arguments.entity[ arguments.baseEntity.retrieveAliasForColumn( variables.morphType ) ];
+	}
+
+	private array function entityRetrieveKeyValues(
+		required string type,
+		required any entity,
+		required any morphParent
+	) {
+		if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+			return arguments.entity.keyValues();
+		}
+
+		return arguments.morphParent
+			.keyNames()
+			.map( function( key ) {
+				return entityRetrieveAttribute( entity, key, morphParent );
+			} );
 	}
 
 }

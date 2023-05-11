@@ -2643,18 +2643,19 @@ component accessors="true" {
 	 * @return  An attribute struct with all the keys needed.
 	 */
 	private struct function paramAttribute( required struct attr ) {
-		param attr.column         = arguments.attr.name;
-		param attr.persistent     = true;
-		param attr.nullValue      = "";
-		param attr.convertToNull  = true;
-		param attr.casts          = "";
-		param attr.readOnly       = false;
-		param attr.sqltype        = "";
-		param attr.insert         = true;
-		param attr.update         = true;
-		param attr.virtual        = false;
-		param attr.exclude        = false;
-		param attr.isParentColumn = false;
+		param attr.column                  = arguments.attr.name;
+		param attr.persistent              = true;
+		param attr.nullValue               = "";
+		param attr.convertToNull           = true;
+		param attr.casts                   = "";
+		param attr.readOnly                = false;
+		param attr.sqltype                 = "";
+		param attr.insert                  = true;
+		param attr.update                  = true;
+		param attr.virtual                 = false;
+		param attr.exclude                 = false;
+		param attr.isParentColumn          = false;
+		variables._nullValues[ attr.name ] = attr.nullValue;
 		return arguments.attr;
 	}
 
@@ -3095,6 +3096,7 @@ component accessors="true" {
 		if ( !isSimpleValue( arguments.value ) ) {
 			return false;
 		}
+
 		return variables._nullValues.keyExists( alias ) &&
 		compare( variables._nullValues[ alias ], arguments.value ) == 0;
 	}
@@ -3218,6 +3220,12 @@ component accessors="true" {
 		return variables._attributes.keyExists( alias ) &&
 		variables._attributes[ alias ].insert &&
 		!variables._attributes[ alias ].isParentColumn;
+	}
+
+	public boolean function canConvertToNull( required string name ) {
+		var alias = retrieveAliasForColumn( arguments.name );
+		return variables._attributes.keyExists( alias ) &&
+		variables._attributes[ alias ].convertToNull;
 	}
 
 	/**

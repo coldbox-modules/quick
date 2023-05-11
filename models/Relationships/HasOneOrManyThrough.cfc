@@ -150,8 +150,12 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return    quick.models.Relationships.HasOneOrManyThrough
 	 */
-	public boolean function addEagerConstraints( required array entities ) {
-		var allKeys = getKeys( entities, variables.closestToParent.getLocalKeys() );
+	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
+		var allKeys = getKeys(
+			entities,
+			variables.closestToParent.getLocalKeys(),
+			arguments.baseEntity
+		);
 		if ( allKeys.isEmpty() ) {
 			return false;
 		}
@@ -210,7 +214,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 */
 	public struct function buildDictionary( required array results ) {
 		return arguments.results.reduce( function( dict, result ) {
-			var key = result.retrieveAttribute( "__QuickThroughKey__" );
+			var key = structKeyExists( result, "isQuickEntity" ) ? result.retrieveAttribute( "__QuickThroughKey__" ) : result[
+				"__QuickThroughKey__"
+			];
 			if ( !structKeyExists( arguments.dict, key ) ) {
 				arguments.dict[ key ] = [];
 			}

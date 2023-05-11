@@ -31,7 +31,6 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				elpete.loadRelationship( "posts" );
 				elpete.loadRelationship( "posts" );
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeTrue();
-				debug( variables.queries );
 				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed" );
 			} );
 
@@ -41,7 +40,6 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				elpete.forceLoadRelationship( "posts" );
 				elpete.forceLoadRelationship( "posts" );
 				expect( elpete.isRelationshipLoaded( "posts" ) ).toBeTrue();
-				debug( variables.queries );
 				expect( variables.queries ).toHaveLength( 3, "Only three queries should have been executed" );
 			} );
 		} );

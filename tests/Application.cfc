@@ -5,6 +5,7 @@ component {
     this.setClientCookies   = true;
     this.sessionTimeout     = createTimeSpan( 0, 0, 15, 0 );
     this.applicationTimeout = createTimeSpan( 0, 0, 15, 0 );
+    this.timezone = "UTC";
 
     // Turn on/off white space management
 	this.whiteSpaceManagement = "smart";

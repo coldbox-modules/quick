@@ -110,8 +110,12 @@ component accessors="true" {
 	 * @doc_generic  quick.models.BaseEntity
 	 * @return       [quick.models.BaseEntity]
 	 */
-	public array function getEager() {
-		return variables.relationshipBuilder.get();
+	public array function getEager( boolean asQuery = false, boolean withAliases = false ) {
+		return variables.relationshipBuilder
+			.when( arguments.asQuery, function( qb ) {
+				qb.asQuery( withAliases );
+			} )
+			.get();
 	}
 
 	/**
@@ -192,15 +196,20 @@ component accessors="true" {
 	 * @doc_generic  any
 	 * @return   [any]
 	 */
-	public array function getKeys( required array entities, required array keys ) {
+	public array function getKeys(
+		required array entities,
+		required array keys,
+		required any baseEntity
+	) {
 		return unique(
 			arguments.entities.reduce( function( acc, entity ) {
 				var keyValues = [];
 				for ( var key in keys ) {
-					if ( entity.isNullValue( key ) ) {
+					var value = structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( key ) : entity[ key ];
+					if ( entityIsNullValue( baseEntity, key, value ) ) {
 						return acc;
 					}
-					keyValues.append( entity.retrieveAttribute( key ) );
+					keyValues.append( value );
 				}
 				acc.append( keyValues.toList() );
 				return acc;
@@ -428,8 +437,9 @@ component accessors="true" {
 		} );
 		if ( unique( lengths ).len() > 1 ) {
 			throw(
-				type    = "ArrayZipLengthMismatch",
-				message = "The arrays do not have the same length. Lengths: [#serializeJSON( lengths )#]"
+				type         = "ArrayZipLengthMismatch",
+				message      = "The arrays do not have the same length. Lengths: [#serializeJSON( lengths )#]",
+				extendedInfo = serializeJSON( arguments.arrays )
 			);
 		}
 
@@ -464,6 +474,47 @@ component accessors="true" {
 				type    = "KeyLengthMismatch",
 				message = "The number of values passed in [#arguments.actual.len()#] does not match the number expected [#expectedLength#]."
 			);
+		}
+	}
+
+	private boolean function entityHasAttribute(
+		required any entity,
+		required string key,
+		required any baseEntity
+	) {
+		if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+			return arguments.entity.hasAttribute( arguments.key );
+		}
+
+		return structKeyExists( arguments.entity, arguments.key ) ||
+		structKeyExists( arguments.entity, arguments.baseEntity.retrieveAliasForColumn( arguments.key ) );
+	}
+
+	private any function entityRetrieveAttribute(
+		required any entity,
+		required string key,
+		required any baseEntity
+	) {
+		if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+			return entity.retrieveAttribute( key );
+		}
+
+		if ( structKeyExists( arguments.entity, arguments.key ) ) {
+			return arguments.entity[ arguments.key ];
+		}
+
+		return arguments.entity[ arguments.baseEntity.retrieveAliasForColumn( arguments.key ) ];
+	}
+
+	private boolean function entityIsNullValue(
+		required any entity,
+		required string key,
+		required any value
+	) {
+		if ( structKeyExists( entity, "isQuickEntity" ) ) {
+			return entity.isNullValue( key, value )
+		} else {
+			return !structKeyExists( entity, key ) || isNull( entity[ key ] ) || entity[ key ] == arguments.value;
 		}
 	}
 

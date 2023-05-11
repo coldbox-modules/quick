@@ -82,8 +82,8 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	 *
 	 * @return    quick.models.Relationships.PolymorphicHasOneOrMany
 	 */
-	public boolean function addEagerConstraints( required array entities ) {
-		if ( !super.addEagerConstraints( arguments.entities ) ) {
+	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
+		if ( !super.addEagerConstraints( arguments.entities, arguments.baseEntity ) ) {
 			return false;
 		}
 		variables.relationshipBuilder.where( variables.morphType, variables.morphMapping );

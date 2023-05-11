@@ -134,8 +134,12 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return    void
 	 */
-	public boolean function addEagerConstraints( required array entities ) {
-		var allKeys = getKeys( entities, variables.parentKeys );
+	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
+		var allKeys = getKeys(
+			entities,
+			variables.parentKeys,
+			arguments.baseEntity
+		);
 		if ( allKeys.isEmpty() ) {
 			return false;
 		}
@@ -175,7 +179,12 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 */
 	public array function initRelation( required array entities, required string relation ) {
 		return arguments.entities.map( function( entity ) {
-			return arguments.entity.assignRelationship( relation, [] );
+			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.assignRelationship( relation, [] );
+			} else {
+				arguments.entity[ relation ] = [];
+			}
+			return arguments.entity;
 		} );
 	}
 
@@ -199,12 +208,18 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		arguments.entities.each( function( entity ) {
 			var parentDictionaryKey = variables.parentKeys
 				.map( function( parentKey ) {
-					return entity.retrieveAttribute( parentKey );
+					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( parentKey ) : entity[
+						parentKey
+					];
 				} )
 				.toList();
 
 			if ( structKeyExists( dictionary, parentDictionaryKey ) ) {
-				arguments.entity.assignRelationship( relation, dictionary[ parentDictionaryKey ] );
+				if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+					arguments.entity.assignRelationship( relation, dictionary[ parentDictionaryKey ] );
+				} else {
+					arguments.entity[ relation ] = dictionary[ parentDictionaryKey ];
+				}
 			}
 		} );
 		return arguments.entities;
@@ -222,7 +237,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		return arguments.results.reduce( function( dict, result ) {
 			var key = variables.foreignPivotKeys
 				.map( function( foreignPivotKey ) {
-					return result.retrieveAttribute( foreignPivotKey );
+					return structKeyExists( result, "isQuickEntity" ) ? result.retrieveAttribute( foreignPivotKey ) : result[
+						foreignPivotKey
+					];
 				} )
 				.toList();
 			if ( !structKeyExists( arguments.dict, key ) ) {

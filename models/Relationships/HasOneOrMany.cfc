@@ -81,8 +81,12 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return    quick.models.Relationships.HasOneOrMany
 	 */
-	public boolean function addEagerConstraints( required array entities ) {
-		var allKeys = getKeys( entities, variables.localKeys );
+	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
+		var allKeys = getKeys(
+			entities,
+			variables.localKeys,
+			arguments.baseEntity
+		);
 		if ( allKeys.isEmpty() ) {
 			return false;
 		}
@@ -166,11 +170,17 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		arguments.entities.each( function( entity ) {
 			var key = variables.localKeys
 				.map( function( localKey ) {
-					return entity.retrieveAttribute( localKey );
+					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
+						localKey
+					];
 				} )
 				.toList();
 			if ( structKeyExists( dictionary, key ) ) {
-				arguments.entity.assignRelationship( relation, getRelationValue( dictionary, key, type ) );
+				if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+					arguments.entity.assignRelationship( relation, getRelationValue( dictionary, key, type ) );
+				} else {
+					arguments.entity[ relation ] = getRelationValue( dictionary, key, type );
+				}
 			}
 		} );
 		return arguments.entities;
@@ -188,7 +198,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		return arguments.results.reduce( function( dict, result ) {
 			var key = variables.foreignKeys
 				.map( function( foreignKey ) {
-					return result.retrieveAttribute( foreignKey );
+					return entityRetrieveAttribute(
+						result,
+						foreignKey,
+						variables.related
+					);
 				} )
 				.toList();
 			if ( !structKeyExists( arguments.dict, key ) ) {

@@ -105,8 +105,12 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	 *
 	 * @return    quick.models.Relationships.BelongsToThrough
 	 */
-	public boolean function addEagerConstraints( required array entities ) {
-		var allKeys = getKeys( entities, variables.closestToParent.getLocalKeys() );
+	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
+		var allKeys = getKeys(
+			entities,
+			variables.closestToParent.getLocalKeys(),
+			arguments.baseEntity
+		);
 
 		if ( allKeys.isEmpty() ) {
 			return false;
@@ -258,7 +262,12 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	 */
 	public array function initRelation( required array entities, required string relation ) {
 		return arguments.entities.map( function( entity ) {
-			return arguments.entity.assignRelationship( relation, javacast( "null", "" ) );
+			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.assignRelationship( relation, javacast( "null", "" ) );
+			} else {
+				arguments.entity[ relation ] = {};
+			}
+			return arguments.entity;
 		} );
 	}
 

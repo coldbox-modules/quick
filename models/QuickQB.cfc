@@ -532,8 +532,18 @@ component
 				"cfsqltype" : getEntity().attributeHasSqlType( arguments.column ) ? getEntity().retrieveSqlTypeForAttribute(
 					arguments.column
 				) : ( isNull( arguments.value ) ? "CF_SQL_VARCHAR" : getUtils().inferSqlType( arguments.value ) ),
-				"null"  : isNull( arguments.value ) || getEntity().isNullValue( arguments.column, arguments.value ),
-				"nulls" : isNull( arguments.value ) || getEntity().isNullValue( arguments.column, arguments.value )
+				"null" : isNull( arguments.value ) || (
+					getEntity().canConvertToNull( arguments.column ) && getEntity().isNullValue(
+						arguments.column,
+						arguments.value
+					)
+				),
+				"nulls" : isNull( arguments.value ) || (
+					getEntity().canConvertToNull( arguments.column ) && getEntity().isNullValue(
+						arguments.column,
+						arguments.value
+					)
+				)
 			};
 		} else {
 			return {

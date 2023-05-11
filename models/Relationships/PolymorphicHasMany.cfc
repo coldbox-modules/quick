@@ -41,7 +41,12 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 	 */
 	public array function initRelation( required array entities, required string relation ) {
 		return arguments.entities.map( function( entity ) {
-			return arguments.entity.assignRelationship( relation, [] );
+			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.assignRelationship( relation, [] );
+			} else {
+				arguments.entity[ relation ] = [];
+			}
+			return arguments.entity;
 		} );
 	}
 

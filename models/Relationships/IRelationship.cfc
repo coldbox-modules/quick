@@ -15,7 +15,7 @@ interface displayname="IRelationship" {
 	 * @doc_generic  quick.models.BaseEntity
 	 * @return       [quick.models.BaseEntity]
 	 */
-	public array function getEager();
+	public array function getEager( boolean asQuery, boolean withAliases );
 
 	/**
 	 * Gets the first matching record for the relationship.

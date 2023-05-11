@@ -34,6 +34,16 @@ component accessors="true" transientCache="false" {
 	property name="_eagerLoad";
 
 	/**
+	 * A flag marking if this builder should return as a qb result or as a collection of entities.
+	 */
+	property name="_asQuery";
+
+	/**
+	 * A flag marking if this builder should use aliases instead of column names.  Only applies with `_asQuery` being true.
+	 */
+	property name="_withAliases";
+
+	/**
 	 * The WireBox injector.  Used to inject other entities.
 	 */
 	property name="_wirebox" inject="wirebox";
@@ -51,6 +61,8 @@ component accessors="true" transientCache="false" {
 		variables._eagerLoad             = [];
 		variables._globalScopesApplied   = false;
 		variables._asMemento             = false;
+		variables._asQuery               = false;
+		variables._withAliases           = false;
 		variables._asMementoSettings     = {};
 		variables._globalScopeExclusions = [];
 		return this;
@@ -218,7 +230,8 @@ component accessors="true" transientCache="false" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	private array function getEntities() {
-		return variables.qb.get().map( variables.loadEntity );
+		var results = variables.qb.get();
+		return variables._asQuery ? results : results.map( variables.loadEntity );
 	}
 
 	/**
@@ -351,7 +364,7 @@ component accessors="true" transientCache="false" {
 	 * @relationName  A single relation name or array of relation
 	 *                names to eager load.
 	 *
-	 * @return        quick.models.BaseEntity
+	 * @return        QuickBuilder
 	 */
 	public any function with( required any relationName ) {
 		if ( isSimpleValue( arguments.relationName ) && arguments.relationName == "" ) {
@@ -364,7 +377,7 @@ component accessors="true" transientCache="false" {
 			true
 		);
 
-		return getEntity();
+		return this;
 	}
 
 	/**
@@ -372,10 +385,10 @@ component accessors="true" transientCache="false" {
 	 * Returns the retrieved entities eager loaded with the configured
 	 * relationships.
 	 *
-	 * @entities     The retrieved entities to eager load.
+	 * @entities     The retrieved entities or array of structs to eager load.
 	 *
-	 * @doc_generic  quick.models.BaseEntity
-	 * @return       [quick.models.BaseEntity]
+	 * @doc_generic  quick.models.BaseEntity | struct
+	 * @return       [quick.models.BaseEntity] | [struct]
 	 */
 	private array function eagerLoadRelations( required array entities ) {
 		if ( arguments.entities.isEmpty() || variables._eagerLoad.isEmpty() ) {
@@ -385,8 +398,8 @@ component accessors="true" transientCache="false" {
 		// This is a workaround for grammars with a parameter limit.  If the grammar
 		// has a `parameterLimit` public property, it is used to slice up the array
 		// and work it in chunks.
-		if ( structKeyExists( arguments.entities[ 1 ].newQuery().getGrammar(), "parameterLimit" ) ) {
-			var parameterLimit = arguments.entities[ 1 ].newQuery().getGrammar().parameterLimit;
+		if ( structKeyExists( getEntity().newQuery().getGrammar(), "parameterLimit" ) ) {
+			var parameterLimit = getEntity().newQuery().getGrammar().parameterLimit;
 			if ( arguments.entities.len() > parameterLimit ) {
 				for ( var i = 1; i < arguments.entities.len(); i += parameterLimit ) {
 					var length = min( arguments.entities.len() - i + 1, parameterLimit );
@@ -398,7 +411,7 @@ component accessors="true" transientCache="false" {
 		}
 
 		arrayEach( variables._eagerLoad, function( relationName ) {
-			entities = eagerLoadRelation( arguments.relationName, entities );
+			entities = eagerLoadRelation( relationName, entities );
 		} );
 
 		return arguments.entities;
@@ -409,10 +422,10 @@ component accessors="true" transientCache="false" {
 	 * Returns the retrieved entities eager loaded with the given relation.
 	 *
 	 * @relationName  The relationship to eager load.
-	 * @entities      The retrieved entities to eager load the relationship.
+	 * @entities      The retrieved entities or array of structs to eager load the relationship.
 	 *
-	 * @doc_generic   quick.models.BaseEntity
-	 * @return        [quick.models.BaseEntity]
+	 * @doc_generic   quick.models.BaseEntity | struct
+	 * @return        [quick.models.BaseEntity] | [struct]
 	 */
 	private array function eagerLoadRelation( required any relationName, required array entities ) {
 		var callback = function() {
@@ -437,11 +450,11 @@ component accessors="true" transientCache="false" {
 			} );
 		} );
 		callback( relation );
-		var hasMatches = relation.addEagerConstraints( arguments.entities );
+		var hasMatches = relation.addEagerConstraints( arguments.entities, getEntity() );
 		relation.with( listRest( arguments.relationName, "." ) );
 		return relation.match(
 			relation.initRelation( arguments.entities, currentRelationship ),
-			hasMatches ? relation.getEager() : [],
+			hasMatches ? relation.getEager( variables._asQuery, variables._withAliases ) : [],
 			currentRelationship
 		);
 	}
@@ -736,11 +749,10 @@ component accessors="true" transientCache="false" {
 	public any function first() {
 		activateGlobalScopes();
 
-		var attrs = variables.qb.first();
-
-		return structIsEmpty( attrs ) ? javacast( "null", "" ) : handleTransformations(
+		var result = variables.qb.first();
+		return structIsEmpty( result ) ? javacast( "null", "" ) : handleTransformations(
 			// wrap the single entity in an array to eager load, then grab it out again
-			eagerLoadRelations( [ loadEntity( attrs ) ] )[ 1 ]
+			eagerLoadRelations( [ variables._asQuery ? result : loadEntity( result ) ] )[ 1 ]
 		);
 	}
 
@@ -935,8 +947,11 @@ component accessors="true" transientCache="false" {
 	 */
 	public any function paginate( numeric page = 1, numeric maxRows = 25 ) {
 		activateGlobalScopes();
-		var p     = variables.qb.paginate( arguments.page, arguments.maxRows );
-		p.results = handleTransformations( eagerLoadRelations( p.results.map( variables.loadEntity ) ) );
+		var p = variables.qb.paginate( arguments.page, arguments.maxRows );
+		if ( !variables._asQuery ) {
+			p.results = p.results.map( variables.loadEntity );
+		}
+		p.results = handleTransformations( eagerLoadRelations( p.results ) );
 		return p;
 	}
 
@@ -950,8 +965,11 @@ component accessors="true" transientCache="false" {
 	 */
 	public any function simplePaginate( numeric page = 1, numeric maxRows = 25 ) {
 		activateGlobalScopes();
-		var p     = variables.qb.simplePaginate( arguments.page, arguments.maxRows );
-		p.results = handleTransformations( eagerLoadRelations( p.results.map( variables.loadEntity ) ) );
+		var p = variables.qb.simplePaginate( arguments.page, arguments.maxRows );
+		if ( !variables._asQuery ) {
+			p.results = p.results.map( variables.loadEntity );
+		}
+		p.results = handleTransformations( eagerLoadRelations( p.results ) );
 		return p;
 	}
 
@@ -1143,7 +1161,33 @@ component accessors="true" transientCache="false" {
 	 */
 	public any function asMemento() {
 		variables._asMemento         = true;
+		variables._asQuery           = false;
 		variables._asMementoSettings = arguments;
+		return this;
+	}
+
+	/**
+	 * Returns the results as a qb result instead of an array of entities.
+	 *
+	 * @return  quick.models.BaseEntity
+	 */
+	public any function asQuery( boolean withAliases = true ) {
+		variables._asQuery     = true;
+		variables._withAliases = arguments.withAliases;
+		if ( variables._withAliases ) {
+			var qualifiedColumns = getEntity().retrieveQualifiedColumns();
+			qb.setColumns(
+				qb.getColumns()
+					.map( function( column ) {
+						if ( !qualifiedColumns.contains( column ) ) {
+							return column;
+						}
+
+						return column & " AS " & getEntity().retrieveAliasForColumn( listLast( column, "." ) );
+					} )
+			);
+		}
+		variables._asMemento = false;
 		return this;
 	}
 

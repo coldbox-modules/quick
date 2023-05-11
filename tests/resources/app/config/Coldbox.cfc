@@ -48,7 +48,10 @@
 		moduleSettings = {
 			"quick" = {
 				"defaultGrammar" = "MySQLGrammar@qb"
-            }
+            },
+			"mementifier" = {
+				"convertToTimezone" = "UTC"
+			}
 		};
 
 		// custom settings

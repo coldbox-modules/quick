@@ -137,8 +137,8 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return    quick.models.Relationships.BelongsTo
 	 */
-	public boolean function addEagerConstraints( required array entities ) {
-		var allKeys = getEagerEntityKeys( entities );
+	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
+		var allKeys = getEagerEntityKeys( arguments.entities, arguments.baseEntity );
 		if ( allKeys.isEmpty() ) {
 			return false;
 		}
@@ -165,14 +165,14 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @doc_generic  any
 	 * @return       [any]
 	 */
-	public array function getEagerEntityKeys( required array entities ) {
+	public array function getEagerEntityKeys( required array entities, required any baseEntity ) {
 		return arguments.entities
 			.reduce( function( keys, entity ) {
 				var values = variables.foreignKeys
 					.map( function( foreignKey ) {
 						return {
 							"foreignKey" : foreignKey,
-							"value"      : entity.retrieveAttribute( foreignKey )
+							"value"      : entityRetrieveAttribute( entity, foreignKey, baseEntity )
 						};
 					} )
 					.filter( function( map ) {
@@ -184,11 +184,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 							return false;
 						}
 
-						if ( !entity.hasAttribute( map.foreignKey ) ) {
+						if ( !entityHasAttribute( entity, map.foreignKey, baseEntity ) ) {
 							return false;
 						}
 
-						if ( entity.isNullValue( map.foreignKey, map.value ) ) {
+						if ( baseEntity.isNullValue( map.foreignKey, map.value ) ) {
 							return false;
 						}
 
@@ -221,7 +221,11 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 */
 	public array function initRelation( required array entities, required string relation ) {
 		arguments.entities.each( function( entity ) {
-			arguments.entity.assignRelationship( relation, javacast( "null", "" ) );
+			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.assignRelationship( relation, javacast( "null", "" ) );
+			} else {
+				arguments.entity[ relation ] = {};
+			}
 		} );
 		return arguments.entities;
 	}
@@ -245,7 +249,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		var dictionary = arguments.results.reduce( function( dict, result ) {
 			var key = variables.localKeys
 				.map( function( localKey ) {
-					return result.retrieveAttribute( localKey );
+					return structKeyExists( result, "isQuickEntity" ) ? result.retrieveAttribute( localKey ) : result[
+						localKey
+					];
 				} )
 				.toList();
 			arguments.dict[ key ] = arguments.result;
@@ -255,11 +261,15 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		arguments.entities.each( function( entity ) {
 			var foreignKeyValue = variables.foreignKeys
 				.map( function( foreignKey ) {
-					return entity.retrieveAttribute( foreignKey );
+					return entityRetrieveAttribute( entity, foreignKey, variables.parent );
 				} )
 				.toList();
 			if ( structKeyExists( dictionary, foreignKeyValue ) ) {
-				arguments.entity.assignRelationship( relation, dictionary[ foreignKeyValue ] );
+				if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+					arguments.entity.assignRelationship( relation, dictionary[ foreignKeyValue ] );
+				} else {
+					arguments.entity[ relation ] = dictionary[ foreignKeyValue ];
+				}
 			}
 		} );
 

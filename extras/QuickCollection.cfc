@@ -77,7 +77,7 @@ component extends="cfcollection.models.Collection" {
 	 */
 	private void function eagerLoadRelation( required string relationName ) {
 		var relation         = invoke( get( 1 ), arguments.relationName ).resetQuery();
-		var hasMatches       = relation.addEagerConstraints( get() );
+		var hasMatches       = relation.addEagerConstraints( get(), get( 1 ) );
 		variables.collection = relation.match(
 			relation.initRelation( get(), arguments.relationName ),
 			hasMatches ? relation.getEager() : [],

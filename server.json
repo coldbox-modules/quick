@@ -2,9 +2,6 @@
     "app":{
         "cfengine":"adobe@2018"
     },
-    "JVM":{
-        "minHeapSize":"1024"
-    },
     "web":{
         "http":{
             "port":"52482"

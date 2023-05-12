@@ -64,6 +64,33 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user ).toHaveKey( "countryName" );
 				expect( user.countryName ).toBe( "United States" );
 			} );
+
+			it( "subsequent entity calls using withoutGlobalScope do not cache memento keys", function() {
+				var userA = getInstance( "UserWithGlobalScope" )
+					.findOrFail( 1 )
+					.getMemento();
+
+				expect( userA ).toHaveKey( "countryName" );
+				expect( userA ).toHaveKey( "teamName" );
+
+				var userB = getInstance( "UserWithGlobalScope" )
+					.withoutGlobalScope( "withTeamName" )
+					.findOrFail( 1 )
+					.getMemento();
+
+				expect( userB ).toHaveKey( "countryName" );
+				expect( userB ).notToHaveKey( "teamName" );
+			} );
+
+			it( "can exclude all global scopes", function() {
+				var user = getInstance( "UserWithGlobalScope" )
+					.withoutGlobalScope( )
+					.findOrFail( 1 )
+					.getMemento();
+
+				expect( user ).notToHaveKey( "countryName" );
+				expect( user ).notToHaveKey( "teamName" );
+			} );			
 		} );
 	}
 

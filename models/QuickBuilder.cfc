@@ -24,6 +24,11 @@ component accessors="true" transientCache="false" {
 	property name="_globalScopesApplied" default="false";
 
 	/**
+	 * A boolean flag representing if global scopes should not be activated or not.
+	 */
+	property name="_globalScopeExcludeAll" default="false";
+
+	/**
 	 * An array of global scopes to exclude from being applied. Added using the `withoutGlobalScope` method.
 	 */
 	property name="_globalScopeExclusions";
@@ -60,6 +65,7 @@ component accessors="true" transientCache="false" {
 	function init() {
 		variables._eagerLoad             = [];
 		variables._globalScopesApplied   = false;
+		variables._globalScopeExcludeAll = false;
 		variables._asMemento             = false;
 		variables._asQuery               = false;
 		variables._withAliases           = false;
@@ -1041,7 +1047,11 @@ component accessors="true" transientCache="false" {
 	public any function activateGlobalScopes() {
 		if ( !variables._globalScopesApplied ) {
 			variables._applyingGlobalScopes = true;
-			getEntity().applyGlobalScopes( this );
+
+			if ( !variables._globalScopeExcludeAll ) {
+				getEntity().applyGlobalScopes( this );
+			}
+
 			variables._applyingGlobalScopes = false;
 			variables._globalScopesApplied  = true;
 		}
@@ -1051,11 +1061,16 @@ component accessors="true" transientCache="false" {
 	/**
 	 * Allows a query to override one or more global scopes for one execution.
 	 *
-	 * @name    The name of the global scope to override.
+	 * @name    The name of the global scope to override. If ommited, then all global scopes with be excluded
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function withoutGlobalScope( required any name ) {
+	public any function withoutGlobalScope( any name ) {
+		if ( !structKeyExists( arguments, "name" ) ) {
+			variables._globalScopeExcludeAll = true;
+			return this;
+		}
+
 		for ( var n in arrayWrap( arguments.name ) ) {
 			variables._globalScopeExclusions.append( lCase( n ) );
 		}

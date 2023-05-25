@@ -1048,7 +1048,7 @@ component accessors="true" transientCache="false" {
 		if ( !variables._globalScopesApplied ) {
 			variables._applyingGlobalScopes = true;
 
-			if( !variables._globalScopeExcludeAll ){
+			if ( !variables._globalScopeExcludeAll ) {
 				getEntity().applyGlobalScopes( this );
 			}
 
@@ -1066,7 +1066,7 @@ component accessors="true" transientCache="false" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function withoutGlobalScope( any name ) {
-		if( !structKeyExists( arguments, 'name' ) ){
+		if ( !structKeyExists( arguments, "name" ) ) {
 			variables._globalScopeExcludeAll = true;
 			return this;
 		}

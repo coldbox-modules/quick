@@ -66,9 +66,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "subsequent entity calls using withoutGlobalScope do not cache memento keys", function() {
-				var userA = getInstance( "UserWithGlobalScope" )
-					.findOrFail( 1 )
-					.getMemento();
+				var userA = getInstance( "UserWithGlobalScope" ).findOrFail( 1 ).getMemento();
 
 				expect( userA ).toHaveKey( "countryName" );
 				expect( userA ).toHaveKey( "teamName" );
@@ -84,14 +82,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "can exclude all global scopes", function() {
 				var user = getInstance( "UserWithGlobalScope" )
-					.withoutGlobalScope( )
+					.withoutGlobalScope()
 					.findOrFail( 1 )
 					.getMemento();
 
 				expect( user ).notToHaveKey( "countryName" );
 				expect( user ).notToHaveKey( "teamName" );
-			} );			
+			} );		
 		} );
 	}
-
 }

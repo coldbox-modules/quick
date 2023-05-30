@@ -152,6 +152,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return hasMany( "Post", "user_id" ).latest();
 	}
 
+	function postsWithGlobalScope() {
+		return hasMany( "PostWithGlobalScope", "user_id" );
+	}
+
 	function publishedPosts() {
 		return hasMany( "Post", "user_id" ).whereNotNull( "published_date" );
 	}

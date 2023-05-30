@@ -37,24 +37,34 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "applies global scopes to relationships", function() {
 				var user = getInstance( "User" ).find( 1 );
-				var post = user.postsWithGlobalScope().first().getMemento();
+				var post = user
+					.postsWithGlobalScope()
+					.first()
+					.getMemento();
 				expect( post ).toHaveKey( "authorLastName" );
 				expect( len( post.authorLastName ) ).toBeGT( 0 );
-			});
+			} );
 
 			it( "can apply scopes to relationships if they are retrieved as queries", function() {
 				var user = getInstance( "User" ).find( 1 );
-				var post = user.postsWithGlobalScope().withAuthorLastName().retrieveQuery().first();
+				var post = user
+					.postsWithGlobalScope()
+					.withAuthorLastName()
+					.retrieveQuery()
+					.first();
 				expect( post ).toHaveKey( "authorLastName" );
 				expect( len( post.authorLastName ) ).toBeGT( 0 );
-			})
+			} )
 
 			it( "applies global scopes to relationships if they are retrieved as queries", function() {
 				var user = getInstance( "User" ).find( 1 );
-				var post = user.postsWithGlobalScope().retrieveQuery().first();
+				var post = user
+					.postsWithGlobalScope()
+					.retrieveQuery()
+					.first();
 				expect( post ).toHaveKey( "authorLastName" );
 				expect( len( post.authorLastName ) ).toBeGT( 0 );
-			});
+			} );
 
 
 			it( "applies global scopes when calling fresh", function() {

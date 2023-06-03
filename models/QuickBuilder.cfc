@@ -57,6 +57,12 @@ component accessors="true" transientCache="false" {
 	property name="_asMementoSettings";
 
 	/**
+	 * Used to quickly identify QueryBuilder instances
+	 * instead of resorting to `isInstanceOf` which is slow.
+	 */
+	this.isBuilder = true;
+
+	/**
 	 * Used to quickly identify QuickBuilder instances
 	 * instead of resorting to `isInstanceOf` which is slow.
 	 */
@@ -634,7 +640,8 @@ component accessors="true" transientCache="false" {
 			// the entity. Otherwise return whatever came back from the scope.
 			if (
 				isStruct( result ) &&
-				structKeyExists( result, "isBuilder" )
+				structKeyExists( result, "isBuilder" ) &&
+				!structKeyExists( result, "isQuickBuilder" )
 			) {
 				variables.qb = result;
 				return this;
@@ -654,7 +661,8 @@ component accessors="true" transientCache="false" {
 			// the entity. Otherwise return whatever came back from the scope.
 			if (
 				isStruct( result ) &&
-				structKeyExists( result, "isBuilder" )
+				structKeyExists( result, "isBuilder" ) &&
+				!structKeyExists( result, "isQuickBuilder" )
 			) {
 				variables.qb = result;
 				return this;

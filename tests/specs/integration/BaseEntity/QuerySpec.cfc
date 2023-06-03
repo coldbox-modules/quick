@@ -29,6 +29,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getId() ).toBe( 1 );
 				expect( user.getUsername() ).toBe( "elpete" );
 			} );
+
+			it( "can use a QuickBuilder instance anywhere a QueryBuilder instance is accepted", function() {
+				var users = getInstance( "User" )
+					.whereIn( "username", getInstance( "User" ).select( "username" ).where( "type", "admin" ) )
+					.get();
+
+				expect( users ).toHaveLength( 2, "Two users should be returned." );
+				expect( users[ 1 ].getId() ).toBe( 1 );
+				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
+				expect( users[ 2 ].getId() ).toBe( 4 );
+				expect( users[ 2 ].getUsername() ).toBe( "elpete2" );
+			} );
 		} );
 	}
 

@@ -45,6 +45,328 @@ component
 	}
 
 	/**
+	 * Adds a WHERE IN clause to the query using a subselect.  To call this using the public api, pass a closure to `whereIn` as the second argument (`values`).
+	 *
+	 * @column The name of the column with which to constrain the query.
+	 * @callback A closure that will contain the subquery with which to constain this clause.
+	 * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+	 * @negate False for IN, True for NOT IN. Default: false.
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	private QuickQB function whereInSub(
+		column,
+		query,
+		combinator = "and",
+		negate     = false
+	) {
+		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+			arguments.query = arguments.query.getQB();
+		}
+
+		return super.whereInSub( argumentCollection = arguments );
+	}
+
+	/**
+	 * Sets the FROM table of the query using a derived table.
+	 *
+	 * @alias The alias for the derived table
+	 * @input Either a QueryBuilder instance or a closure to define the derived query.
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	public QuickQB function fromSub( required string alias, required any input ) {
+		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+			arguments.input = arguments.input.getQB();
+		}
+
+		return super.fromSub( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds an INNER JOIN from a derived table to another table.
+	 *
+	 * For simple joins, this specifies a column on which to join the two tables.
+	 * For complex joins, a closure can be passed to `first`.
+	 * This allows multiple `on` and `where` conditions to be applied to the join.
+	 *
+	 * @alias The alias for the derived table
+	 * @input Either a QueryBuilder instance or a closure to define the derived query.
+	 * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+	 * @operator The boolean operator for the join clause. Default: "=".
+	 * @second The second column in the join's `on` statement.
+	 * @type The type of the join. Default: "inner".  Passing this as an argument is discouraged for readability.  Use the dedicated methods like `leftJoin` and `rightJoin` where possible.
+	 * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	public QuickQB function joinSub(
+		required string alias,
+		required any input,
+		required any first,
+		string operator = "=",
+		string second,
+		string type   = "inner",
+		boolean where = false
+	) {
+		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+			arguments.input = arguments.input.getQB();
+		}
+
+		return super.joinSub( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds a where clause where the value is a subquery.
+	 *
+	 * @column The name of the column with which to constrain the query.
+	 * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).
+	 * @callback The closure that defines the subquery. A new query will be passed to the closure as the only argument.
+	 * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	private QuickQB function whereSub(
+		column,
+		operator,
+		query,
+		combinator = "and"
+	) {
+		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+			arguments.query = arguments.query.getQB();
+		}
+
+		return super.whereSub( argumentCollection = arguments );
+	}
+
+	/**
+	 * Add an order by clause with a subquery to the query.
+	 *
+	 * @query     The builder instance or closure to define the query.
+	 * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc".
+	 *
+	 * @return    qb.models.Query.QueryBuilder
+	 */
+	public QuickQB function orderBySub( required any query, string direction = "asc" ) {
+		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+			arguments.query = arguments.query.getQB();
+		}
+
+		return super.orderBySub( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds a CROSS JOIN from a derived table to another table.
+	 *
+	 * For simple joins, this joins one table to another in a cross join.
+	 * For complex joins, a closure can be passed to `first`.
+	 * This allows multiple `on` and `where` conditions to be applied to the join.
+	 *
+	 * @alias The alias for the derived table
+	 * @input Either a QueryBuilder instance or a closure to define the derived query.
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	public QuickQB function crossJoinSub( required any alias, required any input ) {
+		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+			arguments.input = arguments.input.getQB();
+		}
+
+		return super.crossJoinSub( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds a WHERE NULL clause with a subselect to the query.
+	 *
+	 * @query The builder instance or closure to apply.
+	 * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+	 * @negate False for NULL, True for NOT NULL. Default: false.
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	public QuickQB function whereNullSub(
+		query,
+		combinator = "and",
+		negate     = false
+	) {
+		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+			arguments.query = arguments.query.getQB();
+		}
+
+		return super.whereNullSub( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds a WHERE BETWEEN clause to the query.
+	 *
+	 * @column The name of the column with which to constrain the query.
+	 * @start The beginning value of the BETWEEN statement.
+	 * @end The end value of the BETWEEN statement.
+	 * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+	 * @negate False for BETWEEN, True for NOT BETWEEN. Default: false.
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	public QueryBuilder function whereBetween(
+		column,
+		start,
+		end,
+		combinator = "and",
+		negate     = false
+	) {
+		if ( !isSimpleValue( arguments.start ) && structKeyExists( arguments.start, "isQuickBuilder" ) ) {
+			arguments.start = arguments.start.getQB();
+		}
+
+		if ( !isSimpleValue( arguments.end ) && structKeyExists( arguments.end, "isQuickBuilder" ) ) {
+			arguments.end = arguments.end.getQB();
+		}
+
+		return super.whereBetween( argumentCollection = arguments );
+	}
+
+	/**
+	 * Add a UNION statement to the SQL.
+	 *
+	 * @input   Either a QueryBuilder instance or a closure to define the derived query.
+	 * @all     Determines if UNION statement should be a "UNION ALL".  Passing this as an argument is discouraged.  Use the dedicated `unionAll` where possible.
+	 *
+	 * @return  qb.models.Query.QueryBuilder
+	 */
+	public QueryBuilder function union( required any input, boolean all = false ) {
+		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+			arguments.input = arguments.input.getQB();
+		}
+
+		return super.union( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds a new COMMON TABLE EXPRESSION (CTE) to the SQL.
+	 *
+	 * @name        The name of the CTE.
+	 * @input       Either a QueryBuilder instance or a closure to define the derived query.
+	 * @columns     An optional array containing the columns to include in the CTE.
+	 * @recursive   Determines if CTE statement should be a recursive CTE.  Passing this as an argument is discouraged.  Use the dedicated `withRecursive` where possible.
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	public QueryBuilder function with(
+		required string name,
+		required any input,
+		array columns     = [],
+		boolean recursive = false
+	) {
+		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+			arguments.input = arguments.input.getQB();
+		}
+
+		return super.with( argumentCollection = arguments );
+	}
+
+	/**
+	 * Inserts data into a table based off of a query.
+	 * This call must come after setting the query's table using `from` or `table`.
+	 *
+	 * @source A callback function or QueryBuilder object to insert records from.
+	 * @columns An array of columns to insert. If no columns are passed, the columns will be derived from the source columns and aliases.
+	 * @options Any options to pass to `queryExecute`. Default: {}.
+	 * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+	 *
+	 * @return query
+	 */
+	public any function insertUsing(
+		required any source,
+		array columns,
+		struct options = {},
+		boolean toSql  = false
+	) {
+		if ( structKeyExists( arguments.source, "isQuickBuilder" ) ) {
+			arguments.source = arguments.source.getQB();
+		}
+
+		return super.insertUsing( argumentCollection = arguments );
+	}
+
+	/**
+	 * Updates a table with a struct of column and value pairs.
+	 * This call must come after setting the query's table using `from` or `table`.
+	 * Any constraining of the update query should be done using the appropriate WHERE statement before calling `update`.
+	 *
+	 * @values A struct of column and value pairs to update.
+	 * @options Any options to pass to `queryExecute`. Default: {}.
+	 * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+	 *
+	 * @return query
+	 */
+	public any function update(
+		struct values  = {},
+		struct options = {},
+		boolean toSql  = false
+	) {
+		for ( var key in arguments.values ) {
+			if ( structKeyExists( arguments.values[ key ], "isQuickBuilder" ) ) {
+				arguments.values[ key ] = arguments.values[ key ].getQb();
+			}
+		}
+
+		return super.update( argumentCollection = arguments );
+	}
+
+	public any function upsert(
+		required any values,
+		required any target,
+		any update,
+		any source,
+		boolean deleteUnmatched = false,
+		struct options          = {},
+		boolean toSql           = false
+	) {
+		if ( !isNull( arguments.source ) && structKeyExists( arguments.source, "isQuickBuilder" ) ) {
+			arguments.source = arguments.source.getQB();
+		}
+
+		return super.upsert( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds a sub-select to the query.
+	 *
+	 * @alias The alias for the sub-select
+	 * @callback The callback or query to configure the sub-select.
+	 *
+	 * @returns qb.models.Query.QueryBuilder
+	 */
+	public QueryBuilder function subSelect( required string alias, required any query ) {
+		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+			arguments.query = arguments.query.getQB();
+		}
+
+		return super.subSelect( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds a WHERE EXISTS clause to the query.
+	 *
+	 * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
+	 * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+	 * @negate False for EXISTS, True for NOT EXISTS. Default: false.
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	public QueryBuilder function whereExists(
+		query,
+		combinator = "and",
+		negate     = false
+	) {
+		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+			arguments.query = arguments.query.getQB();
+		}
+
+		return super.whereExists( argumentCollection = arguments );
+	}
+
+	/**
 	 * Checks for the existence of a relationship when executing the query.
 	 *
 	 * @relationshipName  The relationship to check.  Can also be a dot-delimited list of nested relationships.

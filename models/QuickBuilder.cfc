@@ -1091,7 +1091,7 @@ component accessors="true" transientCache="false" {
 	 * @returns  quick.models.BaseEntity
 	 */
 	public any function resetQuery() {
-		variables.qb = newQuery();
+		variables.qb = newQuickQB();
 		return this;
 	}
 
@@ -1116,6 +1116,15 @@ component accessors="true" transientCache="false" {
 	 * @return  quick.models.QuickBuilder
 	 */
 	public any function newQuery() {
+		return variables._wirebox.getInstance( "QuickBuilder@quick" ).setEntity( getEntity() );
+	}
+
+	/**
+	 * Configures a new query builder and returns it.
+	 *
+	 * @return  quick.models.QuickQB
+	 */
+	public any function newQuickQB() {
 		return variables._wirebox
 			.getInstance( "QuickQB@quick" )
 			.setQuickBuilder( this )
@@ -1212,6 +1221,21 @@ component accessors="true" transientCache="false" {
 		}
 		variables._asMemento = false;
 		return this;
+	}
+
+	public QuickBuilder function clone() {
+		var newBuilder = newQuery();
+		newBuilder.setQB( variables.qb.clone() );
+		newBuilder.set_applyingGlobalScopes( this.get_applyingGlobalScopes() );
+		newBuilder.set_globalScopesApplied( this.get_globalScopesApplied() );
+		newBuilder.set_globalScopeExcludeAll( this.get_globalScopeExcludeAll() );
+		newBuilder.set_globalScopeExclusions( this.get_globalScopeExclusions() );
+		newBuilder.set_eagerLoad( this.get_eagerLoad() );
+		newBuilder.set_asQuery( this.get_asQuery() );
+		newBuilder.set_withAliases( this.get_withAliases() );
+		newBuilder.set_asMemento( this.get_asMemento() );
+		newBuilder.set_asMementoSettings( this.get_asMementoSettings() );
+		return newBuilder;
 	}
 
 	/**

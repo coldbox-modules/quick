@@ -25,6 +25,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var clonedUser = user.clone( markLoaded = true );
 				expect( clonedUser.isLoaded() ).toBeTrue( "The cloned user instance should be marked as loaded, but was not." );
 			} );
+
+			it( "can clone a QuickBuilder instance", function() {
+				var userBuilder  = getInstance( "User" ).orderBy( "id" );
+				var userBuilder2 = userBuilder.clone();
+				userBuilder2.clearOrders();
+				expect( userBuilder.getOrders() ).toBe( [
+					{
+						"column"    : "users.id",
+						"direction" : "asc"
+					}
+				] );
+				expect( userBuilder2.getOrders() ).toBe( [] );
+			} );
 		} );
 	}
 

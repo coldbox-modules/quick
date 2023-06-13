@@ -92,6 +92,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				var newPhoneNumber = getInstance( "PhoneNumber" );
 				newPhoneNumber.setNumber( "+18018644200" );
+				newPhoneNumber.setActive( true );
 				newPhoneNumber.save();
 
 				expect( request ).toHaveKey( "saveSpecPreQBExecute" );
@@ -99,11 +100,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request.saveSpecPreQBExecute ).toHaveLength( 1 );
 				expect( request.saveSpecPreQBExecute[ 1 ] ).toHaveKey( "bindings" );
 				expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toBeArray();
-				expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toHaveLength( 1 );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings ).toHaveLength( 2 );
 				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "value" );
-				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].value ).toBe( "+18018644200" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].value ).toBe( 1 );
 				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ] ).toHaveKey( "cfsqltype" );
-				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 1 ].cfsqltype ).toBe( "CF_SQL_BIT" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 2 ] ).toHaveKey( "value" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 2 ].value ).toBe( "+18018644200" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 2 ] ).toHaveKey( "cfsqltype" );
+				expect( request.saveSpecPreQBExecute[ 1 ].bindings[ 2 ].cfsqltype ).toBe( "CF_SQL_VARCHAR" );
 			} );
 
 			it( "uses the sqltype attribute when calling updateOrCreate and updating", function() {

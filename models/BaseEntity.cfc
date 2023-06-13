@@ -3123,6 +3123,10 @@ component accessors="true" {
 			return arguments.value;
 		}
 
+		if ( isNullValue( arguments.key, arguments.value ) ) {
+			return arguments.value;
+		}
+
 		var castMapping = variables._casts[ arguments.key ];
 		if ( !variables._casterCache.keyExists( arguments.key ) ) {
 			variables._casterCache[ arguments.key ] = variables._wirebox.getInstance( dsl = castMapping );
@@ -3153,6 +3157,10 @@ component accessors="true" {
 		}
 
 		if ( variables._saving ) {
+			return arguments.value;
+		}
+
+		if ( isNullValue( arguments.key, arguments.value ) ) {
 			return arguments.value;
 		}
 

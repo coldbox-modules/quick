@@ -236,6 +236,64 @@ component accessors="true" transientCache="false" {
 	}
 
 	/**
+	 * Adds a sum of a related entity attribute as a subselect attribute.
+	 * Relationships can be constrained at runtime by passing a
+	 * struct where the key is the relationship name and the value
+	 * is a function to constrain the query.
+	 *
+	 * @relation  A single relation name or array of relation names to load counts.
+	 *
+	 * @return    quick.models.BaseEntity
+	 */
+	public any function withSum( required any relationMapping ) {
+		for ( var r in arrayWrap( arguments.relationMapping ) ) {
+			var relationName = r;
+			var callback     = function() {
+			};
+
+			if ( isStruct( relationName ) ) {
+				for ( var key in relationName ) {
+					callback     = relationName[ key ];
+					relationName = key;
+					break;
+				}
+			}
+
+			if ( listLen( relationName, "." ) > 2 ) {
+				throw(
+					type    = "QuickInvalidRelationshipSumMapping",
+					message = "`withSum` only supports a single relationship level.  Your string should match the pattern `relationName.attributeName`."
+				);
+			}
+			var attributeName = listLast( relationName, "." );
+			relationName      = listFirst( relationName, "." );
+
+			var subselectName = getEntity().get_str().camel( "Total " & relationName );
+			if ( findNoCase( " as ", attributeName ) ) {
+				var parts     = attributeName.split( "\s(?:A|a)(?:S|s)\s" );
+				attributeName = parts[ 1 ];
+				subselectName = parts[ 2 ];
+			}
+
+			addSubselect(
+				subselectName,
+				getEntity().ignoreLoadedGuard( function() {
+					return getEntity().withoutRelationshipConstraints( function() {
+						var related = invoke( getEntity(), relationName );
+						return related
+							.addCompareConstraints()
+							.when( true, callback )
+							.clearOrders()
+							.reselectRaw( "COALESCE(SUM(#related.qualifyColumn( attributeName )#), 0)" );
+					} );
+				} )
+			);
+		}
+
+		return this;
+	}
+
+	/**
 	 * Executes the configured query and returns the entities in an array.
 	 *
 	 * @doc_generic  quick.models.BaseEntity

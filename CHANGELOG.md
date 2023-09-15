@@ -1,3 +1,12 @@
+# v7.2.0
+## 15 Sep 2023 — 20:07:44 UTC
+
+### feat
+
++ __QuickQB:__ Allow defaultOptions for underlying QuickQB
+ ([a1e282f](https://github.com/coldbox-modules/quick/commit/a1e282fb60d0c625ea08e46d578af3950868c0ca))
+
+
 # v4.1.5
 ## 02 Nov 2020 — 12:24:13 UTC
 

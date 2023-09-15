@@ -9,6 +9,7 @@ component {
 	function configure() {
 		settings = {
 			"defaultGrammar"        : "AutoDiscover@qb",
+			"defaultQueryOptions"   : {},
 			"preventDuplicateJoins" : true,
 			"metadataCache"         : {
 				"name"       : "quickMeta",
@@ -49,6 +50,7 @@ component {
 			.to( "#moduleMapping#.models.QuickQB" )
 			.initArg( name = "grammar", dsl = settings.defaultGrammar )
 			.initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
+			.initArg( name = "defaultOptions", value = settings.defaultQueryOptions )
 			.initArg( name = "utils", dsl = "QueryUtils@qb" )
 			.initArg( name = "returnFormat", value = "array" );
 

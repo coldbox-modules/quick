@@ -347,6 +347,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( product.skus().toSQL() ).toBe( "SELECT `product_skus`.`createdDate`, `product_skus`.`deletedDate`, `product_skus`.`designation`, `product_skus`.`id`, `product_skus`.`modifiedDate`, `product_skus`.`productId`, `apparel_skus`.`color`, `apparel_skus`.`cost`, `apparel_skus`.`size1`, `apparel_skus`.`size1Description`, `apparel_skus`.`size1Index` FROM `product_skus` LEFT OUTER JOIN `apparel_skus` ON `product_skus`.`id` = `apparel_skus`.`id` WHERE (`product_skus`.`productId` = ? AND `product_skus`.`productId` IS NOT NULL)" );
 				} );
 			} );
+
+			it( "Will maintain virtual attributes in the child class when fetching results from the parent class", function() {
+				var comment = getInstance( "Comment" )
+					.addUpperBody()
+					.where( "designation", "internal" )
+					.get()[1]
+
+				expect( comment.hasAttribute( "upperBody" ) ).toBeTrue(
+					"Child class should have a virtual attribute 'upperBody'."
+				);
+			} );
+
 		} );
 
 		describe( "Single Table Inheritence Class Spec", function() {

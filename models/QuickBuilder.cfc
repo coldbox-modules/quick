@@ -1311,6 +1311,11 @@ component accessors="true" transientCache="false" {
 				].mapping
 			);
 
+			//add any virtual attributes present in the parent entity to child entity
+			getEntity().get_virtualAttributes().each( function( item ) {
+				childClass.appendVirtualAttribute( item );
+			} );
+
 			getEntity()
 				.keyNames()
 				.each( function( key, i ) {

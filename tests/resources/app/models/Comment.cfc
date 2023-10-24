@@ -28,4 +28,10 @@ component
         return hasManyThrough( [ "commentable", "tags" ] );
     }
 
+    // chose this sql function as it present in both mysql and sql server
+    function scopeAddUpperBody(qb){
+        qb.selectRaw( "UPPER(body) as upperBody" );
+        appendVirtualAttribute( "upperBody" );        
+    }
+
 }

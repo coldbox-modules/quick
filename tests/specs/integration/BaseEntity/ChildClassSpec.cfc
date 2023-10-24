@@ -330,6 +330,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( comment.isNullAttribute( "reason" ) ).toBeFalse( "The reason field should not be null." );
 				} );
 			} );
+
+
+			it( "Will maintain virtual attributes in the child class when fetching results from the parent class", function() {
+				var comment = getInstance( "Comment" )
+					.addUpperBody()
+					.where( "designation", "internal" )
+					.get()[1]
+
+				expect( comment.hasAttribute( "upperBody" ) ).toBeTrue(
+					"Child class should have a virtual attribute 'upperBody'."
+				);
+			} );
+
 		} );
 
 		describe( "Single Table Inheritence Class Spec", function() {

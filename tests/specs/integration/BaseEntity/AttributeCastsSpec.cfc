@@ -110,6 +110,20 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var product = getInstance( "BaseProduct" ).firstOrFail();
 				expect( product.getMetadata() ).toBeStruct();
 			} );
+
+			it( "can maintain casts when loading a discriminated child through the parent", () => {
+				var comment = getInstance( "Comment" )
+					.where('designation', 'internal')
+					.first();
+
+				expect( comment.getSentimentAnalysis() ).notToBeNull();
+				expect( comment.getSentimentAnalysis() ).toBeStruct();
+				expect( comment.getSentimentAnalysis() ).toHaveKey( "analyzed" );
+				expect( comment.getSentimentAnalysis() ).toHaveKey( "magnitude" );
+				expect( comment.getSentimentAnalysis() ).toHaveKey( "score" );
+
+			} );
+
 		} );
 	}
 

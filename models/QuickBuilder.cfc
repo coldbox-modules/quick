@@ -1233,13 +1233,11 @@ component accessors="true" transientCache="false" {
 				childClass.appendVirtualAttribute( item );
 			} );
 
-			getEntity()
-				.keyNames()
-				.each( function( key, i ) {
-					data[ childClass.keyNames()[ i ] ] = data[ key ];
-				} );
+			return childClass				
+				.assignAttributesData( arguments.data )
+				.assignOriginalAttributes( arguments.data )
+				.markLoaded();
 
-			return childClass.hydrate( arguments.data, true );
 		} else {
 			return getEntity()
 				.newEntity()

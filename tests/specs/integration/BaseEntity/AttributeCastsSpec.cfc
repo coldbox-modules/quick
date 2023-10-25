@@ -84,6 +84,20 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					pn.update( { "active" : false } );
 				} ).notToThrow( message = "PhoneNumber should be able to be saved with a `null` [confirmed] value" );
 			} );
+
+			it( "can maintain casts when loading a discriminated child through the parent", () => {
+				var comment = getInstance( "Comment" )
+					.where('designation', 'internal')
+					.first();
+
+				expect( comment.getSentimentAnalysis() ).notToBeNull();
+				expect( comment.getSentimentAnalysis() ).toBeStruct();
+				expect( comment.getSentimentAnalysis() ).toHaveKey( "analyzed" );
+				expect( comment.getSentimentAnalysis() ).toHaveKey( "magnitude" );
+				expect( comment.getSentimentAnalysis() ).toHaveKey( "score" );
+
+			} );
+
 		} );
 	}
 

@@ -98,6 +98,21 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			} );
 
+			it( "will recast after saving entity", function() {
+				var pn = getInstance( "PhoneNumber" ).find(1);
+				pn.setNumber( "111-111-1111" );
+				pn.setActive( "0" );
+
+				expect( pn.getActive() ).toBe( "0" );
+				expect( pn.getActive() ).toBeNumeric();
+ 
+				pn.save();
+
+				expect( pn.getActive() ).toBe( false ); 
+				expect( pn.getActive() ).toBeBoolean();
+
+			} );
+
 		} );
 	}
 

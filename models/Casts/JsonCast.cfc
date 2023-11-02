@@ -15,19 +15,16 @@ component singleton {
 		any value
 	) {
 
-		if( !isJSON(arguments.value) ){
-			return arguments.value;
-		}
-
 		if ( isNull( arguments.value ) ) {
 			return javacast( "null", "" );
 		}
 
-		if ( arguments.value == "" ) {
-			return "";
+		if( isJSON( arguments.value ) ){
+			return deserializeJSON( arguments.value );
 		}
 
-		return deserializeJSON( arguments.value );
+		return arguments.value;
+
 	}
 
 	/**

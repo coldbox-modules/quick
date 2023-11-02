@@ -14,6 +14,11 @@ component singleton {
 		required string key,
 		any value
 	) {
+
+		if( isStruct( arguments.value ) ){
+			return arguments.value
+		}
+
 		if ( isNull( arguments.value ) ) {
 			return javacast( "null", "" );
 		}

@@ -15,8 +15,8 @@ component singleton {
 		any value
 	) {
 
-		if( isStruct( arguments.value ) ){
-			return arguments.value
+		if( !isJSON(arguments.value) ){
+			return arguments.value;
 		}
 
 		if ( isNull( arguments.value ) ) {

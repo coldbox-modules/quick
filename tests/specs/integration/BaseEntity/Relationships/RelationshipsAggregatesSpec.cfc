@@ -200,6 +200,41 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					);
 					expect( posts[ 4 ].getcomments_count() ).toBe( 1 );
 				} );
+
+				// https://github.com/coldbox-modules/quick/issues/115
+				it( "can add a count for a belongsToMany relationship", function() {
+					var posts = getInstance( "Post" )
+						.withCount( "tags" )
+						.orderBy( "createdDate" )
+						.get();
+
+					expect( posts ).toBeArray();
+					expect( posts ).toHaveLength( 4 );
+
+					expect( posts[ 1 ].getPost_Pk() ).toBe( 1245 );
+					expect( posts[ 1 ].hasAttribute( "tagsCount" ) ).toBeTrue(
+						"Post #posts[ 1 ].getPost_Pk()# should have an attribute named `tagsCount`."
+					);
+					expect( posts[ 1 ].getTagsCount() ).toBe( 2 );
+
+					expect( posts[ 2 ].getPost_Pk() ).toBe( 523526 );
+					expect( posts[ 2 ].hasAttribute( "tagsCount" ) ).toBeTrue(
+						"Post #posts[ 2 ].getPost_Pk()# should have an attribute named `tagsCount`."
+					);
+					expect( posts[ 2 ].getTagsCount() ).toBe( 2 );
+
+					expect( posts[ 3 ].getPost_Pk() ).toBe( 7777 );
+					expect( posts[ 3 ].hasAttribute( "tagsCount" ) ).toBeTrue(
+						"Post #posts[ 3 ].getPost_Pk()# should have an attribute named `tagsCount`."
+					);
+					expect( posts[ 3 ].getTagsCount() ).toBe( 0 );
+
+					expect( posts[ 4 ].getPost_Pk() ).toBe( 321 );
+					expect( posts[ 4 ].hasAttribute( "tagsCount" ) ).toBeTrue(
+						"Post #posts[ 4 ].getPost_Pk()# should have an attribute named `tagsCount`."
+					);
+					expect( posts[ 4 ].getTagsCount() ).toBe( 0 );
+				} );
 			} );
 
 			describe( "sum", function() {

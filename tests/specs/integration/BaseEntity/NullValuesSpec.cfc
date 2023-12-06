@@ -63,6 +63,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					.save();
 				expect( getInstance( "Song" ).whereNull( "title" ).count() ).toBe( 1 );
 			} );
+
+			// https://github.com/coldbox-modules/quick/issues/157
+			it( "can check for null values on newly created entities", () => {
+				var newUser = getInstance( "User" ).create( {
+					"username"  : "newuser",
+					"firstName" : "New",
+					"lastName"  : "User"
+				} );
+				expect( newUser.isNullAttribute( "email" ) ).toBeTrue();
+				expect( newUser.isNullValue( "email", "" ) ).toBeTrue();
+			} );
 		} );
 	}
 

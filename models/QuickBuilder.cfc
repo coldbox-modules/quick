@@ -133,7 +133,7 @@ component accessors="true" transientCache="false" {
 		var subselectQuery = arguments.subselect;
 		if ( isClosure( subselectQuery ) || isCustomFunction( subselectQuery ) ) {
 			subselectQuery = variables.qb.newQuery();
-			subselectQuery = arguments.subselect( subselectQuery );
+			arguments.subselect( subselectQuery );
 		} else if ( isSimpleValue( subselectQuery ) && listLen( subselectQuery, "." ) > 1 ) {
 			var column = subselectQuery;
 			var q      = javacast( "null", "" );

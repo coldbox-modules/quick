@@ -116,6 +116,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					"Only one query should have been executed. #arrayLen( variables.queries )# were instead."
 				);
 			} );
+
+			// https://github.com/coldbox-modules/quick/issues/104
+			it( "can add a subselect using a query builder instance", () => {
+				var elpete = getInstance( "User" )
+					.addSubselect( "latestPostId", ( qb ) => {
+						qb.from( "my_posts" )
+							.select( "post_pk" )
+							.whereColumn( "my_posts.user_id", "=", "users.id" )
+							.orderByRaw( "COALESCE(published_date, created_date)" );
+					} )
+					.findOrFail( 1 );
+				expect( elpete.getLatestPostId() ).toBe( 1245 );
+			} );
 		} );
 	}
 

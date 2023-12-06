@@ -33,8 +33,8 @@
         "mementifier":"^3.0.0"
     },
     "devDependencies":{
-        "coldbox":"be",
-        "testbox":"^4.0.0",
+        "coldbox":"stable",
+        "testbox":"stable",
         "cfcollection":"^3.6.4",
         "cfmigrations":"^4.0.0"
     },

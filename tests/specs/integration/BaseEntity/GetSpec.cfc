@@ -262,6 +262,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( existingUser.getFirstName() ).notToBe( "Doesnt" );
 					expect( existingUser.getLastName() ).notToBe( "Exist" );
 				} );
+
+				// https://github.com/coldbox-modules/quick/issues/107
+				it( "ensures that you can retrieve posts by aliases or columns", function() {
+					var existingPostByAlias = getInstance( "PostAlt" ).firstOrNew( { "id" : 1245 } );
+					expect( existingPostByAlias.isLoaded() ).toBeTrue( "Post 1245 should have been loaded from the database" );
+					expect( existingPostByAlias.getId() ).toBe( 1245 );
+
+					var existingPostByColumn = getInstance( "PostAlt" ).firstOrNew( { "post_pk" : 1245 } );
+					expect( existingPostByColumn.isLoaded() ).toBeTrue( "Post 1245 should have been loaded from the database" );
+					expect( existingPostByColumn.getId() ).toBe( 1245 );
+				} );
 			} );
 
 			describe( "firstOrCreate", function() {

@@ -32,6 +32,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					getInstance( "User" ).where( "username", "johndoe" ).firstOrFail();
 				} ).toThrow( type = "EntityNotFound" );
 			} );
+
+			// https://github.com/coldbox-modules/quick/issues/124
+			it( "can deleteAll off of a hasMany relationship", () => {
+				var elpete = getInstance( "User" ).findOrFail( 1 );
+				elpete.posts().deleteAll();
+				elpete.purchases().deleteAll();
+			} );
 		} );
 	}
 

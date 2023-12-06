@@ -504,8 +504,9 @@ component accessors="true" {
 		boolean setToNull = false,
 		boolean force     = false
 	) {
+		var alias  = retrieveAliasForColumn( arguments.name );
+		var column = retrieveColumnForAlias( arguments.name );
 		if ( arguments.force ) {
-			var alias = retrieveAliasForColumn( arguments.name );
 			if ( !variables._attributes.keyExists( alias ) ) {
 				var clearedAttr                              = paramAttribute( { "name" : arguments.name } );
 				variables._attributes[ clearedAttr.name ]    = clearedAttr;
@@ -515,11 +516,11 @@ component accessors="true" {
 			}
 		}
 		if ( arguments.setToNull ) {
-			variables._data[ retrieveColumnForAlias( arguments.name ) ] = javacast( "null", "" );
-			variables[ retrieveAliasForColumn( arguments.name ) ]       = javacast( "null", "" );
+			variables._data[ column ] = javacast( "null", "" );
+			variables[ alias ]        = javacast( "null", "" );
 		} else {
-			variables._data.delete( retrieveColumnForAlias( arguments.name ) );
-			structDelete( variables, retrieveAliasForColumn( arguments.name ) );
+			variables._data[ column ] = variables._nullValues[ alias ];
+			variables[ alias ]        = variables._nullValues[ alias ];
 		}
 		return this;
 	}

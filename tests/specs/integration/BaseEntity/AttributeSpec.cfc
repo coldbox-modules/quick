@@ -194,6 +194,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					"favoritePost_id" : "1245"
 				} );
 			} );
+
+			// https://github.com/coldbox-modules/quick/issues/127
+			it( "can clear an attribute", () => {
+				var elpete = getInstance( "User" ).findOrFail( 1 );
+				expect( elpete.isNullValue( "password" ) ).toBeFalse();
+				elpete.clearAttribute( "password" );
+				expect( elpete.isNullValue( "password" ) ).toBeTrue();
+				expect( elpete.getPassword() ).toBe( "" );
+			} );
 		} );
 	}
 

@@ -1086,6 +1086,7 @@ component accessors="true" {
 				"#parentDefinition.joinColumn#" : parent.keyValues()[ 1 ]
 			} );
 		}
+		var oldData = duplicate(variables._data);
 		guardNoAttributes();
 		guardReadOnly();
 		mergeAttributesFromCastCache();
@@ -1093,7 +1094,7 @@ component accessors="true" {
 		variables._saving = true;
 		var builder       = newQuery();
 		if ( variables._loaded ) {
-			fireEvent( "preUpdate", { entity : this } );
+			fireEvent( "preUpdate", { entity : this, oldData : oldData } );
 			builder
 				.where( function( q ) {
 					arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {

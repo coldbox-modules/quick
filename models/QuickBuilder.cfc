@@ -1236,13 +1236,16 @@ component accessors="true" transientCache="false" {
 				].mapping
 			);
 
-			getEntity()
-				.keyNames()
-				.each( function( key, i ) {
-					data[ childClass.keyNames()[ i ] ] = data[ key ];
-				} );
+			//add any virtual attributes present in the parent entity to child entity
+			getEntity().get_virtualAttributes().each( function( item ) {
+				childClass.appendVirtualAttribute( item );
+			} );
 
-			return childClass.hydrate( arguments.data, true );
+			return childClass				
+				.assignAttributesData( arguments.data )
+				.assignOriginalAttributes( arguments.data )
+				.markLoaded();
+
 		} else {
 			return getEntity()
 				.newEntity()

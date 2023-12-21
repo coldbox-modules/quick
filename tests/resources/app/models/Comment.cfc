@@ -11,10 +11,12 @@ component
     property name="userId" column="user_id";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
+    property name="sentimentAnalysis" casts="JsonCast@quick";
 
     variables._discriminators = [
         "InternalComment"
     ];
+
 
     function commentable() {
         return polymorphicBelongsTo( "commentable" );
@@ -26,6 +28,12 @@ component
 
     function tags() {
         return hasManyThrough( [ "commentable", "tags" ] );
+    }
+
+    // chose this sql function as it present in both mysql and sql server
+    function scopeAddUpperBody(qb){
+        qb.selectRaw( "UPPER(body) as upperBody" );
+        appendVirtualAttribute( "upperBody" );        
     }
 
 }

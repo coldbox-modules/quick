@@ -173,6 +173,13 @@ component accessors="true" {
 	 */
 	property name="_withoutFiringEvents" persistent="false";
 
+
+	/**
+	 * An array of virtual attribute key names that have been add to this entity
+	 */
+	property name="_virtualAttributes" persistent="false"; 
+
+
 	/**
 	 * A boolean flag indicating that the entity has been loaded from the database.
 	 */
@@ -242,6 +249,7 @@ component accessors="true" {
 		param variables._queryOptions             = {};
 		param variables._attributes               = {};
 		param variables._columns                  = {};
+		param variables._virtualAttributes        = [];
 		variables._saving                         = false;
 		return this;
 	}
@@ -1145,7 +1153,11 @@ component accessors="true" {
 		fireEvent( "postSave", { entity : this } );
 
 		// re-cast
-		populateAttributes( variables._castCache );
+		for ( var key in variables._castCache) {
+			var castedValue = castValueForGetter( key, variables._castCache[ key ], true );
+			variables._data[ retrieveColumnForAlias( key ) ] = castedValue;
+			variables[ retrieveAliasForColumn( key ) ] = castedValue;
+		}
 
 		return this;
 	}
@@ -2618,6 +2630,7 @@ component accessors="true" {
 			variables._columns[ attr.column ]            = attr;
 			variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 			variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
+			variables._virtualAttributes.append( arguments.name );
 		}
 		return this;
 	}
@@ -3113,10 +3126,10 @@ component accessors="true" {
 	 *
 	 * @return  any
 	 */
-	private any function castValueForGetter( required string key, any value ) {
+	private any function castValueForGetter( required string key, any value, boolean forceCast = false ) {
 		arguments.key = retrieveAliasForColumn( arguments.key );
 
-		if ( structKeyExists( variables._castCache, arguments.key ) ) {
+		if ( structKeyExists( variables._castCache, arguments.key )  AND !arguments.forceCast ) {
 			return variables._castCache[ arguments.key ];
 		}
 

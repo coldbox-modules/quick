@@ -197,7 +197,8 @@ component accessors="true" transientCache="false" {
 	 *
 	 * @return    quick.models.BaseEntity
 	 */
-	public any function withCount( required any relation ) {
+	public any function withCount( required any relation, boolean asBuilder = false ) {
+		var builders = [];
 		for ( var r in arrayWrap( arguments.relation ) ) {
 			var relationName = r;
 			var callback     = function() {
@@ -218,21 +219,24 @@ component accessors="true" transientCache="false" {
 				subselectName = parts[ 2 ];
 			}
 
-			addSubselect(
-				subselectName,
-				getEntity().ignoreLoadedGuard( function() {
-					return getEntity().withoutRelationshipConstraints( function() {
-						return invoke( getEntity(), relationName )
-							.addCompareConstraints()
-							.when( true, callback )
-							.clearOrders()
-							.reselectRaw( "COUNT(*)" );
-					} );
-				} )
-			);
+			var countBuilder = getEntity().ignoreLoadedGuard( function() {
+				return getEntity().withoutRelationshipConstraints( function() {
+					return invoke( getEntity(), relationName )
+						.addCompareConstraints()
+						.when( true, callback )
+						.clearOrders()
+						.reselectRaw( "COUNT(*)" );
+				} );
+			} );
+
+			if ( arguments.asBuilder ) {
+				builders.append( countBuilder );
+			} else {
+				addSubselect( subselectName, countBuilder );
+			}
 		}
 
-		return this;
+		return arguments.asBuilder ? builders : this;
 	}
 
 	/**
@@ -245,7 +249,8 @@ component accessors="true" transientCache="false" {
 	 *
 	 * @return    quick.models.BaseEntity
 	 */
-	public any function withSum( required any relationMapping ) {
+	public any function withSum( required any relationMapping, boolean asBuilder = false ) {
+		var builders = [];
 		for ( var r in arrayWrap( arguments.relationMapping ) ) {
 			var relationName = r;
 			var callback     = function() {
@@ -275,22 +280,25 @@ component accessors="true" transientCache="false" {
 				subselectName = parts[ 2 ];
 			}
 
-			addSubselect(
-				subselectName,
-				getEntity().ignoreLoadedGuard( function() {
-					return getEntity().withoutRelationshipConstraints( function() {
-						var related = invoke( getEntity(), relationName );
-						return related
-							.addCompareConstraints()
-							.when( true, callback )
-							.clearOrders()
-							.reselectRaw( "COALESCE(SUM(#related.qualifyColumn( attributeName )#), 0)" );
-					} );
-				} )
-			);
+			var sumBuilder = getEntity().ignoreLoadedGuard( function() {
+				return getEntity().withoutRelationshipConstraints( function() {
+					var related = invoke( getEntity(), relationName );
+					return related
+						.addCompareConstraints()
+						.when( true, callback )
+						.clearOrders()
+						.reselectRaw( "COALESCE(SUM(#related.qualifyColumn( attributeName )#), 0)" );
+				} );
+			} );
+
+			if ( arguments.asBuilder ) {
+				builders.append( sumBuilder );
+			} else {
+				addSubselect( subselectName, sumBuilder );
+			}
 		}
 
-		return this;
+		return arguments.asBuilder ? builders : this;
 	}
 
 	/**

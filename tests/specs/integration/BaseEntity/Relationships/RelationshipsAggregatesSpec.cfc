@@ -235,6 +235,23 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					);
 					expect( posts[ 4 ].getTagsCount() ).toBe( 0 );
 				} );
+
+				it( "can return the QuickBuilder instance generated for the count", function() {
+					getInstance( "InternalComment" )
+						.get()
+						.each( function( comment ) {
+							comment.delete();
+						} );
+
+					var commentsCountBuilder = getInstance( "Post" ).withCount(
+						relation  = "comments",
+						asBuilder = true
+					);
+					expect( commentsCountBuilder ).toBeArray();
+					expect( commentsCountBuilder ).toHaveLength( 1 );
+					expect( commentsCountBuilder[ 1 ] ).toBeInstanceOf( "QuickBuilder" );
+					expect( commentsCountBuilder[ 1 ].toSQL() ).toBe( "SELECT COUNT(*) FROM `comments` LEFT OUTER JOIN `internalComments` ON `comments`.`id` = `internalComments`.`FK_comment` WHERE (`my_posts`.`post_pk` = `comments`.`commentable_id`) AND `comments`.`commentable_type` = ?" );
+				} );
 			} );
 
 			describe( "sum", function() {
@@ -363,6 +380,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 					expect( users[ 5 ].getId() ).toBe( 5 );
 					expect( users[ 5 ].getTotalPrice() ).toBe( 50 );
+				} );
+
+				it( "can return the QuickBuilder instance generated for the sum", function() {
+					var totalPriceBuilder = getInstance( "User" ).withSum(
+						relationMapping = "purchases.price",
+						asBuilder       = true
+					);
+					expect( totalPriceBuilder ).toBeArray();
+					expect( totalPriceBuilder ).toHaveLength( 1 );
+					expect( totalPriceBuilder[ 1 ] ).toBeInstanceOf( "QuickBuilder" );
+					expect( totalPriceBuilder[ 1 ].toSQL() ).toBe( "SELECT COALESCE(SUM(purchases.price), 0) FROM `purchases` WHERE (`users`.`id` = `purchases`.`userId`)" );
 				} );
 			} );
 		} );

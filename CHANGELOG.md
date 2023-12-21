@@ -1,3 +1,30 @@
+# v7.3.0
+## 21 Dec 2023 — 19:13:38 UTC
+
+### chore
+
++ __tests:__ add test case for checking null attributes on newly created entities ([638754a](https://github.com/coldbox-modules/quick/commit/638754a701fda2a4500dae9b5bdcd744ce68bbc7))
++ __tests:__ add test case for deleteAll off of a hasMany relationship
+ ([1626bc5](https://github.com/coldbox-modules/quick/commit/1626bc5cfd7d8e40e6b1033c872934d579e2271c))
++ __tests:__ add test case for belongsToMany withCount
+ ([8bfad62](https://github.com/coldbox-modules/quick/commit/8bfad624eaa91a0a9ce506afcc92750968159f26))
++ __tests:__ add test case for firstOrNew with aliases and columns ([5dc81bf](https://github.com/coldbox-modules/quick/commit/5dc81bf9b6c2f0d29e49ed80b45d6c4c6797844f))
+
+### feat
+
++ __QuickBuilder:__ Return optional QuickBuilder instances for `withCount` and `withSum` ([e1b17cf](https://github.com/coldbox-modules/quick/commit/e1b17cfeccb5e9693fa4b9dcaa7e65c100814a1a))
+
+### fix
+
++ __BaseEntity:__ Fix clearAttribute when not setting to null ([4018d54](https://github.com/coldbox-modules/quick/commit/4018d541fdd3635924a9eddd4986a6704df1c187))
++ __QuickBuilder:__ Fix using a query builder instance to define a subselect ([8ac6ba7](https://github.com/coldbox-modules/quick/commit/8ac6ba727fb8e290a0fe620a5702fc8398d0383c))
+
+### other
+
++ __\*:__ fix: revert server.json change
+ ([4182c55](https://github.com/coldbox-modules/quick/commit/4182c55b22fa39e0e273b736daa4df635f280127))
+
+
 # v7.2.0
 ## 15 Sep 2023 — 20:07:44 UTC
 

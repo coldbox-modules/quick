@@ -2,12 +2,9 @@
     "app":{
         "cfengine":"adobe@2018"
     },
-    "JVM":{
-        "javaVersion":"openjdk8_jre_x64_mac_hotspot_jdk8u372-b07"
-    },
     "web":{
         "http":{
-            "port":"55123"
+            "port":"52482"
         }
     }
 }

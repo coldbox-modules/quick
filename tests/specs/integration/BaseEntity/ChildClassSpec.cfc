@@ -330,6 +330,23 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( comment.isNullAttribute( "reason" ) ).toBeFalse( "The reason field should not be null." );
 				} );
 			} );
+
+			it( "returns an array of discriminated entities when loading through a relationship", () => {
+				var post     = getInstance( "Post" ).findOrFail( 1245 );
+				var comments = post.getComments();
+
+				expect( comments ).toBeArray();
+				expect( comments ).toHaveLength( 2 );
+				expect( comments[ 1 ] ).toBeInstanceOf( "Comment" );
+				expect( comments[ 2 ] ).toBeInstanceOf( "InternalComment" );
+			} );
+
+			describe( "products and skus", () => {
+				it( "can load products and discriminated skus", () => {
+					var product = getInstance( "Product" ).findOrFail( "BDC3F099-0FBF-4334-AFEAEFFD06C8AAD8" );
+					expect( product.skus().toSQL() ).toBe( "SELECT `product_skus`.`createdDate`, `product_skus`.`deletedDate`, `product_skus`.`designation`, `product_skus`.`id`, `product_skus`.`modifiedDate`, `product_skus`.`productId`, `apparel_skus`.`color`, `apparel_skus`.`cost`, `apparel_skus`.`size1`, `apparel_skus`.`size1Description`, `apparel_skus`.`size1Index` FROM `product_skus` LEFT OUTER JOIN `apparel_skus` ON `product_skus`.`id` = `apparel_skus`.`id` WHERE (`product_skus`.`productId` = ? AND `product_skus`.`productId` IS NOT NULL)" );
+				} );
+			} );
 		} );
 
 		describe( "Single Table Inheritence Class Spec", function() {

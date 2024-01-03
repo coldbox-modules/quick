@@ -329,7 +329,11 @@ component accessors="true" {
 	 *
 	 * @return  string
 	 */
-	public string function qualifyColumn( required string column, string tableName = tableName() ) {
+	public string function qualifyColumn(
+		required string column,
+		string tableName        = tableName(),
+		boolean useParentLookup = true
+	) {
 		if (
 			findNoCase( ".", arguments.column ) != 0 ||
 			!hasAttribute( arguments.column ) ||
@@ -338,7 +342,7 @@ component accessors="true" {
 			return arguments.column;
 		}
 
-		return isParentAttribute( arguments.column )
+		return ( isParentAttribute( arguments.column ) && arguments.useParentLookup )
 		 ? variables._meta.parentDefinition.meta.table & "." & retrieveColumnForAlias( arguments.column )
 		 : listLast( arguments.tableName, " " ) & "." & retrieveColumnForAlias( arguments.column );
 	}
@@ -2744,7 +2748,10 @@ component accessors="true" {
 					"mapping"    : childMeta.fullName,
 					"table"      : ( childMeta.keyExists( "table" ) ? childMeta.table : variables._meta.table ),
 					"joincolumn" : (
-						childMeta.keyExists( "joinColumn" ) ? childClass.qualifyColumn( childMeta.joinColumn ) : ""
+						childMeta.keyExists( "joinColumn" ) ? childClass.qualifyColumn(
+							column          = childMeta.joinColumn,
+							useParentLookup = false
+						) : ""
 					),
 					"attributes"   : childAttributes,
 					"childColumns" : childColumns

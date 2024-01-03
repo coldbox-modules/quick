@@ -1,3 +1,12 @@
+# v7.3.1
+## 03 Jan 2024 — 17:58:04 UTC
+
+### fix
+
++ __Discriminators:__ Fix where discriminated entities could use the wrong qualified column name in the join with the parent entity.
+ ([682aa03](https://github.com/coldbox-modules/quick/commit/682aa03874ae16af927b1b6b6c400a1791687544))
+
+
 # v7.3.0
 ## 21 Dec 2023 — 19:13:38 UTC
 

@@ -55,8 +55,7 @@ component accessors="true" {
 	 */
 	property
 		name      ="_mapping"
-		persistent="false"
-		inject    ="wirebox:targetId";
+		persistent="false";
 
 	/**
 	 * The full name of the entity.

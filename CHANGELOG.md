@@ -1,3 +1,11 @@
+# v7.3.2
+## 05 Feb 2024 — 20:23:02 UTC
+
+### fix
+
++ __BaseEntity:__ Use the interceptor approach instead of `wirebox:targetId` to support CommandBox ([164247d](https://github.com/coldbox-modules/quick/commit/164247d2858c9d5f6b3f3e27548d4296fe1ea07a))
+
+
 # v7.3.1
 ## 03 Jan 2024 — 17:58:04 UTC
 

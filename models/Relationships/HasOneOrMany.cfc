@@ -317,9 +317,20 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @return      quick.models.BaseEntity
 	 */
 	public any function create( struct attributes = {} ) {
-		var newInstance = variables.related.newEntity().fill( arguments.attributes );
+		return newEntity()
+			.fill( arguments.attributes )
+			.save();
+	}
+
+	/**
+	 * Returns a new instance of the entity, pre-associated to the parent entity. Does not persist it.
+	 *
+	 * @return      quick.models.BaseEntity
+	 */
+	public any function newEntity() {
+		var newInstance = variables.related.newEntity();
 		setForeignAttributesForCreate( newInstance );
-		return newInstance.save();
+		return newInstance;
 	}
 
 	/**

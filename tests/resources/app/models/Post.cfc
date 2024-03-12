@@ -50,4 +50,8 @@ component table="my_posts" extends="quick.models.BaseEntity" accessors="true" {
         return qb.orderBy( "created_date", "desc" );
     }
 
+    function scopePublished( qb ) {
+        qb.whereNotNull( "publishedDate" );
+    }
+
 }

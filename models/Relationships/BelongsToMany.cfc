@@ -556,7 +556,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 			} );
 	}
 
-	function nestCompareConstraints( base, nested ) {
+	function nestCompareConstraints( required any base, required any nested ) {
 		return structKeyExists( arguments.nested, "retrieveQuery" ) ? arguments.nested.retrieveQuery() : arguments.nested;
 	}
 
@@ -566,8 +566,8 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getQualifiedForeignKeyNames() {
-		return getQualifiedForeignPivotKeyNames();
+	public array function getQualifiedForeignKeyNames( any builder = variables.relationshipBuilder ) {
+		return getQualifiedForeignPivotKeyNames( arguments.builder );
 	}
 
 	/**

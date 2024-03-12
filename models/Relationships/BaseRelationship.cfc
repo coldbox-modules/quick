@@ -4,7 +4,7 @@
  *
  * @doc_abstract true
  */
-component accessors="true" {
+component accessors="true" implements="IRelationship" {
 
 	/**
 	 * The WireBox Injector.
@@ -74,22 +74,34 @@ component accessors="true" {
 		required string relationName,
 		required string relationMethodName,
 		required any parent,
-		boolean withConstraints = true
+		boolean withConstraints = true,
+		QuickBuilder relationshipBuilder
 	) {
 		variables.returnDefaultEntity = false;
 		variables.defaultAttributes   = {};
 
-		variables.related             = arguments.related;
-		variables.relationshipBuilder = arguments.related.newQuery();
-		variables.relationName        = arguments.relationName;
-		variables.relationMethodName  = arguments.relationMethodName;
-		variables.parent              = arguments.parent;
+		variables.related = arguments.related;
+		if ( !isNull( arguments.relationshipBuilder ) ) {
+			variables.relationshipBuilder = arguments.relationshipBuilder;
+		} else {
+			variables.relationshipBuilder = arguments.related.newQuery();
+		}
+		variables.relationName       = arguments.relationName;
+		variables.relationMethodName = arguments.relationMethodName;
+		variables.parent             = arguments.parent;
 
 		if ( arguments.withConstraints ) {
 			variables.addConstraints();
 		}
 
 		return this;
+	}
+
+	public void function addConstraints() {
+		throw(
+			type    = "NotImplemented",
+			message = "The `addConstraints` method must be implemented in the concrete relationship."
+		);
 	}
 
 	/**
@@ -187,6 +199,20 @@ component accessors="true" {
 		return variables.getResults();
 	}
 
+	public any function getResults() {
+		throw(
+			type    = "NotImplemented",
+			message = "The `getResults` method must be implemented in the concrete relationship."
+		);
+	}
+
+	public array function getQualifiedForeignKeyNames( any builder = variables.relationshipBuilder ) {
+		throw(
+			type    = "NotImplemented",
+			message = "The `getQualifiedForeignKeyNames` method must be implemented in the concrete relationship."
+		);
+	}
+
 	/**
 	 * Retrieves the values of the key from each entity passed.
 	 *
@@ -242,14 +268,14 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
-	public any function addCompareConstraints( any base = variables.relationshipBuilder ) {
+	public any function addCompareConstraints( any base = variables.relationshipBuilder, any nested ) {
 		return arguments.base
 			.select( variables.relationshipBuilder.raw( 1 ) )
 			.where( function( q ) {
 				arrayZipEach(
 					[
-						getExistanceLocalKeys(),
-						getExistenceCompareKeys()
+						getExistenceLocalKeys( base ),
+						getExistenceCompareKeys( base )
 					],
 					function( qualifiedLocalKey, existenceCompareKey ) {
 						q.whereColumn( qualifiedLocalKey, existenceCompareKey );
@@ -270,7 +296,7 @@ component accessors="true" {
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getQualifiedLocalKeys() {
+	public array function getQualifiedLocalKeys( any builder = variables.relationshipBuilder ) {
 		return variables.parent.retrieveQualifiedKeyNames();
 	}
 
@@ -280,8 +306,8 @@ component accessors="true" {
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getExistanceLocalKeys() {
-		return getQualifiedLocalKeys();
+	public array function getExistenceLocalKeys( any builder = variables.relationshipBuilder ) {
+		return getQualifiedLocalKeys( arguments.builder );
 	}
 
 	/**
@@ -290,8 +316,8 @@ component accessors="true" {
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getExistenceCompareKeys() {
-		return getQualifiedForeignKeyNames();
+	public array function getExistenceCompareKeys( any builder = variables.relationshipBuilder ) {
+		return getQualifiedForeignKeyNames( arguments.builder );
 	}
 
 	/**
@@ -329,7 +355,7 @@ component accessors="true" {
 	 *
 	 * @return  qb.models.Query.QueryBuilder
 	 */
-	public any function retrieveQuery() {
+	public QueryBuilder function retrieveQuery() {
 		return variables.relationshipBuilder.retrieveQuery();
 	}
 
@@ -435,6 +461,7 @@ component accessors="true" {
 		var lengths = arguments.arrays.map( function( arr ) {
 			return arr.len();
 		} );
+
 		if ( unique( lengths ).len() > 1 ) {
 			throw(
 				type         = "ArrayZipLengthMismatch",

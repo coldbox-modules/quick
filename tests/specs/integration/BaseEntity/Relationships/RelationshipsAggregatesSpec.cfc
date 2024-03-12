@@ -112,7 +112,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( posts[ 4 ].hasAttribute( "tagsCount" ) ).toBeTrue(
 						"Post #posts[ 4 ].getPost_Pk()# should have an attribute named `tagsCount`."
 					);
-					expect( posts[ 4 ].getTagsCount() ).toBe( 0 );
+					expect( posts[ 4 ].getTagsCount() ).toBe( 1 );
 				} );
 
 				it( "can constrain counts at runtime", function() {
@@ -233,7 +233,25 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( posts[ 4 ].hasAttribute( "tagsCount" ) ).toBeTrue(
 						"Post #posts[ 4 ].getPost_Pk()# should have an attribute named `tagsCount`."
 					);
-					expect( posts[ 4 ].getTagsCount() ).toBe( 0 );
+					expect( posts[ 4 ].getTagsCount() ).toBe( 1 );
+				} );
+
+				it( "can add a count for a hasManyDeep relationship", function() {
+					var countries = getInstance( "Country" )
+						.withCount( "postsDeep" )
+						.orderBy( "createdDate" )
+						.get();
+
+					expect( countries ).toBeArray();
+					expect( countries ).toHaveLength( 2 );
+
+					expect( countries[ 1 ].getId() ).toBe( "02B84D66-0AA0-F7FB-1F71AFC954843861" );
+					expect( countries[ 1 ].getName() ).toBe( "United States" );
+					expect( countries[ 1 ].getPostsDeepCount() ).toBe( 2 );
+
+					expect( countries[ 2 ].getId() ).toBe( "02BA2DB0-EB1E-3F85-5F283AB5E45608C6" );
+					expect( countries[ 2 ].getName() ).toBe( "Argentina" );
+					expect( countries[ 2 ].getPostsDeepCount() ).toBe( 1 );
 				} );
 
 				it( "can return the QuickBuilder instance generated for the count", function() {
@@ -380,6 +398,24 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 					expect( users[ 5 ].getId() ).toBe( 5 );
 					expect( users[ 5 ].getTotalPrice() ).toBe( 50 );
+				} );
+
+				it( "can add a sum for a hasManyDeep relationship", function() {
+					var countries = getInstance( "Country" )
+						.withSum( "postsDeep.post_pk AS postIdTotal" )
+						.orderBy( "createdDate" )
+						.get();
+
+					expect( countries ).toBeArray();
+					expect( countries ).toHaveLength( 2 );
+
+					expect( countries[ 1 ].getId() ).toBe( "02B84D66-0AA0-F7FB-1F71AFC954843861" );
+					expect( countries[ 1 ].getName() ).toBe( "United States" );
+					expect( countries[ 1 ].getPostIdTotal() ).toBe( 524771 );
+
+					expect( countries[ 2 ].getId() ).toBe( "02BA2DB0-EB1E-3F85-5F283AB5E45608C6" );
+					expect( countries[ 2 ].getName() ).toBe( "Argentina" );
+					expect( countries[ 2 ].getPostIdTotal() ).toBe( 321 );
 				} );
 
 				it( "can return the QuickBuilder instance generated for the sum", function() {

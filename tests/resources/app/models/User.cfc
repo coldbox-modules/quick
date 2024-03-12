@@ -148,6 +148,23 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return hasManyThrough( [ "roles", "permissions" ] );
 	}
 
+	function permissionsDeep() {
+		return hasManyDeep(
+			relationName = "Permission",
+			through = [ "roles_users", "Role", "permissions_roles" ],
+			foreignKeys = [ "userId", "id", "roleId", "id" ],
+			localKeys = [ "id", "roleId", "id", "permissionId" ]
+		);
+	}
+
+	function permissionsDeepBuilder() {
+		return newHasManyDeepBuilder()
+			.throughPivotTable( "roles_users", "userId", "id" )
+			.throughEntity( "Role", "id", "roleId" )
+			.throughPivotTable( "permissions_roles", "roleId", "id" )
+			.toRelated( "Permission", "id", "permissionId" );
+	}
+
 	function posts() {
 		return hasMany( "Post", "user_id" ).latest();
 	}

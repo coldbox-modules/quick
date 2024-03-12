@@ -348,7 +348,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getQualifiedLocalKeys() {
+	public array function getQualifiedLocalKeys( any builder = variables.relationshipBuilder ) {
 		return variables.localKeys.map( function( localKey ) {
 			return variables.related.qualifyColumn( localKey );
 		} );
@@ -360,7 +360,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getExistenceCompareKeys() {
+	public array function getExistenceCompareKeys( any builder = variables.relationshipBuilder ) {
 		return variables.foreignKeys.map( function( foreignKey ) {
 			return variables.child.qualifyColumn( foreignKey );
 		} );

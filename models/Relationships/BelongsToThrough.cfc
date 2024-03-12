@@ -181,7 +181,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	 *
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
-	public any function addCompareConstraints( any base = variables.related ) {
+	public any function addCompareConstraints( any base = variables.related, any nested ) {
 		return tap( arguments.base.select(), function( q ) {
 			performJoin( q );
 			q.where( function( q2 ) {

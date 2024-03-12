@@ -232,7 +232,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
-	public any function addCompareConstraints( any base = variables.relationshipBuilder ) {
+	public any function addCompareConstraints( any base = variables.relationshipBuilder, any nested ) {
 		if (
 			variables.closestToParent.relationshipClass == "HasOneOrManyThrough" ||
 			variables.closestToParent.relationshipClass == "BelongsToThrough"

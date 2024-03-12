@@ -79,11 +79,16 @@ interface displayname="IRelationship" {
 	 *
 	 * @entities  An array of entities to retrieve keys.
 	 * @key       The key to retrieve from each entity.
+	 * @key       The entity the keys are associated with. Used to check for null attributes.
 	 *
 	 * @doc_generic  any
 	 * @return   [any]
 	 */
-	public array function getKeys( required array entities, required array keys );
+	public array function getKeys(
+		required array entities,
+		required array keys,
+		required any baseEntity
+	);
 
 	/**
 	 * Checks if all of the keys (usually foreign keys) on the specified entity are null. Used to determine whether we should even run a relationship query or just return null.
@@ -101,7 +106,7 @@ interface displayname="IRelationship" {
 	 *
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
-	public any function addCompareConstraints( any base );
+	public any function addCompareConstraints( any base, any nested );
 
 	public any function nestCompareConstraints( required any base, required any nested );
 
@@ -111,15 +116,7 @@ interface displayname="IRelationship" {
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getQualifiedLocalKeys();
-
-	/**
-	 * Returns the fully-qualified local key.
-	 *
-	 * @doc_generic  String
-	 * @return       [String]
-	 */
-	public array function getExistanceLocalKeys();
+	public array function getExistenceLocalKeys( any builder );
 
 	/**
 	 * Get the key to compare in the existence query.
@@ -127,7 +124,7 @@ interface displayname="IRelationship" {
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getExistenceCompareKeys();
+	public array function getExistenceCompareKeys( any builder );
 
 	/**
 	 * Returns the related entity for the relationship.
@@ -150,11 +147,23 @@ interface displayname="IRelationship" {
 	 */
 	public any function applyAliasSuffix( required string suffix );
 
+	/*
+	 * TODO: pull this into a separate interface
+	 */
+	public array function getQualifiedForeignKeyNames( any builder );
+
+	/*
+	 * TODO: pull this into a separate interface
+	 */
+	public array function getQualifiedLocalKeys( any builder );
+
+
+
 	/**
 	 * Retrieves the current query builder instance.
 	 *
-	 * @return  quick.models.QuickBuilder
+	 * @return  qb.models.QueryBuilder
 	 */
-	public QuickBuilder function retrieveQuery();
+	public QueryBuilder function retrieveQuery();
 
 }

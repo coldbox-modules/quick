@@ -97,7 +97,7 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	 *
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
-	public any function addCompareConstraints( any base = variables.relationshipBuilder ) {
+	public any function addCompareConstraints( any base = variables.relationshipBuilder, any nested ) {
 		return tap( super.addCompareConstraints( arguments.base ), function( q ) {
 			q.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
 		} );

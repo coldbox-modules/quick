@@ -49,6 +49,11 @@ component accessors="true" transientCache="false" {
 	property name="_withAliases";
 
 	/**
+	 * A map of aliases to entities to use when qualifying aliased columns.
+	 */
+	property name="aliasMap";
+
+	/**
 	 * The WireBox injector.  Used to inject other entities.
 	 */
 	property name="_wirebox" inject="wirebox";
@@ -77,6 +82,7 @@ component accessors="true" transientCache="false" {
 		variables._withAliases           = false;
 		variables._asMementoSettings     = {};
 		variables._globalScopeExclusions = [];
+		variables.aliasMap               = {};
 		return this;
 	}
 
@@ -90,6 +96,7 @@ component accessors="true" transientCache="false" {
 	public QuickBuilder function setEntity( required any newEntity ) {
 		variables.entity = arguments.newEntity;
 		variables.qb.setEntity( arguments.newEntity );
+		variables.aliasMap[ arguments.newEntity.tableAlias() ] = arguments.newEntity;
 		return this;
 	}
 
@@ -101,6 +108,7 @@ component accessors="true" transientCache="false" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public QuickBuilder function withAlias( required string alias ) {
+		variables.aliasMap.delete( getEntity().tableAlias() );
 		getEntity().withAlias( arguments.alias );
 		variables.qb.from( getEntity().tableName() );
 		return this;
@@ -184,6 +192,39 @@ component accessors="true" transientCache="false" {
 		}
 
 		variables.qb.subselect( name, subselectQuery );
+		return this;
+	}
+
+	/**
+	 * Adds a JOIN to another table.
+	 *
+	 * For simple joins, this specifies a column on which to join the two tables.
+	 * For complex joins, a closure can be passed to `first`.
+	 * This allows multiple `on` and `where` conditions to be applied to the join.
+	 *
+	 * @table The table/expression to join to the query.
+	 * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+	 * @operator The boolean operator for the join clause. Default: "=".
+	 * @second The second column in the join's `on` statement.
+	 * @type The type of the join. Default: "inner".  Passing this as an argument is discouraged for readability.  Use the dedicated methods like `leftJoin` and `rightJoin` where possible.
+	 * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+	 * @preventDuplicateJoins Introspects the builder for a join matching the join we're trying to add. If a match is found, disregards this request. Defaults to moduleSetting or qb setting
+	 *
+	 * @return qb.models.Query.QueryBuilder
+	 */
+	public QuickBuilder function join(
+		required any table,
+		any first,
+		string operator = "=",
+		string second,
+		string type                   = "inner",
+		boolean where                 = false,
+		boolean preventDuplicateJoins = this.getPreventDuplicateJoins()
+	) {
+		variables.qb                                         = variables.qb.join( argumentCollection = arguments );
+		var latestJoin                                       = variables.qb.getJoins().last();
+		var latestJoinBuilder                                = latestJoin.getParentQuery().getQuickBuilder();
+		variables.aliasMap[ latestJoinBuilder.tableAlias() ] = latestJoinBuilder.getEntity();
 		return this;
 	}
 
@@ -610,7 +651,36 @@ component accessors="true" transientCache="false" {
 	 * @return  string
 	 */
 	public string function qualifyColumn( required string column, string tableName ) {
+		if ( findNoCase( ".", column ) != 0 ) {
+			var columnAlias = listFirst( column, "." );
+			for ( var tableAlias in variables.aliasMap ) {
+				if ( compareNoCase( columnAlias, tableAlias ) == 0 ) {
+					return variables.aliasMap[ tableAlias ].qualifyColumn( listLast( column, "." ), columnAlias );
+				}
+			}
+		}
 		return getEntity().qualifyColumn( argumentCollection = arguments );
+	}
+
+	/**
+	 * Returns the table name of the underlying entity
+	 */
+	public string function tableName() {
+		return getEntity().tableName();
+	}
+
+	/**
+	 * Returns the table alias of the underlying entity
+	 */
+	public string function tableAlias() {
+		return getEntity().tableAlias();
+	}
+
+	/**
+	 * Returns the mapping name of the underlying entity
+	 */
+	public string function mappingName() {
+		return getEntity().mappingName();
 	}
 
 	/**

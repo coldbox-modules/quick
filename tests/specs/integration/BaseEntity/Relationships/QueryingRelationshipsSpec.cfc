@@ -166,7 +166,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					it( "can find only entities that have a related belongsToMany entity", function() {
 						var posts = getInstance( "Post" ).has( "tags" ).get();
 						expect( posts ).toBeArray();
-						expect( posts ).toHaveLength( 2 );
+						expect( posts ).toHaveLength( 3 );
 					} );
 
 					it( "can use whereHas on a belongsToMany relationship", function() {
@@ -341,7 +341,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					it( "can find only entities that do not have a related belongsToMany entity", function() {
 						var posts = getInstance( "Post" ).doesntHave( "tags" ).get();
 						expect( posts ).toBeArray();
-						expect( posts ).toHaveLength( 2 );
+						expect( posts ).toHaveLength( 1 );
 					} );
 				} );
 

@@ -314,6 +314,15 @@ component accessors="true" {
 		return variables._table;
 	}
 
+	/**
+	 * Returns the table name for this entity.
+	 *
+	 * @return  String
+	 */
+	public string function tableAlias() {
+		return listLen( variables._table, " " ) > 1 ? listLast( variables._table, " " ) : variables._table;
+	}
+
 	public any function withAlias( required string alias ) {
 		variables._table = "#variables._table# #arguments.alias#";
 		return this;
@@ -2016,6 +2025,88 @@ component accessors="true" {
 				"localKeys"          : arguments.localKey,
 				"type"               : arguments.type,
 				"withConstraints"    : !variables._withoutRelationshipConstraints
+			}
+		);
+	}
+
+	public HasManyDeep function hasManyDeep(
+		required any relationName,
+		required array through,
+		required array foreignKeys,
+		required array localKeys,
+		string relationMethodName
+	) {
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+
+		var related = "";
+		if ( isClosure( arguments.relationName ) || isCustomFunction( arguments.relationName ) ) {
+			related = arguments.relationName();
+		} else {
+			var parts = arguments.relationName.split( "[Aa][Ss]" );
+			related   = variables._wirebox.getInstance( trim( parts[ 1 ] ) );
+			if ( arrayLen( parts ) > 1 ) {
+				related.withAlias( trim( parts[ 2 ] ) );
+			}
+		}
+
+		if ( !structKeyExists( related, "isBuilder" ) ) {
+			related = related.newQuery();
+		}
+
+		guardAgainstNotLoaded(
+			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#related.getEntity().entityName()#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
+		);
+
+		var throughParents = arguments.through.map( function( throughEntityName ) {
+			var throughEntity = "";
+			if ( isClosure( throughEntityName ) || isCustomFunction( throughEntityName ) ) {
+				throughEntity = throughEntityName();
+			} else {
+				var parts = throughEntityName.split( "[Aa][Ss]" );
+				if ( variables._wirebox.containsInstance( trim( parts[ 1 ] ) ) ) {
+					throughEntity = variables._wirebox.getInstance( trim( parts[ 1 ] ) );
+					if ( arrayLen( parts ) > 1 ) {
+						throughEntity.withAlias( trim( parts[ 2 ] ) );
+					}
+				} else {
+					// turn parts into a CFML array
+					throughEntity = variables._wirebox.getInstance( "PivotTable@quick" )
+					throughEntity.setTable( trim( parts[ 1 ] ) );
+					if ( arrayLen( parts ) > 1 ) {
+						throughEntity.withAlias( trim( parts[ 2 ] ) );
+					}
+				}
+			}
+
+			if ( !structKeyExists( throughEntity, "isBuilder" ) ) {
+				throughEntity = throughEntity.newQuery();
+			}
+
+			return throughEntity;
+		} );
+
+		return variables._wirebox.getInstance(
+			name          = "HasManyDeep@quick",
+			initArguments = {
+				"related"            : related,
+				"relationName"       : related.getEntity().entityName(),
+				"relationMethodName" : arguments.relationMethodName,
+				"parent"             : this,
+				"throughParents"     : throughParents,
+				"foreignKeys"        : arguments.foreignKeys,
+				"localKeys"          : arguments.localKeys,
+				"withConstraints"    : !variables._withoutRelationshipConstraints
+			}
+		);
+	}
+
+	private HasManyDeepBuilder function newHasManyDeepBuilder( string relationMethodName ) {
+		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		return variables._wirebox.getInstance(
+			"HasManyDeepBuilder@quick",
+			{
+				"parent"             : this,
+				"relationMethodName" : arguments.relationMethodName
 			}
 		);
 	}

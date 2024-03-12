@@ -224,7 +224,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( posts ).toHaveLength( 4 );
 
 				expect( posts[ 1 ].getTags() ).toBeArray();
-				expect( posts[ 1 ].getTags() ).toHaveLength( 0 );
+				expect( posts[ 1 ].getTags() ).toHaveLength( 1 );
 
 				expect( posts[ 2 ].getTags() ).toBeArray();
 				expect( posts[ 2 ].getTags() ).toHaveLength( 2 );

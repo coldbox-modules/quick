@@ -350,7 +350,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getQualifiedLocalKeys() {
+	public array function getQualifiedLocalKeys( any builder = variables.relationshipBuilder ) {
 		return variables.localKeys.map( function( localKey ) {
 			return variables.parent.qualifyColumn( localKey );
 		} );
@@ -362,9 +362,9 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 * @doc_generic  String
 	 * @return       [String]
 	 */
-	public array function getQualifiedForeignKeyNames() {
+	public array function getQualifiedForeignKeyNames( any builder = variables.relationshipBuilder ) {
 		return variables.foreignKeys.map( function( foreignKey ) {
-			return variables.relationshipBuilder.qualifyColumn( foreignKey );
+			return builder.qualifyColumn( foreignKey );
 		} );
 	}
 

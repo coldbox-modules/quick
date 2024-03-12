@@ -1,7 +1,16 @@
 /**
  * Represents a hasManyDeep relationship.
  */
-component extends="quick.models.Relationships.BaseRelationship" accessors="true" {
+component
+	extends   ="quick.models.Relationships.BaseRelationship"
+	implements="IConcatenatableRelationship"
+	accessors ="true"
+{
+
+	/**
+	 * The through parent entities being traversed.
+	 */
+	property name="throughParents" type="array";
 
 	/**
 	 * The foreign keys traversing the related entities.
@@ -58,7 +67,16 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	public void function addConstraints() {
 		performJoin();
 
-		var qualifiedFirstForeignKey = throughParents[ 1 ].qualifyColumn( variables.foreignKeys[ 1 ] );
+		var firstForeignKey = variables.foreignKeys[ 1 ]
+		if ( isArray( firstForeignKey ) ) {
+			variables.relationshipBuilder.where(
+				variables.throughParents[ 1 ].qualifyColumn( firstForeignKey[ 1 ] ),
+				"=",
+				variables.parent.mappingName()
+			);
+			firstForeignKey = firstForeignKey[ 2 ];
+		}
+		var qualifiedFirstForeignKey = variables.throughParents[ 1 ].qualifyColumn( firstForeignKey );
 		var firstLocalValue          = variables.parent.retrieveAttribute( variables.localKeys[ 1 ] );
 		variables.relationshipBuilder.where( qualifiedFirstForeignKey, firstLocalValue );
 	}
@@ -71,6 +89,13 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		var alias = segments[ 2 ] ?: "";
 
 		var chainLength = variables.throughParents.len();
+		if ( chainLength == 4 && ( chainLength + 1 != variables.foreignKeys.len() ) ) {
+			// TODO: turn into an exception
+			writeDump(
+				var = "invalid foreign key length. Expected #chainLength + 1# but received #variables.foreignKeys.len()#"
+			);
+			abort;
+		}
 		for ( var i = chainLength; i > 0; i-- ) {
 			var throughParent = variables.throughParents[ i ];
 			var predecessor   = i < chainLength ? variables.throughParents[ i + 1 ] : variables.related;
@@ -190,9 +215,17 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 		var foreignKeys = [];
 		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
 			if ( i > variables.throughParents.len() ) {
-				foreignKeys.append( variables.related.qualifyColumn( variables.foreignKeys[ i ] ) );
+				if ( isArray( variables.foreignKeys[ i ] ) ) {
+					foreignKeys.append( variables.related.qualifyColumn( variables.foreignKeys[ i ][ 2 ] ) );
+				} else {
+					foreignKeys.append( variables.related.qualifyColumn( variables.foreignKeys[ i ] ) );
+				}
 			} else {
-				foreignKeys.append( variables.throughParents[ i ].qualifyColumn( variables.foreignKeys[ i ] ) );
+				if ( isArray( variables.foreignKeys[ i ] ) ) {
+					foreignKeys.append( variables.throughParents[ i ].qualifyColumn( variables.foreignKeys[ i ][ 2 ] ) );
+				} else {
+					foreignKeys.append( variables.throughParents[ i ].qualifyColumn( variables.foreignKeys[ i ] ) );
+				}
 			}
 		}
 		return foreignKeys;
@@ -214,6 +247,148 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 			}
 		}
 		return localKeys;
+	}
+
+	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
+		performJoin();
+
+		var firstKey = variables.foreignKeys[ 1 ];
+		if ( isArray( firstKey ) ) {
+			firstKey = firstKey[ 2 ];
+		}
+		var qualifiedFirstKey = variables.throughParents[ 1 ].qualifyColumn( firstKey );
+		var modelKeys         = getKeys(
+			arguments.entities,
+			arrayWrap( variables.localKeys[ 1 ] ),
+			arguments.baseEntity
+		);
+
+		variables.relationshipBuilder.whereIn( qualifiedFirstKey, modelKeys );
+		variables.relationshipBuilder.addSelect( "#qualifiedFirstKey# AS __QuickThroughKey__" );
+		variables.relationshipBuilder.appendVirtualAttribute( "__QuickThroughKey__" );
+
+		if ( isArray( variables.foreignKeys[ 1 ] ) ) {
+			variables.relationshipBuilder.where(
+				variables.throughParent[ 1 ].qualifyColumn( variables.foreignKeys[ 1 ][ 1 ] ),
+				variables.parent.mappingName()
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Initializes the relation to the null value for each entity in an array.
+	 *
+	 * @entities     The entities to initialize the relation.
+	 * @relation     The name of the relation to initialize.
+	 *
+	 * @doc_generic  quick.models.BaseEntity
+	 * @return       [quick.models.BaseEntity]
+	 */
+	public array function initRelation( required array entities, required string relation ) {
+		return arguments.entities.map( function( entity ) {
+			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.assignRelationship( relation, [] );
+			} else {
+				arguments.entity[ relation ] = [];
+			}
+			return arguments.entity;
+		} );
+	}
+
+	/**
+	 * Matches the array of entity results to an array of entities for a relation.
+	 * Any matched records are populated into the matched entity's relation.
+	 *
+	 * @entities     The entities being eager loaded.
+	 * @results      The relationship results.
+	 * @relation     The relation name being loaded.
+	 *
+	 * @doc_generic  quick.models.BaseEntity
+	 * @return       [quick.models.BaseEntity]
+	 */
+	public array function match(
+		required array entities,
+		required array results,
+		required string relation
+	) {
+		var dictionary = buildDictionary( arguments.results );
+		arguments.entities.each( function( entity ) {
+			var key = arrayWrap( variables.localKeys[ 1 ] )
+				.map( function( localKey ) {
+					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
+						localKey
+					];
+				} )
+				.toList();
+			if ( structKeyExists( dictionary, key ) ) {
+				if ( structKeyExists( entity, "isQuickEntity" ) ) {
+					entity.assignRelationship( relation, dictionary[ key ] );
+				} else {
+					entity[ relation ] = dictionary[ key ];
+				}
+			}
+		} );
+		return arguments.entities;
+	}
+
+	/**
+	 * Builds a dictionary mapping the `firstKey` value to related results.
+	 *
+	 * @results      The array of entities from retrieving the relationship.
+	 *
+	 * @doc_generic  any,quick.models.BaseEntity
+	 * @return       {any: quick.models.BaseEntity}
+	 */
+	public struct function buildDictionary( required array results ) {
+		return arguments.results.reduce( function( dict, result ) {
+			var key = structKeyExists( result, "isQuickEntity" ) ? result.retrieveAttribute( "__QuickThroughKey__" ) : result[
+				"__QuickThroughKey__"
+			];
+			if ( !structKeyExists( arguments.dict, key ) ) {
+				arguments.dict[ key ] = [];
+			}
+			arrayAppend( arguments.dict[ key ], arguments.result );
+			return arguments.dict;
+		}, {} );
+	}
+
+	public struct function appendToDeepRelationship(
+		required array through,
+		required array foreignKeys,
+		required array localKeys,
+		required numeric position
+	) {
+		for ( var throughParent in variables.throughParents ) {
+			var mapping = throughParent.tableName();
+			if ( !structKeyExists( throughParent, "isPivotTable" ) ) {
+				mapping = throughParent.mappingName();
+			}
+
+			if ( throughParent.tableName() != throughParent.tableAlias() ) {
+				mapping &= " as " & throughParent.tableAlias();
+			}
+
+			arguments.through.append( mapping );
+		}
+
+		arrayAppend(
+			arguments.foreignKeys,
+			variables.foreignKeys,
+			true
+		);
+		arrayAppend(
+			arguments.localKeys,
+			variables.localKeys,
+			true
+		);
+
+		return {
+			"through"     : arguments.through,
+			"foreignKeys" : arguments.foreignKeys,
+			"localKeys"   : arguments.localKeys
+		};
 	}
 
 }

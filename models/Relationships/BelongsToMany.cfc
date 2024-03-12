@@ -15,7 +15,11 @@
  * }
  * ```
  */
-component extends="quick.models.Relationships.BaseRelationship" accessors="true" {
+component
+	extends   ="quick.models.Relationships.BaseRelationship"
+	implements="IConcatenatableRelationship"
+	accessors ="true"
+{
 
 	/**
 	 * The pivot table name between relationships.
@@ -698,6 +702,45 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 				}
 			);
 		} );
+	}
+
+	public struct function appendToDeepRelationship(
+		required array through,
+		required array foreignKeys,
+		required array localKeys,
+		required numeric position
+	) {
+		arguments.through.append( variables.table );
+
+		if ( variables.foreignPivotKeys.len() == 1 ) {
+			arguments.foreignKeys.append( variables.foreignPivotKeys, true );
+		} else {
+			arguments.foreignKeys.append( variables.foreignPivotKeys );
+		}
+
+		if ( variables.relatedKeys.len() == 1 ) {
+			arguments.foreignKeys.append( variables.relatedKeys, true );
+		} else {
+			arguments.foreignKeys.append( variables.relatedKeys );
+		}
+
+		if ( variables.parentKeys.len() == 1 ) {
+			arguments.localKeys.append( variables.parentKeys, true );
+		} else {
+			arguments.localKeys.append( variables.parentKeys );
+		}
+
+		if ( variables.relatedPivotKeys.len() == 1 ) {
+			arguments.localKeys.append( variables.relatedPivotKeys, true );
+		} else {
+			arguments.localKeys.append( variables.relatedPivotKeys );
+		}
+
+		return {
+			"through"     : arguments.through,
+			"foreignKeys" : arguments.foreignKeys,
+			"localKeys"   : arguments.localKeys
+		};
 	}
 
 }

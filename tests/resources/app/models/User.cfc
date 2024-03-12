@@ -140,6 +140,19 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		} );
 	}
 
+	function officematesDeep() {
+		return hasManyDeep(
+			relationName = "User AS officemates",
+			through      = [
+				"Team AS usersTeam",
+				"Office AS usersOffice",
+				"Team AS teammates"
+			],
+			foreignKeys = [ "id", "id", "officeId", "team_id" ],
+			localKeys   = [ "team_id", "officeId", "id", "id" ]
+		).where( "officemates.id", "<>", this.getId() );
+	}
+
 	function roles() {
 		return belongsToMany( "Role" );
 	}
@@ -151,9 +164,13 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	function permissionsDeep() {
 		return hasManyDeep(
 			relationName = "Permission",
-			through = [ "roles_users", "Role", "permissions_roles" ],
+			through      = [
+				"roles_users",
+				"Role",
+				"permissions_roles"
+			],
 			foreignKeys = [ "userId", "id", "roleId", "id" ],
-			localKeys = [ "id", "roleId", "id", "permissionId" ]
+			localKeys   = [ "id", "roleId", "id", "permissionId" ]
 		);
 	}
 

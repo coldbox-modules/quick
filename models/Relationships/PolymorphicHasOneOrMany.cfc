@@ -8,7 +8,11 @@
  *
  * @doc_abstract true
  */
-component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
+component
+	extends   ="quick.models.Relationships.HasOneOrMany"
+	implements="IConcatenatableRelationship"
+	accessors ="true"
+{
 
 	/**
 	 * The name of the column that contains the entity type
@@ -123,6 +127,37 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 				}
 			);
 		} );
+	}
+
+	public struct function appendToDeepRelationship(
+		required array through,
+		required array foreignKeys,
+		required array localKeys,
+		required numeric position
+	) {
+		if ( variables.foreignKeys.len() == 1 ) {
+			arguments.foreignKeys.append( [
+				variables.morphType,
+				variables.foreignKeys[ 1 ]
+			] );
+		} else {
+			arguments.foreignKeys.append( [
+				variables.morphType,
+				variables.foreignKeys
+			] );
+		}
+
+		if ( variables.localKeys.len() == 1 ) {
+			arguments.localKeys.append( variables.localKeys, true );
+		} else {
+			arguments.localKeys.append( variables.localKeys );
+		}
+
+		return {
+			"through"     : arguments.through,
+			"foreignKeys" : arguments.foreignKeys,
+			"localKeys"   : arguments.localKeys
+		};
 	}
 
 }

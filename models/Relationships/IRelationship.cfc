@@ -18,6 +18,14 @@ interface displayname="IRelationship" {
 	public array function getEager( boolean asQuery, boolean withAliases );
 
 	/**
+	 * Adds constraints for eager loading
+	 *
+	 * @doc_generic  quick.models.BaseEntity
+	 * @return       boolean
+	 */
+	public boolean function addEagerConstraints( required array entities, required any baseEntity );
+
+	/**
 	 * Gets the first matching record for the relationship.
 	 * Returns null if no record is found.
 	 *

@@ -4,7 +4,11 @@
  *
  * @doc_abstract true
  */
-component extends="quick.models.Relationships.BaseRelationship" accessors="true" {
+component
+	extends   ="quick.models.Relationships.BaseRelationship"
+	implements="IConcatenatableRelationship"
+	accessors ="true"
+{
 
 	/**
 	 * The foreign keys on the parent entity.
@@ -441,6 +445,31 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 					}
 				);
 			} );
+	}
+
+	public struct function appendToDeepRelationship(
+		required array through,
+		required array foreignKeys,
+		required array localKeys,
+		required numeric position
+	) {
+		if ( variables.foreignKeys.len() == 1 ) {
+			arguments.foreignKeys.append( variables.foreignKeys, true );
+		} else {
+			arguments.foreignKeys.append( variables.foreignKeys );
+		}
+
+		if ( variables.localKeys.len() == 1 ) {
+			arguments.localKeys.append( variables.localKeys, true );
+		} else {
+			arguments.localKeys.append( variables.localKeys );
+		}
+
+		return {
+			"through"     : arguments.through,
+			"foreignKeys" : arguments.foreignKeys,
+			"localKeys"   : arguments.localKeys
+		};
 	}
 
 }

@@ -213,6 +213,13 @@ component accessors="true" implements="IRelationship" {
 		);
 	}
 
+	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
+		throw(
+			type    = "NotImplemented",
+			message = "The `addEagerConstraints` method must be implemented in the concrete relationship."
+		);
+	}
+
 	/**
 	 * Retrieves the values of the key from each entity passed.
 	 *

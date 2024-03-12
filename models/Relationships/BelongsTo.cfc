@@ -15,7 +15,11 @@
  * }
  * ```
  */
-component extends="quick.models.Relationships.BaseRelationship" accessors="true" {
+component
+	extends   ="quick.models.Relationships.BaseRelationship"
+	implements="IConcatenatableRelationship"
+	accessors ="true"
+{
 
 	/**
 	 * An alias for the parent entity.
@@ -454,6 +458,31 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 				}
 			);
 		} );
+	}
+
+	public struct function appendToDeepRelationship(
+		required array through,
+		required array foreignKeys,
+		required array localKeys,
+		required numeric position
+	) {
+		if ( variables.localKeys.len() == 1 ) {
+			arguments.foreignKeys.append( variables.localKeys, true );
+		} else {
+			arguments.foreignKeys.append( variables.localKeys );
+		}
+
+		if ( variables.foreignKeys.len() == 1 ) {
+			arguments.localKeys.append( variables.foreignKeys, true );
+		} else {
+			arguments.localKeys.append( variables.foreignKeys );
+		}
+
+		return {
+			"through"     : arguments.through,
+			"foreignKeys" : arguments.foreignKeys,
+			"localKeys"   : arguments.localKeys
+		};
 	}
 
 }

@@ -134,6 +134,16 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( users[ 1 ].getId() ).toBe( 1 );
 				expect( users[ 2 ].getId() ).toBe( 4 );
 			} );
+
+			it( "can go up and down many relationships", function() {
+				var user        = getInstance( "User" ).where( "username", "johndoe" ).firstOrFail();
+				var officemates = user.getOfficematesDeep();
+				expect( officemates ).toBeArray();
+				expect( officemates ).toHaveLength( 3 );
+				expect( officemates[ 1 ].getId() ).toBe( 1 );
+				expect( officemates[ 2 ].getId() ).toBe( 3 );
+				expect( officemates[ 3 ].getId() ).toBe( 4 );
+			} );
 		} );
 	}
 

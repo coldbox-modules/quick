@@ -66,13 +66,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var country  = getInstance( "Country" ).where( "name", "United States" ).firstOrFail();
 				var comments = country.getComments();
 				expect( comments ).toBeArray();
-				expect( comments ).toHaveLength( 2 );
+				expect( comments ).toHaveLength( 1 );
 				expect( comments[ 1 ].getId() ).toBe( 1 );
 				expect( comments[ 1 ].getCommentableType() ).toBe( "Post" );
 				expect( comments[ 1 ].getBody() ).toBe( "I thought this post was great" );
-				expect( comments[ 2 ].getId() ).toBe( 3 );
-				expect( comments[ 2 ].getCommentableType() ).toBe( "Video" );
-				expect( comments[ 2 ].getBody() ).toBe( "What a great video! So fun!" );
 			} );
 
 			it( "can go up and down belongsTo and hasMany relationships", function() {

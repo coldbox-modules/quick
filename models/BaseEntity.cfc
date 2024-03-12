@@ -1701,7 +1701,7 @@ component accessors="true" {
 	 *
 	 * @return              quick.models.Relationships.HasManyThrough
 	 */
-	private HasManyThrough function hasManyThrough( required array relationships, string relationMethodName ) {
+	private HasManyDeep function hasManyThrough( required array relationships, string relationMethodName ) {
 		if ( arguments.relationships.len() <= 1 ) {
 			throw(
 				type    = "RelationshipsLengthMismatch",
@@ -1716,37 +1716,54 @@ component accessors="true" {
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
 		);
 
-		// this is set here for the first case where the previousEntity is
-		// `this` entity and we don't want to double prefix
-		var aliasPrefix      = variables._aliasPrefix;
-		var previousEntity   = this;
-		var relationshipsMap = arguments.relationships.reduce( function( map, relation, index ) {
-			var mirroredIndex = relationships.len() == 2 ? ( index == 1 ? 2 : 1 ) : ( index + ( relationships.len() - 1 ) ) % (
-				relationships.len() + 1
-			);
-			mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
-			previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
-			var relationship = previousEntity.ignoreLoadedGuard( function() {
-				return invoke( previousEntity, relation );
-			} );
-			relationship.applyAliasSuffix( "_" & aliasPrefix & mirroredIndex );
-			map[ relation ] = relationship;
-			previousEntity  = relationship.getRelated();
-			return map;
-		}, structNew( "ordered" ) );
+		var related     = "";
+		var parent      = this;
+		var through     = [];
+		var foreignKeys = [];
+		var localKeys   = [];
 
-		return variables._wirebox.getInstance(
-			name          = "HasManyThrough@quick",
-			initArguments = {
-				"related"            : relationshipsMap[ relationships[ relationships.len() ] ].getRelated(),
-				"relationName"       : relationships[ relationships.len() ],
-				"relationMethodName" : arguments.relationMethodName,
-				"parent"             : this,
-				"relationships"      : arguments.relationships,
-				"relationshipsMap"   : relationshipsMap,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+		var predecessor = this;
+		for ( var i = 1; i <= arguments.relationships.len(); i++ ) {
+			var relationName = arguments.relationships[ i ];
+			var relationship = predecessor.ignoreLoadedGuard( function() {
+				return invoke( predecessor, relationName );
+			} );
+
+			relationship.withAlias( "#relationName#_#i#" );
+
+			var updatedArgs = relationship.appendToDeepRelationship( through, foreignKeys, localKeys, i );
+			through         = updatedArgs.through;
+			foreignKeys     = updatedArgs.foreignKeys;
+			localKeys       = updatedArgs.localKeys;
+
+			if ( i == arguments.relationships.len() ) {
+				related = relationship.getRelated().mappingName();
+			} else {
+				var relatedEntity  = relationship.getRelated();
+				var throughMapping = relatedEntity.mappingName();
+				var successor      = relatedEntity.ignoreLoadedGuard( function() {
+					return invoke( relatedEntity, relationships[ i + 1 ] );
+				} );
+				if ( relatedEntity.mappingName() == successor.getParent().mappingName() ) {
+					if ( successor.getParent().tableName() != successor.getParent().tableAlias() ) {
+						throughMapping &= " AS #successor.getParent().tableAlias()#";
+					}
+				}
+
+				through.append( throughMapping );
+				predecessor = successor.getParent();
 			}
-		);
+		}
+
+		return this.ignoreLoadedGuard( function() {
+			return hasManyDeep(
+				related,
+				through,
+				foreignKeys,
+				localKeys,
+				relationMethodName
+			);
+		} );
 	}
 
 	/**

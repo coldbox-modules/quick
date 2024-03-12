@@ -99,7 +99,7 @@ component accessors="true" {
 	 *
 	 * @return   BaseRelationship
 	 */
-	public BaseRelationship function setRelationMethodName( required string name ) {
+	public any function setRelationMethodName( required string name ) {
 		variables.relationMethodName = arguments.name;
 		return this;
 	}
@@ -306,7 +306,7 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
-	public BaseRelationship function withDefault( any attributes = {} ) {
+	public any function withDefault( any attributes = {} ) {
 		variables.returnDefaultEntity = true;
 		variables.defaultAttributes   = arguments.attributes;
 		return this;
@@ -319,7 +319,7 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
-	public BaseRelationship function applyAliasSuffix( required string suffix ) {
+	public any function applyAliasSuffix( required string suffix ) {
 		variables.relationshipBuilder.withAlias( variables.related.tableName() & arguments.suffix );
 		return this;
 	}

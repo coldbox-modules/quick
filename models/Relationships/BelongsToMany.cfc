@@ -579,7 +579,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  quick.models.Relationships.HasManyThrough
 	 */
-	public BelongsToMany function applyAliasSuffix( required string suffix ) {
+	public any function applyAliasSuffix( required string suffix ) {
 		variables.tableSuffix = arguments.suffix;
 		variables.table       = "#variables.table# #variables.table##suffix#";
 		super.applyAliasSuffix( argumentCollection = arguments );

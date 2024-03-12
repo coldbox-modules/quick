@@ -5,9 +5,9 @@ interface displayname="IRelationship" {
 	 *
 	 * @name     The relation method name for this relationship.
 	 *
-	 * @return   IRelationship
+	 * @return   quick.models.Relationships.IRelationship
 	 */
-	public IRelationship function setRelationMethodName( required string name );
+	public any function setRelationMethodName( required string name );
 
 	/**
 	 * Retrieves the entities for eager loading.
@@ -139,7 +139,7 @@ interface displayname="IRelationship" {
 	 *
 	 * @return  quick.models.Relationships.IRelationship
 	 */
-	public IRelationship function withDefault( any attributes );
+	public any function withDefault( any attributes );
 
 	/**
 	 * Applies a suffix to an alias for the relationship.
@@ -148,7 +148,7 @@ interface displayname="IRelationship" {
 	 *
 	 * @return  quick.models.Relationships.IRelationship
 	 */
-	public IRelationship function applyAliasSuffix( required string suffix );
+	public any function applyAliasSuffix( required string suffix );
 
 	/**
 	 * Retrieves the current query builder instance.

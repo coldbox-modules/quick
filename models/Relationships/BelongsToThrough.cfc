@@ -210,7 +210,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	 *
 	 * @return  quick.models.Relationships.BelongsToThrough
 	 */
-	public BelongsToThrough function applyAliasSuffix( required string suffix ) {
+	public any function applyAliasSuffix( required string suffix ) {
 		return this;
 	}
 

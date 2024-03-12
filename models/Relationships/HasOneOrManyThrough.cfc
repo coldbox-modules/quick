@@ -271,7 +271,7 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	 *
 	 * @return  quick.models.Relationships.HasOneOrManyThrough
 	 */
-	public HasOneOrManyThrough function applyAliasSuffix( required string suffix ) {
+	public any function applyAliasSuffix( required string suffix ) {
 		return this;
 	}
 

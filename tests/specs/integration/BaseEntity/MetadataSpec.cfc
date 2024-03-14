@@ -68,7 +68,6 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			describe( "parent meta", function() {
 				it( "can detect a discriminated entity", function() {
 					var discriminated = getInstance( "InternalComment" );
-					debug( discriminated.get_Meta() );
 
 					expect( discriminated.get_Meta() ).toHaveKey( "parentDefinition" ).toHaveKey( "hasParentEntity" );
 
@@ -83,7 +82,6 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				it( "can detect a non-discriminated child subclass", function() {
 					var discriminated = getInstance( "Jingle" );
-					debug( discriminated.get_Meta() );
 
 					expect( discriminated.get_Meta() ).toHaveKey( "parentDefinition" ).toHaveKey( "hasParentEntity" );
 

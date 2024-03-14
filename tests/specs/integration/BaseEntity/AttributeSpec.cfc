@@ -126,12 +126,6 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 							extra.append( key );
 						}
 					}
-					debug( {
-						"actual"   : memento.keyArray(),
-						"expected" : expected,
-						"missing"  : missing,
-						"extra"    : extra
-					} );
 					expect( structCount( memento ) ).toHaveLength( 18 );
 				}
 				expect( memento ).toHaveKey( "id" );

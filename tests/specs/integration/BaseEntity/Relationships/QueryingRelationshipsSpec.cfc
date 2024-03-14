@@ -71,13 +71,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					} );
 
 					it( "applies count constraints to the final relationship in a nested relationship existence check", function() {
-						debug( getInstance( "User" ).has( "posts.comments", "=", 1 ).toSQL() );
-
 						var users = getInstance( "User" ).has( "posts.comments", "=", 1 ).get();
-						debug(
-							var = queryExecute( "SELECT user_id, count(*) from comments GROUP BY user_id" ),
-							top = 2
-						);
 						expect( users ).toBeArray();
 						expect( users ).toHaveLength( 1 );
 

@@ -22,6 +22,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		);
 	}
 
+	function publishedPosts() {
+		return hasManyThrough( [ "users", "publishedPosts" ] );
+	}
+
 	function publishedPostsDeep() {
 		return hasManyDeep(
 			relationName = () => {

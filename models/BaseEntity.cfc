@@ -1701,7 +1701,11 @@ component accessors="true" {
 	 *
 	 * @return              quick.models.Relationships.HasManyThrough
 	 */
-	private HasManyDeep function hasManyThrough( required array relationships, string relationMethodName ) {
+	private HasManyDeep function hasManyThrough(
+		required array relationships,
+		string relationMethodName,
+		boolean nested = variables._withoutRelationshipConstraints
+	) {
 		if ( arguments.relationships.len() <= 1 ) {
 			throw(
 				type    = "RelationshipsLengthMismatch",
@@ -1726,10 +1730,14 @@ component accessors="true" {
 		for ( var i = 1; i <= arguments.relationships.len(); i++ ) {
 			var relationName = arguments.relationships[ i ];
 			var relationship = predecessor.ignoreLoadedGuard( function() {
-				return invoke( predecessor, relationName );
+				return predecessor.withoutRelationshipConstraints( function() {
+					return invoke( predecessor, relationName );
+				} );
 			} );
 
-			relationship.withAlias( "#relationName#_#i#" );
+			// TODO: need a better way to ensure uniqueness
+			param request.loopCount = 1;
+			relationship.withAlias( "#relationName#_#request.loopCount++#" );
 
 			var updatedArgs = relationship.appendToDeepRelationship( through, foreignKeys, localKeys, i );
 			through         = updatedArgs.through;
@@ -1737,31 +1745,27 @@ component accessors="true" {
 			localKeys       = updatedArgs.localKeys;
 
 			if ( i == arguments.relationships.len() ) {
-				related = relationship.getRelated().mappingName();
+				related = () => relationship.getRelationshipBuilder();
 			} else {
 				var relatedEntity  = relationship.getRelated();
 				var throughMapping = relatedEntity.mappingName();
-				var successor      = relatedEntity.ignoreLoadedGuard( function() {
-					return invoke( relatedEntity, relationships[ i + 1 ] );
-				} );
-				if ( relatedEntity.mappingName() == successor.getParent().mappingName() ) {
-					if ( successor.getParent().tableName() != successor.getParent().tableAlias() ) {
-						throughMapping &= " AS #successor.getParent().tableAlias()#";
-					}
+				if ( relatedEntity.tableName() != relatedEntity.tableAlias() ) {
+					throughMapping &= " AS #relatedEntity.tableAlias()#";
 				}
 
 				through.append( throughMapping );
-				predecessor = successor.getParent();
+				predecessor = relatedEntity;
 			}
 		}
 
 		return this.ignoreLoadedGuard( function() {
 			return hasManyDeep(
-				related,
-				through,
-				foreignKeys,
-				localKeys,
-				relationMethodName
+				relationName       = related,
+				through            = through,
+				foreignKeys        = foreignKeys,
+				localKeys          = localKeys,
+				relationMethodName = relationMethodName,
+				nested             = nested
 			);
 		} );
 	}
@@ -2051,6 +2055,7 @@ component accessors="true" {
 		required array through,
 		required array foreignKeys,
 		required array localKeys,
+		boolean nested = variables._withoutRelationshipConstraints,
 		string relationMethodName
 	) {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
@@ -2112,6 +2117,7 @@ component accessors="true" {
 				"throughParents"     : throughParents,
 				"foreignKeys"        : arguments.foreignKeys,
 				"localKeys"          : arguments.localKeys,
+				"nested"             : arguments.nested,
 				"withConstraints"    : !variables._withoutRelationshipConstraints
 			}
 		);

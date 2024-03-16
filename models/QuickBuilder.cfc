@@ -110,7 +110,7 @@ component accessors="true" transientCache="false" {
 	public QuickBuilder function withAlias( required string alias ) {
 		variables.aliasMap.delete( getEntity().tableAlias() );
 		getEntity().withAlias( arguments.alias );
-		variables.qb.from( getEntity().tableName() );
+		variables.qb.withAlias( arguments.alias );
 		return this;
 	}
 

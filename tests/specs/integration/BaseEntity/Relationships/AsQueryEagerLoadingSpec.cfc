@@ -269,8 +269,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				expect( countries[ 1 ][ "posts" ] ).toBeArray();
 				expect( countries[ 1 ][ "posts" ] ).toHaveLength( 2 );
-				expect( countries[ 1 ][ "posts" ][ 1 ][ "body" ] ).toBe( "My awesome post body" );
-				expect( countries[ 1 ][ "posts" ][ 2 ][ "body" ] ).toBe( "My second awesome post body" );
+				expect( countries[ 1 ][ "posts" ][ 1 ][ "body" ] ).toBe( "My second awesome post body" );
+				expect( countries[ 1 ][ "posts" ][ 2 ][ "body" ] ).toBe( "My awesome post body" );
 
 				expect( countries[ 2 ][ "posts" ] ).toBeArray();
 				expect( countries[ 2 ][ "posts" ] ).toHaveLength( 1 );

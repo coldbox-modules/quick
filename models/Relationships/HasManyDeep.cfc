@@ -22,6 +22,11 @@ component
 	 */
 	property name="localKeys" type="array";
 
+	property
+		name   ="nested"
+		type   ="boolean"
+		default="false";
+
 	/**
 	 * Used to check for the type of relationship more quickly than using isInstanceOf.
 	 */
@@ -48,13 +53,16 @@ component
 		required array throughParents,
 		required array foreignKeys,
 		required array localKeys,
+		boolean nested          = false,
 		boolean withConstraints = true
 	) {
 		variables.throughParents = arguments.throughParents;
 		variables.localKeys      = arguments.localKeys;
 		variables.foreignKeys    = arguments.foreignKeys;
+		// TODO: figure out a way to not need this field
+		variables.nested         = arguments.nested;
 
-		return super.init(
+		var instance = super.init(
 			related             = arguments.related.getEntity(),
 			relationName        = arguments.relationName,
 			relationMethodName  = arguments.relationMethodName,
@@ -62,23 +70,27 @@ component
 			withConstraints     = arguments.withConstraints,
 			relationshipBuilder = arguments.related
 		);
+
+		performJoin();
+
+		return instance;
 	}
 
 	public void function addConstraints() {
-		performJoin();
-
-		var firstForeignKey = variables.foreignKeys[ 1 ]
-		if ( isArray( firstForeignKey ) ) {
-			variables.relationshipBuilder.where(
-				variables.throughParents[ 1 ].qualifyColumn( firstForeignKey[ 1 ] ),
-				"=",
-				variables.parent.mappingName()
-			);
-			firstForeignKey = firstForeignKey[ 2 ];
+		if ( !nested ) {
+			var firstForeignKey = variables.foreignKeys[ 1 ]
+			if ( isArray( firstForeignKey ) ) {
+				variables.relationshipBuilder.where(
+					variables.throughParents[ 1 ].qualifyColumn( firstForeignKey[ 1 ] ),
+					"=",
+					variables.parent.mappingName()
+				);
+				firstForeignKey = firstForeignKey[ 2 ];
+			}
+			var qualifiedFirstForeignKey = variables.throughParents[ 1 ].qualifyColumn( firstForeignKey );
+			var firstLocalValue          = variables.parent.retrieveAttribute( variables.localKeys[ 1 ] );
+			variables.relationshipBuilder.where( qualifiedFirstForeignKey, firstLocalValue );
 		}
-		var qualifiedFirstForeignKey = variables.throughParents[ 1 ].qualifyColumn( firstForeignKey );
-		var firstLocalValue          = variables.parent.retrieveAttribute( variables.localKeys[ 1 ] );
-		variables.relationshipBuilder.where( qualifiedFirstForeignKey, firstLocalValue );
 	}
 
 	public void function performJoin( any builder = variables.relationshipBuilder ) {

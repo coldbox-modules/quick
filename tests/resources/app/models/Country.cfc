@@ -99,6 +99,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 			);
 	}
 
+	function publishedPostTags() {
+		return hasManyThrough( [ "users", "publishedPosts", "tags" ] ).distinct();
+	}
+
 	function postCommentsDeep() {
 		return hasManyDeep(
 			relationName = "Comment",

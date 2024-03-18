@@ -101,13 +101,6 @@ component
 		var alias = segments[ 2 ] ?: "";
 
 		var chainLength = variables.throughParents.len();
-		if ( chainLength == 4 && ( chainLength + 1 != variables.foreignKeys.len() ) ) {
-			// TODO: turn into an exception
-			writeDump(
-				var = "invalid foreign key length. Expected #chainLength + 1# but received #variables.foreignKeys.len()#"
-			);
-			abort;
-		}
 		for ( var i = chainLength; i > 0; i-- ) {
 			var throughParent = variables.throughParents[ i ];
 			var predecessor   = i < chainLength ? variables.throughParents[ i + 1 ] : variables.related;

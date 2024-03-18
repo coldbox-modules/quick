@@ -235,9 +235,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( posts[ 3 ].getTags() ).toHaveLength( 0 );
 
 				expect( posts[ 4 ].getTags() ).toBeArray();
-				expect( posts[ 4 ].getTags() ).toHaveLength( 2 );
+				expect( posts[ 4 ].getTags() ).toHaveLength( 3 );
 				expect( posts[ 4 ].getTags()[ 1 ].getName() ).toBe( "programming" );
 				expect( posts[ 4 ].getTags()[ 2 ].getName() ).toBe( "music" );
+				expect( posts[ 4 ].getTags()[ 3 ].getName() ).toBe( "gaming" );
 
 				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
 			} );

@@ -324,7 +324,7 @@ component accessors="true" {
 	}
 
 	public any function withAlias( required string alias ) {
-		variables._table = "#variables._table# #arguments.alias#";
+		variables._table = listFirst( variables._table, " " ) & " " & arguments.alias;
 		return this;
 	}
 
@@ -1737,7 +1737,8 @@ component accessors="true" {
 
 			// TODO: need a better way to ensure uniqueness
 			param request.loopCount = 1;
-			relationship.withAlias( "#relationName#_#request.loopCount++#" );
+			var newAlias            = "#relationName#_#request.loopCount++#";
+			relationship.withAlias( newAlias );
 
 			var updatedArgs = relationship.appendToDeepRelationship( through, foreignKeys, localKeys, i );
 			through         = updatedArgs.through;
@@ -1745,16 +1746,10 @@ component accessors="true" {
 			localKeys       = updatedArgs.localKeys;
 
 			if ( i == arguments.relationships.len() ) {
-				related = () => relationship.getRelationshipBuilder();
+				related = relationship.getRelationshipBuilder();
 			} else {
-				var relatedEntity  = relationship.getRelated();
-				var throughMapping = relatedEntity.mappingName();
-				if ( relatedEntity.tableName() != relatedEntity.tableAlias() ) {
-					throughMapping &= " AS #relatedEntity.tableAlias()#";
-				}
-
-				through.append( throughMapping );
-				predecessor = relatedEntity;
+				through.append( relationship.getRelationshipBuilder() );
+				predecessor = relationship.getRelated();
 			}
 		}
 
@@ -2063,6 +2058,8 @@ component accessors="true" {
 		var related = "";
 		if ( isClosure( arguments.relationName ) || isCustomFunction( arguments.relationName ) ) {
 			related = arguments.relationName();
+		} else if ( !isSimpleValue( arguments.relationName ) ) {
+			related = arguments.relationName;
 		} else {
 			var parts = arguments.relationName.split( "[Aa][Ss]" );
 			related   = variables._wirebox.getInstance( trim( parts[ 1 ] ) );
@@ -2083,6 +2080,8 @@ component accessors="true" {
 			var throughEntity = "";
 			if ( isClosure( throughEntityName ) || isCustomFunction( throughEntityName ) ) {
 				throughEntity = throughEntityName();
+			} else if ( !isSimpleValue( throughEntityName ) ) {
+				throughEntity = throughEntityName;
 			} else {
 				var parts = throughEntityName.split( "[Aa][Ss]" );
 				if ( variables._wirebox.containsInstance( trim( parts[ 1 ] ) ) ) {

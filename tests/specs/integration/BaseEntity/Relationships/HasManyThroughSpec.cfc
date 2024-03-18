@@ -27,15 +27,26 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( countryA.getPublishedPosts()[ 1 ].getBody() ).toBe( "My awesome post body" );
 			} );
 
+			it( "can get the related entities through another entity including a constrained relationship in the through", function() {
+				var countryA = getInstance( "Country@something" ).find( "02B84D66-0AA0-F7FB-1F71AFC954843861" );
+				expect( countryA.getPublishedPostTags() ).toHaveLength( 2 );
+				expect( countryA.getPublishedPostTags()[ 1 ].getId() ).toBe( 1 );
+				expect( countryA.getPublishedPostTags()[ 1 ].getName() ).toBe( "programming" );
+				expect( countryA.getPublishedPostTags()[ 2 ].getId() ).toBe( 2 );
+				expect( countryA.getPublishedPostTags()[ 2 ].getName() ).toBe( "music" );
+			} );
+
 			it( "can get the related entities through any number of intermediate entities including a belongsToMany relationship", function() {
 				var country = getInstance( "Country" ).where( "name", "United States" ).firstOrFail();
 				var tags    = country.getTags();
 				expect( tags ).toBeArray();
-				expect( tags ).toHaveLength( 2 );
+				expect( tags ).toHaveLength( 3 );
 				expect( tags[ 1 ].getId() ).toBe( 1 );
 				expect( tags[ 1 ].getName() ).toBe( "programming" );
 				expect( tags[ 2 ].getId() ).toBe( 2 );
 				expect( tags[ 2 ].getName() ).toBe( "music" );
+				expect( tags[ 3 ].getId() ).toBe( 3 );
+				expect( tags[ 3 ].getName() ).toBe( "gaming" );
 			} );
 
 			it( "can get the related entities starting with a belongsToMany relationship", function() {

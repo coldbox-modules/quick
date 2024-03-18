@@ -92,7 +92,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( posts[ 2 ].hasAttribute( "tagsCount" ) ).toBeTrue(
 						"Post #posts[ 2 ].getPost_Pk()# should have an attribute named `tagsCount`."
 					);
-					expect( posts[ 2 ].getTagsCount() ).toBe( 2 );
+					expect( posts[ 2 ].getTagsCount() ).toBe( 3 );
 
 					expect( posts[ 3 ].getPost_Pk() ).toBe( 7777 );
 					expect( posts[ 3 ].hasAttribute( "commentsCount" ) ).toBeTrue(
@@ -221,7 +221,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( posts[ 2 ].hasAttribute( "tagsCount" ) ).toBeTrue(
 						"Post #posts[ 2 ].getPost_Pk()# should have an attribute named `tagsCount`."
 					);
-					expect( posts[ 2 ].getTagsCount() ).toBe( 2 );
+					expect( posts[ 2 ].getTagsCount() ).toBe( 3 );
 
 					expect( posts[ 3 ].getPost_Pk() ).toBe( 7777 );
 					expect( posts[ 3 ].hasAttribute( "tagsCount" ) ).toBeTrue(

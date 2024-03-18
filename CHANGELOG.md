@@ -1,3 +1,34 @@
+# v7.4.0
+## 18 Mar 2024 — 16:41:44 UTC
+
+### chore
+
++ __tests:__ Remove extra debug logs from tests
+ ([1ba3ca0](https://github.com/coldbox-modules/quick/commit/1ba3ca0a49f3cdc35c122151aab9f7af7b18fe8a))
+
+### feat
+
++ __HasManyThrough:__ The `hasManyThrough` function now returns `HasManyDeep` relationships 
+ ([1af491a](https://github.com/coldbox-modules/quick/commit/1af491ab0f1c21f8c15d67603c4e413f24af1320))
++ __Relationships:__ New `hasManyDeep` and `hasManyDeepBuilder` relationships. ([5331b36](https://github.com/coldbox-modules/quick/commit/5331b36b67d9f35996ae47579d780cc97fa0371d))
+
+### fix
+
++ __HasManyThrough:__ Keep constraints of through entities for `hasManyThrough` relationships
+ ([3f3de36](https://github.com/coldbox-modules/quick/commit/3f3de36125997717ecc56a208384ba5c307eb500))
++ __HasManyThrough:__ Keep constraints on final related entities in hasManyThrough
+ ([95a53d3](https://github.com/coldbox-modules/quick/commit/95a53d304205bac9f6815d9053f99147788620ce))
++ __IRelationship:__ Update type hints to satisfy `IRelationship` interface
+ ([026d7e0](https://github.com/coldbox-modules/quick/commit/026d7e0a8bd365a0c2efc1559737f3c325b4a971))
+
+### other
+
++ __\*:__ v7.4.0-beta.2
+ ([530502c](https://github.com/coldbox-modules/quick/commit/530502c92aadc7c291a98ae5406d38b0c00fba8c))
++ __\*:__ v7.4.0-beta.1
+ ([49e11bb](https://github.com/coldbox-modules/quick/commit/49e11bb8956ea93bf2c547e7faa215879283489f))
+
+
 # v7.3.2
 ## 05 Feb 2024 — 20:23:02 UTC
 

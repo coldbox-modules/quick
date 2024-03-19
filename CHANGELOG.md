@@ -1,3 +1,12 @@
+# v7.4.1
+## 19 Mar 2024 — 17:54:52 UTC
+
+### fix
+
++ __box.json:__ Upgrade to latest str dependency
+ ([582e4cc](https://github.com/coldbox-modules/quick/commit/582e4cc38ed3fe8317ddc5553bb143fb7ba976a2))
+
+
 # v7.4.0
 ## 18 Mar 2024 — 16:41:44 UTC
 

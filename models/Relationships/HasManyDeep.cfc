@@ -194,7 +194,6 @@ component
 	}
 
 	public any function addCompareConstraints( any base = variables.relationshipBuilder, any nested ) {
-		performJoin( base );
 		return arguments.base
 			.select( variables.relationshipBuilder.raw( 1 ) )
 			.where( function( q ) {

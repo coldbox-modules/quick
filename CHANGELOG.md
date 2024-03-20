@@ -1,3 +1,12 @@
+# v7.4.2
+## 20 Mar 2024 — 22:55:50 UTC
+
+### fix
+
++ __HasManyDeep:__ Remove duplicate join from addCompareConstraints
+ ([a9fa07e](https://github.com/coldbox-modules/quick/commit/a9fa07e2973e62122d6a28b4f24c09a0fe02b2e2))
+
+
 # v7.4.1
 ## 19 Mar 2024 — 17:54:52 UTC
 

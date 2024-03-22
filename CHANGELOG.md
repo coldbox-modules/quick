@@ -1,3 +1,11 @@
+# v7.4.3
+## 22 Mar 2024 — 03:08:47 UTC
+
+### fix
+
++ __HasManyDeep:__ Fix qualifying column issue ([72723b1](https://github.com/coldbox-modules/quick/commit/72723b19f51cd8e873133e04c7c711965784830d))
+
+
 # v7.4.2
 ## 20 Mar 2024 — 22:55:50 UTC
 

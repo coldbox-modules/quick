@@ -643,6 +643,11 @@ component accessors="true" transientCache="false" {
 		return this;
 	}
 
+	public QuickBuilder function addAliasesFromBuilder( required any otherBuilder ) {
+		variables.aliasMap.append( otherBuilder.getAliasMap() );
+		return this;
+	}
+
 	/**
 	 * Qualifies a column with the entity's table name.
 	 *

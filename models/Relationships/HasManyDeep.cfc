@@ -142,7 +142,7 @@ component
 		}
 
 		arguments.builder.join( arguments.throughParent.tableName(), function( j ) {
-			j.getParentQuery().setQuickBuilder( throughParent );
+			builder.addAliasesFromBuilder( throughParent );
 			j.setWheres( throughParent.getWheres() );
 			j.addBindings( throughParent.getRawBindings().where, "where" );
 			for ( var join in qualifiedJoins ) {

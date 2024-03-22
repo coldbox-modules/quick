@@ -54,4 +54,8 @@ component accessors="true" {
 		return this;
 	}
 
+	public struct function getAliasMap() {
+		return {};
+	}
+
 }

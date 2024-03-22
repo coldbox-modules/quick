@@ -916,7 +916,7 @@ component
 			returnFormat        = getReturnFormat(),
 			paginationCollector = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
 			columnFormatter     = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
-			parentQuery         = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery(),
+			parentQuery         = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery().clone(),
 			defaultOptions      = getDefaultOptions()
 		);
 		newBuilder.setQuickBuilder( getQuickBuilder() );

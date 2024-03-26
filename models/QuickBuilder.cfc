@@ -149,7 +149,7 @@ component accessors="true" transientCache="false" {
 				var relationshipName = listFirst( column, "." );
 				if ( isNull( q ) ) {
 					q = getEntity().ignoreLoadedGuard( function() {
-						return getEntity().withoutRelationshipConstraints( function() {
+						return getEntity().withoutRelationshipConstraints( relationshipName, function() {
 							return invoke( getEntity(), relationshipName ).addCompareConstraints();
 						} );
 					} );
@@ -159,7 +159,7 @@ component accessors="true" transientCache="false" {
 						.ignoreLoadedGuard( function() {
 							return q
 								.getEntity()
-								.withoutRelationshipConstraints( function() {
+								.withoutRelationshipConstraints( relationshipName, function() {
 									return invoke( q.getEntity(), relationshipName );
 								} );
 						} );
@@ -261,7 +261,7 @@ component accessors="true" transientCache="false" {
 			}
 
 			var countBuilder = getEntity().ignoreLoadedGuard( function() {
-				return getEntity().withoutRelationshipConstraints( function() {
+				return getEntity().withoutRelationshipConstraints( relationName, function() {
 					return invoke( getEntity(), relationName )
 						.addCompareConstraints()
 						.when( true, callback )
@@ -322,7 +322,7 @@ component accessors="true" transientCache="false" {
 			}
 
 			var sumBuilder = getEntity().ignoreLoadedGuard( function() {
-				return getEntity().withoutRelationshipConstraints( function() {
+				return getEntity().withoutRelationshipConstraints( relationName, function() {
 					var related = invoke( getEntity(), relationName );
 					return related
 						.addCompareConstraints()
@@ -564,7 +564,7 @@ component accessors="true" transientCache="false" {
 		}
 		var currentRelationship = listFirst( arguments.relationName, "." );
 		var relation            = getEntity().ignoreLoadedGuard( function() {
-			return getEntity().withoutRelationshipConstraints( function() {
+			return getEntity().withoutRelationshipConstraints( currentRelationship, function() {
 				return invoke( getEntity(), currentRelationship );
 			} );
 		} );
@@ -602,7 +602,7 @@ component accessors="true" transientCache="false" {
 			var thisRelationshipName = listFirst( arguments.relationshipName, "." );
 			if ( isNull( q ) ) {
 				q = getEntity().ignoreLoadedGuard( function() {
-					return getEntity().withoutRelationshipConstraints( function() {
+					return getEntity().withoutRelationshipConstraints( thisRelationshipName, function() {
 						return invoke( getEntity(), thisRelationshipName ).addCompareConstraints().clearOrders();
 					} );
 				} );
@@ -612,7 +612,7 @@ component accessors="true" transientCache="false" {
 					.ignoreLoadedGuard( function() {
 						return q
 							.getEntity()
-							.withoutRelationshipConstraints( function() {
+							.withoutRelationshipConstraints( thisRelationshipName, function() {
 								return invoke( q.getEntity(), thisRelationshipName );
 							} );
 					} );

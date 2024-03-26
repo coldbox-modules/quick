@@ -1266,8 +1266,8 @@ component accessors="true" {
 	 *
 	 * @callback  The callback to run without any automatic relationship constraints.
 	 */
-	public any function withoutRelationshipConstraints( required any callback ) {
-		variables._withoutRelationshipConstraints = true;
+	public any function withoutRelationshipConstraints( required string relationshipName, required any callback ) {
+		variables._withoutRelationshipConstraints = arguments.relationshipName;
 		try {
 			return arguments.callback();
 		} finally {
@@ -1454,7 +1454,7 @@ component accessors="true" {
 				"parent"             : this,
 				"foreignKeys"        : arguments.foreignKey,
 				"localKeys"          : arguments.localKey,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 			}
 		);
 	}
@@ -1509,7 +1509,7 @@ component accessors="true" {
 				"parent"             : this,
 				"foreignKeys"        : arguments.foreignKey,
 				"localKeys"          : arguments.localKey,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 			}
 		);
 	}
@@ -1564,7 +1564,7 @@ component accessors="true" {
 				"parent"             : this,
 				"foreignKeys"        : arguments.foreignKey,
 				"localKeys"          : arguments.localKey,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 			}
 		);
 	}
@@ -1655,7 +1655,7 @@ component accessors="true" {
 				"relatedPivotKeys"   : arguments.relatedPivotKey,
 				"parentKeys"         : arguments.parentKey,
 				"relatedKeys"        : arguments.relatedKey,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 			}
 		);
 	}
@@ -1704,7 +1704,7 @@ component accessors="true" {
 	private HasManyDeep function hasManyThrough(
 		required array relationships,
 		string relationMethodName,
-		boolean nested = variables._withoutRelationshipConstraints
+		boolean nested
 	) {
 		if ( arguments.relationships.len() <= 1 ) {
 			throw(
@@ -1715,6 +1715,7 @@ component accessors="true" {
 		}
 
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		arguments.nested                   = variables._withoutRelationshipConstraints == arguments.relationMethodName;
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -1726,11 +1727,11 @@ component accessors="true" {
 		var foreignKeys = [];
 		var localKeys   = [];
 
-		var predecessor = this.clone( true );
+		var predecessor = this;
 		for ( var i = 1; i <= arguments.relationships.len(); i++ ) {
 			var relationName = arguments.relationships[ i ];
 			var relationship = predecessor.ignoreLoadedGuard( function() {
-				return predecessor.withoutRelationshipConstraints( function() {
+				return predecessor.withoutRelationshipConstraints( relationName, function() {
 					return invoke( predecessor, relationName );
 				} );
 			} );
@@ -1831,7 +1832,7 @@ component accessors="true" {
 				"parent"             : this,
 				"relationships"      : arguments.relationships,
 				"relationshipsMap"   : relationshipsMap,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 			}
 		);
 	}
@@ -1904,7 +1905,7 @@ component accessors="true" {
 				"parent"             : this,
 				"relationships"      : arguments.relationships,
 				"relationshipsMap"   : relationshipsMap,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 			}
 		);
 	}
@@ -1966,7 +1967,7 @@ component accessors="true" {
 				"type"               : arguments.type,
 				"ids"                : arguments.id,
 				"localKeys"          : arguments.localKey,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 			}
 		);
 	}
@@ -2021,7 +2022,7 @@ component accessors="true" {
 					"foreignKeys"        : arguments.id,
 					"localKeys"          : [],
 					"type"               : arguments.type,
-					"withConstraints"    : !variables._withoutRelationshipConstraints
+					"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 				}
 			);
 		}
@@ -2040,7 +2041,7 @@ component accessors="true" {
 				"foreignKeys"        : arguments.id,
 				"localKeys"          : arguments.localKey,
 				"type"               : arguments.type,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 			}
 		);
 	}
@@ -2050,7 +2051,7 @@ component accessors="true" {
 		required array through,
 		required array foreignKeys,
 		required array localKeys,
-		boolean nested = variables._withoutRelationshipConstraints,
+		boolean nested = false,
 		string relationMethodName
 	) {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
@@ -2117,7 +2118,7 @@ component accessors="true" {
 				"foreignKeys"        : arguments.foreignKeys,
 				"localKeys"          : arguments.localKeys,
 				"nested"             : arguments.nested,
-				"withConstraints"    : !variables._withoutRelationshipConstraints
+				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
 			}
 		);
 	}

@@ -87,7 +87,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		qb.addSubselect(
 			"latestPostId",
 			this.ignoreLoadedGuard( function() {
-				return this.withoutRelationshipConstraints( function() {
+				return this.withoutRelationshipConstraints( "posts", function() {
 					return this
 						.posts()
 						.addCompareConstraints()

@@ -384,8 +384,9 @@ component
 		boolean negate    = false
 	) {
 		var relation = getEntity().ignoreLoadedGuard( function() {
-			return getEntity().withoutRelationshipConstraints( function() {
-				return invoke( getEntity(), listFirst( relationshipName, "." ) );
+			var relationName = listFirst( relationshipName, "." );
+			return getEntity().withoutRelationshipConstraints( relationName, function() {
+				return invoke( getEntity(), relationName );
 			} );
 		} );
 
@@ -511,10 +512,11 @@ component
 		var relation = relationQuery
 			.getEntity()
 			.ignoreLoadedGuard( function() {
+				var relationName = listFirst( relationshipName, "." );
 				return relationQuery
 					.getEntity()
-					.withoutRelationshipConstraints( function() {
-						return invoke( relationQuery.getEntity(), listFirst( relationshipName, "." ) );
+					.withoutRelationshipConstraints( relationName, function() {
+						return invoke( relationQuery.getEntity(), relationName );
 					} );
 			} );
 
@@ -583,8 +585,9 @@ component
 		boolean negate    = false
 	) {
 		var relation = getEntity().ignoreLoadedGuard( function() {
-			return getEntity().withoutRelationshipConstraints( function() {
-				return invoke( getEntity(), listFirst( relationshipName, "." ) );
+			var relationName = listFirst( relationshipName, "." );
+			return getEntity().withoutRelationshipConstraints( relationName, function() {
+				return invoke( getEntity(), relationName );
 			} );
 		} );
 
@@ -682,10 +685,11 @@ component
 		var relation = arguments.relationQuery
 			.getEntity()
 			.ignoreLoadedGuard( function() {
+				var relationName = listFirst( relationshipName, "." );
 				return relationQuery
 					.getEntity()
-					.withoutRelationshipConstraints( function() {
-						return invoke( relationQuery.getEntity(), listFirst( relationshipName, "." ) );
+					.withoutRelationshipConstraints( relationName, function() {
+						return invoke( relationQuery.getEntity(), relationName );
 					} );
 			} );
 

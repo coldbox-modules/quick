@@ -1,3 +1,12 @@
+# v7.4.4
+## 26 Mar 2024 — 18:11:18 UTC
+
+### fix
+
++ __HasManyThrough:__ Fix for thread safety when loading multiple relationships off of a single entity
+ ([9e49f55](https://github.com/coldbox-modules/quick/commit/9e49f558b80cc87e25eecc40791c965a470e283c))
+
+
 # v7.4.3
 ## 22 Mar 2024 — 03:08:47 UTC
 

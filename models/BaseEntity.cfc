@@ -156,7 +156,7 @@ component accessors="true" {
 	property name="_loadChildren" persistent="false";
 
 	/**
-	 * A boolean flag representing that the entity does not want automatic relationship constraints.
+	 * An set of relationship method names that the entity does not want automatic relationship constraints.
 	 */
 	property name="_withoutRelationshipConstraints" persistent="false";
 
@@ -221,7 +221,7 @@ component accessors="true" {
 		param variables._relationshipsData        = {};
 		param variables._relationshipsLoaded      = {};
 		param variables._eagerLoad                = [];
-		variables._withoutRelationshipConstraints = false;
+		variables._withoutRelationshipConstraints = createObject( "java", "java.util.HashSet" ).init();
 		variables._applyingGlobalScopes           = false;
 		variables._globalScopesApplied            = false;
 		variables._ignoreNotLoadedGuard           = false;
@@ -1267,11 +1267,11 @@ component accessors="true" {
 	 * @callback  The callback to run without any automatic relationship constraints.
 	 */
 	public any function withoutRelationshipConstraints( required string relationshipName, required any callback ) {
-		variables._withoutRelationshipConstraints = arguments.relationshipName;
+		variables._withoutRelationshipConstraints.add( lCase( arguments.relationshipName ) );
 		try {
 			return arguments.callback();
 		} finally {
-			variables._withoutRelationshipConstraints = false;
+			variables._withoutRelationshipConstraints.remove( lCase( arguments.relationshipName ) );
 		}
 	}
 
@@ -1454,7 +1454,9 @@ component accessors="true" {
 				"parent"             : this,
 				"foreignKeys"        : arguments.foreignKey,
 				"localKeys"          : arguments.localKey,
-				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+				"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+					lCase( arguments.relationMethodName )
+				)
 			}
 		);
 	}
@@ -1509,7 +1511,9 @@ component accessors="true" {
 				"parent"             : this,
 				"foreignKeys"        : arguments.foreignKey,
 				"localKeys"          : arguments.localKey,
-				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+				"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+					lCase( arguments.relationMethodName )
+				)
 			}
 		);
 	}
@@ -1564,7 +1568,9 @@ component accessors="true" {
 				"parent"             : this,
 				"foreignKeys"        : arguments.foreignKey,
 				"localKeys"          : arguments.localKey,
-				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+				"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+					lCase( arguments.relationMethodName )
+				)
 			}
 		);
 	}
@@ -1655,7 +1661,9 @@ component accessors="true" {
 				"relatedPivotKeys"   : arguments.relatedPivotKey,
 				"parentKeys"         : arguments.parentKey,
 				"relatedKeys"        : arguments.relatedKey,
-				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+				"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+					lCase( arguments.relationMethodName )
+				)
 			}
 		);
 	}
@@ -1715,7 +1723,7 @@ component accessors="true" {
 		}
 
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-		arguments.nested                   = variables._withoutRelationshipConstraints == arguments.relationMethodName;
+		arguments.nested                   = variables._withoutRelationshipConstraints.contains( lCase( arguments.relationMethodName ) );
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -1832,7 +1840,9 @@ component accessors="true" {
 				"parent"             : this,
 				"relationships"      : arguments.relationships,
 				"relationshipsMap"   : relationshipsMap,
-				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+				"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+					lCase( arguments.relationMethodName )
+				)
 			}
 		);
 	}
@@ -1905,7 +1915,9 @@ component accessors="true" {
 				"parent"             : this,
 				"relationships"      : arguments.relationships,
 				"relationshipsMap"   : relationshipsMap,
-				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+				"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+					lCase( arguments.relationMethodName )
+				)
 			}
 		);
 	}
@@ -1967,7 +1979,9 @@ component accessors="true" {
 				"type"               : arguments.type,
 				"ids"                : arguments.id,
 				"localKeys"          : arguments.localKey,
-				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+				"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+					lCase( arguments.relationMethodName )
+				)
 			}
 		);
 	}
@@ -2022,7 +2036,9 @@ component accessors="true" {
 					"foreignKeys"        : arguments.id,
 					"localKeys"          : [],
 					"type"               : arguments.type,
-					"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+					"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+						lCase( arguments.relationMethodName )
+					)
 				}
 			);
 		}
@@ -2041,7 +2057,9 @@ component accessors="true" {
 				"foreignKeys"        : arguments.id,
 				"localKeys"          : arguments.localKey,
 				"type"               : arguments.type,
-				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+				"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+					lCase( arguments.relationMethodName )
+				)
 			}
 		);
 	}
@@ -2118,7 +2136,9 @@ component accessors="true" {
 				"foreignKeys"        : arguments.foreignKeys,
 				"localKeys"          : arguments.localKeys,
 				"nested"             : arguments.nested,
-				"withConstraints"    : variables._withoutRelationshipConstraints != arguments.relationMethodName
+				"withConstraints"    : !variables._withoutRelationshipConstraints.contains(
+					lCase( arguments.relationMethodName )
+				)
 			}
 		);
 	}

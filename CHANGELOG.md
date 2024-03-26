@@ -1,3 +1,11 @@
+# v8.0.0
+## 26 Mar 2024 — 19:33:41 UTC
+
+### BREAKING
+
++ __Relationship:__ Required the relationship name when disabling constraints to match on ([dff52d6](https://github.com/coldbox-modules/quick/commit/dff52d681e4b47e674dfec979de6f0853cea093c))
+
+
 # v7.4.4
 ## 26 Mar 2024 — 18:11:18 UTC
 

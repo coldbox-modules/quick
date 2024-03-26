@@ -1,3 +1,12 @@
+# v8.0.2
+## 26 Mar 2024 — 22:12:23 UTC
+
+### fix
+
++ __Relationships:__ Handle skipping constraints when a relationship is defined with other relationships
+ ([62fa4a4](https://github.com/coldbox-modules/quick/commit/62fa4a41d15b64747f27569489d7a2ac51f3ecc5))
+
+
 # v8.0.1
 ## 26 Mar 2024 — 20:03:50 UTC
 

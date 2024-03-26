@@ -1,3 +1,11 @@
+# v8.0.1
+## 26 Mar 2024 — 20:03:50 UTC
+
+### fix
+
++ __BaseEntity:__ Make the withoutRelationshipConstraints check more resilient ([4aedbac](https://github.com/coldbox-modules/quick/commit/4aedbac0d06355105d299bf0d240a73c2236f886))
+
+
 # v8.0.0
 ## 26 Mar 2024 — 19:33:41 UTC
 

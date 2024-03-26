@@ -1726,7 +1726,7 @@ component accessors="true" {
 		var foreignKeys = [];
 		var localKeys   = [];
 
-		var predecessor = this;
+		var predecessor = this.clone( true );
 		for ( var i = 1; i <= arguments.relationships.len(); i++ ) {
 			var relationName = arguments.relationships[ i ];
 			var relationship = predecessor.ignoreLoadedGuard( function() {

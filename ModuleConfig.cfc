@@ -52,6 +52,7 @@ component {
 			.initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
 			.initArg( name = "defaultOptions", value = settings.defaultQueryOptions )
 			.initArg( name = "utils", dsl = "QueryUtils@qb" )
+			.initArg( name = "sqlCommenter", ref = "ColdBoxSQLCommenter@qb" )
 			.initArg( name = "returnFormat", value = "array" );
 
 		if ( isSimpleValue( settings.metadataCache ) ) {

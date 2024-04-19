@@ -1,3 +1,12 @@
+# v8.0.3
+## 19 Apr 2024 — 21:16:01 UTC
+
+### fix
+
++ __ModuleConfig:__ Support qb's SqlCommenter
+ ([66799c6](https://github.com/coldbox-modules/quick/commit/66799c63aa96ca13197fb5d585193ffd4c233108))
+
+
 # v8.0.2
 ## 26 Mar 2024 — 22:12:23 UTC
 

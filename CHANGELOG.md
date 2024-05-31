@@ -1,3 +1,51 @@
+# v9.0.0
+## 31 May 2024 — 22:18:55 UTC
+
+### BREAKING
+
++ __Relationships:__ Return default entities for non-matched eager loaded entites ([b1212de](https://github.com/coldbox-modules/quick/commit/b1212deb04a68339db7a3f128a9e549e041907a9))
++ __Child Entities:__ Fix casting for discriminated entities ([288b81b](https://github.com/coldbox-modules/quick/commit/288b81baa17a45181d559a6d8bd26fbdeeb9da16))
+
+### chore
+
++ __tests:__ Only test against Lucee 6 in cron tests ([940ed80](https://github.com/coldbox-modules/quick/commit/940ed80dd48c6919c1cc1176880b12172c54aadd))
++ __tests:__ Add in Adobe 2023 and ColdBox 7 to the testing matrix
+ ([cd3c8da](https://github.com/coldbox-modules/quick/commit/cd3c8da4d584e6924f37a1add7565658fa809562))
+
+### feat
+
++ __Relationships:__ Get a new filled instance of a relationship by calling the `fill` method on the relationship object
+ ([a2da133](https://github.com/coldbox-modules/quick/commit/a2da13357eae26c68eab6454588217ba3a307568))
++ __Events:__ Add `newAttributes` and `originalAttributes` to the `preUpdate` event
+ ([4dd8496](https://github.com/coldbox-modules/quick/commit/4dd8496638fe7e689428e36ff2066223f930ba22))
++ __Relationships:__ Add additional fetch methods to all relationships ([9709b2f](https://github.com/coldbox-modules/quick/commit/9709b2f72c8c4182d63440cd5f88cd39526114bb))
++ __Casts:__ Allow specifying virtual attributes with a cast ([a57d092](https://github.com/coldbox-modules/quick/commit/a57d092047b320a34d18ff2775a7f55176ee5e91))
+
+### fix
+
++ __Relationships:__ Clear the relationship cache for a relationship when using the relationship setter
+ ([f49b099](https://github.com/coldbox-modules/quick/commit/f49b09909fd5482f46bb2637f2790523ed295a6b))
++ __BaseEntity:__ Only computed attributes hash from persistent attributes
+ ([164b047](https://github.com/coldbox-modules/quick/commit/164b0479451bff48e731fbb5e1c9200ebc390d7f))
++ __Relationships:__ Fix naming collision with `newEntity` function and variable name.
+ ([81aedbb](https://github.com/coldbox-modules/quick/commit/81aedbb48504a14ac87b1be8cae5f587bbfd3556))
++ __BaseEntity:__ Handle null values when assigning to attributes
+ ([ba3a2f4](https://github.com/coldbox-modules/quick/commit/ba3a2f437d2d8f880088f6e7b2fa8033e682c554))
++ __HasOneOrMany:__ Allow returning a new non-persisted entity ([084a089](https://github.com/coldbox-modules/quick/commit/084a089508f6ba935b5a527564a727c3c452560f))
+
+### other
+
++ __\*:__ Fixed issue null check would never pass
+ ([38005c9](https://github.com/coldbox-modules/quick/commit/38005c9a9ee54b71f0b6eed1837b534181b90e39))
++ __\*:__ Update JsonCast.cfc
+ ([b92fc0a](https://github.com/coldbox-modules/quick/commit/b92fc0a418a7d5f991d4e9f181eacbb53808ec94))
++ __\*:__ -fixed regression for issue #203
+ ([45095ad](https://github.com/coldbox-modules/quick/commit/45095ad616e1b27fee219a3f6411941ca1f90e8e))
++ __\*:__ remove hydrate in favor of manually assigning attributes ([c87cb9c](https://github.com/coldbox-modules/quick/commit/c87cb9c10d6b8e3e64f00cccd78b00024cacbefa))
++ __\*:__ Fixed issue where virtualAttributes were not being applied to discriminated child entities when loading through the parent
+ ([149aa9e](https://github.com/coldbox-modules/quick/commit/149aa9eb40d1d382fc195cb6c36682a592ae1768))
+
+
 # v8.0.3
 ## 19 Apr 2024 — 21:16:01 UTC
 

@@ -29,6 +29,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request.quickPreUpdateCalled[ 1 ].entity.getDownloadUrl() ).toBe(
 					"https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
 				);
+				expect( request.quickPreUpdateCalled[ 1 ] ).toHaveKey( "originalAttributes" );
+				expect( request.quickPreUpdateCalled[ 1 ].originalAttributes.download_url ).toBe( "https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV" );
+				expect( request.quickPreUpdateCalled[ 1 ] ).toHaveKey( "newAttributes" );
+				expect( request.quickPreUpdateCalled[ 1 ].newAttributes.download_url ).toBe( "https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv" );
+
 				structDelete( request, "quickPreUpdateCalled" );
 			} );
 

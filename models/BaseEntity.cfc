@@ -1100,7 +1100,14 @@ component accessors="true" {
 		variables._saving = true;
 		var builder       = newQuery();
 		if ( variables._loaded ) {
-			fireEvent( "preUpdate", { entity : this } );
+			fireEvent(
+				"preUpdate",
+				{
+					"entity"             : this,
+					"newAttributes"      : get_data(),
+					"originalAttributes" : get_originalAttributes()
+				}
+			);
 			builder
 				.where( function( q ) {
 					arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {

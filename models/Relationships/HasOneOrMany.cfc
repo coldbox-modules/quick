@@ -321,9 +321,7 @@ component
 	 * @return      quick.models.BaseEntity
 	 */
 	public any function create( struct attributes = {} ) {
-		return newEntity()
-			.fill( arguments.attributes )
-			.save();
+		return newEntity().fill( arguments.attributes ).save();
 	}
 
 	/**

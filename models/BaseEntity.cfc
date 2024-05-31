@@ -2411,6 +2411,8 @@ component accessors="true" {
 			);
 		}
 
+		clearRelationship( relationshipName );
+
 		return relationship.applySetter( argumentCollection = arguments.missingMethodArguments );
 	}
 

@@ -350,8 +350,6 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					newTagB
 				] );
 
-				post.refresh();
-
 				expect( post.getTags().toArray() ).toBeArray();
 				expect( post.getTags().toArray() ).toHaveLength( 3 );
 				expect(

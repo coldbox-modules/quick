@@ -772,7 +772,7 @@ component accessors="true" {
 	 * @return      string
 	 */
 	public string function computeAttributesHash( required struct attributes ) {
-		var keys = arguments.attributes.keyArray();
+		var keys = arguments.attributes.keyArray().filter( hasAttribute );
 		arraySort( keys, "textnocase" );
 		return hash(
 			keys.map( function( key ) {

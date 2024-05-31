@@ -676,33 +676,29 @@ component accessors="true" {
 	}
 
 	/**
-	 * Hyrdates an entity from a struct of data.
+	 * Hydrates an entity from a struct of data.
 	 * Hydrating an entity fills the entity and then marks it as loaded.
 	 *
-	 * @attributes                   A struct of key / value pairs.
-	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
-	 *                               attribute does not exist.  Instead, it skips
-	 *                               the non-existent attribute.
+	 * @attributes  A struct of key / value pairs.
 	 *
-	 * @return                       quick.models.BaseEntity
+	 * @return      quick.models.BaseEntity
 	 */
-	public any function hydrate( required struct attributes, boolean ignoreNonExistentAttributes = false ) {
+	public any function hydrate( required struct attributes ) {
 		guardAgainstMissingKeys( arguments.attributes );
-		return fill( argumentCollection = arguments ).assignOriginalAttributes( arguments.attributes ).markLoaded();
+		return assignAttributesData( arguments.attributes )
+			.assignOriginalAttributes( arguments.attributes )
+			.markLoaded();
 	}
 
 	/**
 	 * Hydrates a new collection of entities from an array of structs.
 	 *
-	 * @mementos                     An array of structs to hydrate into entities.
-	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
-	 *                               attribute does not exist.  Instead, it skips
-	 *                               the non-existent attribute.
+	 * @mementos  An array of structs to hydrate into entities.
 	 */
-	public any function hydrateAll( array mementos = [], boolean ignoreNonExistentAttributes = false ) {
+	public any function hydrateAll( array mementos = [] ) {
 		return newCollection(
 			arguments.mementos.map( function( memento ) {
-				return newEntity().hydrate( memento, ignoreNonExistentAttributes );
+				return newEntity().hydrate( memento );
 			} )
 		);
 	}

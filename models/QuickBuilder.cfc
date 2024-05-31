@@ -1317,7 +1317,7 @@ component accessors="true" transientCache="false" {
 					data[ childClass.keyNames()[ i ] ] = data[ key ];
 				} );
 
-			return childClass.hydrate( arguments.data, true );
+			return childClass.hydrate( arguments.data );
 		} else {
 			return getEntity()
 				.newEntity()

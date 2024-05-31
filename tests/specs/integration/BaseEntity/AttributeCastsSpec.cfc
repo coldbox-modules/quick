@@ -105,6 +105,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					pn.update( { "active" : false } );
 				} ).notToThrow( message = "PhoneNumber should be able to be saved with a `null` [confirmed] value" );
 			} );
+
+			it( "correctly casts child entities", () => {
+				var product = getInstance( "BaseProduct" ).firstOrFail();
+				expect( product.getMetadata() ).toBeStruct();
+			} );
 		} );
 	}
 

@@ -1,6 +1,6 @@
-component 
-    extends="quick.models.BaseEntity" 
-    accessors="true" 
+component
+    extends="quick.models.BaseEntity"
+    accessors="true"
     discriminatorColumn="type"
     singleTableInheritance="true"
     table="products"
@@ -10,6 +10,7 @@ component
 	property name="name";
     property name="userId" column="user_id";
     property name="type";
+    property name="metadata" casts="JsonCast@quick";
 
 
     variables._discriminators = [

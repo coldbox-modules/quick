@@ -7,6 +7,7 @@ component {
             table.string( "type" ).nullable(); // ( books|music )
             table.string( "isbn" ).nullable(); // books only
             table.string( "artist" ).nullable(); // music only
+            table.text( "metadata" ).nullable();
             table.unsignedInteger( "user_id" ); // relationship to user
         } );
 
@@ -15,7 +16,8 @@ component {
                 "name": "The Lord Of The Rings",
                 "type": "book",
                 "isbn": "9780544003415",
-                "user_id": 2
+                "user_id": 2,
+                "metadata": "{}"
         } );
 
         qb.newQuery().table( "products" ).insert( {
@@ -23,7 +25,8 @@ component {
                 "name": "Jeremy",
                 "type": "music",
                 "artist": "Pearl Jam",
-                "user_id": 1
+                "user_id": 1,
+                "metadata": "{}"
         } );
     }
 

@@ -3344,7 +3344,7 @@ component accessors="true" {
 			for ( var column in attrs ) {
 				assignAttribute(
 					name  = column,
-					value = attrs[ column ],
+					value = isNull( attrs[ column ] ) ? javacast( "null", "" ) : attrs[ column ],
 					cast  = false
 				);
 			}

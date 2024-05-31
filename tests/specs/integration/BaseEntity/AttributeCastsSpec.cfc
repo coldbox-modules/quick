@@ -56,6 +56,27 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getState() ).toBe( "TX" );
 			} );
 
+			it( "can assign a value object that is then casted", () => {
+				var user = getInstance( "User" );
+				user.setUsername( "testing_casts" );
+				user.setFirstName( "Testing" );
+				user.setLastName( "Casts" );
+				var newAddress = getInstance( "Address" );
+				newAddress.setStreetOne( "123 Elm Street" );
+				newAddress.setCity( "Salt Lake City" );
+				newAddress.setState( "UT" );
+				newAddress.setZip( "84123" );
+				user.setAddress( newAddress );
+				user.save();
+
+				var fetchedUser = getInstance( "User" ).where( "username", "testing_casts" ).firstOrFail();
+				expect( fetchedUser.getUsername() ).toBe( "testing_casts" );
+				expect( fetchedUser.getFirstName() ).toBe( "Testing" );
+				expect( fetchedUser.getLastName() ).toBe( "Casts" );
+				expect( fetchedUser.getAddress() ).notToBeNull();
+				expect( fetchedUser.getAddress().formatted() ).toBe( newAddress.formatted() );
+			} );
+
 			it( "can cast json data", function() {
 				var theme = getInstance( "Theme" ).create( {
 					"slug"    : "my-theme",

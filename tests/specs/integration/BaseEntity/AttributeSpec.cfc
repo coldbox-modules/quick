@@ -97,7 +97,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "shows all the attributes in the memento of a newly created object", function() {
 				var memento = getInstance( "User" ).getMemento();
-				if ( structCount( memento ) != 18 ) {
+				if ( structCount( memento ) != 14 ) {
 					var expected = [
 						"id",
 						"username",
@@ -111,11 +111,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						"type",
 						"email",
 						"externalID",
-						"streetOne",
-						"streetTwo",
-						"city",
-						"state",
-						"zip",
+						"address",
 						"favoritePost_id"
 					];
 					var missing = duplicate( expected );
@@ -126,7 +122,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 							extra.append( key );
 						}
 					}
-					expect( structCount( memento ) ).toHaveLength( 18 );
+					expect( memento ).toHaveLength( 14 );
 				}
 				expect( memento ).toHaveKey( "id" );
 				expect( memento[ "id" ] ).toBe( "" );
@@ -152,39 +148,44 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( memento[ "email" ] ).toBe( "" );
 				expect( memento ).toHaveKey( "externalId" );
 				expect( memento[ "externalId" ] ).toBe( "" );
-				expect( memento ).toHaveKey( "streetOne" );
-				expect( memento[ "streetOne" ] ).toBe( "" );
-				expect( memento ).toHaveKey( "streetTwo" );
-				expect( memento[ "streetTwo" ] ).toBe( "" );
-				expect( memento ).toHaveKey( "city" );
-				expect( memento[ "city" ] ).toBe( "" );
-				expect( memento ).toHaveKey( "state" );
-				expect( memento[ "state" ] ).toBe( "" );
-				expect( memento ).toHaveKey( "zip" );
-				expect( memento[ "zip" ] ).toBe( "" );
+				expect( memento ).toHaveKey( "address" );
+				var address = memento[ "address" ];
+				expect( address ).toBeStruct();
+				expect( address ).toHaveKey( "streetOne" );
+				expect( address[ "streetOne" ] ).toBe( "" );
+				expect( address ).toHaveKey( "streetTwo" );
+				expect( address[ "streetTwo" ] ).toBe( "" );
+				expect( address ).toHaveKey( "city" );
+				expect( address[ "city" ] ).toBe( "" );
+				expect( address ).toHaveKey( "state" );
+				expect( address[ "state" ] ).toBe( "" );
+				expect( address ).toHaveKey( "zip" );
+				expect( address[ "zip" ] ).toBe( "" );
 				expect( memento ).toHaveKey( "favoritePost_id" );
 				expect( memento[ "favoritePost_id" ] ).toBe( "" );
 			} );
 
 			it( "shows all the attributes in the component casing", function() {
 				expect( getInstance( "User" ).findOrFail( 1 ).getMemento() ).toBe( {
-					"id"              : 1,
-					"username"        : "elpete",
-					"firstName"       : "Eric",
-					"lastName"        : "Peterson",
-					"password"        : "5F4DCC3B5AA765D61D8327DEB882CF99",
-					"countryId"       : "02B84D66-0AA0-F7FB-1F71AFC954843861",
-					"teamId"          : 1,
-					"createdDate"     : "2017-07-28 02:06:36",
-					"modifiedDate"    : "2017-07-28 02:06:36",
-					"type"            : "admin",
-					"email"           : "",
-					"externalId"      : "1234",
-					"streetOne"       : "123 Elm Street",
-					"streetTwo"       : "",
-					"city"            : "Salt Lake City",
-					"state"           : "UT",
-					"zip"             : "84123",
+					"id"           : 1,
+					"username"     : "elpete",
+					"firstName"    : "Eric",
+					"lastName"     : "Peterson",
+					"password"     : "5F4DCC3B5AA765D61D8327DEB882CF99",
+					"countryId"    : "02B84D66-0AA0-F7FB-1F71AFC954843861",
+					"teamId"       : 1,
+					"createdDate"  : "2017-07-28 02:06:36",
+					"modifiedDate" : "2017-07-28 02:06:36",
+					"type"         : "admin",
+					"email"        : "",
+					"externalId"   : "1234",
+					"address"      : {
+						"streetOne" : "123 Elm Street",
+						"streetTwo" : "",
+						"city"      : "Salt Lake City",
+						"state"     : "UT",
+						"zip"       : "84123"
+					},
 					"favoritePost_id" : "1245"
 				} );
 			} );

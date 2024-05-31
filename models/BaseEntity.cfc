@@ -3257,7 +3257,7 @@ component accessors="true" {
 			return arguments.value;
 		}
 
-		if ( isNullValue( arguments.key, arguments.value ) ) {
+		if ( !isVirtualAttribute( arguments.key ) && isNullValue( arguments.key, arguments.value ) ) {
 			return arguments.value;
 		}
 

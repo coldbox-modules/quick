@@ -21,7 +21,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	property
 		name      ="address"
 		casts     ="AddressCast"
-		persistent="false"
+		virtual   ="true"
 		getter    ="false"
 		setter    ="false";
 	property name="streetOne";
@@ -29,6 +29,16 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	property name="city";
 	property name="state";
 	property name="zip";
+
+	this.memento = {
+		"neverInclude": [
+			"streetOne",
+			"streetTwo",
+			"city",
+			"state",
+			"zip"
+		]
+	};
 
 	function externalThings() {
 		return hasMany(

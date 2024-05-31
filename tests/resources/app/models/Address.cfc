@@ -17,4 +17,14 @@ component accessors="true" {
         return fullStreet() & chr( 10 ) & "#getCity()#, #getState()# #getZip()#";
     }
 
+    function getMemento() {
+        return {
+            "streetOne": variables.streetOne,
+            "streetTwo": variables.streetTwo,
+            "city": variables.city,
+            "state": variables.state,
+            "zip": variables.zip
+        };
+    }
+
 }

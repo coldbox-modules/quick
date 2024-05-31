@@ -19,8 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "adobe@2018", "adobe@2021"]
-        coldbox: ["coldbox@6", "coldbox@be"]
+        cfengine: ["lucee@5", "lucee@6", "adobe@2018", "adobe@2021", "adobe@2023"]
+        coldbox: ["coldbox@6", "coldbox@7", "coldbox@be"]
     services:
       mysql:
         image: mysql:5.7

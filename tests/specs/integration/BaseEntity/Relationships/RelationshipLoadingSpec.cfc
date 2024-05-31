@@ -77,6 +77,47 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( postQuery.result.sqlparameters ).toBe( [ 321, 523526 ] );
 				} );
 			} );
+
+			it( "can call fetch methods on the relationship builder", () => {
+				var elpete             = getInstance( "User" ).findOrFail( 1 );
+				var elpeteFavoritePost = elpete.favoritePost().first();
+				expect( elpeteFavoritePost ).notToBeNull();
+				expect( elpeteFavoritePost ).toBeInstanceOf( "Post" );
+				expect( elpeteFavoritePost.isLoaded() ).toBeTrue();
+				expect( elpeteFavoritePost.getPost_Pk() ).toBe( 1245 );
+
+				var johndoe = getInstance( "User" ).findOrFail( 2 );
+				expect( johndoe.favoritePost().first() ).toBeNull();
+
+				var janedoe             = getInstance( "User" ).findOrFail( 3 );
+				var janedoeFavoritePost = janedoe.favoritePost().firstOrNew();
+				expect( janedoeFavoritePost ).notToBeNull();
+				expect( janedoeFavoritePost ).toBeInstanceOf( "Post" );
+				expect( janedoeFavoritePost.isLoaded() ).toBeFalse();
+
+				var elpete2             = getInstance( "User" ).findOrFail( 4 );
+				var elpete2FavoritePost = elpete2
+					.favoritePost()
+					.firstOrCreate( { "user_id" : 4, "body" : "test body" } );
+				expect( elpete2FavoritePost ).notToBeNull();
+				expect( elpete2FavoritePost ).toBeInstanceOf( "Post" );
+				expect( elpete2FavoritePost.isLoaded() ).toBeTrue();
+				expect( elpete2FavoritePost.getUser_Id() ).toBe( 4 );
+				expect( elpete2FavoritePost.getBody() ).toBe( "test body" );
+			} );
+
+			it( "can call exists methods on a relationship class", () => {
+				var elpete = getInstance( "User" ).findOrFail( 1 );
+				expect( elpete.favoritePost().exists() ).toBeTrue();
+
+				var johndoe = getInstance( "User" ).findOrFail( 2 );
+				expect( johndoe.favoritePost().exists() ).toBeFalse();
+
+				expect( function() {
+					var janedoe = getInstance( "User" ).findOrFail( 3 );
+					janedoe.favoritePost().existsOrFail();
+				} ).toThrow( type = "EntityNotFound" );
+			} );
 		} );
 	}
 

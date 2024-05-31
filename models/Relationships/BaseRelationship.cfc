@@ -153,6 +153,67 @@ component accessors="true" implements="IRelationship" {
 	}
 
 	/**
+	 * Gets the first matching record for the relationship or returns an unloaded entity
+	 *
+	 * @attributes                   A struct of attributes to restrict the query. If no entity is
+	 *                               found the attributes are filled on the new entity returned.
+	 * @newAttributes                A struct of attributes to fill on the new entity if no entity
+	 *                               is found. These attributes are combined with `attributes`.
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 *                               attribute does not exist.  Instead, it skips
+	 *                               the non-existent attribute.
+	 *
+	 * @return   quick.models.BaseEntity
+	 */
+	public any function firstOrNew(
+		struct attributes                   = {},
+		struct newAttributes                = {},
+		boolean ignoreNonExistentAttributes = false
+	) {
+		return variables.relationshipBuilder.firstOrNew( argumentCollection = arguments );
+	}
+
+	/**
+	 * Finds the first matching record for the relationship or creates a new entity.
+	 *
+	 * @attributes                   A struct of attributes to restrict the query. If no entity is
+	 *                               found the attributes are filled on the new entity created.
+	 * @newAttributes                A struct of attributes to fill on the created entity if no entity
+	 *                               is found. These attributes are combined with `attributes`.
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 *                               attribute does not exist.  Instead, it skips
+	 *                               the non-existent attribute.
+	 *
+	 * @return                       quick.models.BaseEntity
+	 */
+	public any function firstOrCreate(
+		struct attributes                   = {},
+		struct newAttributes                = {},
+		boolean ignoreNonExistentAttributes = false
+	) {
+		return variables.relationshipBuilder.firstOrCreate( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds a basic where clause to the relationship query and returns the first result.
+	 *
+	 * @column      The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+	 * @operator    The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+	 * @value       The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+	 * @combinator  The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+	 *
+	 * @return      quick.models.BaseEntity
+	 */
+	public any function firstWhere(
+		any column,
+		any operator,
+		any value,
+		string combinator = "and"
+	) {
+		return variables.relationshipBuilder.firstWhere( argumentCollection = arguments );
+	}
+
+	/**
 	 * Finds the first matching record with a given id for the relationship.
 	 * Returns null if no record is found.
 	 *
@@ -176,6 +237,47 @@ component accessors="true" implements="IRelationship" {
 	 */
 	public any function findOrFail( required any id ) {
 		return variables.relationshipBuilder.findOrFail( arguments.id );
+	}
+
+	/**
+	 * Returns the related entity with the id value as the primary key.
+	 * If no record is found, it returns a new unloaded entity.
+	 *
+	 * @id                           The id value to find.
+	 * @attributes                   A struct of attributes to fill on the new entity if no entity is found.
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 *                               attribute does not exist.  Instead, it skips
+	 *                               the non-existent attribute.
+	 *
+	 * @return      quick.models.BaseEntity
+	 */
+	public any function findOrNew(
+		required any id,
+		struct attributes                   = {},
+		boolean ignoreNonExistentAttributes = false
+	) {
+		return variables.relationshipBuilder.findOrNew( argumentCollection = arguments );
+	}
+
+	/**
+	 * Returns the related entity with the id value as the primary key.
+	 * If no record is found, it returns a newly created entity.
+	 *
+	 * @id                           The id value to find.
+	 * @attributes                   A struct of attributes to use when creating the new entity
+	 *                               if no entity is found.
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 *                               attribute does not exist.  Instead, it skips
+	 *                               the non-existent attribute.
+	 *
+	 * @return  quick.models.BaseEntity
+	 */
+	public any function findOrCreate(
+		required any id,
+		struct attributes                   = {},
+		boolean ignoreNonExistentAttributes = false
+	) {
+		return variables.relationshipBuilder.findOrCreate( argumentCollection = arguments );
 	}
 
 	/**

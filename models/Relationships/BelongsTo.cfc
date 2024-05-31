@@ -219,14 +219,14 @@ component
 	 */
 	public array function initRelation( required array entities, required string relation ) {
 		arguments.entities.each( function( entity ) {
-			var newEntity = newDefaultEntity();
+			var defaultEntity = newDefaultEntity();
 			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
 				arguments.entity.assignRelationship(
 					relation,
-					isNull( newEntity ) ? javacast( "null", "" ) : newEntity
+					isNull( defaultEntity ) ? javacast( "null", "" ) : defaultEntity
 				);
 			} else {
-				arguments.entity[ relation ] = isNull( newEntity ) ? {} : newEntity.getMemento();
+				arguments.entity[ relation ] = isNull( defaultEntity ) ? {} : defaultEntity.getMemento();
 			}
 		} );
 		return arguments.entities;

@@ -103,13 +103,7 @@ component
 			return javacast( "null", "" );
 		}
 
-		if ( isClosure( variables.defaultAttributes ) || isCustomFunction( variables.defaultAttributes ) ) {
-			return tap( variables.related.newEntity(), function( newEntity ) {
-				variables.defaultAttributes( newEntity, variables.child );
-			} );
-		}
-
-		return variables.related.newEntity().fill( variables.defaultAttributes );
+		return newDefaultEntity();
 	}
 
 	/**
@@ -225,10 +219,14 @@ component
 	 */
 	public array function initRelation( required array entities, required string relation ) {
 		arguments.entities.each( function( entity ) {
+			var newEntity = newDefaultEntity();
 			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-				arguments.entity.assignRelationship( relation, javacast( "null", "" ) );
+				arguments.entity.assignRelationship(
+					relation,
+					isNull( newEntity ) ? javacast( "null", "" ) : newEntity
+				);
 			} else {
-				arguments.entity[ relation ] = {};
+				arguments.entity[ relation ] = isNull( newEntity ) ? {} : newEntity.getMemento();
 			}
 		} );
 		return arguments.entities;

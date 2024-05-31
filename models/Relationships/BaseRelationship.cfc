@@ -511,6 +511,22 @@ component accessors="true" implements="IRelationship" {
 		}
 	}
 
+	public any function newDefaultEntity() {
+		if ( !variables.returnDefaultEntity ) {
+			return javacast( "null", "" );
+		}
+
+		var newEntity = variables.related.newEntity();
+
+		if ( isClosure( variables.defaultAttributes ) || isCustomFunction( variables.defaultAttributes ) ) {
+			variables.defaultAttributes( newEntity, variables.parent );
+		} else {
+			newEntity.fill( variables.defaultAttributes );
+		}
+
+		return newEntity;
+	}
+
 	private boolean function entityHasAttribute(
 		required any entity,
 		required string key,

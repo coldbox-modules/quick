@@ -525,6 +525,23 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					var result = getInstance( "RMME_A" ).with( "B" ).get();
 				} ).notToThrow();
 			} );
+
+			it( "can provides default models if they are defined for the relationship", () => {
+				var categories = getInstance( "Category" )
+					.with( "parent" )
+					.orderByAsc( "id" )
+					.get();
+
+				expect( categories ).toBeArray();
+				expect( categories ).toHaveLength( 2 );
+				expect( categories[ 1 ].getId() ).toBe( 1 );
+				expect( categories[ 1 ].getParent() ).notToBeNull();
+				expect( categories[ 1 ].getParent().isLoaded() ).toBeFalse( "Category 1 should have a default parent Category NOT loaded from the database" );
+				expect( categories[ 2 ].getId() ).toBe( 2 );
+				expect( categories[ 2 ].getParent() ).notToBeNull();
+				expect( categories[ 2 ].getParent().isLoaded() ).toBeTrue( "Category 2 should have a parent Category loaded from the database" );
+				expect( categories[ 2 ].getParent().getId() ).toBe( 1 );
+			} );
 		} );
 	}
 

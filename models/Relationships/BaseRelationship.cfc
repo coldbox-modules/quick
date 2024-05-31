@@ -281,6 +281,29 @@ component accessors="true" implements="IRelationship" {
 	}
 
 	/**
+	 * Creates a new unloaded related entity and sets attributes data from a struct of key / value pairs.
+	 * This method does the following, in order:
+	 * 1. Guard against read-only attributes
+	 * 2. Attempt to call a relationship setter.
+	 * 2. Calls custom attribute setters for attributes that exist
+	 * 3. Throws an error if an attribute does not exist
+	 *
+	 * @attributes                   A struct of key / value pairs.
+	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
+	 *                               attribute does not exist.  Instead, it skips
+	 *                               the non-existent attribute.
+	 *
+	 * @return                       quick.models.BaseEntity
+	 */
+	public any function fill(
+		struct attributes                   = {},
+		boolean ignoreNonExistentAttributes = false,
+		any include                         = [],
+		any exclude                         = []
+	) {
+		return newEntity().fill( argumentCollection = arguments );
+	}
+	/**
 	 * Returns all results for the related entity.
 	 * Note: `all` resets any query restrictions, including relationship restrictions.
 	 *
@@ -627,6 +650,17 @@ component accessors="true" implements="IRelationship" {
 		}
 
 		return newEntity;
+	}
+
+	/**
+	 * Returns a new instance of the entity, pre-associated to the parent entity. Does not persist it.
+	 *
+	 * @return      quick.models.BaseEntity
+	 */
+	public any function newEntity() {
+		var newInstance = variables.related.newEntity();
+		setForeignAttributesForCreate( newInstance );
+		return newInstance;
 	}
 
 	private boolean function entityHasAttribute(

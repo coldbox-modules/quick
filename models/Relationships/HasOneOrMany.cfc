@@ -325,17 +325,6 @@ component
 	}
 
 	/**
-	 * Returns a new instance of the entity, pre-associated to the parent entity. Does not persist it.
-	 *
-	 * @return      quick.models.BaseEntity
-	 */
-	public any function newEntity() {
-		var newInstance = variables.related.newEntity();
-		setForeignAttributesForCreate( newInstance );
-		return newInstance;
-	}
-
-	/**
 	 * Sets the parent key value as the foreign key for the entity.
 	 *
 	 * @entity   The entity to associate.

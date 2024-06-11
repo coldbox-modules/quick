@@ -1094,7 +1094,7 @@ component accessors="true" {
 				var parent = variables._wirebox.getInstance( parentDefinition.meta.fullName );
 			}
 
-			parent.fill( getMemento(), true ).save();
+			parent.fill( retrieveAttributesData(), true ).save();
 
 			assignAttributesData( {
 				"#parentDefinition.key#"        : parent.keyValues()[ 1 ],

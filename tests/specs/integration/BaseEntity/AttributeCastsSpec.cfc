@@ -112,33 +112,28 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "can maintain casts when loading a discriminated child through the parent", () => {
-				var comment = getInstance( "Comment" )
-					.where('designation', 'internal')
-					.first();
+				var comment = getInstance( "Comment" ).where( "designation", "internal" ).first();
 
 				expect( comment.getSentimentAnalysis() ).notToBeNull();
 				expect( comment.getSentimentAnalysis() ).toBeStruct();
 				expect( comment.getSentimentAnalysis() ).toHaveKey( "analyzed" );
 				expect( comment.getSentimentAnalysis() ).toHaveKey( "magnitude" );
 				expect( comment.getSentimentAnalysis() ).toHaveKey( "score" );
-
 			} );
 
 			it( "will recast after saving entity", function() {
-				var pn = getInstance( "PhoneNumber" ).find(1);
+				var pn = getInstance( "PhoneNumber" ).find( 1 );
 				pn.setNumber( "111-111-1111" );
 				pn.setActive( "0" );
 
 				expect( pn.getActive() ).toBe( "0" );
 				expect( pn.getActive() ).toBeNumeric();
- 
+
 				pn.save();
 
-				expect( pn.getActive() ).toBe( false ); 
+				expect( pn.getActive() ).toBe( false );
 				expect( pn.getActive() ).toBeBoolean();
-
 			} );
-
 		} );
 	}
 

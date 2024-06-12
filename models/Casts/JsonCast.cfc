@@ -14,17 +14,15 @@ component singleton {
 		required string key,
 		any value
 	) {
-
 		if ( isNull( arguments.value ) ) {
 			return javacast( "null", "" );
 		}
 
-		if( isJSON( arguments.value ) ){
+		if ( isJSON( arguments.value ) ) {
 			return deserializeJSON( arguments.value );
 		}
 
 		return arguments.value;
-
 	}
 
 	/**

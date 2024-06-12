@@ -352,13 +352,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var comment = getInstance( "Comment" )
 					.addUpperBody()
 					.where( "designation", "internal" )
-					.get()[1]
+					.get()[ 1 ]
 
 				expect( comment.hasAttribute( "upperBody" ) ).toBeTrue(
 					"Child class should have a virtual attribute 'upperBody'."
 				);
 			} );
-
 		} );
 
 		describe( "Single Table Inheritence Class Spec", function() {

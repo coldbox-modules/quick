@@ -10,7 +10,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "can compute attributes hash correctly", function() {
 				var passwordHash = hash( "password" )
-				var user = getInstance( "User" ).populate(
+				var user         = getInstance( "User" ).populate(
 					{
 						"username"              : "JaneDoe",
 						"first_name"            : "Jane",

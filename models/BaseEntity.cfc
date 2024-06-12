@@ -174,7 +174,7 @@ component accessors="true" {
 	/**
 	 * An array of virtual attribute key names that have been add to this entity
 	 */
-	property name="_virtualAttributes" persistent="false"; 
+	property name="_virtualAttributes" persistent="false";
 
 
 	/**
@@ -1166,10 +1166,14 @@ component accessors="true" {
 		fireEvent( "postSave", { entity : this } );
 
 		// re-cast
-		for ( var key in variables._castCache) {
-			var castedValue = castValueForGetter( key, variables._castCache[ key ], true );
+		for ( var key in variables._castCache ) {
+			var castedValue = castValueForGetter(
+				key,
+				variables._castCache[ key ],
+				true
+			);
 			variables._data[ retrieveColumnForAlias( key ) ] = castedValue;
-			variables[ retrieveAliasForColumn( key ) ] = castedValue;
+			variables[ retrieveAliasForColumn( key ) ]       = castedValue;
 		}
 
 		return this;
@@ -3264,10 +3268,14 @@ component accessors="true" {
 	 *
 	 * @return  any
 	 */
-	private any function castValueForGetter( required string key, any value, boolean forceCast = false ) {
+	private any function castValueForGetter(
+		required string key,
+		any value,
+		boolean forceCast = false
+	) {
 		arguments.key = retrieveAliasForColumn( arguments.key );
 
-		if ( structKeyExists( variables._castCache, arguments.key )  AND !arguments.forceCast ) {
+		if ( structKeyExists( variables._castCache, arguments.key ) AND !arguments.forceCast ) {
 			return variables._castCache[ arguments.key ];
 		}
 

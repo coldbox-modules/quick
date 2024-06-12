@@ -9,18 +9,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "can compute attributes hash correctly", function() {
+				var passwordHash = hash( "password" )
 				var user = getInstance( "User" ).populate(
 					{
 						"username"              : "JaneDoe",
 						"first_name"            : "Jane",
 						"last_name"             : "Doe",
-						"password"              : hash( "password" ),
+						"password"              : passwordHash,
 						"non-existant-property" : "any-value"
 					},
 					true
 				);
 
-				var expectedHash = hash( "first_name=Jane&last_name=Doe&password=5F4DCC3B5AA765D61D8327DEB882CF99&username=JaneDoe" );
+				var expectedHash = hash( "first_name=Jane&last_name=Doe&password=#passwordHash#&username=JaneDoe" );
 				var hash         = user.computeAttributesHash( user.retrieveAttributesData() );
 				expect( expectedHash ).toBe( hash, "The computeAttributesHash method does not return the correct hash" );
 			} );

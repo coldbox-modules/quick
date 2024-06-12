@@ -5,8 +5,13 @@ component {
             t.increments( "id" );
             t.string( "title" ).nullable();
             t.string( "download_url" );
-            t.timestamp( "created_date" ).withCurrent();
-            t.timestamp( "modified_date" ).withCurrent();
+
+            t.raw( "`created_date` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)" );
+            t.raw( "`modified_date` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)" );
+
+            //proposed qb pull request https://github.com/coldbox-modules/qb/pull/282:
+            //t.timestamp( "created_date", 6 ).withCurrent( 6 );
+            //t.timestamp( "modified_date", 6 ).withCurrent( 6 );
         } );
 
         qb.table( "songs" ).insert( [

@@ -1,3 +1,11 @@
+# v9.0.1
+## 12 Jun 2024 — 21:45:58 UTC
+
+### fix
+
++ __BaseEntity:__ Fixed issue with NULL values being inserted into identity columns for MSSQL ([4ae80fa](https://github.com/coldbox-modules/quick/commit/4ae80fae95d2b40461ad7b23306b4111f785ea40))
+
+
 # v9.0.0
 ## 31 May 2024 — 22:18:55 UTC
 

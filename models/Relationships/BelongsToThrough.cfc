@@ -291,7 +291,44 @@ component extends="quick.models.Relationships.BaseRelationship" {
 		required array results,
 		required string relation
 	) {
-		return matchOne( argumentCollection = arguments );
+		var dictionary = buildDictionary( arguments.results );
+		arguments.entities.each( function( entity ) {
+			var key = variables.localKeys
+				.map( function( localKey ) {
+					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
+						localKey
+					];
+				} )
+				.toList();
+			if ( structKeyExists( dictionary, key ) ) {
+				if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+					arguments.entity.assignRelationship( relation, getRelationValue( dictionary, key, "one" ) );
+				} else {
+					arguments.entity[ relation ] = getRelationValue( dictionary, key, "one" );
+				}
+			}
+		} );
+		return arguments.entities;
+	}
+
+	/**
+	 * Retrieves the value for the key from the dictionary.
+	 * Also, returns either the first result for a "one" type or the entire
+	 * array of results for a "many" type.
+	 *
+	 * @dictionary  A dictionary mapping the `foreignKey` value to related results.
+	 * @key         The `foreignKey` value to look up in the dictionary.
+	 * @type        The type of the relation value, "many" or "one".
+	 *
+	 * @return      quick.models.BaseEntity | [quick.models.BaseEntity]
+	 */
+	public any function getRelationValue(
+		required struct dictionary,
+		required string key,
+		required string type
+	) {
+		var value = arguments.dictionary[ arguments.key ];
+		return arguments.type == "one" ? value[ 1 ] : value;
 	}
 
 	/**

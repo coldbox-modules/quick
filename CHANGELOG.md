@@ -1,3 +1,14 @@
+# v9.0.2
+## 24 Sep 2024 — 18:55:51 UTC
+
+### fix
+
++ __HasOneThrough:__ Add missing matchOne method
+ ([a09196e](https://github.com/coldbox-modules/quick/commit/a09196ec8f248ade92202e140c3a10d1d5a4a20a))
++ __ChildEntities:__ Fix qualifying column on discriminated joined entities
+ ([d3559bc](https://github.com/coldbox-modules/quick/commit/d3559bc206a74d3ac27602e999fd4758b13a2d21))
+
+
 # v9.0.1
 ## 12 Jun 2024 — 21:45:58 UTC
 

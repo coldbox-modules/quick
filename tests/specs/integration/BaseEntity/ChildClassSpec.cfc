@@ -101,6 +101,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					"The child table row was not deleted"
 				);
 			} );
+
+			it( "can refresh a child entity", function() {
+				var tripComponent = getInstance( "TripPlannerReservationComponent" ).findOrFail( 4 );
+				expect( () => {
+					tripComponent.refresh();
+				} ).notToThrow();
+			} );
 		} );
 
 		describe( "Discriminated Class Spec", function() {

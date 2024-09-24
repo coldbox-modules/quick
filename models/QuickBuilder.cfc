@@ -716,9 +716,10 @@ component accessors="true" transientCache="false" {
 		// Apply and append any inheritance joins/columns
 		if ( entity.hasParentEntity() && !entity.isSingleTableInheritance() ) {
 			var parentDefinition = entity.getParentDefinition();
+			var parentEntity     = variables._wirebox.getInstance( parentDefinition.meta.fullName )
 			variables.qb.join(
 				parentDefinition.meta.table,
-				parentDefinition.meta.table & "." & parentDefinition.key,
+				parentEntity.qualifyColumn( parentDefinition.key ),
 				entity.qualifyColumn( entity.keyNames()[ 1 ] )
 			);
 		} else if ( entity.isDiscriminatedParent() && entity.get_loadChildren() ) {

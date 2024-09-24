@@ -2918,8 +2918,8 @@ component accessors="true" {
 		var parentDefinition = getParentDefinition();
 
 		var attr                           = paramAttribute( { "name" : parentDefinition.joincolumn } );
-		variables._attributes[ attr.name ] = attr;
-		variables._columns[ attr.column ]  = attr;
+		variables._attributes[ attr.name ] = variables._attributes[ attr.name ] ?: attr;
+		variables._columns[ attr.column ]  = variables._columns[ attr.column ] ?: attr;
 
 		parentDefinition.meta.attributes
 			.keyArray()

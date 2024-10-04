@@ -1,3 +1,11 @@
+# v9.0.3
+## 04 Oct 2024 — 17:13:58 UTC
+
+### fix
+
++ __ChildEntity:__ Ensure single table inheritance columns are not duplicated ([2a37ead](https://github.com/coldbox-modules/quick/commit/2a37ead9962e98e79eabda042a43a7969ce407f4))
+
+
 # v9.0.2
 ## 24 Sep 2024 — 18:55:51 UTC
 

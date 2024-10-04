@@ -376,7 +376,16 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "Will fetch a discriminated entity and merge properties", function() {
 				// Grab a productbook (child) entity from the BaseProduct by specifying the type (discriminator column)
-				var book = getInstance( "BaseProduct" ).where( "type", "book" ).first();
+				var book = getInstance( "BaseProduct" )
+					.where( "type", "book" )
+					.tap( ( q ) => {
+						var originalColumns = q.getColumns();
+						var uniqueColumns   = arrayUnique( originalColumns );
+						arraySort( originalColumns, "textnocase" );
+						arraySort( uniqueColumns, "textnocase" );
+						expect( originalColumns ).toBe( uniqueColumns );
+					} )
+					.first();
 
 				expect( book.isLoaded() ).toBeTrue();
 				expect( book ).toBeInstanceOf( "ProductBook" );

@@ -2885,13 +2885,13 @@ component accessors="true" {
 						return acc;
 					}, [] );
 
+				var localColumns = this.retrieveQualifiedColumns();
 				var childColumns = childClass
 					.retrieveQualifiedColumns()
 					.filter( function( column ) {
-						return listFirst( column, "." ) == (
-							childMeta.keyExists( "table" ) ? childMeta.table : variables._meta.table
-						);
+						return !arrayContainsNoCase( localColumns, column );
 					} );
+
 				acc[ childMeta.discriminatorValue ] = {
 					"mapping"    : childMeta.fullName,
 					"table"      : ( childMeta.keyExists( "table" ) ? childMeta.table : variables._meta.table ),

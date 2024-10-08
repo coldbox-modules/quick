@@ -96,7 +96,7 @@ component
 	public void function performJoin( any builder = variables.relationshipBuilder ) {
 		var segments = arguments.builder
 			.getQB()
-			.getFrom()
+			.getTableName()
 			.split( "[Aa][Ss]" );
 		var alias = segments[ 2 ] ?: "";
 
@@ -212,7 +212,7 @@ component
 	public array function getQualifiedForeignKeyNames( any builder = variables.relationshipBuilder ) {
 		var segments = arguments.builder
 			.getQB()
-			.getFrom()
+			.getTableName()
 			.split( "[Aa][Ss]" );
 		var alias = segments[ 2 ] ?: "";
 
@@ -238,7 +238,7 @@ component
 	public array function getQualifiedLocalKeys( any builder = variables.relationshipBuilder ) {
 		var segments = arguments.builder
 			.getQB()
-			.getFrom()
+			.getTableName()
 			.split( "[Aa][Ss]" );
 		var alias = segments[ 2 ] ?: "";
 

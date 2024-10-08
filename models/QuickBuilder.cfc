@@ -135,7 +135,7 @@ component accessors="true" transientCache="false" {
 				variables.qb.getColumns()[ 1 ] == "*"
 			)
 		) {
-			variables.qb.select( variables.qb.getFrom() & ".*" );
+			variables.qb.select( variables.qb.getTableName() & ".*" );
 		}
 
 		var subselectQuery = arguments.subselect;
@@ -687,29 +687,6 @@ component accessors="true" transientCache="false" {
 	public string function mappingName() {
 		return getEntity().mappingName();
 	}
-
-	/**
-	 * Creates a new query using the same Grammar and QueryUtils.
-	 *
-	 * @return quick.models.QuickBuilder
-	 */
-	// public QuickBuilder function newQuery() {
-	// 	var builder = new quick.models.QuickBuilder(
-	// 		grammar               = getGrammar(),
-	// 		utils                 = getUtils(),
-	// 		returnFormat          = getReturnFormat(),
-	// 		paginationCollector   = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
-	// 		defaultOptions        = getDefaultOptions(),
-	// 		preventDuplicateJoins = getPreventDuplicateJoins()
-	// 	);
-	// 	builder.setEntity( getEntity() );
-	// 	builder.setFrom( getEntity().tableName() );
-	// 	builder.setColumnFormatter( function( column ) {
-	// 		return builder.qualifyColumn( column );
-	// 	} );
-	// 	applyInheritanceJoins( builder );
-	// 	return builder;
-	// }
 
 	function applyInheritanceJoins() {
 		var entity = getEntity();

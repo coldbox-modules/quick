@@ -925,7 +925,7 @@ component
 		);
 		newBuilder.setQuickBuilder( getQuickBuilder() );
 		newBuilder.setEntity( getEntity() );
-		newBuilder.setFrom( getFrom() );
+		newBuilder.setTableName( getTableName() );
 		return newBuilder;
 	}
 

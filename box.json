@@ -28,7 +28,7 @@
     },
     "type":"modules",
     "dependencies":{
-        "qb":"^9.8.0",
+        "qb":"^10.0.1",
         "str":"^4.0.0",
         "mementifier":"^3.0.0"
     },

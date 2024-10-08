@@ -1,3 +1,11 @@
+# v10.0.0
+## 08 Oct 2024 — 06:05:50 UTC
+
+### BREAKING
+
++ __qb:__ Upgrade to qb v10 ([8a9be8f](https://github.com/coldbox-modules/quick/commit/8a9be8f9fc1d47fbd3b0ea06443f30c1f2dd796d))
+
+
 # v9.0.3
 ## 04 Oct 2024 — 17:13:58 UTC
 

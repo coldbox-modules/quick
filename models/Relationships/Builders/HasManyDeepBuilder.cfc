@@ -27,7 +27,7 @@ component accessors="true" {
 		if ( !isNull( arguments.callback ) ) {
 			variables.through.append( function() {
 				var entity = "";
-				var parts  = entityName.split( "[Aa][Ss]" );
+				var parts  = entityName.split( "\s(?:[Aa][Ss]\s)?" );
 				var entity = variables.wirebox.getInstance( trim( parts[ 1 ] ) );
 				if ( arrayLen( parts ) > 1 ) {
 					entity.withAlias( trim( parts[ 2 ] ) );
@@ -78,7 +78,7 @@ component accessors="true" {
 		if ( !isNull( arguments.callback ) ) {
 			related = function() {
 				var entity = "";
-				var parts  = relationName.split( "[Aa][Ss]" );
+				var parts  = relationName.split( "\s(?:[Aa][Ss]\s)?" );
 				var entity = variables.wirebox.getInstance( trim( parts[ 1 ] ) );
 				if ( arrayLen( parts ) > 1 ) {
 					entity.withAlias( trim( parts[ 2 ] ) );

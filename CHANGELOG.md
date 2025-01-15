@@ -1,3 +1,11 @@
+# v10.0.1
+## 15 Jan 2025 — 18:16:59 UTC
+
+### fix
+
++ __BaseEntity:__ Better matching of only "as" in relationship strings ([263461d](https://github.com/coldbox-modules/quick/commit/263461de025ad8ef340d618d4fcf622b6a275e40))
+
+
 # v10.0.0
 ## 08 Oct 2024 — 06:05:50 UTC
 

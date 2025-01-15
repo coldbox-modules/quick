@@ -97,7 +97,7 @@ component
 		var segments = arguments.builder
 			.getQB()
 			.getTableName()
-			.split( "[Aa][Ss]" );
+			.split( "\s(?:[Aa][Ss]\s)?" );
 		var alias = segments[ 2 ] ?: "";
 
 		var chainLength = variables.throughParents.len();
@@ -213,7 +213,7 @@ component
 		var segments = arguments.builder
 			.getQB()
 			.getTableName()
-			.split( "[Aa][Ss]" );
+			.split( "\s(?:[Aa][Ss]\s)?" );
 		var alias = segments[ 2 ] ?: "";
 
 		var foreignKeys = [];
@@ -239,7 +239,7 @@ component
 		var segments = arguments.builder
 			.getQB()
 			.getTableName()
-			.split( "[Aa][Ss]" );
+			.split( "\s(?:[Aa][Ss]\s)?" );
 		var alias = segments[ 2 ] ?: "";
 
 		var localKeys = [];

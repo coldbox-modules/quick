@@ -2096,7 +2096,7 @@ component accessors="true" {
 		} else if ( !isSimpleValue( arguments.relationName ) ) {
 			related = arguments.relationName;
 		} else {
-			var parts = arguments.relationName.split( "[Aa][Ss]" );
+			var parts = arguments.relationName.split( "\s(?:[Aa][Ss]\s)?" );
 			related   = variables._wirebox.getInstance( trim( parts[ 1 ] ) );
 			if ( arrayLen( parts ) > 1 ) {
 				related.withAlias( trim( parts[ 2 ] ) );
@@ -2118,7 +2118,7 @@ component accessors="true" {
 			} else if ( !isSimpleValue( throughEntityName ) ) {
 				throughEntity = throughEntityName;
 			} else {
-				var parts = throughEntityName.split( "[Aa][Ss]" );
+				var parts = throughEntityName.split( "\s(?:[Aa][Ss]\s)?" );
 				if ( variables._wirebox.containsInstance( trim( parts[ 1 ] ) ) ) {
 					throughEntity = variables._wirebox.getInstance( trim( parts[ 1 ] ) );
 					if ( arrayLen( parts ) > 1 ) {

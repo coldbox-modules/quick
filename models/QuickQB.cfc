@@ -857,7 +857,7 @@ component
 				"value"     : ( isNull( arguments.value ) || getEntity().isNullValue( arguments.column, arguments.value ) ) ? "" : arguments.value,
 				"cfsqltype" : getEntity().attributeHasSqlType( arguments.column ) ? getEntity().retrieveSqlTypeForAttribute(
 					arguments.column
-				) : ( isNull( arguments.value ) ? "CF_SQL_VARCHAR" : getUtils().inferSqlType( arguments.value ) ),
+				) : ( isNull( arguments.value ) ? "CF_SQL_VARCHAR" : getUtils().inferSqlType( arguments.value, variables.grammar ) ),
 				"null" : isNull( arguments.value ) || (
 					getEntity().canConvertToNull( arguments.column ) && getEntity().isNullValue(
 						arguments.column,
@@ -876,7 +876,7 @@ component
 				"value"     : isNull( arguments.value ) ? "" : arguments.value,
 				"cfsqltype" : getEntity().attributeHasSqlType( arguments.column ) ? getEntity().retrieveSqlTypeForAttribute(
 					arguments.column
-				) : ( isNull( arguments.value ) ? "CF_SQL_VARCHAR" : getUtils().inferSqlType( arguments.value ) ),
+				) : ( isNull( arguments.value ) ? "CF_SQL_VARCHAR" : getUtils().inferSqlType( arguments.value, variables.grammar ) ),
 				"null"  : isNull( arguments.value ),
 				"nulls" : isNull( arguments.value )
 			};

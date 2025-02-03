@@ -1,3 +1,16 @@
+# v11.0.0
+## 03 Feb 2025 — 22:21:28 UTC
+
+### BREAKING
+
++ __\*:__ feat: BoxLang compatibility ([68dbfd4](https://github.com/coldbox-modules/quick/commit/68dbfd4ebdef4cc2f80d28f00c92a2f087600275))
+
+### fix
+
++ __QuickBuilder:__ Pass grammar to `inferSqlType`
+ ([54ca2aa](https://github.com/coldbox-modules/quick/commit/54ca2aaff7e2242df5ab4d7f1a7ee53d5d85a390))
+
+
 # v10.0.1
 ## 15 Jan 2025 — 18:16:59 UTC
 

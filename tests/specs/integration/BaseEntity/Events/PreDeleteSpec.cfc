@@ -25,7 +25,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request.quickPreDeleteCalled ).toHaveLength( 1 );
 				expect( request.quickPreDeleteCalled[ 1 ] ).toBeStruct();
 				expect( request.quickPreDeleteCalled[ 1 ] ).toHaveKey( "entity" );
-				expect( request.quickPreDeleteCalled[ 1 ].entity.getId() ).toBe( 1 );
+				expect( request.quickPreDeleteCalled[ 1 ].entity.id ).toBe( 1 );
 				structDelete( request, "quickPreDeleteCalled" );
 			} );
 
@@ -40,7 +40,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request.preDeleteCalled ).toHaveLength( 1 );
 				expect( request.preDeleteCalled[ 1 ] ).toBeStruct();
 				expect( request.preDeleteCalled[ 1 ] ).toHaveKey( "entity" );
-				expect( request.preDeleteCalled[ 1 ].entity.getId() ).toBe( 1 );
+				expect( request.preDeleteCalled[ 1 ].entity.id ).toBe( 1 );
 				structDelete( request, "preDeleteCalled" );
 			} );
 		} );
@@ -54,7 +54,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		prc
 	) {
 		param request.quickPreDeleteCalled = [];
-		arrayAppend( request.quickPreDeleteCalled, duplicate( arguments.interceptData ) );
+		arrayAppend( request.quickPreDeleteCalled, { "entity" : arguments.interceptData.entity.getMemento() } );
 	}
 
 }

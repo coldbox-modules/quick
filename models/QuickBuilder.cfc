@@ -1334,6 +1334,10 @@ component accessors="true" transientCache="false" {
 			qb.setColumns(
 				qb.getColumns()
 					.map( function( column ) {
+						if ( variables.qb.getUtils().isExpression( column ) ) {
+							return column;
+						}
+
 						if ( !qualifiedColumns.contains( column ) ) {
 							return column;
 						}

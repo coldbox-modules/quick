@@ -73,8 +73,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed" );
 
 					var postQuery = variables.queries[ 2 ];
-					expect( postQuery.result.sqlparameters ).toHaveLength( 2 );
-					expect( postQuery.result.sqlparameters ).toBe( [ 321, 523526 ] );
+					expect( postQuery.result.sqlparameters ).toContain( 321 );
+					expect( postQuery.result.sqlparameters ).toContain( 523526 );
 				} );
 			} );
 

@@ -24,17 +24,18 @@
         "format:check":"cfformat check dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,tests/specs/**/*.cfc --verbose",
         "format:watch":"cfformat watch dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,tests/specs/**/*.cfc",
         "generateAPIDocs":"rm .tmp --recurse --force && docbox generate mapping=quick excludes=test|/modules|ModuleConfig|QuickCollection strategy-outputDir=.tmp/apidocs strategy-projectTitle=Quick",
-        "install:2021":"cfpm install document,feed,mysql,zip"
+        "install:2021":"cfpm install document,feed,mysql,zip",
+        "bx-modules:install":"install bx-compat-cfml@be,bx-esapi,bx-mysql"
     },
     "type":"modules",
     "dependencies":{
-        "qb":"^11.0.1",
+        "qb":"^11.0.2",
         "str":"^4.0.0",
         "mementifier":"^3.0.0"
     },
     "devDependencies":{
         "coldbox":"v7.3.0",
-        "testbox":"v6.1.0",
+        "testbox":"be",
         "cfcollection":"^3.6.4",
         "cfmigrations":"^4.0.0"
     },

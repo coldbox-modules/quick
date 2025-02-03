@@ -26,7 +26,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request.quickPreUpdateCalled ).toHaveLength( 1 );
 				expect( request.quickPreUpdateCalled[ 1 ] ).toBeStruct();
 				expect( request.quickPreUpdateCalled[ 1 ] ).toHaveKey( "entity" );
-				expect( request.quickPreUpdateCalled[ 1 ].entity.getDownloadUrl() ).toBe(
+				expect( request.quickPreUpdateCalled[ 1 ].entity.downloadUrl ).toBe(
 					"https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
 				);
 				expect( request.quickPreUpdateCalled[ 1 ] ).toHaveKey( "originalAttributes" );
@@ -49,7 +49,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request.preUpdateCalled ).toHaveLength( 1 );
 				expect( request.preUpdateCalled[ 1 ] ).toBeStruct();
 				expect( request.preUpdateCalled[ 1 ] ).toHaveKey( "entity" );
-				expect( request.preUpdateCalled[ 1 ].entity.getDownloadUrl() ).toBe(
+				expect( request.preUpdateCalled[ 1 ].entity.downloadUrl ).toBe(
 					"https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
 				);
 				structDelete( request, "preUpdateCalled" );
@@ -65,7 +65,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		prc
 	) {
 		param request.quickPreUpdateCalled = [];
-		arrayAppend( request.quickPreUpdateCalled, duplicate( arguments.interceptData ) );
+		arrayAppend(
+			request.quickPreUpdateCalled,
+			{
+				"entity"             : arguments.interceptData.entity.getMemento(),
+				"originalAttributes" : arguments.interceptData.originalAttributes,
+				"newAttributes"      : arguments.interceptData.newAttributes
+			}
+		);
 	}
 
 }

@@ -26,8 +26,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( variables ).toHaveKey( "quickPostInsertCalled" );
 				expect( variables.quickPostInsertCalled ).toBeStruct();
 				expect( variables.quickPostInsertCalled ).toHaveKey( "entity" );
-				expect( variables.quickPostInsertCalled.entity.getTitle() ).toBe( "Rainbow Connection" );
-				expect( variables.quickPostInsertCalled.entity.isLoaded() ).toBeTrue();
+				expect( variables.quickPostInsertCalled.entity.title ).toBe( "Rainbow Connection" );
+				expect( variables.quickPostInsertCalled.isLoaded ).toBeTrue();
 				structDelete( variables, "quickPostInsertCalled" );
 			} );
 
@@ -39,8 +39,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request ).toHaveKey( "postInsertCalled" );
 				expect( request.postInsertCalled ).toBeStruct();
 				expect( request.postInsertCalled ).toHaveKey( "entity" );
-				expect( request.postInsertCalled.entity.getTitle() ).toBe( "Rainbow Connection" );
-				expect( request.postInsertCalled.entity.isLoaded() ).toBeTrue();
+				expect( request.postInsertCalled.entity.title ).toBe( "Rainbow Connection" );
+				expect( request.postInsertCalled.isLoaded ).toBeTrue();
 				structDelete( request, "postInsertCalled" );
 			} );
 		} );
@@ -53,7 +53,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		rc,
 		prc
 	) {
-		variables.quickPostInsertCalled = duplicate( arguments.interceptData );
+		variables.quickPostInsertCalled = {
+			"entity"   : arguments.interceptData.entity.getMemento(),
+			"isLoaded" : arguments.interceptData.entity.isLoaded()
+		};
 	}
 
 }

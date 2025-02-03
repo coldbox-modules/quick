@@ -3076,7 +3076,9 @@ component accessors="true" {
 	public any function ignoreLoadedGuard( required any callback ) {
 		variables._ignoreNotLoadedGuard = true;
 		try {
-			return arguments.callback();
+			var retval                      = arguments.callback();
+			variables._ignoreNotLoadedGuard = false;
+			return isNull( retval ) ? javacast( "null", "" ) : retval;
 		} finally {
 			variables._ignoreNotLoadedGuard = false;
 		}

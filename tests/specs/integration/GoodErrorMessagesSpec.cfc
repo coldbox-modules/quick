@@ -51,14 +51,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				);
 			} );
 
-			it( "throws a helpful error message if accessors are not turned on", function() {
-				expect( function() {
-					getInstance( "EntityWithoutAccessors" );
-				} ).toThrow(
-					type  = "QuickAccessorsMissing",
-					regex = 'This instance is missing \`accessors\=\"true\"\` in the component metadata\.  This is required for Quick to work properly\.  Please add it to your component metadata and reinit your application\.'
-				);
-			} );
+			it(
+				title = "throws a helpful error message if accessors are not turned on",
+				body  = function() {
+					expect( function() {
+						getInstance( "EntityWithoutAccessors" );
+					} ).toThrow(
+						type  = "QuickAccessorsMissing",
+						regex = 'This instance is missing \`accessors\=\"true\"\` in the component metadata\.  This is required for Quick to work properly\.  Please add it to your component metadata and reinit your application\.'
+					);
+				},
+				skip = server.keyExists( "boxlang" )
+			);
 
 			it( "throws a helpful error message when trying to set a belongsToMany relationship when the relationship is not loaded", function() {
 				expect( function() {

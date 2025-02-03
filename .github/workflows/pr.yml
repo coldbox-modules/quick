@@ -19,8 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "adobe@2018", "adobe@2021", "adobe@2023"]
-        coldbox: ["coldbox@6", "coldbox@7", "coldbox@be"]
+        cfengine: ["lucee@5", "adobe@2018", "adobe@2023", "boxlang@be"]
+        coldbox: ["coldbox@7", "coldbox@be"]
     services:
       mysql:
         image: mysql:5.7
@@ -42,7 +42,9 @@ jobs:
           java-version: 11
 
       - name: Set Up CommandBox
-        uses: elpete/setup-commandbox@v1.0.0
+        uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          install: commandbox-boxlang
 
       - name: Install dependencies
         run: |
@@ -58,7 +60,14 @@ jobs:
           DB_USER: quick
           DB_PASSWORD: quick
         run: |
-          box server start cfengine=${{ matrix.cfengine }}
+          if [[ "${{ matrix.cfengine }}" == *"boxlang"* ]] ; then
+            box server start cfengine=${{ matrix.cfengine }} javaVersion=openjdk21_jdk
+            box run-script bx-modules:install
+            box server restart
+          else
+            box server start cfengine=${{ matrix.cfengine }}
+          fi
+
           # Install Adobe 2021 cfpm modules
           if [[ "${{ matrix.cfengine }}" == "adobe@2021" ]] ; then
             box run-script install:2021
@@ -86,7 +95,9 @@ jobs:
           java-version: 11
 
       - name: Set Up CommandBox
-        uses: elpete/setup-commandbox@v1.0.0
+        uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          install: commandbox-boxlang
 
       - name: Install CFFormat
         run: box install commandbox-cfformat

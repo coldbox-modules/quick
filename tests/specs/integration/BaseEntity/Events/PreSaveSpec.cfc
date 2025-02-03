@@ -23,10 +23,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( variables ).toHaveKey( "quickPreSaveCalled" );
 				expect( variables.quickPreSaveCalled ).toBeStruct();
 				expect( variables.quickPreSaveCalled ).toHaveKey( "entity" );
-				expect( variables.quickPreSaveCalled.entity.getDownloadUrl() ).toBe(
+				expect( variables.quickPreSaveCalled.entity.downloadUrl ).toBe(
 					"https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
 				);
-				expect( variables.quickPreSaveCalled.entity.isLoaded() ).toBeFalse();
+				expect( variables.quickPreSaveCalled.isLoaded ).toBeFalse();
 				structDelete( variables, "quickPreSaveCalled" );
 			} );
 
@@ -39,7 +39,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( variables ).toHaveKey( "quickPreSaveCalled" );
 				expect( variables.quickPreSaveCalled ).toBeStruct();
 				expect( variables.quickPreSaveCalled ).toHaveKey( "entity" );
-				expect( variables.quickPreSaveCalled.entity.getDownloadUrl() ).toBe(
+				expect( variables.quickPreSaveCalled.entity.downloadUrl ).toBe(
 					"https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
 				);
 				structDelete( variables, "quickPreSaveCalled" );
@@ -54,10 +54,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request ).toHaveKey( "preSaveCalled" );
 				expect( request.preSaveCalled ).toBeStruct();
 				expect( request.preSaveCalled ).toHaveKey( "entity" );
-				expect( request.preSaveCalled.entity.getDownloadUrl() ).toBe(
+				expect( request.preSaveCalled.entity.downloadUrl ).toBe(
 					"https://open.spotify.com/track/1SJ4ycWow4yz6z4oFz8NAG"
 				);
-				expect( request.preSaveCalled.entity.isLoaded() ).toBeFalse();
+				expect( request.preSaveCalled.isLoaded ).toBeFalse();
 				structDelete( request, "preSaveCalled" );
 			} );
 
@@ -70,7 +70,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request ).toHaveKey( "preSaveCalled" );
 				expect( request.preSaveCalled ).toBeStruct();
 				expect( request.preSaveCalled ).toHaveKey( "entity" );
-				expect( request.preSaveCalled.entity.getDownloadUrl() ).toBe(
+				expect( request.preSaveCalled.entity.downloadUrl ).toBe(
 					"https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
 				);
 				structDelete( request, "preSaveCalled" );
@@ -85,7 +85,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		rc,
 		prc
 	) {
-		variables.quickPreSaveCalled = duplicate( arguments.interceptData );
+		variables.quickPreSaveCalled = {
+			"entity"   : arguments.interceptData.entity.getMemento(),
+			"isLoaded" : arguments.interceptData.entity.isLoaded()
+		};
 	}
 
 }

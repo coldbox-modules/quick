@@ -1,6 +1,9 @@
 {
     "app":{
-        "cfengine":"adobe@2018"
+        "cfengine":"adobe@2021"
+    },
+    "JVM":{
+        "javaVersion":"openjdk21"
     },
     "web":{
         "http":{

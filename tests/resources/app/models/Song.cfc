@@ -19,39 +19,59 @@ component extends="quick.models.BaseEntity" accessors="true" {
     }
 
     function preInsert( eventData ) {
-        request.preInsertCalled = duplicate( eventData );
+        request.preInsertCalled = {
+            "entity": arguments.eventData.entity.getMemento(),
+            "isLoaded": arguments.eventData.entity.isLoaded()
+        };
     }
 
     function postInsert( eventData ) {
-        request.postInsertCalled = duplicate( eventData );
+        request.postInsertCalled = {
+            "entity": eventData.entity.getMemento(),
+            "isLoaded": eventData.entity.isLoaded()
+        };
     }
 
     function preUpdate( eventData ) {
         param request.preUpdateCalled = [];
-        arrayAppend( request.preUpdateCalled, duplicate( eventData ) );
+        arrayAppend( request.preUpdateCalled, {
+            "entity": eventData.entity.getMemento()
+        } );
     }
 
     function postUpdate( eventData ) {
         param request.postUpdateCalled = [];
-        arrayAppend( request.postUpdateCalled, duplicate( eventData ) );
+        arrayAppend( request.postUpdateCalled, {
+            "entity": eventData.entity.getMemento()
+        } );
     }
 
     function preSave( eventData ) {
-        request.preSaveCalled = duplicate( eventData );
+        request.preSaveCalled = {
+            "entity": arguments.eventData.entity.getMemento(),
+            "isLoaded": arguments.eventData.entity.isLoaded()
+        };
     }
 
     function postSave( eventData ) {
-        request.postSaveCalled = duplicate( eventData );
+        request.postSaveCalled = {
+            "entity": arguments.eventData.entity.getMemento(),
+            "isLoaded": arguments.eventData.entity.isLoaded()
+        };
     }
 
     function preDelete( eventData ) {
         param request.preDeleteCalled = [];
-        arrayAppend( request.preDeleteCalled, duplicate( eventData ) );
+        arrayAppend( request.preDeleteCalled, {
+            "entity": eventData.entity.getMemento()
+        } );
     }
 
     function postDelete( eventData ) {
         param request.postDeleteCalled = [];
-        arrayAppend( request.postDeleteCalled, duplicate( eventData ) );
+        arrayAppend( request.postDeleteCalled, {
+            "entity": eventData.entity.getMemento()
+        } );
     }
 
 }

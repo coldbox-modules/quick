@@ -26,8 +26,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( variables ).toHaveKey( "quickPreInsertCalled" );
 				expect( variables.quickPreInsertCalled ).toBeStruct();
 				expect( variables.quickPreInsertCalled ).toHaveKey( "entity" );
-				expect( variables.quickPreInsertCalled.entity.getTitle() ).toBe( "Rainbow Connection" );
-				expect( variables.quickPreInsertCalled.entity.isLoaded() ).toBeFalse();
+				expect( variables.quickPreInsertCalled.entity.title ).toBe( "Rainbow Connection" );
+				expect( variables.quickPreInsertCalled.isLoaded ).toBeFalse();
 				structDelete( variables, "quickPreInsertCalled" );
 			} );
 
@@ -39,8 +39,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request ).toHaveKey( "preInsertCalled" );
 				expect( request.preInsertCalled ).toBeStruct();
 				expect( request.preInsertCalled ).toHaveKey( "entity" );
-				expect( request.preInsertCalled.entity.getTitle() ).toBe( "Rainbow Connection" );
-				expect( request.preInsertCalled.entity.isLoaded() ).toBeFalse();
+				expect( request.preInsertCalled.entity.title ).toBe( "Rainbow Connection" );
+				expect( request.preInsertCalled.isLoaded ).toBeFalse();
 				structDelete( request, "preInsertCalled" );
 			} );
 
@@ -61,10 +61,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		rc,
 		prc
 	) {
-		variables.quickPreInsertCalled = duplicate( arguments.interceptData );
 		if ( arguments.interceptData.entity.getTitle() == "Bohemian Rhapsody" ) {
 			arguments.interceptData.entity.assignAttribute( "createdDate", createDate( 1975, 10, 31 ) );
 		}
+
+		variables.quickPreInsertCalled = {
+			"entity"   : arguments.interceptData.entity.getMemento(),
+			"isLoaded" : arguments.interceptData.entity.isLoaded()
+		};
 	}
 
 }

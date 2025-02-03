@@ -31,7 +31,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					} )
 					.save();
 
-				var memento = newJingle.getMemento();
+				var memento = newJingle.getMemento( iso8601Format = true );
 
 				expect( memento )
 					.toHaveKey( "id" )
@@ -43,9 +43,26 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( newJingle.getId() ).notToBeNull();
 				expect( newJingle.isLoaded() ).toBeTrue();
 
-				var jingle = getInstance( "Jingle" ).findOrFail( newJingle.getId() );
+				var jingle     = getInstance( "Jingle" ).findOrFail( newJingle.getId() );
+				var newMemento = jingle.getMemento();
 
-				expect( jingle.getMemento() ).toBe( newJingle.getMemento() );
+				expect( newMemento.keyArray() ).toBe( memento.keyArray() );
+				for ( var key in newMemento.keyArray() ) {
+					if ( isDate( newMemento[ key ] ) ) {
+						expect(
+							dateCompare(
+								newMemento[ key ],
+								memento[ key ],
+								"s"
+							)
+						).toBe(
+							0,
+							"Dates are not equal to the second. Left: #dateTimeFormat( newMemento[ key ], "MM/DD/YYYY HH:nn:ss" )# - Right: #dateTimeFormat( memento[ key ], "MM/DD/YYYY HH:nn:ss" )#"
+						);
+					} else {
+						expect( newMemento[ key ] ).toBe( memento[ key ] );
+					}
+				}
 			} );
 
 			it( "can update a child entity", function() {

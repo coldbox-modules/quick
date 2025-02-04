@@ -478,7 +478,14 @@ component accessors="true" implements="IRelationship" {
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
 	public any function applyAliasSuffix( required string suffix ) {
-		variables.relationshipBuilder.withAlias( variables.related.tableName() & arguments.suffix );
+		variables.relationshipBuilder.withAlias(
+			replace(
+				variables.related.tableName(),
+				".",
+				"_",
+				"all"
+			) & arguments.suffix
+		);
 		return this;
 	}
 

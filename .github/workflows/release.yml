@@ -112,11 +112,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: box semantic-release
 
-      - name: Generate API Docs
-        run: |
-          box install commandbox-docbox
-          box run-script generateAPIDocs
-
       - name: Get Current Version
         id: current_version
         run: echo "::set-output name=version::`cat box.json | jq '.version' -r`"

@@ -1,3 +1,12 @@
+# v11.0.1
+## 04 Feb 2025 — 02:48:38 UTC
+
+### fix
+
++ __QuickBuilder:__ Fix for aliases with fully server qualified identifiers
+ ([5b61ebe](https://github.com/coldbox-modules/quick/commit/5b61ebedd6b4906e7235eb156682ce2f961e9cdb))
+
+
 # v11.0.0
 ## 03 Feb 2025 — 22:21:28 UTC
 

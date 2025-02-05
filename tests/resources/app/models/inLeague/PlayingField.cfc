@@ -10,7 +10,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
         return variables._wirebox.getInstance( "NullKeyType@quick" );
     }
 
-	function field() {
+	function games() {
 		return hasMany(
 			relationName = "Game",
 			foreignKey = [ "fieldID", "clientID" ],

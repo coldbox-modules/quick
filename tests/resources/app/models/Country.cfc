@@ -204,6 +204,14 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return hasManyThrough( [ "roles", "permissions" ] );
 	}
 
+	function playingFields() {
+		return hasMany( "PlayingField", "country_id" );
+	}
+
+	function games() {
+		return hasManyThrough( [ "playingFields", "games" ] );
+	}
+
 	function keyType() {
 		return variables._wirebox.getInstance( "UUIDKeyType@quick" );
 	}

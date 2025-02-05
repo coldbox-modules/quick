@@ -159,28 +159,38 @@ component
 		required any localKey
 	) {
 		var joins = [];
-		if ( isArray( arguments.localKey ) ) {
+
+		arguments.localKey   = arrayWrap( arguments.localKey );
+		arguments.foreignKey = arrayWrap( arguments.foreignKey );
+
+		// This handles polymorphic relationships
+		if ( arguments.localKey.len() > arguments.foreignKey.len() ) {
 			arguments.builder.where(
 				arguments.throughParent.qualifyColumn( arguments.localKey[ 1 ] ),
 				arguments.predecessor.mappingName()
 			);
 
-			arguments.localKey = arguments.localKey[ 2 ];
+			arguments.localKey = arraySlice( arguments.localKey, 2 );
 		}
 
-		if ( isArray( arguments.foreignKey ) ) {
+		// This handles polymorphic relationships
+		if ( arguments.foreignKey.len() > arguments.localKey.len() ) {
 			arguments.builder.where(
 				arguments.predecessor.qualifyColumn( arguments.foreignKey[ 1 ] ),
 				arguments.throughParent.mappingName()
 			);
 
-			arguments.foreignKey = arguments.foreignKey[ 2 ];
+			arguments.foreignKey = arraySlice( arguments.foreignKey, 2 );
 		}
 
-		joins.append( [
-			arguments.throughParent.qualifyColumn( arguments.localKey ),
-			arguments.predecessor.qualifyColumn( arguments.foreignKey )
-		] );
+		guardAgainstKeyLengthMismatch( arguments.foreignKey, arguments.localKey );
+
+		for ( var i = 1; i <= arguments.localKey.len(); i++ ) {
+			joins.append( [
+				arguments.throughParent.qualifyColumn( arguments.localKey[ i ] ),
+				arguments.predecessor.qualifyColumn( arguments.foreignKey[ i ] )
+			] );
+		}
 
 		return joins;
 	}
@@ -242,15 +252,19 @@ component
 			.split( "\s(?:[Aa][Ss]\s)?" );
 		var alias = segments[ 2 ] ?: "";
 
-		var localKeys = [];
+		var qualifiedLocalKeys = [];
 		for ( var i = 1; i <= variables.localKeys.len(); i++ ) {
 			if ( i == 1 ) {
-				localKeys.append( variables.parent.qualifyColumn( variables.localKeys[ i ] ) );
+				arrayWrap( variables.localKeys[ i ] ).each( function( localKey ) {
+					qualifiedLocalKeys.append( variables.parent.qualifyColumn( localKey ) );
+				} );
 			} else {
-				localKeys.append( variables.throughParents[ i - 1 ].qualifyColumn( variables.localKeys[ i ] ) );
+				arrayWrap( variables.localKeys[ i ] ).each( function( localKey ) {
+					qualifiedLocalKeys.append( variables.throughParents[ i - 1 ].qualifyColumn( localKey ) );
+				} );
 			}
 		}
-		return localKeys;
+		return qualifiedLocalKeys;
 	}
 
 	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {

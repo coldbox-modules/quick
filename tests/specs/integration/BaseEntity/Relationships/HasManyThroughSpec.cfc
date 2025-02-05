@@ -118,6 +118,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( officemates[ 2 ].getId() ).toBe( 3 );
 				expect( officemates[ 3 ].getId() ).toBe( 4 );
 			} );
+
+			it( "can go through entities with multiple local and foreign keys", () => {
+				var argentina      = getInstance( "Country" ).where( "name", "Argentina" ).firstOrFail();
+				var argentinaGames = argentina.getGames();
+				expect( argentinaGames ).toBeArray();
+				expect( argentinaGames ).toHaveLength( 1 );
+				expect( argentinaGames[ 1 ].getId() ).toBe( 1 );
+
+				var unitedStates = getInstance( "Country" ).where( "name", "United States" ).firstOrFail();
+				var usGames      = unitedStates.getGames();
+				expect( usGames ).toBeArray();
+				expect( usGames ).toBeEmpty();
+			} );
 		} );
 	}
 

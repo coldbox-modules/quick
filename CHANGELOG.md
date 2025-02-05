@@ -1,3 +1,17 @@
+# v11.1.0
+## 05 Feb 2025 — 17:05:10 UTC
+
+### feat
+
++ __KeyTypes:__ Add GUID keyType introduced in QB v9
+ ([38b2479](https://github.com/coldbox-modules/quick/commit/38b247906c398690303eb9e3ba41f0de23ab9e49))
+
+### fix
+
++ __HasManyDeep:__ Account for compound keys in hasManyDeep relationships
+ ([71d9c5a](https://github.com/coldbox-modules/quick/commit/71d9c5a3ee8067954995aed8513368533022b003))
+
+
 # v11.0.1
 ## 04 Feb 2025 — 02:48:38 UTC
 

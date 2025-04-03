@@ -1,3 +1,17 @@
+# v11.2.0
+## 03 Apr 2025 — 18:33:20 UTC
+
+### feat
+
++ __EagerLoading:__ Give entities a way to automatically eager load certain relationships ([399bb93](https://github.com/coldbox-modules/quick/commit/399bb939f9c1e2f4d8b96416c1892ac16478df1b))
++ __EagerLoading:__ Allow preventing all lazy loading of relationships ([5939192](https://github.com/coldbox-modules/quick/commit/5939192e6f595dfd8f58d09a5c287083566d19f6))
+
+### fix
+
++ __BoxLang:__ Compatibility updates
+ ([4426aee](https://github.com/coldbox-modules/quick/commit/4426aeef420740359b39169902dcf9f0d73f73b1))
+
+
 # v11.1.0
 ## 05 Feb 2025 — 17:05:10 UTC
 

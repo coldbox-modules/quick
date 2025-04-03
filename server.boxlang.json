@@ -1,0 +1,14 @@
+{
+    "name":"quick-boxlang",
+    "app":{
+        "cfengine":"boxlang@be"
+    },
+    "JVM":{
+        "javaVersion":"openjdk21"
+    },
+    "web":{
+        "http":{
+            "port":"52485"
+        }
+    }
+}

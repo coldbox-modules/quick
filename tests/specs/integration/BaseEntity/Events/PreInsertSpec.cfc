@@ -49,7 +49,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					title        : "Bohemian Rhapsody",
 					download_url : "https://open.spotify.com/album/3BHe7LbW5yRjyqXNJ3A6mW"
 				} );
-				expect( song.refresh().getCreatedDate() ).toBe( createDate( 1975, 10, 31 ) );
+				expect( dateFormat( song.refresh().getCreatedDate(), "MM/dd/YYYY" ) ).toBe( "10/31/1975" );
 			} );
 		} );
 	}

@@ -10,6 +10,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					.get();
 				expect( results ).toBeArray();
 				expect( results ).toHaveLength( 2 );
+
+				for ( var result in results ) {
+					result.createdDate  = dateTimeFormat( result.createdDate, "yyyy-mm-dd hh:nn:ss" );
+					result.modifiedDate = dateTimeFormat( result.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+				}
+
 				expect( results[ 1 ] ).toBeStruct();
 				expect( results[ 1 ] ).toBe( {
 					"city"            : "Salt Lake City",

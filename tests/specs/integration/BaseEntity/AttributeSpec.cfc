@@ -166,7 +166,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "shows all the attributes in the component casing", function() {
-				expect( getInstance( "User" ).findOrFail( 1 ).getMemento() ).toBe( {
+				var memento          = getInstance( "User" ).findOrFail( 1 ).getMemento();
+				memento.createdDate  = dateTimeFormat( memento.createdDate, "yyyy-mm-dd hh:nn:ss" );
+				memento.modifiedDate = dateTimeFormat( memento.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+				expect( memento ).toBe( {
 					"id"           : 1,
 					"username"     : "elpete",
 					"firstName"    : "Eric",

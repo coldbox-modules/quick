@@ -63,7 +63,7 @@
             "clientUsername":false,
             "clob":false,
             "clobBuffer":64000,
-            "connectionLimit":-1,
+            "connectionLimit":100,
             "connectionTimeout":1,
             "connectionTimeoutInterval":420,
             "custom":"useUnicode=true&characterEncoding=UTF8&serverTimezone=UTC&useLegacyDatetimeCode=true&autoReconnect=true&useSSL=false",

@@ -66,6 +66,12 @@ component accessors="true" {
 	property name="_table" persistent="false";
 
 	/**
+	 * An array of relationships to automatically eager load.
+	 * Use with caution as it is easy to over fetch using this.
+	 */
+	property name="_with" persistent="false";
+
+	/**
 	 * A struct of query options for query executions.
 	 */
 	property name="_queryOptions" persistent="false";
@@ -245,7 +251,7 @@ component accessors="true" {
 		param variables._data                     = {};
 		param variables._relationshipsData        = {};
 		param variables._relationshipsLoaded      = {};
-		param variables._eagerLoad                = [];
+		param variables._with                     = [];
 		variables._withoutRelationshipConstraints = createObject( "java", "java.util.HashSet" ).init();
 		variables._applyingGlobalScopes           = false;
 		variables._globalScopesApplied            = false;
@@ -1024,7 +1030,6 @@ component accessors="true" {
 		}
 		variables._relationshipsData   = {};
 		variables._relationshipsLoaded = {};
-		variables._eagerLoad           = [];
 		variables._loaded              = arguments.toNew ? false : variables._loaded;
 
 		return this;
@@ -2104,7 +2109,7 @@ component accessors="true" {
 			return variables._wirebox.getInstance(
 				name          = "PolymorphicBelongsTo@quick",
 				initArguments = {
-					"related"            : this.set_EagerLoad( [] ).resetQuery(),
+					"related"            : this.resetQuery(),
 					"relationName"       : relationName,
 					"relationMethodName" : arguments.relationMethodName,
 					"parent"             : this,
@@ -2241,7 +2246,8 @@ component accessors="true" {
 			.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
 			.mergeDefaultOptions( variables._queryOptions )
 			.from( tableName() )
-			.addSelect( retrieveQualifiedColumns() );
+			.addSelect( retrieveQualifiedColumns() )
+			.with( variables._with );
 
 		if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
 			newBuilder.setGrammar( variables._wirebox.getInstance( variables._meta.originalMetadata.grammar ) );

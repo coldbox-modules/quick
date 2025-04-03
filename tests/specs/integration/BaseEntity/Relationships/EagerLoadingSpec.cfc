@@ -590,6 +590,25 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					);
 				} );
 			} );
+
+			describe( "automatic eager loading", () => {
+				it( "will automatically eager load specified relationships", () => {
+					var posts = getInstance( "EagerLoadedPost" ).preventLazyLoading().get();
+					expect( posts ).toBeArray();
+					expect( posts ).toHaveLength( 4, "4 posts should have been loaded" );
+					for ( var post in posts ) {
+						expect( () => {
+							post.getComments();
+						} ).notToThrow( type = "QuickLazyLoadingException" );
+					}
+					if ( arrayLen( variables.queries ) != 2 ) {
+						expect( variables.queries ).toHaveLength(
+							2,
+							"Only two queries should have been executed. #arrayLen( variables.queries )# were instead."
+						);
+					}
+				} );
+			} );
 		} );
 	}
 

@@ -169,7 +169,6 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 		}
 
 		return arguments.instance
-			.with( variables.related.get_eagerLoad() )
 			.when( arguments.asQuery, function( qb ) {
 				qb.asQuery( withAliases );
 			} )

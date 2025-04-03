@@ -49,6 +49,20 @@ component accessors="true" transientCache="false" {
 	property name="_withAliases";
 
 	/**
+	 * A flag marking if this builder prevent the results from lazy loading relationships. Default: false.
+	 */
+	property
+		name   ="_preventLazyLoading"
+		default="false"
+		inject ="coldbox:setting:preventLazyLoading@quick";
+
+	/**
+	 * A callback function called when a lazy loading violation occurs.
+	 * It is passed the entity and relation name that caused the violation.
+	 */
+	property name="_lazyLoadingViolationCallback" inject="coldbox:setting:lazyLoadingViolationCallback@quick";
+
+	/**
 	 * A map of aliases to entities to use when qualifying aliased columns.
 	 */
 	property name="aliasMap";
@@ -74,12 +88,21 @@ component accessors="true" transientCache="false" {
 	this.isQuickBuilder = true;
 
 	function init() {
-		variables._eagerLoad             = [];
-		variables._globalScopesApplied   = false;
-		variables._globalScopeExcludeAll = false;
-		variables._asMemento             = false;
-		variables._asQuery               = false;
-		variables._withAliases           = false;
+		variables._eagerLoad                = [];
+		variables._globalScopesApplied      = false;
+		variables._globalScopeExcludeAll    = false;
+		variables._asMemento                = false;
+		variables._asQuery                  = false;
+		variables._withAliases              = false;
+		param variables._preventLazyLoading = false;
+		if ( isNull( variables._lazyLoadingViolationCallback ) ) {
+			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
+				throw(
+					type    = "QuickLazyLoadingException",
+					message = "Attempted to lazy load the [#arguments.relationName#] relationship on the entity [#arguments.entity.mappingName()#] but lazy loading is disabled. This is usually caused by the N+1 problem and is a sign that you are missing an eager load."
+				);
+			};
+		}
 		variables._asMementoSettings     = {};
 		variables._globalScopeExclusions = [];
 		variables.aliasMap               = {};
@@ -576,6 +599,16 @@ component accessors="true" transientCache="false" {
 			hasMatches ? relation.getEager( variables._asQuery, variables._withAliases ) : [],
 			currentRelationship
 		);
+	}
+
+	/**
+	 * Marks the results as not being allowed to lazy load relationships.
+	 *
+	 * @return  quick.models.QuickBuilder
+	 */
+	public QuickBuilder function preventLazyLoading() {
+		variables._preventLazyLoading = true;
+		return this;
 	}
 
 	/**
@@ -1299,12 +1332,16 @@ component accessors="true" transientCache="false" {
 			return childClass
 				.assignAttributesData( arguments.data )
 				.assignOriginalAttributes( arguments.data )
+				.set_preventLazyLoading( variables._preventLazyLoading )
+				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
 				.markLoaded();
 		} else {
 			return getEntity()
 				.newEntity()
 				.assignAttributesData( arguments.data )
 				.assignOriginalAttributes( arguments.data )
+				.set_preventLazyLoading( variables._preventLazyLoading )
+				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
 				.markLoaded();
 		}
 	}
@@ -1359,6 +1396,9 @@ component accessors="true" transientCache="false" {
 		newBuilder.set_globalScopeExclusions( this.get_globalScopeExclusions() );
 		newBuilder.set_eagerLoad( this.get_eagerLoad() );
 		newBuilder.set_asQuery( this.get_asQuery() );
+		newBuilder.set_withAliases( this.get_withAliases() );
+		newBuilder.set_preventLazyLoading( this.get_preventLazyLoading() );
+		newBuilder.set_lazyLoadingViolationCallback( this.get_lazyLoadingViolationCallback() );
 		newBuilder.set_withAliases( this.get_withAliases() );
 		newBuilder.set_asMemento( this.get_asMemento() );
 		newBuilder.set_asMementoSettings( this.get_asMementoSettings() );

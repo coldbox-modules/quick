@@ -166,6 +166,24 @@ component accessors="true" {
 	property name="_ignoreNotLoadedGuard" persistent="false";
 
 	/**
+	 * A boolean flag representing if the entity and any QuickBuilder instances
+	 * created from it are allowed to lazy load relationships.
+	 */
+	property
+		name      ="_preventLazyLoading"
+		persistent="false"
+		inject    ="coldbox:setting:preventLazyLoading@quick";
+
+	/**
+	 * A callback function called when a lazy loading violation occurs.
+	 * It is passed the entity and relation name that caused the violation.
+	 */
+	property
+		name      ="_lazyLoadingViolationCallback"
+		persistent="false"
+		inject    ="coldbox:setting:lazyLoadingViolationCallback@quick";
+
+	/**
 	 * A boolean flag representing that events should not be fired.
 	 */
 	property name="_withoutFiringEvents" persistent="false";
@@ -233,21 +251,30 @@ component accessors="true" {
 		variables._globalScopesApplied            = false;
 		variables._ignoreNotLoadedGuard           = false;
 		variables._withoutFiringEvents            = false;
-		param variables._nullValues               = {};
-		param variables._casts                    = {};
-		param variables._castCache                = {};
-		param variables._casterCache              = {};
-		param variables._loaded                   = false;
-		param variables._aliasPrefix              = "";
-		param variables._hasParentEntity          = false;
-		param variables._parentDefinition         = {};
-		param variables._discriminators           = [];
-		param variables._loadChildren             = true;
-		param variables._queryOptions             = {};
-		param variables._attributes               = {};
-		param variables._columns                  = {};
-		param variables._virtualAttributes        = [];
-		variables._saving                         = false;
+		param variables._preventLazyLoading       = false;
+		if ( isNull( variables._lazyLoadingViolationCallback ) ) {
+			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
+				throw(
+					type    = "QuickLazyLoadingException",
+					message = "Attempted to lazy load the [#arguments.relationName#] relationship on the entity [#arguments.entity.mappingName()#] but lazy loading is disabled. This is usually caused by the N+1 problem and is a sign that you are missing an eager load."
+				);
+			};
+		}
+		param variables._nullValues        = {};
+		param variables._casts             = {};
+		param variables._castCache         = {};
+		param variables._casterCache       = {};
+		param variables._loaded            = false;
+		param variables._aliasPrefix       = "";
+		param variables._hasParentEntity   = false;
+		param variables._parentDefinition  = {};
+		param variables._discriminators    = [];
+		param variables._loadChildren      = true;
+		param variables._queryOptions      = {};
+		param variables._attributes        = {};
+		param variables._columns           = {};
+		param variables._virtualAttributes = [];
+		variables._saving                  = false;
 		return this;
 	}
 
@@ -1294,6 +1321,34 @@ component accessors="true" {
 		}
 	}
 
+	/**
+	 * Marks this entity and any QuickBuilder instances created from it as
+	 * not being allowed to lazy load relationships.
+	 */
+	public any function preventLazyLoading( function callback ) {
+		if ( isNull( arguments.callback ) ) {
+			arguments.callback = ( entity, relationName ) => {
+				throw(
+					type    = "QuickLazyLoadingException",
+					message = "Attempted to lazy load the [#arguments.relationName#] relationship on the entity [#arguments.entity.mappingName()#] but lazy loading is disabled. This is usually caused by the N+1 problem and is a sign that you are missing an eager load."
+				);
+			}
+		}
+		variables._preventLazyLoading           = true;
+		variables._lazyLoadingViolationCallback = arguments.callback;
+		return this;
+	}
+
+	/**
+	 * Marks this entity and any QuickBuilder instances created from it as
+	 * being allowed to lazy load relationships.
+	 */
+	public any function allowLazyLoading() {
+		variables._preventLazyLoading = false;
+		return this;
+	}
+
+
 	private boolean function shouldSkipRelationshipConstraints( required string relationMethodName ) {
 		if ( variables._withoutRelationshipConstraints.contains( lCase( relationMethodName ) ) ) {
 			variables._withoutRelationshipConstraints.remove( lCase( relationMethodName ) );
@@ -2182,6 +2237,8 @@ component accessors="true" {
 			.getInstance( "QuickBuilder@quick" )
 			.setEntity( this )
 			.setReturnFormat( "array" )
+			.set_preventLazyLoading( variables._preventLazyLoading )
+			.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
 			.mergeDefaultOptions( variables._queryOptions )
 			.from( tableName() )
 			.addSelect( retrieveQualifiedColumns() );
@@ -2367,6 +2424,10 @@ component accessors="true" {
 
 		if ( !hasRelationship( relationshipName ) ) {
 			return;
+		}
+
+		if ( !isRelationshipLoaded( relationshipName ) && variables._preventLazyLoading ) {
+			variables._lazyLoadingViolationCallback( this, relationshipName );
 		}
 
 		if ( !isRelationshipLoaded( relationshipName ) ) {

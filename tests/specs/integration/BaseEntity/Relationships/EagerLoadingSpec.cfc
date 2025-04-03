@@ -542,6 +542,54 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( categories[ 2 ].getParent().isLoaded() ).toBeTrue( "Category 2 should have a parent Category loaded from the database" );
 				expect( categories[ 2 ].getParent().getId() ).toBe( 1 );
 			} );
+
+			describe( "handling lazy loading", () => {
+				it( "can completely disable lazy loading", () => {
+					var posts = getInstance( "Post" ).preventLazyLoading().get();
+					expect( posts ).toBeArray();
+					expect( posts ).toHaveLength( 4, "4 posts should have been loaded" );
+					var postA = posts[ 1 ];
+					expect( () => {
+						postA.getComments();
+					} ).toThrow(
+						type  = "QuickLazyLoadingException",
+						regex = "Attempted to lazy load the \[comments\] relationship on the entity \[Post\] but lazy loading is disabled\. This is usually caused by the N\+1 problem and is a sign that you are missing an eager load\."
+					);
+				} );
+
+				it( "can enable lazy loading on an entity by entity basis", () => {
+					var posts = getInstance( "Post" ).allowLazyLoading().get();
+					expect( posts ).toBeArray();
+					expect( posts ).toHaveLength( 4, "4 posts should have been loaded" );
+					var postA = posts[ 1 ];
+					expect( () => {
+						postA.getComments();
+					} ).notToThrow(
+						type  = "QuickLazyLoadingException",
+						regex = "Attempted to lazy load the \[comments\] relationship on the entity \[Post\] but lazy loading is disabled\. This is usually caused by the N\+1 problem and is a sign that you are missing an eager load\."
+					);
+				} );
+
+				it( "can use a callback to control how lazy loading is handled", () => {
+					var posts = getInstance( "Post" )
+						.preventLazyLoading( ( entity, relationName ) => {
+							throw(
+								type    = "CustomLazyLoadingException",
+								message = "Custom lazy loading message about #relationName#"
+							);
+						} )
+						.get();
+					expect( posts ).toBeArray();
+					expect( posts ).toHaveLength( 4, "4 posts should have been loaded" );
+					var postA = posts[ 1 ];
+					expect( () => {
+						postA.getComments();
+					} ).toThrow(
+						type  = "CustomLazyLoadingException",
+						regex = "Custom lazy loading message about comments"
+					);
+				} );
+			} );
 		} );
 	}
 

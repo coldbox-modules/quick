@@ -178,7 +178,7 @@ component accessors="true" {
 	property
 		name      ="_preventLazyLoading"
 		persistent="false"
-		inject    ="coldbox:setting:preventLazyLoading@quick";
+		inject    ="box:setting:preventLazyLoading@quick";
 
 	/**
 	 * A callback function called when a lazy loading violation occurs.
@@ -187,7 +187,7 @@ component accessors="true" {
 	property
 		name      ="_lazyLoadingViolationCallback"
 		persistent="false"
-		inject    ="coldbox:setting:lazyLoadingViolationCallback@quick";
+		inject    ="box:setting:lazyLoadingViolationCallback@quick";
 
 	/**
 	 * A boolean flag representing that events should not be fired.

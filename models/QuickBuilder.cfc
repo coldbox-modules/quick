@@ -54,13 +54,13 @@ component accessors="true" transientCache="false" {
 	property
 		name   ="_preventLazyLoading"
 		default="false"
-		inject ="coldbox:setting:preventLazyLoading@quick";
+		inject ="box:setting:preventLazyLoading@quick";
 
 	/**
 	 * A callback function called when a lazy loading violation occurs.
 	 * It is passed the entity and relation name that caused the violation.
 	 */
-	property name="_lazyLoadingViolationCallback" inject="coldbox:setting:lazyLoadingViolationCallback@quick";
+	property name="_lazyLoadingViolationCallback" inject="box:setting:lazyLoadingViolationCallback@quick";
 
 	/**
 	 * A map of aliases to entities to use when qualifying aliased columns.

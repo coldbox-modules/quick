@@ -1,3 +1,12 @@
+# v11.2.1
+## 04 Apr 2025 — 20:26:28 UTC
+
+### fix
+
++ __EagerLoading:__ Use `box` namespace for CommandBox compatibility
+ ([a05076f](https://github.com/coldbox-modules/quick/commit/a05076f8ea55a32ec061cfcbb345f7ed37f6eaaa))
+
+
 # v11.2.0
 ## 03 Apr 2025 — 18:33:20 UTC
 

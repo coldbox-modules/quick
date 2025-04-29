@@ -1394,14 +1394,15 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.BaseEntity;
 	 */
-	public any function loadRelationship( required any name, boolean force = false ) {
-		for ( var n in arrayWrap( arguments.name ) ) {
-			if ( arguments.force || !isRelationshipLoaded( n ) ) {
+	public any function loadRelationship( required any name, boolean force = false, boolean parallel = false ) {
+		arguments.name = arrayWrap( arguments.name );
+		arguments.name.each( ( n ) => {
+			if ( force || !isRelationshipLoaded( n ) ) {
 				var relationship = invoke( this, n );
 				relationship.setRelationMethodName( n );
 				assignRelationship( n, relationship.get() );
 			}
-		}
+		}, arguments.name.len() > 1 && arguments.parallel );
 		return this;
 	}
 
@@ -1415,7 +1416,7 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.BaseEntity;
 	 */
-	public any function forceLoadRelationship( required any name ) {
+	public any function forceLoadRelationship( required any name, boolean parallel = false ) {
 		arguments.force = true;
 		return loadRelationship( argumentCollection = arguments );
 	}

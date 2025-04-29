@@ -1,3 +1,26 @@
+# v11.3.0
+## 29 Apr 2025 — 20:55:57 UTC
+
+### chore
+
++ __CI:__ Lucee 6 is not ready for prime time
+ ([88473a0](https://github.com/coldbox-modules/quick/commit/88473a0c5d111a39f216bd4c3ec7e4ac6d094db0))
++ __CI:__ More test engine matrix pruning
+ ([935fd04](https://github.com/coldbox-modules/quick/commit/935fd047d3072ec6d87f95cc52b878800fffe174))
++ __CI:__ Upgrade ACF testing matrix
+ ([3173e92](https://github.com/coldbox-modules/quick/commit/3173e923b8785f83de323f3c91b1662482334796))
+
+### feat
+
++ __Relationship:__ Allow parallel loading for loadRelationship
+ ([4e2b199](https://github.com/coldbox-modules/quick/commit/4e2b1996ea902c1ec523d41b39ffd1f93c5b0c4e))
+
+### other
+
++ __\*:__ fix: Use ColdBox Async manager over built in async loops
+ ([5920e2c](https://github.com/coldbox-modules/quick/commit/5920e2c105201113234d248085f15eea48a22b78))
+
+
 # v11.2.1
 ## 04 Apr 2025 — 20:26:28 UTC
 

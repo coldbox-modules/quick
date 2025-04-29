@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "lucee@6", "lucee@be", "adobe@2018", "adobe@2023", "adobe@be", "boxlang@be"]
+        cfengine: ["lucee@5", "lucee@6", "lucee@be", "adobe@2021", "adobe@2023", "adobe@2025", "adobe@be", "boxlang@be"]
         coldbox: ["coldbox@7", "coldbox@be"]
         javaVersion: ["openjdk8", "openjdk11"]
     services:

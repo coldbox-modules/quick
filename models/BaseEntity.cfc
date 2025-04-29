@@ -41,6 +41,14 @@ component accessors="true" {
 		inject    ="box:interceptorService"
 		persistent="false";
 
+	/**
+	 * The ColdBox AsyncManager.
+	 */
+	property
+		name      ="_async"
+		inject    ="box:asyncManager"
+		persistent="false";
+
 	/*===========================================
     =            Metadata Properties            =
     ===========================================*/
@@ -1394,15 +1402,31 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.BaseEntity;
 	 */
-	public any function loadRelationship( required any name, boolean force = false, boolean parallel = false ) {
+	public any function loadRelationship(
+		required any name,
+		boolean force    = false,
+		boolean parallel = false
+	) {
 		arguments.name = arrayWrap( arguments.name );
-		arguments.name.each( ( n ) => {
-			if ( force || !isRelationshipLoaded( n ) ) {
-				var relationship = invoke( this, n );
-				relationship.setRelationMethodName( n );
-				assignRelationship( n, relationship.get() );
+		if ( arguments.name.len() > 1 && arguments.parallel ) {
+			for ( var n in arguments.name ) {
+				if ( arguments.force || !isRelationshipLoaded( n ) ) {
+					variables._async.newFuture( () => {
+						var relationship = invoke( this, n );
+						relationship.setRelationMethodName( n );
+						assignRelationship( n, relationship.get() );
+					} );
+				}
 			}
-		}, arguments.name.len() > 1 && arguments.parallel );
+		} else {
+			for ( var n in arguments.name ) {
+				if ( arguments.force || !isRelationshipLoaded( n ) ) {
+					var relationship = invoke( this, n );
+					relationship.setRelationMethodName( n );
+					assignRelationship( n, relationship.get() );
+				}
+			}
+		}
 		return this;
 	}
 

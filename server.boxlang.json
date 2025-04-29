@@ -1,7 +1,7 @@
 {
     "name":"quick-boxlang",
     "app":{
-        "cfengine":"boxlang@be"
+        "cfengine":"adobe@2021"
     },
     "JVM":{
         "javaVersion":"openjdk21"

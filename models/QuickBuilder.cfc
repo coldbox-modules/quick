@@ -168,6 +168,8 @@ component accessors="true" transientCache="false" {
 		} else if ( isSimpleValue( subselectQuery ) && listLen( subselectQuery, "." ) > 1 ) {
 			var column = subselectQuery;
 			var q      = javacast( "null", "" );
+			// Get the current table alias from the builder
+			var parentTableAlias = this.tableAlias();
 			while ( listLen( column, "." ) > 1 ) {
 				var relationshipName = listFirst( column, "." );
 				if ( isNull( q ) ) {
@@ -201,7 +203,8 @@ component accessors="true" transientCache="false" {
 				}
 				column = listRest( column, "." );
 			}
-			subselectQuery = q.select( q.qualifyColumn( column ) );
+			// Use the parent table alias when qualifying the column
+			subselectQuery = q.select( q.qualifyColumn( column, parentTableAlias ) );
 		}
 
 		subselectQuery.limit( 1 )

@@ -166,10 +166,8 @@ component accessors="true" transientCache="false" {
 			subselectQuery = variables.qb.newQuery();
 			arguments.subselect( subselectQuery );
 		} else if ( isSimpleValue( subselectQuery ) && listLen( subselectQuery, "." ) > 1 ) {
-			var column           = subselectQuery;
-			var q                = javacast( "null", "" );
-			// Get the current table alias from the builder
-			var parentTableAlias = this.tableAlias();
+			var column = subselectQuery;
+			var q      = javacast( "null", "" );
 			while ( listLen( column, "." ) > 1 ) {
 				var relationshipName = listFirst( column, "." );
 				if ( isNull( q ) ) {
@@ -203,8 +201,7 @@ component accessors="true" transientCache="false" {
 				}
 				column = listRest( column, "." );
 			}
-			// Use the parent table alias when qualifying the column
-			subselectQuery = q.select( q.qualifyColumn( column, parentTableAlias ) );
+			subselectQuery = q.select( q.qualifyColumn( column ) );
 		}
 
 		subselectQuery.limit( 1 )

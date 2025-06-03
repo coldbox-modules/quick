@@ -166,8 +166,8 @@ component accessors="true" transientCache="false" {
 			subselectQuery = variables.qb.newQuery();
 			arguments.subselect( subselectQuery );
 		} else if ( isSimpleValue( subselectQuery ) && listLen( subselectQuery, "." ) > 1 ) {
-			var column = subselectQuery;
-			var q      = javacast( "null", "" );
+			var column           = subselectQuery;
+			var q                = javacast( "null", "" );
 			// Get the current table alias from the builder
 			var parentTableAlias = this.tableAlias();
 			while ( listLen( column, "." ) > 1 ) {

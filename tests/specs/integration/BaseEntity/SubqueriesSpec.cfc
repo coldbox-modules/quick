@@ -129,6 +129,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					.findOrFail( 1 );
 				expect( elpete.getLatestPostId() ).toBe( 1245 );
 			} );
+
+			it( "can add a subquery to an entity using a hasManyThrough relationship with table aliases", function() {
+				// expect( () => {
+					var rmmeAs = getInstance( "RMME_A" )
+						.asMemento( includes = [ "C" ] )
+						.get();
+				// } ).notToThrow();
+			} );
+
 		} );
 	}
 

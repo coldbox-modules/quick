@@ -8,8 +8,12 @@ component table="RMME_A" extends="quick.models.BaseEntity" accessors="true" {
     	return hasMany(
             relationName = "RMME_B",
             foreignKey = "ID_A",
-            localKey="ID_A"
-        ).with( [ "C" ] );
+            localKey = "ID_A"
+        );
+    }
+
+    function C() {
+        return hasManyThrough( [ "B", "C" ] );
     }
 
 }

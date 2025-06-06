@@ -1,10 +1,9 @@
-component table="RMME_C" extends="quick.models.BaseEntity" accessors="true" {
+component table="RMME_D" extends="quick.models.BaseEntity" accessors="true" {
 
-    property name="ID_B" type="numeric" sqltype="integer";
-    property name="ID_C" type="numeric" sqltype="integer";
     property name="ID_D" type="numeric" sqltype="integer";
+    property name="dValue" type="numeric" sqltype="integer";
 
-    variables._key = "ID_C";
+    variables._key = "ID_D";
 
     function scopeWithSomeScope( qb ) {
         qb.addSubselect( "inlined_dValue", "d.dValue" );
@@ -12,7 +11,7 @@ component table="RMME_C" extends="quick.models.BaseEntity" accessors="true" {
 
     function D() {
         return hasOne(
-            relationName = "RMME_D",
+            relationName = "D",
             foreignKey = "ID_D",
             localKey = "ID_D"
         )

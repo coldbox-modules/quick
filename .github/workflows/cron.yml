@@ -11,12 +11,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "lucee@6", "lucee@be", "adobe@2023", "adobe@2025", "adobe@be", "boxlang@be"]
+        cfengine: ["lucee@5", "lucee@6", "adobe@2021", "adobe@2023", "boxlang-cfml@1"]
         coldbox: ["coldbox@7", "coldbox@be"]
-        javaVersion: ["openjdk8", "openjdk11"]
+        experimental: [ false ]
+        include:
+          - cfengine: "lucee@be"
+            experimental: true
+          - cfengine: "adobe@be"
+            experimental: true
+          - cfengine: "boxlang@1"
+            experimental: true
+          - cfengine: "boxlang@be"
+            experimental: true
     services:
       mysql:
-        image: mysql:5.7
+        image: mysql:8
         env:
           MYSQL_RANDOM_ROOT_PASSWORD: yes
           MYSQL_USER: quick
@@ -27,12 +36,13 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4.2.2
 
       - name: Setup Java JDK
-        uses: actions/setup-java@v1.4.3
+        uses: actions/setup-java@v4.7.1
         with:
-          java-version: 11
+          distribution: 'temurin'
+          java-version: 17
 
       - name: Set Up CommandBox
         uses: Ortus-Solutions/setup-commandbox@v2.0.1
@@ -53,18 +63,8 @@ jobs:
           DB_USER: quick
           DB_PASSWORD: quick
         run: |
-          if [[ "${{ matrix.cfengine }}" == *"boxlang"* ]] ; then
-            box server start cfengine=${{ matrix.cfengine }} javaVersion=openjdk21_jdk
-            box run-script bx-modules:install
-            box server restart
-          else
-            box server start cfengine=${{ matrix.cfengine }} javaVersion=${{ matrix.javaVersion }}
-          fi
-
-          # Install Adobe 2021 cfpm modules
-          if [[ "${{ matrix.cfengine }}" == "adobe@2021" ]] ; then
-            box run-script install:2021
-          fi
+          box server start serverConfigFile="server-${{ matrix.cfengine }}.json" --noSaveSettings --debug
+          curl http://127.0.0.1:60299
 
       - name: Run TestBox Tests
         env:

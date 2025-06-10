@@ -32,7 +32,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				userBuilder2.clearOrders();
 				expect( userBuilder.getOrders() ).toBe( [
 					{
-						"column"    : "users.id",
+						"column" : {
+							"type"  : "simple",
+							"value" : "users.id"
+						},
 						"direction" : "asc"
 					}
 				] );

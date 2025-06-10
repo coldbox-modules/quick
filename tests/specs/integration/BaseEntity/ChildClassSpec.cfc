@@ -396,7 +396,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var book = getInstance( "BaseProduct" )
 					.where( "type", "book" )
 					.tap( ( q ) => {
-						var originalColumns = q.getColumns();
+						var originalColumns = q.getColumns().map( ( c ) => c.value );
 						var uniqueColumns   = arrayUnique( originalColumns );
 						arraySort( originalColumns, "textnocase" );
 						arraySort( uniqueColumns, "textnocase" );

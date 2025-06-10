@@ -132,6 +132,7 @@ component accessors="true" transientCache="false" {
 	 */
 	public QuickBuilder function withAlias( required string alias ) {
 		variables.aliasMap.delete( getEntity().tableAlias() );
+		variables.aliasMap[ arguments.alias ] = getEntity();
 		getEntity().withAlias( arguments.alias );
 		variables.qb.withAlias( arguments.alias );
 		return this;
@@ -170,6 +171,7 @@ component accessors="true" transientCache="false" {
 			var q      = javacast( "null", "" );
 			while ( listLen( column, "." ) > 1 ) {
 				var relationshipName = listFirst( column, "." );
+
 				if ( isNull( q ) ) {
 					q = getEntity().ignoreLoadedGuard( function() {
 						return getEntity().withoutRelationshipConstraints( relationshipName, function() {
@@ -1371,15 +1373,20 @@ component accessors="true" transientCache="false" {
 			qb.setColumns(
 				qb.getColumns()
 					.map( function( column ) {
-						if ( variables.qb.getUtils().isExpression( column ) ) {
+						if ( column.type == "raw" ) {
 							return column;
 						}
 
-						if ( !qualifiedColumns.contains( column ) ) {
+						if ( !qualifiedColumns.contains( column.value ) ) {
 							return column;
 						}
 
-						return column & " AS " & getEntity().retrieveAliasForColumn( listLast( column, "." ) );
+						return {
+							"type"  : "simple",
+							"value" : column.value & " AS " & getEntity().retrieveAliasForColumn(
+								listLast( column.value, "." )
+							)
+						};
 					} )
 			);
 		}

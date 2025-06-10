@@ -101,9 +101,9 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var pn = getInstance( "PhoneNumber" ).find( 3 );
 				expect( pn.isNullAttribute( "confirmed" ) ).toBeTrue( "[confirmed] should be considered null" );
 				expect( pn.getConfirmed() ).toBe( "" );
-				expect( function() {
-					pn.update( { "active" : false } );
-				} ).notToThrow( message = "PhoneNumber should be able to be saved with a `null` [confirmed] value" );
+				// expect( function() {
+				pn.update( { "active" : false } );
+				// } ).notToThrow( message = "PhoneNumber should be able to be saved with a `null` [confirmed] value" );
 			} );
 
 			it( "correctly casts child entities", () => {
@@ -133,6 +133,42 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				expect( pn.getActive() ).toBe( false );
 				expect( pn.getActive() ).toBeBoolean();
+			} );
+
+			it( "casts during firstOrCreate", () => {
+				var themeA = getInstance( "Theme" ).firstOrCreate(
+					{ "id" : 1 },
+					{
+						slug    : "theme-new",
+						version : "0.0.1",
+						config  : { "message" : "I should be cast to JSON" }
+					}
+				);
+
+				expect( themeA.getId() ).toBe( 1 );
+				expect( themeA.getSlug() ).toBe( "theme-a" );
+				expect( themeA.getVersion() ).toBe( "1.0.0" );
+				expect( themeA.isNullAttribute( "config" ) ).toBeTrue();
+
+				var newTheme = getInstance( "Theme" ).firstOrCreate(
+					{ "id" : 2 },
+					{
+						slug    : "theme-new",
+						version : "0.0.1",
+						config  : { "message" : "I should be cast to JSON" }
+					}
+				);
+
+				expect( newTheme.getSlug() ).toBe( "theme-new" );
+				expect( newTheme.getVersion() ).toBe( "0.0.1" );
+				expect( newTheme.isNullAttribute( "config" ) ).toBeFalse();
+				expect( newTheme.getConfig() ).toBe( { "message" : "I should be cast to JSON" } );
+			} );
+
+			it( "casts values when setting them as a where clause", () => {
+				// expect( () => {
+				getInstance( "Theme" ).where( "config", { "message" : "I should be cast to JSON" } ).first()
+				// } ).notToThrow();
 			} );
 		} );
 	}

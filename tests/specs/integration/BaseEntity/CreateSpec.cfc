@@ -35,6 +35,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						.first()
 				).notToBeNull();
 			} );
+
+			it( "can create a new entity with a json cast", () => {
+				var newTheme = getInstance( "Theme" ).create( {
+					slug    : "theme-new",
+					version : "0.0.1",
+					config  : { "message" : "I should be cast to JSON" }
+				} );
+
+				expect( newTheme.getSlug() ).toBe( "theme-new" );
+				expect( newTheme.getVersion() ).toBe( "0.0.1" );
+				expect( newTheme.isNullAttribute( "config" ) ).toBeFalse();
+				expect( newTheme.getConfig() ).toBe( { "message" : "I should be cast to JSON" } );
+			} );
 		} );
 	}
 

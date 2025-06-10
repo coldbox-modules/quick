@@ -3456,6 +3456,23 @@ component accessors="true" {
 		return this;
 	}
 
+	public any function convertToCastedValue( required string key, any value ) {
+		if ( !variables._casts.keyExists( arguments.key ) ) {
+			return isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value;
+		}
+
+		if ( !variables._casterCache.keyExists( arguments.key ) ) {
+			var castMapping                         = variables._casts[ arguments.key ];
+			variables._casterCache[ arguments.key ] = variables._wirebox.getInstance( dsl = castMapping );
+		}
+		var caster = variables._casterCache[ arguments.key ];
+		return caster.set(
+			this,
+			arguments.key,
+			isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
+		);
+	}
+
 	/**
 	 * Checks if an attribute can be updated.
 	 *

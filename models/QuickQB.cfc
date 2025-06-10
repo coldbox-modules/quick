@@ -853,18 +853,21 @@ component
 		boolean checkNullValues = true
 	) {
 		// If that value is already a struct, pass it back unchanged.
-		if ( !isNull( arguments.value ) && isStruct( arguments.value ) ) {
+		if ( !isNull( arguments.value ) && getUtils().isValidQueryParamStruct( arguments.value ) ) {
 			return arguments.value;
 		}
 
 		if ( arguments.checkNullValues ) {
 			return {
-				"value"     : ( isNull( arguments.value ) || getEntity().isNullValue( arguments.column, arguments.value ) ) ? "" : arguments.value,
+				"value" : ( isNull( arguments.value ) || getEntity().isNullValue( arguments.column, arguments.value ) ) ? "" : getEntity().convertToCastedValue(
+					arguments.column,
+					arguments.value
+				),
 				"cfsqltype" : getEntity().attributeHasSqlType( arguments.column ) ? getEntity().retrieveSqlTypeForAttribute(
 					arguments.column
 				) : (
 					isNull( arguments.value ) ? "CF_SQL_VARCHAR" : getUtils().inferSqlType(
-						arguments.value,
+						getEntity().convertToCastedValue( arguments.column, arguments.value ),
 						variables.grammar
 					)
 				),
@@ -883,12 +886,15 @@ component
 			};
 		} else {
 			return {
-				"value"     : isNull( arguments.value ) ? "" : arguments.value,
+				"value" : isNull( arguments.value ) ? "" : getEntity().convertToCastedValue(
+					arguments.column,
+					arguments.value
+				),
 				"cfsqltype" : getEntity().attributeHasSqlType( arguments.column ) ? getEntity().retrieveSqlTypeForAttribute(
 					arguments.column
 				) : (
 					isNull( arguments.value ) ? "CF_SQL_VARCHAR" : getUtils().inferSqlType(
-						arguments.value,
+						getEntity().convertToCastedValue( arguments.column, arguments.value ),
 						variables.grammar
 					)
 				),

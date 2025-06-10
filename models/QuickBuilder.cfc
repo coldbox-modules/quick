@@ -278,7 +278,10 @@ component accessors="true" transientCache="false" {
 				}
 			}
 
-			var subselectName = getEntity().get_str().camel( relationName & " Count" );
+			var subselectNameArray = getEntity().get_str().words( relationName );
+			subselectNameArray.append( "Count" );
+
+			var subselectName = getEntity().get_str().camel( subselectNameArray.toList( " " ) );
 			if ( findNoCase( " as ", relationName ) ) {
 				var parts     = relationName.split( "\s(?:A|a)(?:S|s)\s" );
 				relationName  = parts[ 1 ];
@@ -339,7 +342,10 @@ component accessors="true" transientCache="false" {
 			var attributeName = listLast( relationName, "." );
 			relationName      = listFirst( relationName, "." );
 
-			var subselectName = getEntity().get_str().camel( "Total " & relationName );
+			var subselectNameArray = [ "Total" ];
+			subselectNameArray.append( getEntity().get_str().words( relationName ), true );
+
+			var subselectName = getEntity().get_str().camel( subselectNameArray.toList( " " ) );
 			if ( findNoCase( " as ", attributeName ) ) {
 				var parts     = attributeName.split( "\s(?:A|a)(?:S|s)\s" );
 				attributeName = parts[ 1 ];

@@ -252,6 +252,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( countries[ 2 ].getId() ).toBe( "02BA2DB0-EB1E-3F85-5F283AB5E45608C6" );
 					expect( countries[ 2 ].getName() ).toBe( "Argentina" );
 					expect( countries[ 2 ].getPostsDeepCount() ).toBe( 1 );
+
+					var countryMementoKeys = countries[ 2 ].getMemento().keyArray();
+					arraySort( countryMementoKeys, "text" );
+					expect( countryMementoKeys[ 1 ] ).toBeWithCase( "createdDate" );
+					expect( countryMementoKeys[ 2 ] ).toBeWithCase( "id" );
+					expect( countryMementoKeys[ 3 ] ).toBeWithCase( "modifiedDate" );
+					expect( countryMementoKeys[ 4 ] ).toBeWithCase( "name" );
+					expect( countryMementoKeys[ 5 ] ).toBeWithCase( "postsDeepCount" );
 				} );
 
 				it( "can return the QuickBuilder instance generated for the count", function() {

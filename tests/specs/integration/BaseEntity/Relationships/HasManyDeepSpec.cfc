@@ -144,6 +144,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( officemates[ 2 ].getId() ).toBe( 3 );
 				expect( officemates[ 3 ].getId() ).toBe( 4 );
 			} );
+
+			it( "withCount via hasManyThrough and a mixture of non-composite and composite keys works", () => {
+				var v = getInstance( "HasManyDeepKeyTest_A" )
+					.withCount( "Cs as countOfCs" )
+					.where( "aID", "a1" )
+					.firstOrFail();
+
+				expect( v.getCountOfCs() ).toBe( 2 );
+			} )
 		} );
 	}
 

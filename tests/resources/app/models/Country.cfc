@@ -110,7 +110,11 @@ component extends="quick.models.BaseEntity" accessors="true" {
 			foreignKeys  = [
 				"country_id",
 				"user_id",
-				[ "commentable_type", "commentable_id" ]
+				{
+					"type"        : "morph",
+					"morphType"   : "commentable_type",
+					"foreignKeys" : "commentable_id"
+				}
 			],
 			localKeys = [ "id", "id", "post_pk" ]
 		);
@@ -135,7 +139,11 @@ component extends="quick.models.BaseEntity" accessors="true" {
 			foreignKeys  = [
 				"country_id",
 				"user_id",
-				[ "commentable_type", "commentable_id" ]
+				{
+					"type"        : "morph",
+					"morphType"   : "commentable_type",
+					"foreignKeys" : "commentable_id"
+				}
 			],
 			localKeys = [ "id", "id", "post_pk" ]
 		).where( "comments.designation", "public" );
@@ -161,7 +169,11 @@ component extends="quick.models.BaseEntity" accessors="true" {
 			foreignKeys  = [
 				"country_id",
 				"user_id",
-				[ "commentable_type", "commentable_id" ]
+				{
+					"type"        : "morph",
+					"morphType"   : "commentable_type",
+					"foreignKeys" : "commentable_id"
+				}
 			],
 			localKeys = [ "id", "id", "post_pk" ]
 		).where( "c.designation", "public" );

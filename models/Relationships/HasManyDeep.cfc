@@ -87,6 +87,10 @@ component
 				);
 				firstForeignKey = firstForeignKey[ 2 ];
 			}
+			if ( isStruct( firstForeignKey ) ) {
+				firstForeignKey = firstForeignKey.foreignKeys[ 1 ];
+			}
+
 			var qualifiedFirstForeignKey = variables.throughParents[ 1 ].qualifyColumn( firstForeignKey );
 			var firstLocalValue          = variables.parent.retrieveAttribute( variables.localKeys[ 1 ] );
 			variables.relationshipBuilder.where( qualifiedFirstForeignKey, firstLocalValue );
@@ -163,33 +167,39 @@ component
 		arguments.localKey   = arrayWrap( arguments.localKey );
 		arguments.foreignKey = arrayWrap( arguments.foreignKey );
 
-		// This handles polymorphic relationships
-		if ( arguments.localKey.len() > arguments.foreignKey.len() ) {
-			arguments.builder.where(
-				arguments.throughParent.qualifyColumn( arguments.localKey[ 1 ] ),
-				arguments.predecessor.mappingName()
-			);
-
-			arguments.localKey = arraySlice( arguments.localKey, 2 );
-		}
-
-		// This handles polymorphic relationships
-		if ( arguments.foreignKey.len() > arguments.localKey.len() ) {
-			arguments.builder.where(
-				arguments.predecessor.qualifyColumn( arguments.foreignKey[ 1 ] ),
-				arguments.throughParent.mappingName()
-			);
-
-			arguments.foreignKey = arraySlice( arguments.foreignKey, 2 );
-		}
-
 		guardAgainstKeyLengthMismatch( arguments.foreignKey, arguments.localKey );
 
 		for ( var i = 1; i <= arguments.localKey.len(); i++ ) {
-			joins.append( [
-				arguments.throughParent.qualifyColumn( arguments.localKey[ i ] ),
-				arguments.predecessor.qualifyColumn( arguments.foreignKey[ i ] )
-			] );
+			if ( isStruct( arguments.foreignKey[ i ] ) ) {
+				if ( isStruct( arguments.localKey[ i ] ) ) {
+					throw( "Not sure what's going on here" );
+				}
+
+				// add the polymorphic where clause
+				arguments.builder.where(
+					arguments.predecessor.qualifyColumn( arguments.foreignKey[ i ].morphType ),
+					arguments.throughParent.mappingName()
+				);
+
+				// add the joins
+				arrayZipEach(
+					[
+						arrayWrap( arguments.foreignKey[ i ].foreignKeys ),
+						arrayWrap( arguments.localKey[ i ] )
+					],
+					function( foreignKey, localKey ) {
+						joins.append( [
+							throughParent.qualifyColumn( localKey ),
+							predecessor.qualifyColumn( foreignKey )
+						] );
+					}
+				);
+			} else {
+				joins.append( [
+					arguments.throughParent.qualifyColumn( arguments.localKey[ i ] ),
+					arguments.predecessor.qualifyColumn( arguments.foreignKey[ i ] )
+				] );
+			}
 		}
 
 		return joins;
@@ -229,17 +239,25 @@ component
 		var foreignKeys = [];
 		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
 			if ( i > variables.throughParents.len() ) {
-				if ( isArray( variables.foreignKeys[ i ] ) ) {
-					foreignKeys.append( variables.related.qualifyColumn( variables.foreignKeys[ i ][ 2 ] ) );
-				} else {
-					foreignKeys.append( variables.related.qualifyColumn( variables.foreignKeys[ i ] ) );
-				}
+				arrayWrap( variables.foreignKeys[ i ] ).each( function( foreignKey ) {
+					if ( isStruct( foreignKey ) ) {
+						foreignKey.foreignKeys.each( function( fk ) {
+							foreignKeys.append( variables.related.qualifyColumn( fk ) );
+						} );
+					} else {
+						foreignKeys.append( variables.related.qualifyColumn( foreignKey ) );
+					}
+				} );
 			} else {
-				if ( isArray( variables.foreignKeys[ i ] ) ) {
-					foreignKeys.append( variables.throughParents[ i ].qualifyColumn( variables.foreignKeys[ i ][ 2 ] ) );
-				} else {
-					foreignKeys.append( variables.throughParents[ i ].qualifyColumn( variables.foreignKeys[ i ] ) );
-				}
+				arrayWrap( variables.foreignKeys[ i ] ).each( function( foreignKey ) {
+					if ( isStruct( foreignKey ) ) {
+						foreignKey.foreignKeys.each( function( fk ) {
+							foreignKeys.append( variables.throughParents[ i ].qualifyColumn( fk ) );
+						} );
+					} else {
+						foreignKeys.append( variables.throughParents[ i ].qualifyColumn( foreignKey ) );
+					}
+				} );
 			}
 		}
 		return foreignKeys;
@@ -256,11 +274,23 @@ component
 		for ( var i = 1; i <= variables.localKeys.len(); i++ ) {
 			if ( i == 1 ) {
 				arrayWrap( variables.localKeys[ i ] ).each( function( localKey ) {
-					qualifiedLocalKeys.append( variables.parent.qualifyColumn( localKey ) );
+					if ( isStruct( localKey ) ) {
+						localKey.localKeys.each( function( lk ) {
+							qualifiedLocalKeys.append( variables.parent.qualifyColumn( lk ) );
+						} );
+					} else {
+						qualifiedLocalKeys.append( variables.parent.qualifyColumn( localKey ) );
+					}
 				} );
 			} else {
 				arrayWrap( variables.localKeys[ i ] ).each( function( localKey ) {
-					qualifiedLocalKeys.append( variables.throughParents[ i - 1 ].qualifyColumn( localKey ) );
+					if ( isStruct( localKey ) ) {
+						localKey.localKeys.each( function( lk ) {
+							qualifiedLocalKeys.append( variables.throughParents[ i - 1 ].qualifyColumn( lk ) );
+						} );
+					} else {
+						qualifiedLocalKeys.append( variables.throughParents[ i - 1 ].qualifyColumn( localKey ) );
+					}
 				} );
 			}
 		}

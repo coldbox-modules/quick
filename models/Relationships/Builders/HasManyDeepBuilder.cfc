@@ -60,7 +60,11 @@ component accessors="true" {
 		required any localKey,
 		function callback
 	) {
-		arguments.foreignKey = [ arguments.type, arguments.foreignKey ];
+		arguments.foreignKey = {
+			"type"        : "morph",
+			"morphType"   : arguments.type,
+			"foreignKeys" : arguments.foreignKey
+		};
 		structDelete( arguments, "type" );
 		return throughEntity( argumentCollection = arguments );
 	}
@@ -102,7 +106,11 @@ component accessors="true" {
 		required any foreignKey,
 		required any localKey
 	) {
-		arguments.foreignKey = [ arguments.type, arguments.foreignKey ];
+		arguments.foreignKey = {
+			"type"        : "morph",
+			"morphType"   : arguments.type,
+			"foreignKeys" : arguments.foreignKey
+		};
 		structDelete( arguments, "type" );
 		return toRelated( argumentCollection = arguments );
 	}

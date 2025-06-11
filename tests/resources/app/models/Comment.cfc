@@ -14,7 +14,8 @@ component
     property name="sentimentAnalysis" casts="JsonCast@quick";
 
     variables._discriminators = [
-        "InternalComment"
+        "InternalComment",
+        "PictureComment"
     ];
 
 

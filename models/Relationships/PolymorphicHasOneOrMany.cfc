@@ -135,17 +135,11 @@ component
 		required array localKeys,
 		required numeric position
 	) {
-		if ( variables.foreignKeys.len() == 1 ) {
-			arguments.foreignKeys.append( [
-				variables.morphType,
-				variables.foreignKeys[ 1 ]
-			] );
-		} else {
-			arguments.foreignKeys.append( [
-				variables.morphType,
-				variables.foreignKeys
-			] );
-		}
+		arguments.foreignKeys.append( {
+			"type"        : "morph",
+			"morphType"   : variables.morphType,
+			"foreignKeys" : variables.foreignKeys
+		} );
 
 		if ( variables.localKeys.len() == 1 ) {
 			arguments.localKeys.append( variables.localKeys, true );

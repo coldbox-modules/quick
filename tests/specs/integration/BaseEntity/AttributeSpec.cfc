@@ -17,6 +17,25 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( attributesFromFresh ).notToInclude( "latestPostId" );
 			} );
 
+			it( "can load virtual attributes from a query", () => {
+				var batches = getInstance( "InventoryBatch" )
+					.addTradeCount()
+					.orderByAsc( "id" )
+					.get();
+
+				expect( batches ).toBeArray();
+				expect( batches ).toHaveLength( 3 );
+
+				expect( batches[ 1 ].getId() ).toBe( 1 );
+				expect( batches[ 1 ].getTradeCount() ).toBe( 2 );
+
+				expect( batches[ 2 ].getId() ).toBe( 2 );
+				expect( batches[ 2 ].getTradeCount() ).toBe( 1 );
+
+				expect( batches[ 3 ].getId() ).toBe( 3 );
+				expect( batches[ 3 ].getTradeCount() ).toBe( 3 );
+			} );
+
 			it( "can get any attribute using the `getColumnName` magic methods", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getId() ).toBe( 1 );

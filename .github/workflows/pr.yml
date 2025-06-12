@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "lucee@6", "adobe@2021", "adobe@2023", "boxlang-cfml@1"]
+        cfengine: ["lucee@5", "lucee@6", "adobe@2021", "adobe@2023", "adobe@2025", "boxlang-cfml@1"]
     services:
       mysql:
         image: mysql:8
@@ -39,7 +39,7 @@ jobs:
         uses: actions/setup-java@v4.7.1
         with:
           distribution: 'temurin'
-          java-version: 11
+          java-version: 21
 
       - name: Set Up CommandBox
         uses: Ortus-Solutions/setup-commandbox@v2.0.1

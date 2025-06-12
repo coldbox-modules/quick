@@ -1,3 +1,42 @@
+# v12.0.0
+## 12 Jun 2025 — 22:59:56 UTC
+
+### BREAKING
+
++ __HasManyDeep:__ Fix for deep entities with compound keys ([21c3e03](https://github.com/coldbox-modules/quick/commit/21c3e03db26588a32bdad5cd9ba1352cb94af1d4))
++ __HasManyThrough:__ Use qb 13 to fix missing alias rewriting ([95ce7e6](https://github.com/coldbox-modules/quick/commit/95ce7e6132185aa60ed4db9d32ed971d4c04382f))
++ __box.json:__ Upgrade to latest dependencies ([0b3a4c8](https://github.com/coldbox-modules/quick/commit/0b3a4c82dec7bdf5ee9e39d8bd7f914d0b2c4594))
+
+### chore
+
++ __tests:__ Modify test to work with BoxLang
+ ([102406a](https://github.com/coldbox-modules/quick/commit/102406a3a8f0514d8391f42591aa42eddd8a4e39))
++ __CI:__ Stick to mysql:5.7 for now
+ ([028c2ad](https://github.com/coldbox-modules/quick/commit/028c2adc54d53210dc6d07e8cb1e10fb8cf81bf3))
++ __CI:__ Use explicity ports for MySQL 8 service
+ ([53e4edc](https://github.com/coldbox-modules/quick/commit/53e4edc42a7a9aec82671279633d3aecafac85a8))
++ __CI:__ Update testing matrix and java versions
+ ([1d7c0c8](https://github.com/coldbox-modules/quick/commit/1d7c0c8abe5b9d74f0ec20a3e7c3741082e50bc2))
++ __CI:__ Use separate server.json files for different engines
+ ([ceb4484](https://github.com/coldbox-modules/quick/commit/ceb44842fb58e394ca77ac7801f0a5ff1a1be5cc))
+
+### fix
+
++ __QuickBuilder:__ Fix for qb 13's new column syntax
+ ([e7fb76a](https://github.com/coldbox-modules/quick/commit/e7fb76a200cf4b9c01a502f78d5126e4641a73e5))
++ __ChildEntity:__ Fix for bringing back columns correct when multiple child entities share the same column
+ ([9c5d69e](https://github.com/coldbox-modules/quick/commit/9c5d69e5b4c476bf44cbd3df723bd7d986922209))
++ __QuickBuilder:__ Preserve case for `withCount` and `withSum` ([1262c8d](https://github.com/coldbox-modules/quick/commit/1262c8d8ffd255ba3190b0802b73fbd75a3cf794))
++ __QuickQB:__ Casts values when using them in where clauses ([6035327](https://github.com/coldbox-modules/quick/commit/60353271b190dc37d11f2c06e597578e3a2c13e2))
++ __CI:__ Fix for Lucee 6 and custom DSNs in CI
+ ([1e2ddaf](https://github.com/coldbox-modules/quick/commit/1e2ddaf345be1cbedb185bc5cc413c571027237a))
+
+### other
+
++ __\*:__ Failing test
+ ([25bca38](https://github.com/coldbox-modules/quick/commit/25bca381fcbf160b61284e351ad6f15aec8fbdab))
+
+
 # v11.3.0
 ## 29 Apr 2025 — 20:55:57 UTC
 

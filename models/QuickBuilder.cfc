@@ -1399,7 +1399,7 @@ component accessors="true" transientCache="false" {
 			qb.setColumns(
 				qb.getColumns()
 					.map( function( column ) {
-						if ( column.type == "raw" ) {
+						if ( column.type == "raw" || column.type == "builder" ) {
 							return column;
 						}
 

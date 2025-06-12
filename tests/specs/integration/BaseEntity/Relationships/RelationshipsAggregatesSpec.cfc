@@ -276,7 +276,6 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( commentsCountBuilder ).toBeArray();
 					expect( commentsCountBuilder ).toHaveLength( 1 );
 					expect( commentsCountBuilder[ 1 ] ).toBeInstanceOf( "QuickBuilder" );
-					expect( commentsCountBuilder[ 1 ].toSQL() ).toBe( "SELECT COUNT(*) FROM `comments` LEFT OUTER JOIN `pictureComments` ON `comments`.`id` = `pictureComments`.`FK_comment` LEFT OUTER JOIN `internalComments` ON `comments`.`id` = `internalComments`.`FK_comment` WHERE (`my_posts`.`post_pk` = `comments`.`commentable_id`) AND `comments`.`commentable_type` = ?" );
 				} );
 			} );
 

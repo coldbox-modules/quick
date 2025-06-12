@@ -1,7 +1,7 @@
-component 
+component
     extends="quick.models.BaseEntity"
-    discriminatorColumn="designation" 
-    accessors="true" 
+    discriminatorColumn="designation"
+    accessors="true"
 {
 
     property name="id";
@@ -32,9 +32,9 @@ component
     }
 
     // chose this sql function as it present in both mysql and sql server
-    function scopeAddUpperBody(qb){
+    function scopeAddUpperBody( qb ) {
         qb.selectRaw( "UPPER(body) as upperBody" );
-        appendVirtualAttribute( "upperBody" );        
+        appendVirtualAttribute( "upperBody" );
     }
 
 }

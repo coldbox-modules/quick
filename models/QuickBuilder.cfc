@@ -744,7 +744,7 @@ component accessors="true" transientCache="false" {
 			entity
 				.getDiscriminations()
 				.each( function( discriminator, data ) {
-					// only join if this is a polymorphicn association
+					// only join if this is a polymorphic association
 					if ( !entity.isSingleTableInheritance() ) {
 						variables.qb.join(
 							data.table,
@@ -754,7 +754,14 @@ component accessors="true" transientCache="false" {
 							"left outer"
 						);
 					}
-					variables.qb.addSelect( data.childColumns );
+					variables.qb.addSelect(
+						data.childColumns.map( ( column ) => {
+							if ( column == data.joincolumn ) {
+								return "#column# AS #column#"
+							}
+							return column;
+						} )
+					);
 				} );
 		}
 	}
@@ -1324,11 +1331,11 @@ component accessors="true" transientCache="false" {
 				arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]
 			)
 		) {
-			var childClass = variables._wirebox.getInstance(
-				getEntity().getDiscriminations()[
-					arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]
-				].mapping
-			);
+			var discrimination = getEntity().getDiscriminations()[
+				arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]
+			];
+
+			var childClass = variables._wirebox.getInstance( discrimination.mapping );
 
 			// add any virtual attributes present in the parent entity to child entity
 			getEntity()
@@ -1336,6 +1343,19 @@ component accessors="true" transientCache="false" {
 				.each( function( item ) {
 					childClass.appendVirtualAttribute( item );
 				} );
+
+			// find the correct child columns to use, in the case that multiple child tables contain the same column
+			for ( var column in data ) {
+				if ( listLen( column, "." ) > 1 ) {
+					if ( listFirst( column, "." ) == discrimination.table ) {
+						data[ listRest( column, "." ) ] = data[ column ];
+						data.delete( column );
+					} else {
+						// if the column is not in the discrimination table, then we need to remove it
+						data.delete( column );
+					}
+				}
+			}
 
 			return childClass
 				.assignAttributesData( arguments.data )
@@ -1429,6 +1449,62 @@ component accessors="true" transientCache="false" {
 	 */
 	private array function arrayWrap( required any value ) {
 		return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
+	}
+
+	/**
+	 * Accepts an array of arrays and calls a callback passing each item of
+	 * the same index from each of the arrays.
+	 *
+	 * @arrays    An array of arrays.  All arrays must have the same length.
+	 * @callback  The callback to call.  It will be passed an item from each
+	 *            array passed in at the same index.
+	 *
+	 * @throws    ArrayZipLengthMismatch
+	 *
+	 * @return    The original array of arrays passed in.
+	 */
+	private array function arrayZipEach( required array arrays, required any callback ) {
+		if ( arguments.arrays.isEmpty() ) {
+			return arguments.arrays;
+		}
+
+		var lengths = arguments.arrays.map( function( arr ) {
+			return arr.len();
+		} );
+
+		if ( unique( lengths ).len() > 1 ) {
+			throw(
+				type         = "ArrayZipLengthMismatch",
+				message      = "The arrays do not have the same length. Lengths: [#serializeJSON( lengths )#]",
+				extendedInfo = serializeJSON( arguments.arrays )
+			);
+		}
+
+		for ( var i = 1; i <= arguments.arrays[ 1 ].len(); i++ ) {
+			var args = {};
+			for ( var j = 1; j <= arguments.arrays.len(); j++ ) {
+				args[ j ] = arguments.arrays[ j ][ i ];
+			}
+			callback( argumentCollection = args );
+		}
+
+		return arguments.arrays;
+	}
+
+	/**
+	 * Returns an array of the unique items of an array.
+	 *
+	 * @items        An array of items.
+	 *
+	 * @doc_generic  any
+	 * @return       [any]
+	 */
+	public array function unique( required array items ) {
+		if ( arrayIsEmpty( arguments.items ) ) {
+			return arguments.items;
+		}
+
+		return arraySlice( createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(), 1 );
 	}
 
 }

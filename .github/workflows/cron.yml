@@ -32,7 +32,7 @@ jobs:
           MYSQL_PASSWORD: quick
           MYSQL_DATABASE: quick
         ports:
-          - 3306
+          - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - name: Checkout Repository
@@ -58,7 +58,7 @@ jobs:
       - name: Start server
         env:
           DB_HOST: localhost
-          DB_PORT: ${{ job.services.mysql.ports[3306] }}
+          DB_PORT: 3306
           DB_NAME: quick
           DB_USER: quick
           DB_PASSWORD: quick
@@ -69,7 +69,7 @@ jobs:
       - name: Run TestBox Tests
         env:
           DB_HOST: localhost
-          DB_PORT: ${{ job.services.mysql.ports[3306] }}
+          DB_PORT: 3306
           DB_NAME: quick
           DB_USER: quick
           DB_PASSWORD: quick

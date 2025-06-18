@@ -1,3 +1,12 @@
+# v12.0.1
+## 18 Jun 2025 — 19:52:37 UTC
+
+### fix
+
++ __QuickQB:__ Fix for casts in where statements
+ ([c605721](https://github.com/coldbox-modules/quick/commit/c6057214f7132d3beab13b4406252420619fdf67))
+
+
 # v12.0.0
 ## 12 Jun 2025 — 22:59:56 UTC
 

@@ -35,9 +35,10 @@ component
 	) {
 		if ( isSimpleValue( arguments.column ) && getEntity().hasAttribute( arguments.column ) ) {
 			arguments.value = generateQueryParamStruct(
-				column          = arguments.column,
-				value           = isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
-				checkNullValues = false // where's should not be null.  `WHERE foo = NULL` will return nothing.
+				column           = arguments.column,
+				value            = isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
+				checkNullValues  = false, // where's should not be null.  `WHERE foo = NULL` will return nothing.
+				shouldCastValues = true // we are in a where clause, so the casted values will not be persisted to the entity at this time.
 			);
 		}
 		super.whereBasic( argumentCollection = arguments );
@@ -850,7 +851,8 @@ component
 	public struct function generateQueryParamStruct(
 		required string column,
 		any value,
-		boolean checkNullValues = true
+		boolean checkNullValues  = true,
+		boolean shouldCastValues = false
 	) {
 		// If that value is already a struct, pass it back unchanged.
 		if ( !isNull( arguments.value ) && getUtils().isValidQueryParamStruct( arguments.value ) ) {
@@ -859,15 +861,17 @@ component
 
 		if ( arguments.checkNullValues ) {
 			return {
-				"value" : ( isNull( arguments.value ) || getEntity().isNullValue( arguments.column, arguments.value ) ) ? "" : getEntity().convertToCastedValue(
-					arguments.column,
-					arguments.value
+				"value" : ( isNull( arguments.value ) || getEntity().isNullValue( arguments.column, arguments.value ) ) ? "" : (
+					arguments.shouldCastValues ? getEntity().convertToCastedValue( arguments.column, arguments.value ) : arguments.value
 				),
 				"cfsqltype" : getEntity().attributeHasSqlType( arguments.column ) ? getEntity().retrieveSqlTypeForAttribute(
 					arguments.column
 				) : (
 					isNull( arguments.value ) ? "CF_SQL_VARCHAR" : getUtils().inferSqlType(
-						getEntity().convertToCastedValue( arguments.column, arguments.value ),
+						arguments.shouldCastValues ? getEntity().convertToCastedValue(
+							arguments.column,
+							arguments.value
+						) : arguments.value,
 						variables.grammar
 					)
 				),
@@ -886,15 +890,17 @@ component
 			};
 		} else {
 			return {
-				"value" : isNull( arguments.value ) ? "" : getEntity().convertToCastedValue(
-					arguments.column,
-					arguments.value
+				"value" : isNull( arguments.value ) ? "" : (
+					arguments.shouldCastValues ? getEntity().convertToCastedValue( arguments.column, arguments.value ) : arguments.value
 				),
 				"cfsqltype" : getEntity().attributeHasSqlType( arguments.column ) ? getEntity().retrieveSqlTypeForAttribute(
 					arguments.column
 				) : (
 					isNull( arguments.value ) ? "CF_SQL_VARCHAR" : getUtils().inferSqlType(
-						getEntity().convertToCastedValue( arguments.column, arguments.value ),
+						arguments.shouldCastValues ? getEntity().convertToCastedValue(
+							arguments.column,
+							arguments.value
+						) : arguments.value,
 						variables.grammar
 					)
 				),

@@ -166,9 +166,21 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "casts values when setting them as a where clause", () => {
-				// expect( () => {
-				getInstance( "Theme" ).where( "config", { "message" : "I should be cast to JSON" } ).first()
-				// } ).notToThrow();
+				expect( () => {
+					getInstance( "Theme" ).where( "config", { "message" : "I should be cast to JSON" } ).first()
+				} ).notToThrow();
+			} );
+
+			it( "does not double cast json strings", () => {
+				var newTheme = getInstance( "Theme" );
+				newTheme.setSlug( "theme-new" );
+				newTheme.setVersion( "0.0.1" );
+				newTheme.setConfig( {} );
+				newTheme.save();
+
+				var fetchedTheme = getInstance( "Theme" ).where( "slug", "theme-new" ).firstOrFail();
+				expect( fetchedTheme.getConfig() ).toBe( {} );
+				expect( fetchedTheme.getConfig() ).toBeStruct();
 			} );
 		} );
 	}

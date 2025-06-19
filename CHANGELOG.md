@@ -1,3 +1,12 @@
+# v12.0.2
+## 19 Jun 2025 — 19:37:19 UTC
+
+### fix
+
++ __ModuleConfig:__ Ensure cache exists before clearing it when unloading Quick
+ ([baaa763](https://github.com/coldbox-modules/quick/commit/baaa763799d8c06ccfbaa56d3b564c39af4a82e7))
+
+
 # v12.0.1
 ## 18 Jun 2025 — 19:52:37 UTC
 

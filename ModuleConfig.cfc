@@ -74,10 +74,10 @@ component {
 	}
 
 	function onUnload() {
-		wirebox
-			.getCachebox()
-			.getCache( settings.metadataCache.name )
-			.clearAll();
+		var cacheBox = wirebox.getCachebox();
+		if ( cacheBox.cacheExists( settings.metadataCache.name ) ) {
+			cacheBox.getCache( settings.metadataCache.name ).clearAll();
+		}
 	}
 
 

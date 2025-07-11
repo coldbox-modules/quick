@@ -1399,14 +1399,15 @@ component accessors="true" {
 		boolean force    = false,
 		boolean parallel = false
 	) {
+	    var entity = this;
 		arrayEach( arrayWrap( arguments.name ), ( n ) => {
 			if ( force || !isRelationshipLoaded( n ) ) {
-				var relationship = invoke( this, n );
+				var relationship = invoke( entity, n );
 				relationship.setRelationMethodName( n );
 				assignRelationship( n, relationship.get() );
 			}
 		}, arguments.parallel );
-		return this;
+		return entity;
 	}
 
 	/**

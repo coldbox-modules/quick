@@ -1,3 +1,14 @@
+# v12.0.3
+## 11 Jul 2025 — 23:07:07 UTC
+
+### fix
+
++ __BaseEntity:__ More ACF compatibility fixes for parallel eager loading ([3557e84](https://github.com/coldbox-modules/quick/commit/3557e845ee1744b9cb476a4259852286616d76b2))
++ __BaseEntity:__ potential workaround for ACF ([a46298e](https://github.com/coldbox-modules/quick/commit/a46298e8e083e9c4f759371044722574e4a8fabf))
++ __BaseEntity:__ use BIF for ACF compat ([6f56f52](https://github.com/coldbox-modules/quick/commit/6f56f520d01c26da8efd33b73381273c116a0604))
++ __BaseEntity:__ Fix async relationship loading ([60b9ba8](https://github.com/coldbox-modules/quick/commit/60b9ba8e92df5afc83046ecad8421ef94710a1ed))
+
+
 # v12.0.2
 ## 19 Jun 2025 — 19:37:19 UTC
 

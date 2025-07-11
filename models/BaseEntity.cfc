@@ -1399,7 +1399,7 @@ component accessors="true" {
 		boolean force    = false,
 		boolean parallel = false
 	) {
-		arrayWrap( arguments.name ).each( ( n ) => {
+		arrayEach( arrayWrap( arguments.name ), ( n ) => {
 			if ( force || !isRelationshipLoaded( n ) ) {
 				var relationship = invoke( this, n );
 				relationship.setRelationMethodName( n );

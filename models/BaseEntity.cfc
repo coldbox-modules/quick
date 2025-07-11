@@ -41,14 +41,6 @@ component accessors="true" {
 		inject    ="box:interceptorService"
 		persistent="false";
 
-	/**
-	 * The ColdBox AsyncManager.
-	 */
-	property
-		name      ="_async"
-		inject    ="box:asyncManager"
-		persistent="false";
-
 	/*===========================================
     =            Metadata Properties            =
     ===========================================*/
@@ -1407,26 +1399,13 @@ component accessors="true" {
 		boolean force    = false,
 		boolean parallel = false
 	) {
-		arguments.name = arrayWrap( arguments.name );
-		if ( arguments.name.len() > 1 && arguments.parallel ) {
-			for ( var n in arguments.name ) {
-				if ( arguments.force || !isRelationshipLoaded( n ) ) {
-					variables._async.newFuture( () => {
-						var relationship = invoke( this, n );
-						relationship.setRelationMethodName( n );
-						assignRelationship( n, relationship.get() );
-					} );
-				}
+		arrayWrap( arguments.name ).each( ( n ) => {
+			if ( force || !isRelationshipLoaded( n ) ) {
+				var relationship = invoke( this, n );
+				relationship.setRelationMethodName( n );
+				assignRelationship( n, relationship.get() );
 			}
-		} else {
-			for ( var n in arguments.name ) {
-				if ( arguments.force || !isRelationshipLoaded( n ) ) {
-					var relationship = invoke( this, n );
-					relationship.setRelationMethodName( n );
-					assignRelationship( n, relationship.get() );
-				}
-			}
-		}
+		}, arguments.parallel );
 		return this;
 	}
 

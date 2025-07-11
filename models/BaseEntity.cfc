@@ -1399,15 +1399,38 @@ component accessors="true" {
 		boolean force    = false,
 		boolean parallel = false
 	) {
-	    var entity = this;
-		arrayEach( arrayWrap( arguments.name ), ( n ) => {
-			if ( force || !isRelationshipLoaded( n ) ) {
-				var relationship = invoke( entity, n );
-				relationship.setRelationMethodName( n );
-				assignRelationship( n, relationship.get() );
+		arguments.name = arrayWrap( arguments.name );
+		if ( arguments.name.len() > 1 && arguments.parallel ) {
+			var threadNames = [];
+			for ( var n in arguments.name ) {
+				var threadName = "#n#_#replace( createUUID(), "-", "", "all" )#";
+				threadNames.append( threadName );
+				cfthread(
+					action           = "run",
+					name             = "#threadName#",
+					relationshipName = "#n#",
+					entity           = this
+				) {
+					var relationship = invoke( attributes.entity, attributes.relationshipName );
+					relationship.setRelationMethodName( attributes.relationshipName );
+					assignRelationship( attributes.relationshipName, relationship.get() );
+				}
 			}
-		}, arguments.parallel );
-		return entity;
+			cfthread(
+				action  = "join",
+				name    = "#threadNames.toList()#",
+				timeout = "#60 * 1000#"
+			);
+		} else {
+			for ( var n in arguments.name ) {
+				if ( arguments.force || !isRelationshipLoaded( n ) ) {
+					var relationship = invoke( this, n );
+					relationship.setRelationMethodName( n );
+					assignRelationship( n, relationship.get() );
+				}
+			}
+		}
+		return this;
 	}
 
 	/**

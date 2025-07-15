@@ -1,3 +1,12 @@
+# v12.0.4
+## 15 Jul 2025 — 18:27:26 UTC
+
+### fix
+
++ __QuickBuilder:__ Allow passing `options` for retrieval methods
+ ([0e0fc11](https://github.com/coldbox-modules/quick/commit/0e0fc11dab7ee470cd917314dce98c986520cb82))
+
+
 # v12.0.3
 ## 11 Jul 2025 — 23:07:07 UTC
 

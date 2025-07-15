@@ -376,11 +376,15 @@ component accessors="true" transientCache="false" {
 	/**
 	 * Executes the configured query and returns the entities in an array.
 	 *
+	 * @columns  An optional column, list of columns, or array of columns to select.
+	 *           The selected columns before calling get will be restored after running the query.
+	 * @options  Any options to pass to `queryExecute`. Default: {}.
+	 *
 	 * @doc_generic  quick.models.BaseEntity
 	 * @return       [quick.models.BaseEntity]
 	 */
-	private array function getEntities() {
-		var results = variables.qb.get();
+	private array function getEntities( any columns, struct options = {} ) {
+		var results = variables.qb.get( argumentCollection = arguments );
 		return variables._asQuery ? results : results.map( variables.loadEntity );
 	}
 
@@ -405,7 +409,9 @@ component accessors="true" transientCache="false" {
 	 */
 	public any function get( any columns, struct options = {} ) {
 		activateGlobalScopes();
-		return getEntity().newCollection( handleTransformations( eagerLoadRelations( getEntities() ) ) );
+		return getEntity().newCollection(
+			handleTransformations( eagerLoadRelations( getEntities( argumentCollection = arguments ) ) )
+		);
 	}
 
 	/**
@@ -845,17 +851,19 @@ component accessors="true" transientCache="false" {
 	 * If no record is found, it returns null instead.
 	 *
 	 * @id      The id value to find.
+	 * @options Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return  quick.models.BaseEntity || null
 	 */
-	public any function find( required any id ) {
+	public any function find( required any id, struct options = {} ) {
 		arguments.id = arrayWrap( arguments.id );
 		getEntity().guardAgainstKeyLengthMismatch( arguments.id );
 		getEntity().fireEvent(
 			"preLoad",
 			{
-				id       : arguments.id,
-				metadata : getEntity().get_meta()
+				"id"       : arguments.id,
+				"metadata" : getEntity().get_meta(),
+				"options"  : arguments.options
 			}
 		);
 		activateGlobalScopes();
@@ -866,7 +874,7 @@ component accessors="true" transientCache="false" {
 					q.where( allKeyNames[ i ], id[ i ] );
 				}
 			} )
-			.first();
+			.first( arguments.options );
 	}
 
 	/**
@@ -876,14 +884,15 @@ component accessors="true" transientCache="false" {
 	 * @errorMessage  An optional string error message or callback to produce
 	 *                a string error message.  If a callback is used, it is
 	 *                passed the unloaded entity as the only argument.
+	 * @options       Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @throws        EntityNotFound
 	 *
 	 * @return        quick.models.BaseEntity
 	 */
-	public any function firstOrFail( any errorMessage ) {
+	public any function firstOrFail( any errorMessage, struct options = {} ) {
 		activateGlobalScopes();
-		var instance = this.first();
+		var instance = this.first( arguments.options );
 		if ( isNull( instance ) ) {
 			param arguments.errorMessage = "No [#getEntity().entityName()#] found with constraints [#serializeJSON( this.getBindings() )#]";
 			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
@@ -903,13 +912,18 @@ component accessors="true" transientCache="false" {
 	 * @errorMessage  An optional string error message or callback to produce
 	 *                a string error message.  If a callback is used, it is
 	 *                passed the unloaded entity as the only argument.
+	 * @options       Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @throws        EntityNotFound
 	 *
 	 * @return        quick.models.BaseEntity
 	 */
-	public any function findOrFail( required any id, any errorMessage ) {
-		var instance = this.find( arguments.id );
+	public any function findOrFail(
+		required any id,
+		any errorMessage,
+		struct options = {}
+	) {
+		var instance = this.find( arguments.id, arguments.options );
 		if ( isNull( instance ) ) {
 			param arguments.errorMessage = "No [#getEntity().entityName()#] found with id [#( isArray( arguments.id ) ? arguments.id.toList() : arguments.id )#]";
 			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
@@ -925,12 +939,14 @@ component accessors="true" transientCache="false" {
 	 * Returns the first matching entity for the configured query.
 	 * If no records are found, it returns null instead.
 	 *
+	 * @options Any options to pass to `queryExecute`. Default: {}.
+	 *
 	 * @return  quick.models.BaseEntity || null
 	 */
-	public any function first() {
+	public any function first( struct options = {} ) {
 		activateGlobalScopes();
 
-		var result = variables.qb.first();
+		var result = variables.qb.first( argumentCollection = arguments );
 		return structIsEmpty( result ) ? javacast( "null", "" ) : handleTransformations(
 			// wrap the single entity in an array to eager load, then grab it out again
 			eagerLoadRelations( [ variables._asQuery ? result : loadEntity( result ) ] )[ 1 ]
@@ -947,19 +963,21 @@ component accessors="true" transientCache="false" {
 	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
+	 * @options                      Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return                       quick.models.BaseEntity
 	 */
 	public any function firstOrNew(
 		struct attributes                   = {},
 		struct newAttributes                = {},
-		boolean ignoreNonExistentAttributes = false
+		boolean ignoreNonExistentAttributes = false,
+		struct options                      = {}
 	) {
 		try {
 			for ( var key in arguments.attributes ) {
 				variables.qb.where( key, arguments.attributes[ key ] );
 			}
-			return firstOrFail();
+			return firstOrFail( options = arguments.options );
 		} catch ( EntityNotFound e ) {
 			arguments.attributes.append( arguments.newAttributes, true );
 			return handleTransformations(
@@ -978,24 +996,30 @@ component accessors="true" transientCache="false" {
 	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
+	 * @options                      Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return                       quick.models.BaseEntity
 	 */
 	public any function firstOrCreate(
 		struct attributes                   = {},
 		struct newAttributes                = {},
-		boolean ignoreNonExistentAttributes = false
+		boolean ignoreNonExistentAttributes = false,
+		struct options                      = {}
 	) {
 		for ( var key in arguments.attributes ) {
 			variables.qb.where( key, arguments.attributes[ key ] );
 		}
 
 		try {
-			return firstOrFail();
+			return firstOrFail( options = arguments.options );
 		} catch ( EntityNotFound e ) {
 			arguments.attributes.append( arguments.newAttributes, true );
 			return handleTransformations(
-				getEntity().create( arguments.attributes, arguments.ignoreNonExistentAttributes )
+				getEntity().create(
+					arguments.attributes,
+					arguments.ignoreNonExistentAttributes,
+					arguments.options
+				)
 			);
 		}
 	}
@@ -1007,6 +1031,7 @@ component accessors="true" transientCache="false" {
 	 * @operator    The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
 	 * @value       The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
 	 * @combinator  The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+	 * @options Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return      quick.models.BaseEntity
 	 */
@@ -1014,9 +1039,10 @@ component accessors="true" transientCache="false" {
 		any column,
 		any operator,
 		any value,
-		string combinator = "and"
+		string combinator = "and",
+		struct options    = {}
 	) {
-		return this.where( argumentCollection = arguments ).first();
+		return this.where( argumentCollection = arguments ).first( arguments.options );
 	}
 
 	/**
@@ -1028,16 +1054,18 @@ component accessors="true" transientCache="false" {
 	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
+	 * @options                      Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return      quick.models.BaseEntity
 	 */
 	public any function findOrNew(
 		required any id,
 		struct attributes                   = {},
-		boolean ignoreNonExistentAttributes = false
+		boolean ignoreNonExistentAttributes = false,
+		struct options                      = {}
 	) {
 		try {
-			return findOrFail( arguments.id );
+			return findOrFail( id = arguments.id, options = arguments.options );
 		} catch ( EntityNotFound e ) {
 			return handleTransformations(
 				getEntity().newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes )
@@ -1055,19 +1083,25 @@ component accessors="true" transientCache="false" {
 	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
+	 * @options                      Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function findOrCreate(
 		required any id,
 		struct attributes                   = {},
-		boolean ignoreNonExistentAttributes = false
+		boolean ignoreNonExistentAttributes = false,
+		struct options                      = {}
 	) {
 		try {
-			return findOrFail( arguments.id );
+			return findOrFail( id = arguments.id, options = arguments.options );
 		} catch ( EntityNotFound e ) {
 			return handleTransformations(
-				getEntity().create( arguments.attributes, arguments.ignoreNonExistentAttributes )
+				getEntity().create(
+					arguments.attributes,
+					arguments.ignoreNonExistentAttributes,
+					arguments.options
+				)
 			);
 		}
 	}
@@ -1076,10 +1110,11 @@ component accessors="true" transientCache="false" {
 	 * Returns if any entities exist with the configured query.
 	 *
 	 * @id      An optional id to check if it exists.
+	 * @options Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return  Boolean
 	 */
-	public boolean function exists( any id ) {
+	public boolean function exists( any id, struct options = {} ) {
 		activateGlobalScopes();
 		if ( !isNull( arguments.id ) ) {
 			arguments.id = arrayWrap( arguments.id );
@@ -1090,7 +1125,7 @@ component accessors="true" transientCache="false" {
 				}
 			} );
 		}
-		return variables.qb.exists();
+		return variables.qb.exists( arguments.options );
 	}
 
 	/**
@@ -1101,12 +1136,17 @@ component accessors="true" transientCache="false" {
 	 * @errorMessage  An optional string error message or callback to produce
 	 *                a string error message.  If a callback is used, it is
 	 *                passed the unloaded entity as the only argument.
+	 * @options       Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @throws        EntityNotFound
 	 *
 	 * @return        Boolean
 	 */
-	public boolean function existsOrFail( any id, any errorMessage ) {
+	public boolean function existsOrFail(
+		any id,
+		any errorMessage,
+		struct options = {}
+	) {
 		if ( !variables.exists( argumentCollection = arguments ) ) {
 			param arguments.errorMessage = "No [#getEntity().entityName()#] exists with constraints [#serializeJSON( variables.qb.getBindings() )#]";
 			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
@@ -1123,12 +1163,21 @@ component accessors="true" transientCache="false" {
 	 *
 	 * @page     The page of results to return.
 	 * @maxRows  The number of rows to return.
+	 * @options  Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return   A Pagination Collection object of the entities.
 	 */
-	public any function paginate( numeric page = 1, numeric maxRows = 25 ) {
+	public any function paginate(
+		numeric page    = 1,
+		numeric maxRows = 25,
+		struct options  = {}
+	) {
 		activateGlobalScopes();
-		var p = variables.qb.paginate( arguments.page, arguments.maxRows );
+		var p = variables.qb.paginate(
+			arguments.page,
+			arguments.maxRows,
+			arguments.options
+		);
 		if ( !variables._asQuery ) {
 			p.results = p.results.map( variables.loadEntity );
 		}
@@ -1141,12 +1190,21 @@ component accessors="true" transientCache="false" {
 	 *
 	 * @page     The page of results to return.
 	 * @maxRows  The number of rows to return.
+	 * @options  Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return   A Simple Pagination Collection object of the entities.
 	 */
-	public any function simplePaginate( numeric page = 1, numeric maxRows = 25 ) {
+	public any function simplePaginate(
+		numeric page    = 1,
+		numeric maxRows = 25,
+		struct options  = {}
+	) {
 		activateGlobalScopes();
-		var p = variables.qb.simplePaginate( arguments.page, arguments.maxRows );
+		var p = variables.qb.simplePaginate(
+			arguments.page,
+			arguments.maxRows,
+			arguments.options
+		);
 		if ( !variables._asQuery ) {
 			p.results = p.results.map( variables.loadEntity );
 		}
@@ -1165,16 +1223,18 @@ component accessors="true" transientCache="false" {
 	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
+	 * @options                      Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return         quick.models.BaseEntity
 	 */
 	public any function updateOrCreate(
 		struct attributes                   = {},
 		struct newAttributes                = {},
-		boolean ignoreNonExistentAttributes = false
+		boolean ignoreNonExistentAttributes = false,
+		struct options                      = {}
 	) {
-		var newEntity = firstOrNew( arguments.attributes );
-		return newEntity.fill( newAttributes, ignoreNonExistentAttributes ).save();
+		var newEntity = firstOrNew( attributes = arguments.attributes, options = arguments.options );
+		return newEntity.fill( newAttributes, ignoreNonExistentAttributes ).save( arguments.options );
 	}
 
 	/**
@@ -1184,13 +1244,19 @@ component accessors="true" transientCache="false" {
 	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
+	 * @options                      Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return quick.models.BaseEntity
 	 */
-	public any function updateOrInsert( required struct values, boolean ignoreNonExistentAttributes = false ) {
+	public any function updateOrInsert(
+		required struct values,
+		boolean ignoreNonExistentAttributes = false,
+		struct options                      = {}
+	) {
 		return updateOrCreate(
 			newAttributes               = arguments.values,
-			ignoreNonExistentAttributes = arguments.ignoreNonExistentAttributes
+			ignoreNonExistentAttributes = arguments.ignoreNonExistentAttributes,
+			options                     = arguments.options
 		);
 	}
 

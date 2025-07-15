@@ -1112,21 +1112,23 @@ component accessors="true" {
 	 * If the entity is not loaded, it inserts the data into the database.
 	 * Otherwise it updates the database.
 	 *
+	 * @options Any options to pass to `queryExecute`. Default: {}.
+	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function save() {
+	public any function save( struct options = {} ) {
 		if ( hasParentEntity() ) {
 			var parentDefinition = getParentDefinition();
 			if ( isLoaded() ) {
 				var parent = variables._wirebox
 					.getInstance( parentDefinition.meta.fullName )
 					.set_LoadChildren( false )
-					.findOrFail( keyValues() );
+					.findOrFail( keyValues(), arguments.options );
 			} else {
 				var parent = variables._wirebox.getInstance( parentDefinition.meta.fullName );
 			}
 
-			parent.fill( retrieveAttributesData(), true ).save();
+			parent.fill( retrieveAttributesData(), true ).save( arguments.options );
 
 			assignAttributesData( {
 				"#parentDefinition.key#"        : parent.keyValues()[ 1 ],
@@ -1136,7 +1138,13 @@ component accessors="true" {
 		guardNoAttributes();
 		guardReadOnly();
 		mergeAttributesFromCastCache();
-		fireEvent( "preSave", { entity : this } );
+		fireEvent(
+			"preSave",
+			{
+				entity  : this,
+				options : arguments.options
+			}
+		);
 		variables._saving = true;
 		var builder       = newQuery();
 		if ( variables._loaded ) {
@@ -1145,7 +1153,8 @@ component accessors="true" {
 				{
 					"entity"             : this,
 					"newAttributes"      : get_data(),
-					"originalAttributes" : get_originalAttributes()
+					"originalAttributes" : get_originalAttributes(),
+					"options"            : arguments.options
 				}
 			);
 			builder
@@ -1162,19 +1171,27 @@ component accessors="true" {
 								key,
 								isNull( value ) ? javacast( "null", "" ) : value
 							);
-						} )
+						} ),
+					arguments.options
 				);
 			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
-			fireEvent( "postUpdate", { entity : this } );
+			fireEvent(
+				"postUpdate",
+				{
+					"entity"  : this,
+					"options" : arguments.options
+				}
+			);
 		} else {
 			retrieveKeyType().preInsert( this, builder );
 			fireEvent(
 				"preInsert",
 				{
-					entity     : this,
-					builder    : builder,
-					attributes : retrieveAttributesData()
+					"entity"     : this,
+					"builder"    : builder,
+					"attributes" : retrieveAttributesData(),
+					"options"    : arguments.options
 				}
 			);
 			var attrs = retrieveAttributesData()
@@ -1184,7 +1201,7 @@ component accessors="true" {
 				} );
 			guardEmptyAttributeData( attrs );
 
-			var result = builder.insert( attrs );
+			var result = builder.insert( attrs, arguments.options );
 
 			if ( hasParentEntity() ) {
 				result.result[ getParentDefinition().joincolumn ] = variables._data[ getParentDefinition().joinColumn ];
@@ -1192,10 +1209,22 @@ component accessors="true" {
 			retrieveKeyType().postInsert( this, result );
 			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
-			fireEvent( "postInsert", { entity : this } );
+			fireEvent(
+				"postInsert",
+				{
+					"entity"  : this,
+					"options" : arguments.options
+				}
+			);
 		}
 		variables._saving = false;
-		fireEvent( "postSave", { entity : this } );
+		fireEvent(
+			"postSave",
+			{
+				"entity"  : this,
+				"options" : arguments.options
+			}
+		);
 
 		// re-cast
 		for ( var key in variables._castCache ) {
@@ -1282,13 +1311,18 @@ component accessors="true" {
 	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips
 	 *                               the non-existent attribute.
+	 * @options                      Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @throws                       QuickReadOnlyException
 	 *
 	 * @return                       quick.models.BaseEntity
 	 */
-	public any function create( struct attributes = {}, boolean ignoreNonExistentAttributes = false ) {
-		return newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes ).save();
+	public any function create(
+		struct attributes                   = {},
+		boolean ignoreNonExistentAttributes = false,
+		struct options                      = {}
+	) {
+		return newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes ).save( arguments.options );
 	}
 
 	/*=====================================

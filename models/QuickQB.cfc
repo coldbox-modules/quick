@@ -77,7 +77,7 @@ component
 	 * @return qb.models.Query.QueryBuilder
 	 */
 	public QuickQB function fromSub( required string alias, required any input ) {
-		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.input ) && structKeyExists( arguments.input, "isQuickBuilder" ) ) {
 			arguments.input = arguments.input.getQB();
 		}
 
@@ -110,7 +110,7 @@ component
 		string type   = "inner",
 		boolean where = false
 	) {
-		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.input ) && structKeyExists( arguments.input, "isQuickBuilder" ) ) {
 			arguments.input = arguments.input.getQB();
 		}
 
@@ -133,7 +133,7 @@ component
 		query,
 		combinator = "and"
 	) {
-		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.query ) && structKeyExists( arguments.query, "isQuickBuilder" ) ) {
 			arguments.query = arguments.query.getQB();
 		}
 
@@ -149,7 +149,7 @@ component
 	 * @return    qb.models.Query.QueryBuilder
 	 */
 	public QuickQB function orderBySub( required any query, string direction = "asc" ) {
-		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.query ) && structKeyExists( arguments.query, "isQuickBuilder" ) ) {
 			arguments.query = arguments.query.getQB();
 		}
 
@@ -169,7 +169,7 @@ component
 	 * @return qb.models.Query.QueryBuilder
 	 */
 	public QuickQB function crossJoinSub( required any alias, required any input ) {
-		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.input ) && structKeyExists( arguments.input, "isQuickBuilder" ) ) {
 			arguments.input = arguments.input.getQB();
 		}
 
@@ -190,7 +190,7 @@ component
 		combinator = "and",
 		negate     = false
 	) {
-		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.query ) && structKeyExists( arguments.query, "isQuickBuilder" ) ) {
 			arguments.query = arguments.query.getQB();
 		}
 
@@ -235,7 +235,7 @@ component
 	 * @return  qb.models.Query.QueryBuilder
 	 */
 	public QueryBuilder function union( required any input, boolean all = false ) {
-		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.input ) && structKeyExists( arguments.input, "isQuickBuilder" ) ) {
 			arguments.input = arguments.input.getQB();
 		}
 
@@ -258,7 +258,7 @@ component
 		array columns     = [],
 		boolean recursive = false
 	) {
-		if ( structKeyExists( arguments.input, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.input ) && structKeyExists( arguments.input, "isQuickBuilder" ) ) {
 			arguments.input = arguments.input.getQB();
 		}
 
@@ -282,7 +282,7 @@ component
 		struct options = {},
 		boolean toSql  = false
 	) {
-		if ( structKeyExists( arguments.source, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.source ) && structKeyExists( arguments.source, "isQuickBuilder" ) ) {
 			arguments.source = arguments.source.getQB();
 		}
 
@@ -306,7 +306,7 @@ component
 		boolean toSql  = false
 	) {
 		for ( var key in arguments.values ) {
-			if ( structKeyExists( arguments.values[ key ], "isQuickBuilder" ) ) {
+			if ( isStruct( arguments.values[ key ] ) && structKeyExists( arguments.values[ key ], "isQuickBuilder" ) ) {
 				arguments.values[ key ] = arguments.values[ key ].getQb();
 			}
 		}
@@ -323,7 +323,12 @@ component
 		struct options          = {},
 		boolean toSql           = false
 	) {
-		if ( !isNull( arguments.source ) && structKeyExists( arguments.source, "isQuickBuilder" ) ) {
+		if (
+			!isNull( arguments.source ) && isStruct( arguments.source ) && structKeyExists(
+				arguments.source,
+				"isQuickBuilder"
+			)
+		) {
 			arguments.source = arguments.source.getQB();
 		}
 
@@ -339,7 +344,7 @@ component
 	 * @returns qb.models.Query.QueryBuilder
 	 */
 	public QueryBuilder function subSelect( required string alias, required any query ) {
-		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.query ) && structKeyExists( arguments.query, "isQuickBuilder" ) ) {
 			arguments.query = arguments.query.getQB();
 		}
 
@@ -361,7 +366,7 @@ component
 		negate     = false
 	) {
 		if (
-			!isClosure( arguments.query ) && !isCustomFunction( arguments.query ) && structKeyExists(
+			!isClosure( arguments.query ) && !isCustomFunction( arguments.query ) && isStruct( arguments.query ) && structKeyExists(
 				arguments.query,
 				"isQuickBuilder"
 			)

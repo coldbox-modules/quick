@@ -189,14 +189,14 @@ component accessors="true" transientCache="false" {
 								} );
 						} );
 					q.select( q.raw( 1 ) );
-					if ( structKeyExists( qb, "isQuickBuilder" ) ) {
+					if ( isStruct( qb ) && structKeyExists( qb, "isQuickBuilder" ) ) {
 						q.getQB();
 					}
 					var relationshipQuery = relationship.addCompareConstraints( q );
-					if ( structKeyExists( relationshipQuery, "getRelationshipBuilder" ) ) {
+					if ( isStruct( relationshipQuery ) && structKeyExists( relationshipQuery, "getRelationshipBuilder" ) ) {
 						relationshipQuery = relationshipQuery.getRelationshipBuilder();
 					}
-					if ( structKeyExists( relationshipQuery, "isQuickBuilder" ) ) {
+					if ( isStruct( relationshipQuery ) && structKeyExists( relationshipQuery, "isQuickBuilder" ) ) {
 						relationshipQuery = relationshipQuery.getQB();
 					}
 					q = relationship.whereExists( relationshipQuery );
@@ -208,11 +208,11 @@ component accessors="true" transientCache="false" {
 
 		subselectQuery.limit( 1 )
 
-		if ( structKeyExists( subselectQuery, "getRelationshipBuilder" ) ) {
+		if ( isStruct( subselectQuery ) && structKeyExists( subselectQuery, "getRelationshipBuilder" ) ) {
 			subselectQuery = subselectQuery.getRelationshipBuilder();
 		}
 
-		if ( structKeyExists( subselectQuery, "isQuickBuilder" ) ) {
+		if ( isStruct( subselectQuery ) && structKeyExists( subselectQuery, "isQuickBuilder" ) ) {
 			subselectQuery = subselectQuery.getQB();
 		}
 
@@ -666,7 +666,7 @@ component accessors="true" transientCache="false" {
 
 				var existsQuery = relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).clearOrders();
 
-				if ( structKeyExists( existsQuery, "isQuickBuilder" ) ) {
+				if ( isStruct( existsQuery ) && structKeyExists( existsQuery, "isQuickBuilder" ) ) {
 					existsQuery = existsQuery.getQB();
 				}
 
@@ -677,11 +677,11 @@ component accessors="true" transientCache="false" {
 
 		q.select( arguments.columnName );
 
-		if ( structKeyExists( q, "relationshipClass" ) ) {
+		if ( isStruct( q ) && structKeyExists( q, "relationshipClass" ) ) {
 			q = q.retrieveQuery();
 		}
 
-		if ( structKeyExists( q, "isQuickBuilder" ) ) {
+		if ( isStruct( q ) && structKeyExists( q, "isQuickBuilder" ) ) {
 			q = q.getQB();
 		}
 
@@ -1336,7 +1336,7 @@ component accessors="true" transientCache="false" {
 	 * @returns  quick.models.BaseEntity
 	 */
 	public any function populateQuery( required any query ) {
-		if ( structKeyExists( arguments.query, "isQuickBuilder" ) ) {
+		if ( isStruct( arguments.query ) && structKeyExists( arguments.query, "isQuickBuilder" ) ) {
 			arguments.query = arguments.query.getQB();
 		}
 		variables.qb = arguments.query;

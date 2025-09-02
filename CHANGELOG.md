@@ -1,3 +1,11 @@
+# v12.0.5
+## 02 Sep 2025 — 19:24:35 UTC
+
+### fix
+
++ __QueryUtils:__ Minor fix for `isQuickBuilder` checks on BoxLang ([70b1710](https://github.com/coldbox-modules/quick/commit/70b171094f322d5fe52c0afb926aace9b7c257ff))
+
+
 # v12.0.4
 ## 15 Jul 2025 — 18:27:26 UTC
 

@@ -1,3 +1,12 @@
+# v12.0.7
+## 04 Sep 2025 — 16:48:08 UTC
+
+### fix
+
++ __BooleanCast:__ `booleanFormat` actually returns a string
+ ([c823213](https://github.com/coldbox-modules/quick/commit/c82321388649b8df8250878350fcf055da093b29))
+
+
 # v12.0.6
 ## 04 Sep 2025 — 07:57:09 UTC
 

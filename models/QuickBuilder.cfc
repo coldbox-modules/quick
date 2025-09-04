@@ -867,14 +867,13 @@ component accessors="true" transientCache="false" {
 			}
 		);
 		activateGlobalScopes();
-		return this
-			.where( function( q ) {
-				var allKeyNames = getEntity().keyNames();
-				for ( var i = 1; i <= allKeyNames.len(); i++ ) {
-					q.where( allKeyNames[ i ], id[ i ] );
-				}
-			} )
-			.first( arguments.options );
+		var idQuery     = variables.qb.forNestedWhere();
+		var allKeyNames = getEntity().keyNames();
+		for ( var i = 1; i <= allKeyNames.len(); i++ ) {
+			idQuery.where( allKeyNames[ i ], arguments.id[ i ] );
+		}
+		variables.qb.addNestedWhereQuery( idQuery, "and" );
+		return this.first();
 	}
 
 	/**

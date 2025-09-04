@@ -1,3 +1,11 @@
+# v12.0.6
+## 04 Sep 2025 — 07:57:09 UTC
+
+### fix
+
++ __QuickBuilder:__ Fix for potential scope walking bug ([cdebb52](https://github.com/coldbox-modules/quick/commit/cdebb52d9b5483503bbf89816da026e691118502))
+
+
 # v12.0.5
 ## 02 Sep 2025 — 19:24:35 UTC
 

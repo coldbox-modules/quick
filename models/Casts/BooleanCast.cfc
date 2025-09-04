@@ -14,7 +14,7 @@ component singleton {
 		required string key,
 		any value
 	) {
-		return isNull( arguments.value ) ? false : booleanFormat( arguments.value );
+		return isNull( arguments.value ) ? false : !!arguments.value;
 	}
 
 	/**

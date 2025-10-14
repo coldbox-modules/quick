@@ -3302,7 +3302,7 @@ component accessors="true" {
 			);
 		}
 		if ( !isNull( variables._interceptorService ) ) {
-			param variables.useAnnounceMethodForInterceptorService = variables._interceptorService.keyExists( "announce" );
+			param variables.useAnnounceMethodForInterceptorService = structKeyExists( variables._interceptorService, "announce" );
 			if ( variables.useAnnounceMethodForInterceptorService ) {
 				variables._interceptorService.announce( "quick" & arguments.eventName, arguments.eventData );
 			} else {

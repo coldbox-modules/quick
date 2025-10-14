@@ -29,7 +29,7 @@
     },
     "type":"modules",
     "dependencies":{
-        "qb":"^13.0.0",
+        "qb":"^13.0.11",
         "str":"^4.0.0",
         "mementifier":"^3.0.0"
     },

@@ -3302,7 +3302,12 @@ component accessors="true" {
 			);
 		}
 		if ( !isNull( variables._interceptorService ) ) {
-			variables._interceptorService.processState( "quick" & arguments.eventName, arguments.eventData );
+			param variables.useAnnounceMethodForInterceptorService = variables._interceptorService.keyExists( "announce" );
+			if ( variables.useAnnounceMethodForInterceptorService ) {
+				variables._interceptorService.announce( "quick" & arguments.eventName, arguments.eventData );
+			} else {
+				variables._interceptorService.processState( "quick" & arguments.eventName, arguments.eventData );
+			}
 		}
 	}
 

@@ -1,3 +1,11 @@
+# v12.0.8
+## 23 Oct 2025 — 21:12:52 UTC
+
+### other
+
++ __\*:__  fix(BaseEntity): Use announce as official method for interception points ([f9ee762](https://github.com/coldbox-modules/quick/commit/f9ee7623708b08244398b1847fba97b90673ca45))
+
+
 # v12.0.7
 ## 04 Sep 2025 — 16:48:08 UTC
 

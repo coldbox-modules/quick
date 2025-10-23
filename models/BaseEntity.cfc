@@ -378,7 +378,7 @@ component accessors="true" {
 	 */
 	public string function qualifyColumn(
 		required string column,
-		string tableName        = tableName(),
+		string tableName        = this.tableName(),
 		boolean useParentLookup = true
 	) {
 		if (
@@ -3302,7 +3302,15 @@ component accessors="true" {
 			);
 		}
 		if ( !isNull( variables._interceptorService ) ) {
-			variables._interceptorService.processState( "quick" & arguments.eventName, arguments.eventData );
+			param variables.useAnnounceMethodForInterceptorService = structKeyExists(
+				variables._interceptorService,
+				"announce"
+			);
+			if ( variables.useAnnounceMethodForInterceptorService ) {
+				variables._interceptorService.announce( "quick" & arguments.eventName, arguments.eventData );
+			} else {
+				variables._interceptorService.processState( "quick" & arguments.eventName, arguments.eventData );
+			}
 		}
 	}
 

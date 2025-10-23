@@ -378,7 +378,7 @@ component accessors="true" {
 	 */
 	public string function qualifyColumn(
 		required string column,
-		string tableName        = tableName(),
+		string tableName        = this.tableName(),
 		boolean useParentLookup = true
 	) {
 		if (

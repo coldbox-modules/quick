@@ -100,7 +100,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			it( "can still allow nulls when using casts", () => {
 				var pn = getInstance( "PhoneNumber" ).find( 3 );
 				expect( pn.isNullAttribute( "confirmed" ) ).toBeTrue( "[confirmed] should be considered null" );
-				expect( pn.getConfirmed() ).toBe( "" );
+				expect( pn.getConfirmed() ).toBe( isBoxLang() ? javacast( "null", "" ) : "" );
 				// expect( function() {
 				pn.update( { "active" : false } );
 				// } ).notToThrow( message = "PhoneNumber should be able to be saved with a `null` [confirmed] value" );

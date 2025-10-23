@@ -166,9 +166,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "shows all the attributes in the component casing", function() {
-				var memento          = getInstance( "User" ).findOrFail( 1 ).getMemento();
-				memento.createdDate  = dateTimeFormat( memento.createdDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.modifiedDate = dateTimeFormat( memento.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+				var memento         = getInstance( "User" ).findOrFail( 1 ).getMemento();
+				memento.createdDate = isBoxLang() ? dateTimeFormat( memento.createdDate, "yyyy-MM-dd hh:mm:ss" ) : dateTimeFormat(
+					memento.createdDate,
+					"yyyy-mm-dd hh:nn:ss"
+				);
+				memento.modifiedDate = isBoxLang() ? dateTimeFormat( memento.modifiedDate, "yyyy-MM-dd hh:mm:ss" ) : dateTimeFormat(
+					memento.modifiedDate,
+					"yyyy-mm-dd hh:nn:ss"
+				);
 				expect( memento ).toBe( {
 					"id"           : 1,
 					"username"     : "elpete",
@@ -184,7 +190,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					"externalId"   : "1234",
 					"address"      : {
 						"streetOne" : "123 Elm Street",
-						"streetTwo" : "",
+						"streetTwo" : isBoxLang() ? javacast( "null", "" ) : "",
 						"city"      : "Salt Lake City",
 						"state"     : "UT",
 						"zip"       : "84123"

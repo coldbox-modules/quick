@@ -12,8 +12,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( results ).toHaveLength( 2 );
 
 				for ( var result in results ) {
-					result.createdDate  = dateTimeFormat( result.createdDate, "yyyy-mm-dd hh:nn:ss" );
-					result.modifiedDate = dateTimeFormat( result.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+					result.createdDate = isBoxLangPrime() ? dateTimeFormat( result.createdDate, "yyyy-MM-dd hh:mm:ss" ) : dateTimeFormat(
+						result.createdDate,
+						"yyyy-mm-dd hh:nn:ss"
+					);
+					result.modifiedDate = isBoxLangPrime() ? dateTimeFormat(
+						result.modifiedDate,
+						"yyyy-MM-dd hh:mm:ss"
+					) : dateTimeFormat( result.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+					param result.email           = "";
+					param result.streetTwo       = "";
+					param result.favoritePost_id = "";
 				}
 
 				expect( results[ 1 ] ).toBeStruct();
@@ -74,7 +83,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( results[ 1 ][ "latestPostId" ] ).toBe( 523526 );
 				expect( results[ 2 ] ).toBeStruct();
 				expect( results[ 2 ] ).toHaveKey( "latestPostId" );
-				expect( results[ 2 ][ "latestPostId" ] ).toBe( "" );
+				if ( isBoxLangPrime() ) {
+					expect( results[ 2 ][ "latestPostId" ] ).toBeNull();
+				} else {
+					expect( results[ 2 ][ "latestPostId" ] ).toBe( "" );
+				}
 			} );
 
 			it( "can do eager loading", function() {

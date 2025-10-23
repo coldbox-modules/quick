@@ -77,14 +77,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "does not allow updating of column where update=false in property", function() {
-				var existingUser = getInstance( "User" ).find( 1 );
+				var existingUser     = getInstance( "User" ).find( 1 );
+				var preexistingEmail = existingUser.getEmail();
 				existingUser.setEmail( "test2@test.com" );
 				var userRowsPreSave = queryExecute( "SELECT * FROM users" );
 				expect( userRowsPreSave ).toHaveLength( 5 );
 				existingUser.save();
 				var userRowsPostSave = queryExecute( "SELECT * FROM users" );
 				expect( userRowsPostSave ).toHaveLength( 5 );
-				expect( userRowsPostSave.email ).toBe( "" );
+				expect( userRowsPostSave.email ).toBe( preexistingEmail );
 			} );
 
 			it( "uses the sqltype attribute if present for each column", function() {

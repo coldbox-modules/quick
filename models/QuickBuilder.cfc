@@ -944,7 +944,6 @@ component accessors="true" transientCache="false" {
 	 */
 	public any function first( struct options = {} ) {
 		activateGlobalScopes();
-
 		var result = variables.qb.first( argumentCollection = arguments );
 		return structIsEmpty( result ) ? javacast( "null", "" ) : handleTransformations(
 			// wrap the single entity in an array to eager load, then grab it out again
@@ -1306,7 +1305,7 @@ component accessors="true" transientCache="false" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function withoutGlobalScope( any name ) {
-		if ( !structKeyExists( arguments, "name" ) ) {
+		if ( !structKeyExists( arguments, "name" ) || isNull( arguments.name ) ) {
 			variables._globalScopeExcludeAll = true;
 			return this;
 		}
@@ -1389,15 +1388,15 @@ component accessors="true" transientCache="false" {
 			&&
 			getEntity().isDiscriminatedParent()
 			&&
-			structKeyExists( arguments.data, listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) )
+			structKeyExists( arguments.data, listLast( getEntity().get_meta().discriminatorColumn, "." ) )
 			&&
 			structKeyExists(
 				getEntity().getDiscriminations(),
-				arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]
+				arguments.data[ listLast( getEntity().get_meta().discriminatorColumn, "." ) ]
 			)
 		) {
 			var discrimination = getEntity().getDiscriminations()[
-				arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]
+				arguments.data[ listLast( getEntity().get_meta().discriminatorColumn, "." ) ]
 			];
 
 			var childClass = variables._wirebox.getInstance( discrimination.mapping );

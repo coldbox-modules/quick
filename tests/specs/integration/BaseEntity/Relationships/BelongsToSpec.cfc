@@ -131,7 +131,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "can disassociate the existing entity", function() {
 				var post = getInstance( "Post" ).find( 1245 );
-				expect( post.retrieveAttribute( "user_id" ) ).notToBe( "" );
+				if ( isBoxLang() ) {
+					expect( post.retrieveAttribute( "user_id" ) ).notToBeNull();
+				} else {
+					expect( post.retrieveAttribute( "user_id" ) ).notToBe( "" );
+				}
 				var userId = post.retrieveAttribute( "user_id" );
 				expect(
 					getInstance( "User" )
@@ -142,7 +146,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				post.author()
 					.dissociate()
 					.save();
-				expect( post.retrieveAttribute( "user_id" ) ).toBe( "" );
+				if ( isBoxLang() ) {
+					expect( post.retrieveAttribute( "user_id" ) ).toBeNull();
+				} else {
+					expect( post.retrieveAttribute( "user_id" ) ).toBe( "" );
+				}
 				expect(
 					getInstance( "User" )
 						.find( userId )

@@ -5,7 +5,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			it( "prevents read-only properties from being saved", function() {
 				var link = getInstance( "Link" ).findOrFail( 1 );
 				expect( link.getUrl() ).toBe( "http://example.com/some-link" );
-				expect( dateTimeFormat( link.getCreatedDate(), "YYYY-MM-dd HH:nn:ss" ) ).toBe( "2017-07-28 02:07:00" );
+				var formattedDate = isBoxLang() ? dateTimeFormat( link.getCreatedDate(), "YYYY-MM-dd HH:mm:ss" ) : dateTimeFormat(
+					link.getCreatedDate(),
+					"YYYY-MM-dd HH:nn:ss"
+				)
+				expect( formattedDate ).toBe( "2017-07-28 02:07:00" );
 
 				link.setUrl( "https://example.com/" )
 					.setCreatedDate( now() )
@@ -14,7 +18,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				link.refresh();
 
 				expect( link.getUrl() ).toBe( "https://example.com/" );
-				expect( dateTimeFormat( link.getCreatedDate(), "YYYY-MM-dd HH:nn:ss" ) ).toBe( "2017-07-28 02:07:00" );
+				formattedDate = isBoxLang() ? dateTimeFormat( link.getCreatedDate(), "YYYY-MM-dd HH:mm:ss" ) : dateTimeFormat(
+					link.getCreatedDate(),
+					"YYYY-MM-dd HH:nn:ss"
+				)
+				expect( formattedDate ).toBe( "2017-07-28 02:07:00" );
 			} );
 
 			it( "prevents create from setting read-only properties", function() {

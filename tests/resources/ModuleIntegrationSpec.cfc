@@ -71,4 +71,9 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 		return arraySlice( createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(), 1 );
 	}
 
+	private boolean function isBoxLangPrime() {
+		return isBoxLang() && !server.boxlang.modules.keyExists( "compat-cfml" );
+	}
+
 }
+

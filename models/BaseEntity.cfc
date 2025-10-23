@@ -295,6 +295,9 @@ component accessors="true" {
 			setUpMementifier();
 			fireEvent( "instanceReady", { entity : this } );
 		}
+		for ( var key in retrieveAttributeNames( withVirtualColumns = false ) ) {
+			structDelete( variables, key );
+		}
 	}
 
 	/**
@@ -2311,8 +2314,12 @@ component accessors="true" {
 			.addSelect( retrieveQualifiedColumns() )
 			.with( variables._with );
 
-		if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
-			newBuilder.setGrammar( variables._wirebox.getInstance( variables._meta.originalMetadata.grammar ) );
+		if ( hasMetadataAttribute( "grammar", variables._meta.originalMetadata ) ) {
+			newBuilder.setGrammar(
+				variables._wirebox.getInstance(
+					getMetadataAttribute( key = "grammar", metadata = variables._meta.originalMetadata )
+				)
+			);
 		}
 
 		newBuilder.applyInheritanceJoins();
@@ -2723,51 +2730,81 @@ component accessors="true" {
 
 		if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
 			variables._meta = duplicate(
-				variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
+				variables._cache.getOrSet( "quick-metadata:#variables._mapping#_#createUUID()#", function() {
 					var util                   = variables._wirebox.getUtility();
 					var meta                   = {};
 					meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
 					meta[ "localMetadata" ]    = getMetadata( this );
-					if (
-						!meta[ "localMetadata" ].keyExists( "accessors" ) ||
-						meta[ "localMetadata" ].accessors == false
-					) {
+					var hasAccessorsEnabled    = getMetadataAttribute(
+						"accessors",
+						false,
+						meta.localMetadata
+					);
+					if ( !hasAccessorsEnabled ) {
 						throw(
 							type    = "QuickAccessorsMissing",
 							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
 						);
 					}
-					meta[ "fullName" ]                                 = meta.originalMetadata.fullname;
-					param meta.originalMetadata.mapping                = listLast( meta.originalMetadata.fullname, "." );
-					meta[ "mapping" ]                                  = meta.originalMetadata.mapping;
-					param meta.originalMetadata.entityName             = listLast( meta.originalMetadata.name, "." );
-					meta[ "entityName" ]                               = meta.originalMetadata.entityName;
-					param meta.originalMetadata.table                  = variables._str.plural( variables._str.snake( meta.entityName ) );
-					meta[ "table" ]                                    = meta.originalMetadata.table;
-					param meta.originalMetadata.readonly               = false;
-					meta[ "readonly" ]                                 = meta.originalMetadata.readonly;
-					param meta.originalMetadata.joincolumn             = "";
-					param meta.originalMetadata.discriminatorValue     = "";
-					param meta.originalMetadata.singleTableInheritance = false;
-					param meta.originalMetadata.extends                = "";
-					param meta.originalMetadata.functions              = [];
-					meta[ "hasParentEntity" ]                          = !!len( meta.originalMetadata.joincolumn );
+					meta[ "fullName" ] = getMetadataAttribute( key = "fullname", metadata = meta.originalMetadata );
+					meta[ "mapping" ]  = getMetadataAttribute(
+						"mapping",
+						listLast( meta.fullName, "." ),
+						meta.originalMetadata
+					);
+					meta[ "entityName" ] = getMetadataAttribute(
+						"entityName",
+						listLast( getMetadataAttribute( key = "name", metadata = meta.originalMetadata ), "." ),
+						meta.originalMetadata
+					);
+					meta[ "table" ] = getMetadataAttribute(
+						"table",
+						variables._str.plural( variables._str.snake( meta.entityName ) ),
+						meta.originalMetadata
+					);
+					meta[ "readonly" ] = getMetadataAttribute(
+						"readonly",
+						false,
+						meta.originalMetadata
+					);
+					meta[ "joinColumn" ] = getMetadataAttribute(
+						"joinColumn",
+						"",
+						meta.originalMetadata
+					);
+					meta[ "discriminatorValue" ] = getMetadataAttribute(
+						"discriminatorValue",
+						"",
+						meta.originalMetadata
+					);
+					meta[ "singleTableInheritance" ] = getMetadataAttribute(
+						"singleTableInheritance",
+						false,
+						meta.originalMetadata
+					);
+					meta[ "extends" ]   = getMetadataAttribute( "extends", "", meta.originalMetadata );
+					meta[ "functions" ] = getMetadataAttribute(
+						"functions",
+						[],
+						meta.originalMetadata
+					);
+					meta[ "hasParentEntity" ] = !!len( meta.joinColumn );
 					if ( meta.hasParentEntity ) {
 						var reference = variables._wirebox.getInstance(
-							name          = meta.localMetadata.extends.fullName,
+							name          = getMetadataAttribute( key = "fullName", metadata = meta.localMetadata.extends ),
 							initArguments = { "meta" : {}, "shallow" : true }
 						);
 
 						meta[ "parentDefinition" ] = {
 							"meta"       : reference.get_Meta(),
 							"key"        : reference.keyNames()[ 1 ],
-							"joincolumn" : meta.originalMetadata.joincolumn
+							"joincolumn" : meta.joinColumn
 						};
 
-						if ( len( meta.originalMetadata.discriminatorValue ) ) {
+						if ( len( meta.discriminatorValue ) ) {
 							try {
-								var parentMeta                                 = getComponentMetadata( meta.parentDefinition.meta.fullName );
-								meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
+								var parentMeta                                 = util.getInheritedMetaData( meta.parentDefinition.meta.fullName );
+								meta.parentDefinition[ "discriminatorValue" ]  = meta.discriminatorValue;
 								meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
 							} catch ( any e ) {
 								throw(
@@ -2781,7 +2818,7 @@ component accessors="true" {
 
 					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
 						return arrayReduce(
-							getComponentMetadata( "quick.models.BaseEntity" ).functions,
+							util.getInheritedMetaData( "quick.models.BaseEntity" ).functions,
 							function( acc, func ) {
 								arguments.acc[ arguments.func.name ] = "";
 								return arguments.acc;
@@ -2790,7 +2827,7 @@ component accessors="true" {
 						);
 					} );
 					meta[ "functionNames" ] = generateFunctionNameArray(
-						from    = meta.originalMetadata.functions,
+						from    = meta.functions,
 						without = baseEntityFunctionNames
 					);
 
@@ -2799,8 +2836,13 @@ component accessors="true" {
 					meta[ "attributes" ] = generateAttributesFromProperties(
 						meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
 					);
-					if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
-						meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
+					if ( hasMetadataAttribute( "discriminatorColumn", meta.localMetadata ) ) {
+						var discriminatorColumn = getMetadataAttribute(
+							key      = "discriminatorColumn",
+							metadata = meta.localMetadata
+						);
+						meta.attributes[ discriminatorColumn ] = paramAttribute( { "name" : discriminatorColumn } );
+						meta[ "discriminatorColumn" ]          = discriminatorColumn;
 					}
 					arrayWrap( variables._key ).each( function( key ) {
 						if ( !meta.attributes.keyExists( key ) ) {
@@ -2826,8 +2868,10 @@ component accessors="true" {
 		}
 
 		param variables._queryOptions = {};
-		if ( variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists( "datasource" ) ) {
-			variables._queryOptions = { datasource : variables._meta.originalMetadata.datasource };
+		if ( variables._queryOptions.isEmpty() && hasMetadataAttribute( "datasource", variables._meta.originalMetadata ) ) {
+			variables._queryOptions = {
+				"datasource" : getMetadataAttribute( key = "datasource", metadata = variables._meta.originalMetadata )
+			};
 		}
 		variables._readonly = variables._meta.readonly;
 		explodeAttributesMetadata( variables._meta.attributes );
@@ -2872,9 +2916,18 @@ component accessors="true" {
 
 	private struct function generateCastsFromProperties( required array properties ) {
 		return arguments.properties.reduce( function( acc, prop ) {
+			if ( arguments.prop.keyExists( "annotations" ) ) {
+				structAppend(
+					arguments.prop,
+					arguments.prop.annotations,
+					true
+				);
+			}
+
 			if ( !arguments.prop.keyExists( "casts" ) || arguments.prop.casts == "" ) {
 				return arguments.acc;
 			}
+
 			arguments.acc[ arguments.prop.name ] = arguments.prop.casts;
 			return arguments.acc;
 		}, {} );
@@ -2925,6 +2978,15 @@ component accessors="true" {
 	 * @return  An attribute struct with all the keys needed.
 	 */
 	private struct function paramAttribute( required struct attr ) {
+		if ( arguments.attr.keyExists( "annotations" ) ) {
+			structAppend(
+				arguments.attr,
+				arguments.attr.annotations,
+				true
+			);
+			structDelete( arguments.attr, "annotations" );
+		}
+
 		param attr.column                  = arguments.attr.name;
 		param attr.persistent              = true;
 		param attr.nullValue               = "";
@@ -2972,11 +3034,11 @@ component accessors="true" {
 	}
 
 	public boolean function isDiscriminatedChild() {
-		return hasParentEntity() && variables._meta.localMetadata.keyExists( "discriminatorValue" );
+		return hasParentEntity() && hasMetadataAttribute( "discriminatorValue", variables._meta.localMetadata );
 	}
 
 	public boolean function isDiscriminatedParent() {
-		return variables._meta.localMetadata.keyExists( "discriminatorColumn" )
+		return hasMetadataAttribute( "discriminatorColumn", variables._meta.localMetadata )
 		&& variables._discriminators.len() > 0;
 	}
 
@@ -2996,13 +3058,13 @@ component accessors="true" {
 				// Can be ignored for singleTableInheritance since there's no join
 				if (
 					!isSingleTableInheritance() && (
-						!structKeyExists( childMeta, "joincolumn" ) ||
-						!structKeyExists( childMeta, "discriminatorValue" )
+						!hasMetadataAttribute( "joincolumn", childMeta ) ||
+						!hasMetadataAttribute( "discriminatorValue", childMeta )
 					)
 				) {
 					throw(
 						type    = "QuickParentInstantiationException",
-						message = "Failed to instantiate the parent entity [#variables._meta.fullName#]. The discriminated child class [#childMeta.fullName#] did not contain either a `joinColumn` or `discriminatorValue` attribute"
+						message = "Failed to instantiate the parent entity [#variables._meta.fullName#]. The discriminated child class [#getMetadataAttribute( "fullName", "[unknown]", childMeta )#] did not contain either a `joinColumn` or `discriminatorValue` attribute"
 					);
 				}
 				var childAttributes = childClass
@@ -3021,12 +3083,16 @@ component accessors="true" {
 						return !arrayContainsNoCase( localColumns, column );
 					} );
 
-				acc[ childMeta.discriminatorValue ] = {
-					"mapping"    : childMeta.fullName,
-					"table"      : ( childMeta.keyExists( "table" ) ? childMeta.table : variables._meta.table ),
+				acc[ getMetadataAttribute( key = "discriminatorValue", metadata = childMeta ) ] = {
+					"mapping" : getMetadataAttribute( key = "fullName", metadata = childMeta ),
+					"table"   : getMetadataAttribute(
+						"table",
+						variables._meta.table,
+						childMeta
+					),
 					"joincolumn" : (
-						childMeta.keyExists( "joinColumn" ) ? childClass.qualifyColumn(
-							column          = childMeta.joinColumn,
+						hasMetadataAttribute( "joinColumn", childMeta ) ? childClass.qualifyColumn(
+							column          = getMetadataAttribute( key = "joinColumn", metadata = childMeta ),
 							useParentLookup = false
 						) : ""
 					),
@@ -3221,7 +3287,7 @@ component accessors="true" {
 	private void function guardKeyHasNoDefaultValue( required struct attributes ) {
 		for ( var keyName in keyNames() ) {
 			if ( attributes.keyExists( keyName ) ) {
-				if ( attributes[ keyName ].keyExists( "default" ) ) {
+				if ( attributes[ keyName ].keyExists( "default" ) && !isNull( attributes[ keyName ].default ) ) {
 					throw(
 						type    = "QuickEntityDefaultedKey",
 						message = "The key value [#keyName#] has a default value. Default values on keys prevents Quick from working as expected. Remove the default value to continue."
@@ -3621,7 +3687,36 @@ component accessors="true" {
 	 * since the data for each sub entity originates from a single table
 	 */
 	public boolean function isSingleTableInheritance() {
-		return variables._meta.originalMetadata.singleTableInheritance;
+		return variables._meta.singleTableInheritance;
+	}
+
+	private boolean function hasMetadataAttribute(
+		required string key,
+		struct metadata = variables._meta.localMetadata
+	) {
+		return arguments.metadata.keyExists( arguments.key ) || (
+			arguments.metadata.keyExists( "annotations" ) &&
+			arguments.metadata.annotations.keyExists( arguments.key )
+		);
+	}
+
+	private any function getMetadataAttribute(
+		required string key,
+		any defaultValue,
+		struct metadata = variables._meta.localMetadata
+	) {
+		if ( arguments.metadata.keyExists( "annotations" ) && arguments.metadata.annotations.keyExists( arguments.key ) ) {
+			return arguments.metadata.annotations[ arguments.key ];
+		} else if ( arguments.metadata.keyExists( arguments.key ) ) {
+			return arguments.metadata[ arguments.key ];
+		} else if ( !isNull( arguments.defaultValue ) ) {
+			return arguments.defaultValue;
+		} else {
+			throw(
+				type    = "MetadataAttributeNotFound",
+				message = "The metadata attribute [#arguments.key#] was not found."
+			);
+		}
 	}
 
 }

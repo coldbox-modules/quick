@@ -41,22 +41,38 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "returns retrieved relationships", function() {
-				var post                    = getInstance( "Post" ).with( "author" ).findOrFail( 1245 );
-				var memento                 = post.getMemento( includes = "author" );
-				memento.createdDate         = dateTimeFormat( memento.createdDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.modifiedDate        = dateTimeFormat( memento.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.publishedDate       = dateTimeFormat( memento.publishedDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.author.createdDate  = dateTimeFormat( memento.author.createdDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.author.modifiedDate = dateTimeFormat( memento.author.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+				var post            = getInstance( "Post" ).with( "author" ).findOrFail( 1245 );
+				var memento         = post.getMemento( includes = "author" );
+				memento.createdDate = isBoxLang() ? dateTimeFormat( memento.createdDate, "yyyy-MM-dd hh:mm:ss" ) : dateTimeFormat(
+					memento.createdDate,
+					"yyyy-mm-dd hh:nn:ss"
+				);
+				memento.modifiedDate = isBoxLang() ? dateTimeFormat( memento.modifiedDate, "yyyy-MM-dd hh:mm:ss" ) : dateTimeFormat(
+					memento.modifiedDate,
+					"yyyy-mm-dd hh:nn:ss"
+				);
+				memento.publishedDate = isBoxLang() ? dateTimeFormat( memento.publishedDate, "yyyy-MM-dd hh:mm:ss" ) : dateTimeFormat(
+					memento.publishedDate,
+					"yyyy-mm-dd hh:nn:ss"
+				);
+				memento.author.createdDate = isBoxLang() ? dateTimeFormat(
+					memento.author.createdDate,
+					"yyyy-MM-dd hh:mm:ss"
+				) : dateTimeFormat( memento.author.createdDate, "yyyy-mm-dd hh:nn:ss" );
+				memento.author.modifiedDate = isBoxLang() ? dateTimeFormat(
+					memento.author.modifiedDate,
+					"yyyy-MM-dd hh:mm:ss"
+				) : dateTimeFormat( memento.author.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+
 				expect( memento ).toBe( {
-					"post_pk"       : "1245",
+					"post_pk"       : 1245,
 					"body"          : "My awesome post body",
 					"createdDate"   : "2017-07-28 02:07:00",
 					"modifiedDate"  : "2017-07-28 02:07:00",
 					"publishedDate" : "2017-07-28 02:07:00",
-					"user_id"       : "1",
+					"user_id"       : 1,
 					"author"        : {
-						"id"           : "1",
+						"id"           : 1,
 						"firstName"    : "Eric",
 						"lastName"     : "Peterson",
 						"email"        : "",
@@ -70,12 +86,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						"externalID"   : "1234",
 						"address"      : {
 							"streetOne" : "123 Elm Street",
-							"streetTwo" : "",
+							"streetTwo" : isBoxLang() ? javacast( "null", "" ) : "",
 							"city"      : "Salt Lake City",
 							"state"     : "UT",
 							"zip"       : "84123"
 						},
-						"favoritePost_id" : "1245"
+						"favoritePost_id" : 1245
 					}
 				} );
 			} );

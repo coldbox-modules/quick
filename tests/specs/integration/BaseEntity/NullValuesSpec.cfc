@@ -2,9 +2,9 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Null Values Spec", function() {
-			it( "returns null values as a string by default", function() {
+			it( "returns null values as a string by default on non-BoxLang Prime engines", function() {
 				var user = getInstance( "User" ).findOrFail( 3 );
-				expect( user.getCountryId() ).toBe( "" );
+				expect( user.getCountryId() ).toBe( isBoxLang() ? javacast( "null", "" ) : "" );
 				expect( user.getMemento().countryId ).toBe( "" );
 			} );
 

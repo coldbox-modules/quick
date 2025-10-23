@@ -25,8 +25,8 @@ component {
 					"tripComponentID" : 2,
 					"type"            : "cruise",
 					"isActive"        : 1,
-					"createdDate"     : now(),
-					"modifiedDate"    : now()
+					"createdDate"     : { "value": now(), "cfsqltype": "TIMESTAMP" },
+					"modifiedDate"    : { "value": now(), "cfsqltype": "TIMESTAMP" }
 				}
 			] );
 	}

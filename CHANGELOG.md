@@ -1,3 +1,13 @@
+# v12.0.9
+## 25 Jan 2026 — 01:53:37 UTC
+
+### fix
+
++ __BoxLang:__ Fix for BoxLang returning unmodifiable structs
+ ([cbab1bd](https://github.com/coldbox-modules/quick/commit/cbab1bd4905e577070397aacd6f405da64b79178))
++ __EagerLoading:__ Fix multiple eager loaded relationships ([95c612b](https://github.com/coldbox-modules/quick/commit/95c612babd7027a46ff0da6b2af83d7a457e2d42))
+
+
 # v12.0.8
 ## 23 Oct 2025 — 21:12:52 UTC
 

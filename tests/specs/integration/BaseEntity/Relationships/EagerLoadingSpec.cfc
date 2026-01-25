@@ -609,6 +609,131 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					}
 				} );
 			} );
+
+			describe( "multiple nested eager loads", () => {
+				it( "can eager load multiple nested relationships with the same parent using strings", function() {
+					var users = getInstance( "User" )
+						.with( [ "posts.tags", "posts.comments" ] )
+						.latest()
+						.get();
+
+					expect( users ).toBeArray();
+					expect( users ).toHaveLength( 5, "Five users should be returned" );
+
+					// Find elpete who has posts with tags and comments
+					var elpete = users[ 5 ];
+					expect( elpete.getUsername() ).toBe( "elpete" );
+
+					// Verify posts relationship is loaded
+					expect( elpete.isRelationshipLoaded( "posts" ) ).toBeTrue( "posts should be loaded" );
+					expect( elpete.getPosts() ).toBeArray();
+					expect( elpete.getPosts() ).toHaveLength( 2, "Two posts should belong to elpete" );
+
+					// Verify both nested relationships are loaded on the posts
+					var postWithTagsAndComments = elpete.getPosts()[ 2 ]; // post_pk 1245
+					expect( postWithTagsAndComments.getPost_Pk() ).toBe( 1245 );
+					expect( postWithTagsAndComments.isRelationshipLoaded( "tags" ) ).toBeTrue( "tags should be loaded on post" );
+					expect( postWithTagsAndComments.isRelationshipLoaded( "comments" ) ).toBeTrue( "comments should be loaded on post" );
+
+					// Verify the actual data - post 1245 has 2 tags
+					expect( postWithTagsAndComments.getTags() ).toBeArray();
+					expect( postWithTagsAndComments.getTags() ).toHaveLength( 2 );
+					expect( postWithTagsAndComments.getComments() ).toBeArray();
+
+					// Should be 4 queries: users, posts, tags, comments
+					expect( variables.queries ).toHaveLength(
+						4,
+						"Four queries should have been executed (users, posts, tags, comments). #arrayLen( variables.queries )# were instead."
+					);
+				} );
+
+				it( "can eager load multiple nested relationships with the same parent using structs with callbacks", function() {
+					var users = getInstance( "User" )
+						.with( [
+							{
+								"posts.tags" : function( q ) {
+									return q.where( "name", "programming" );
+								}
+							},
+							{
+								"posts.comments" : function( q ) {
+									return q.where( "designation", "public" );
+								}
+							}
+						] )
+						.latest()
+						.get();
+
+					expect( users ).toBeArray();
+					expect( users ).toHaveLength( 5, "Five users should be returned" );
+
+					// Find elpete who has posts with tags and comments
+					var elpete = users[ 5 ];
+					expect( elpete.getUsername() ).toBe( "elpete" );
+
+					// Verify posts relationship is loaded
+					expect( elpete.isRelationshipLoaded( "posts" ) ).toBeTrue( "posts should be loaded" );
+
+					// Verify both nested relationships are loaded on the posts
+					var postWithTagsAndComments = elpete.getPosts()[ 2 ]; // post_pk 1245
+					expect( postWithTagsAndComments.getPost_Pk() ).toBe( 1245 );
+					expect( postWithTagsAndComments.isRelationshipLoaded( "tags" ) ).toBeTrue( "tags should be loaded on post" );
+					expect( postWithTagsAndComments.isRelationshipLoaded( "comments" ) ).toBeTrue( "comments should be loaded on post" );
+
+					// Verify the callbacks were applied - only "programming" tags
+					var tags = postWithTagsAndComments.getTags();
+					expect( tags ).toBeArray();
+					for ( var tag in tags ) {
+						expect( tag.getName() ).toBe( "programming" );
+					}
+
+					// Verify the callbacks were applied - only "public" comments
+					var comments = postWithTagsAndComments.getComments();
+					expect( comments ).toBeArray();
+					for ( var comment in comments ) {
+						expect( comment.getDesignation() ).toBe( "public" );
+					}
+
+					// Should be 4 queries: users, posts, tags, comments
+					expect( variables.queries ).toHaveLength(
+						4,
+						"Four queries should have been executed (users, posts, tags, comments). #arrayLen( variables.queries )# were instead."
+					);
+				} );
+
+				it( "can mix string and struct eager loads with the same parent", function() {
+					var users = getInstance( "User" )
+						.with( [
+							"posts.tags",
+							{
+								"posts.comments" : function( q ) {
+									return q.where( "designation", "public" );
+								}
+							}
+						] )
+						.latest()
+						.get();
+
+					expect( users ).toBeArray();
+					expect( users ).toHaveLength( 5, "Five users should be returned" );
+
+					var elpete = users[ 5 ];
+					expect( elpete.getUsername() ).toBe( "elpete" );
+
+					var postWithTagsAndComments = elpete.getPosts()[ 2 ];
+					expect( postWithTagsAndComments.isRelationshipLoaded( "tags" ) ).toBeTrue( "tags should be loaded on post" );
+					expect( postWithTagsAndComments.isRelationshipLoaded( "comments" ) ).toBeTrue( "comments should be loaded on post" );
+
+					// Tags should have all tags (no filter)
+					expect( postWithTagsAndComments.getTags() ).toBeArray();
+
+					// Comments should only have public ones (callback applied)
+					var comments = postWithTagsAndComments.getComments();
+					for ( var comment in comments ) {
+						expect( comment.getDesignation() ).toBe( "public" );
+					}
+				} );
+			} );
 		} );
 	}
 

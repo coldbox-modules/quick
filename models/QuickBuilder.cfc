@@ -566,52 +566,190 @@ component accessors="true" transientCache="false" {
 			}
 		}
 
-		arrayEach( variables._eagerLoad, function( relationName ) {
-			entities = eagerLoadRelation( relationName, entities );
+		structEach( denestEagerLoads( variables._eagerLoad ), function( relationName, nestedEagerLoads ) {
+			entities = eagerLoadRelation(
+				relationName,
+				nestedEagerLoads,
+				entities
+			);
 		} );
 
 		return arguments.entities;
+	}
+
+	private struct function denestEagerLoads( required array eagerLoads ) {
+		// this comes in as an array of items which can be:
+		// 1. dot-delimited strings (e.g., "videos.tags")
+		// 2. structs with the key being the dot-delimited path and the value being a callback
+		// these dot-delimited strings can have the same parent
+		// we want to only load each relationship and its eager loads once
+		// Result format: { "relationName": { "callback": function, "nested": { ... } } }
+		var result = {};
+
+		for ( var relationshipPath in arguments.eagerLoads ) {
+			var callback = function() {
+			};
+			var pathString = "";
+
+			// Handle struct format: { "path.to.relation": callback }
+			if ( isStruct( relationshipPath ) ) {
+				for ( var key in relationshipPath ) {
+					pathString = key;
+					callback   = relationshipPath[ key ];
+					break;
+				}
+			} else {
+				pathString = relationshipPath;
+			}
+
+			var parts     = listToArray( pathString, "." );
+			var firstPart = parts[ 1 ];
+
+			// Initialize the entry if it doesn't exist
+			if ( !result.keyExists( firstPart ) ) {
+				result[ firstPart ] = {
+					"callback" : function() {
+					},
+					"nested" : {}
+				};
+			}
+
+			if ( parts.len() > 1 ) {
+				// Build the nested path with the callback attached to the deepest level
+				var nestedPath = arraySlice( parts, 2 ).toList( "." );
+				var nestedItem = isCustomFunction( callback ) || isClosure( callback )
+				 ? { "#nestedPath#" : callback }
+				 : nestedPath;
+
+				var nestedResult                = denestEagerLoads( [ nestedItem ] );
+				// Merge nested results
+				result[ firstPart ][ "nested" ] = mergeNestedEagerLoads( result[ firstPart ][ "nested" ], nestedResult );
+			} else {
+				// This is the target level - apply the callback here
+				if ( isCustomFunction( callback ) || isClosure( callback ) ) {
+					result[ firstPart ][ "callback" ] = callback;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	private struct function mergeNestedEagerLoads( required struct target, required struct source ) {
+		for ( var key in arguments.source ) {
+			if ( !arguments.target.keyExists( key ) ) {
+				arguments.target[ key ] = arguments.source[ key ];
+			} else {
+				// Merge callbacks - source callback takes precedence if it's not empty
+				if (
+					structKeyExists( arguments.source[ key ], "callback" ) &&
+					(
+						isCustomFunction( arguments.source[ key ][ "callback" ] ) || isClosure(
+							arguments.source[ key ][ "callback" ]
+						)
+					)
+				) {
+					// Check if source callback has a body (not empty)
+					arguments.target[ key ][ "callback" ] = arguments.source[ key ][ "callback" ];
+				}
+				// Merge nested
+				if ( structKeyExists( arguments.source[ key ], "nested" ) ) {
+					arguments.target[ key ][ "nested" ] = mergeNestedEagerLoads(
+						arguments.target[ key ][ "nested" ],
+						arguments.source[ key ][ "nested" ]
+					);
+				}
+			}
+		}
+		return arguments.target;
+	}
+
+	public array function renestEagerLoads( required struct additionalEagerLoads ) {
+		// Input format: { "relationName": { "callback": fn, "nested": { ... } } }
+		// Output format: array of strings or structs like { "path.to.relation": callback }
+		return structReduce(
+			arguments.additionalEagerLoads,
+			function( acc, relationName, eagerLoadConfig ) {
+				var callback = function() {
+				};
+				if ( eagerLoadConfig.keyExists( "callback" ) ) {
+					callback = eagerLoadConfig.callback;
+				}
+				var nestedConfig = {};
+				if ( eagerLoadConfig.keyExists( "nested" ) ) {
+					nestedConfig = eagerLoadConfig.nested;
+				}
+				var hasCallback = isCustomFunction( callback ) || isClosure( callback );
+
+				// Get the renested items from nested config
+				var nestedItems = renestEagerLoads( nestedConfig );
+
+				if ( nestedItems.len() > 0 ) {
+					// There are nested items - prepend this relationName to each
+					for ( var nestedItem in nestedItems ) {
+						if ( isSimpleValue( nestedItem ) ) {
+							acc.append( relationName & "." & nestedItem );
+						} else {
+							// It's a struct with callback - prepend relationName to the key
+							for ( var key in nestedItem ) {
+								acc.append( { "#relationName#.#key#" : nestedItem[ key ] } );
+								break;
+							}
+						}
+					}
+				} else if ( hasCallback ) {
+					// No nested, but has a callback - return as struct
+					acc.append( { "#relationName#" : callback } );
+				} else {
+					// No nested, no callback - just the relation name
+					acc.append( relationName );
+				}
+
+				return acc;
+			},
+			[]
+		);
 	}
 
 	/**
 	 * Eager loads the given relation for the retrieved entities.
 	 * Returns the retrieved entities eager loaded with the given relation.
 	 *
-	 * @relationName  The relationship to eager load.
-	 * @entities      The retrieved entities or array of structs to eager load the relationship.
+	 * @relationName       The relationship to eager load.
+	 * @eagerLoadConfig    The config for this eager load containing callback and nested eager loads.
+	 * @entities           The retrieved entities or array of structs to eager load the relationship.
 	 *
 	 * @doc_generic   quick.models.BaseEntity | struct
 	 * @return        [quick.models.BaseEntity] | [struct]
 	 */
-	private array function eagerLoadRelation( required any relationName, required array entities ) {
+	private array function eagerLoadRelation(
+		required string relationName,
+		required struct eagerLoadConfig,
+		required array entities
+	) {
+		// Extract callback and nested config from the eagerLoadConfig
 		var callback = function() {
 		};
-		if ( !isSimpleValue( arguments.relationName ) ) {
-			if ( !isStruct( arguments.relationName ) ) {
-				throw(
-					type    = "QuickInvalidEagerLoadParameter",
-					message = "Only strings or structs are supported eager load parameters.  You passed [#serializeJSON( arguments.relationName )#"
-				);
-			}
-			for ( var key in arguments.relationName ) {
-				callback               = arguments.relationName[ key ];
-				arguments.relationName = key;
-				break;
-			}
+		if ( arguments.eagerLoadConfig.keyExists( "callback" ) ) {
+			callback = arguments.eagerLoadConfig.callback;
 		}
-		var currentRelationship = listFirst( arguments.relationName, "." );
-		var relation            = getEntity().ignoreLoadedGuard( function() {
-			return getEntity().withoutRelationshipConstraints( currentRelationship, function() {
-				return invoke( getEntity(), currentRelationship );
+		var nestedEagerLoads = {};
+		if ( arguments.eagerLoadConfig.keyExists( "nested" ) ) {
+			nestedEagerLoads = arguments.eagerLoadConfig.nested;
+		}
+
+		var relation = getEntity().ignoreLoadedGuard( function() {
+			return getEntity().withoutRelationshipConstraints( relationName, function() {
+				return invoke( getEntity(), relationName );
 			} );
 		} );
 		callback( relation );
 		var hasMatches = relation.addEagerConstraints( arguments.entities, getEntity() );
-		relation.with( listRest( arguments.relationName, "." ) );
+		relation.with( renestEagerLoads( nestedEagerLoads ) );
 		return relation.match(
-			relation.initRelation( arguments.entities, currentRelationship ),
+			relation.initRelation( arguments.entities, arguments.relationName ),
 			hasMatches ? relation.getEager( variables._asQuery, variables._withAliases ) : [],
-			currentRelationship
+			arguments.relationName
 		);
 	}
 

@@ -1201,7 +1201,8 @@ component accessors="true" {
 				} );
 			guardEmptyAttributeData( attrs );
 
-			var result = builder.insert( attrs, arguments.options );
+			var result    = builder.insert( attrs, arguments.options );
+			result.result = structCopy( result.result );
 
 			if ( hasParentEntity() ) {
 				result.result[ getParentDefinition().joincolumn ] = variables._data[ getParentDefinition().joinColumn ];

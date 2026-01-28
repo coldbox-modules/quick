@@ -248,7 +248,7 @@ component accessors="true" transientCache="false" {
 	) {
 		variables.qb                                         = variables.qb.join( argumentCollection = arguments );
 		var latestJoin                                       = variables.qb.getJoins().last();
-		var latestJoinBuilder                                = latestJoin.getParentQuery().getQuickBuilder();
+		var latestJoinBuilder                                = latestJoin.getJoiningQuery().getQuickBuilder();
 		variables.aliasMap[ latestJoinBuilder.tableAlias() ] = latestJoinBuilder.getEntity();
 		return this;
 	}

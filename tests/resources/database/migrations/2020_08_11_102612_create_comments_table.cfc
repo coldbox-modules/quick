@@ -20,8 +20,8 @@ component {
                 "commentable_type": "Post",
                 "designation": "public",
                 "user_id": 1,
-                "created_date": "2017-07-02 04:14:22",
-                "modified_date": "2017-07-02 04:14:22"
+                "created_date": createDateTime( 2017, 07, 02, 04, 14, 22 ),
+                "modified_date": createDateTime( 2017, 07, 02, 04, 14, 22 )
             },
             {
                 "id": 2,
@@ -30,8 +30,8 @@ component {
                 "commentable_type": "Post",
                 "designation": "public",
                 "user_id": 2,
-                "created_date": "2017-07-04 04:14:22",
-                "modified_date": "2017-07-04 04:14:22"
+                "created_date": createDateTime( 2017, 07, 04, 04, 14, 22 ),
+                "modified_date": createDateTime( 2017, 07, 04, 04, 14, 22 )
             },
             {
                 "id": 3,
@@ -40,8 +40,8 @@ component {
                 "commentable_type": "Video",
                 "designation": "public",
                 "user_id": 1,
-                "created_date": "2017-07-02 04:14:22",
-                "modified_date": "2017-07-02 04:14:22"
+                "created_date": createDateTime( 2017, 07, 02, 04, 14, 22 ),
+                "modified_date": createDateTime( 2017, 07, 02, 04, 14, 22 )
             }
         ] );
     }

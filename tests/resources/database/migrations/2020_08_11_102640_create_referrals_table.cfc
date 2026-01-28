@@ -12,8 +12,8 @@ component {
             {
                 "id": 1,
                 "type": "external",
-                "created_date": "2017-07-28 02:07:00",
-                "modified_date": "2017-07-28 02:07:00"
+                "created_date": createDateTime( 2017, 07, 28, 02, 07, 00 ),
+                "modified_date": createDateTime( 2017, 07, 28, 02, 07, 00 )
             }
         ] );
     }

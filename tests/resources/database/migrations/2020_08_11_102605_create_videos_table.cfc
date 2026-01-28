@@ -16,16 +16,16 @@ component {
                 "url": "https://www.youtube.com/watch?v=JDzIypmP0eo",
                 "title": "Building KiteTail with Adam Wathan",
                 "description": "Awesome live coding experience",
-                "created_date": "2017-06-28 02:07:36",
-                "modified_date": "2017-06-30 12:17:24"
+                "created_date": createDateTime( 2017, 06, 28, 02, 07, 36 ),
+                "modified_date": createDateTime( 2017, 06, 30, 12, 17, 24 )
             },
             {
                 "id": 1245,
                 "url": "https://www.youtube.com/watch?v=BgAlQuqzl8o",
                 "title": "Cello Wars",
                 "description": "Star Wars Cello Parody",
-                "created_date": "2017-07-02 04:14:22",
-                "modified_date": "2017-07-02 04:14:22"
+                "created_date": createDateTime( 2017, 07, 02, 04, 14, 22 ),
+                "modified_date": createDateTime( 2017, 07, 02, 04, 14, 22 )
             }
         ] );
     }

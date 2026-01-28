@@ -19,8 +19,8 @@ component {
                 "commentable_type": "Post",
                 "designation": "picture",
                 "user_id": 1,
-                "created_date": "2024-06-13 13:14:22",
-                "modified_date": "2024-06-13 13:14:22",
+                "created_date": createDateTime( 2024, 06, 13, 13, 14, 22 ),
+                "modified_date": createDateTime( 2024, 06, 13, 13, 14, 22 ),
                 "sentimentAnalysis" : '{ "analyzed": true, "magnitude": 0.8, "score": 0.6  }'
             }
         ] );

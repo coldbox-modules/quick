@@ -16,8 +16,8 @@ component {
                 "id": 3,
                 "title": "I Wish I Was an Oscar Mayer Weiner",
                 "download_url": "https://open.spotify.com/track/2wyg2ln6p4gEkdqM2mueLn?si=kWBpdUz1TLymdmTro-xjtw",
-                "created_date": "2017-07-28 02:07:00",
-                "modified_date": "2017-07-28 02:07:00"
+                "created_date": createDateTime( 2017, 07, 28, 02, 07, 00 ),
+                "modified_date": createDateTime( 2017, 07, 28, 02, 07, 00 )
             }
         ] );
 

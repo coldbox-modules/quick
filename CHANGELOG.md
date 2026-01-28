@@ -1,3 +1,12 @@
+# v12.0.10
+## 28 Jan 2026 — 21:56:39 UTC
+
+### fix
+
++ __qb:__ Migrate to join's `joiningQuery` name in qb 13.0.18
+ ([1a95350](https://github.com/coldbox-modules/quick/commit/1a95350f75780cd20b8c361af7aa2ed833fc1915))
+
+
 # v12.0.9
 ## 25 Jan 2026 — 01:53:37 UTC
 

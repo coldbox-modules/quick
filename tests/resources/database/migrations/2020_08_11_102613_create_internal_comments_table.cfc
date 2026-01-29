@@ -19,8 +19,8 @@ component {
                 "commentable_type": "Post",
                 "designation": "internal",
                 "user_id": 1,
-                "created_date": "2017-07-02 04:14:22",
-                "modified_date": "2017-07-02 04:14:22"
+                "created_date": createDateTime( 2017, 07, 02, 04, 14, 22 ),
+                "modified_date": createDateTime( 2017, 07, 02, 04, 14, 22 )
             }
         ] );
 

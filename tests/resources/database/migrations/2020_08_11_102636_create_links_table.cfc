@@ -12,7 +12,7 @@ component {
             {
                 "link_id": 1,
                 "link_url": "http://example.com/some-link",
-                "created_date": "2017-07-28 02:07:00"
+                "created_date": createDateTime( 2017, 07, 28, 02, 07, 00 )
             }
         ] );
     }

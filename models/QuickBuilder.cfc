@@ -246,10 +246,18 @@ component accessors="true" transientCache="false" {
 		boolean where                 = false,
 		boolean preventDuplicateJoins = this.getPreventDuplicateJoins()
 	) {
-		variables.qb                                         = variables.qb.join( argumentCollection = arguments );
-		var latestJoin                                       = variables.qb.getJoins().last();
-		var latestJoinBuilder                                = latestJoin.getJoiningQuery().getQuickBuilder();
-		variables.aliasMap[ latestJoinBuilder.tableAlias() ] = latestJoinBuilder.getEntity();
+		variables.qb = variables.qb.join( argumentCollection = arguments );
+		if ( isStruct( arguments.table ) ) {
+			var joinedBuilder = javacast( "null", "" );
+			if ( structKeyExists( arguments.table, "isQuickBuilder" ) ) {
+				joinedBuilder = arguments.table;
+			} else if ( structKeyExists( arguments.table, "getQuickBuilder" ) ) {
+				joinedBuilder = arguments.table.getQuickBuilder();
+			}
+			if ( !isNull( joinedBuilder ) ) {
+				variables.aliasMap[ joinedBuilder.tableAlias() ] = joinedBuilder.getEntity();
+			}
+		}
 		return this;
 	}
 

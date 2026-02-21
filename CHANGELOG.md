@@ -1,3 +1,18 @@
+# v12.0.11
+## 21 Feb 2026 — 18:16:43 UTC
+
+### chore
+
++ __tests:__ Add additional test coverage
+ ([2ac2dc2](https://github.com/coldbox-modules/quick/commit/2ac2dc2b125868068c62865091b3f6798ff2a23e))
++ __tests:__ Fix timezone-dependent test failures in timestamp assertions ([2ab1ff6](https://github.com/coldbox-modules/quick/commit/2ab1ff6f56e5bfb4ec6b43e20855edb9db7f8143))
+
+### fix
+
++ __QuickBuilder:__ Fix `join` inside QuickBuilder
+ ([bf5d726](https://github.com/coldbox-modules/quick/commit/bf5d726e19622938aa8e16d9e4752952126d7939))
+
+
 # v12.0.10
 ## 28 Jan 2026 — 21:56:39 UTC
 

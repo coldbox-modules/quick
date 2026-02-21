@@ -184,6 +184,26 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						expect( posts ).toHaveLength( 1 );
 						expect( posts[ 1 ].getAuthor().getId() ).toBe( 4 );
 					} );
+					it( "can use whereHas when both nested relationships are belongsToMany", function() {
+						var posts = getInstance( "Post" )
+							.whereHas( "tags.posts", function( q ) {
+								q.where( "post_pk", 1245 );
+							} )
+							.get();
+
+						expect( posts ).toBeArray();
+						expect( posts ).notToBeEmpty();
+					} );
+					it( "can join after populating a cloned query builder", function() {
+						var posts = getInstance( "Post" ).newQuery();
+						posts.populateQuery( posts.getQB().clone() );
+
+						expect( function() {
+							posts.join( "users", function( j ) {
+								j.on( "users.id", posts.qualifyColumn( "user_id" ) );
+							} );
+						} ).notToThrow();
+					} );
 				} );
 
 				describe( "hasManyThrough", function() {

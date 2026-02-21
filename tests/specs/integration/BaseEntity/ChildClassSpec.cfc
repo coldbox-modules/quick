@@ -426,6 +426,9 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( comment.hasAttribute( "upperBody" ) ).toBeTrue(
 					"Child class should have a virtual attribute 'upperBody'."
 				);
+
+				expect( comment.getBody() ).toBeWithCase( "This is an internal comment. It is very, very private." );
+				expect( comment.getUpperBody() ).toBeWithCase( "THIS IS AN INTERNAL COMMENT. IT IS VERY, VERY PRIVATE." );
 			} );
 		} );
 

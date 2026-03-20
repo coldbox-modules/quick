@@ -2791,13 +2791,30 @@ component accessors="true" {
 						}
 					}
 
+					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
+						return arrayReduce(
+							getComponentMetadata( "quick.models.BaseEntity" ).functions,
+							function( acc, func ) {
+								arguments.acc[ arguments.func.name ] = "";
+								return arguments.acc;
+							},
+							{}
+						);
+					} );
 					var functionsForRelationshipDetection = [];
-					if ( meta.localMetadata.keyExists( "functions" ) && isArray( meta.localMetadata.functions ) ) {
-						functionsForRelationshipDetection = meta.localMetadata.functions;
-					} else if ( meta.originalMetadata.keyExists( "functions" ) && isArray( meta.originalMetadata.functions ) ) {
+					if (
+						meta.originalMetadata.keyExists( "functions" ) &&
+						isArray( meta.originalMetadata.functions ) &&
+						!meta.originalMetadata.functions.isEmpty()
+					) {
 						functionsForRelationshipDetection = meta.originalMetadata.functions;
+					} else if ( meta.localMetadata.keyExists( "functions" ) && isArray( meta.localMetadata.functions ) ) {
+						functionsForRelationshipDetection = meta.localMetadata.functions;
 					}
-					meta[ "functionNames" ] = generateFunctionNameArray( from = functionsForRelationshipDetection );
+					meta[ "functionNames" ] = generateFunctionNameArray(
+						from    = functionsForRelationshipDetection,
+						without = baseEntityFunctionNames
+					);
 
 					param meta.originalMetadata.properties = [];
 

@@ -97,8 +97,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			describe( "boxlang metadata compatibility", function() {
 				it(
-					"can read accessors metadata from annotations",
-					function() {
+					title = "can read accessors metadata from annotations",
+					body  = function() {
 						expect( function() {
 							getInstance( "User" );
 						} ).notToThrow();
@@ -107,8 +107,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				);
 
 				it(
-					"can read property persistent metadata from annotations",
-					function() {
+					title = "can read property persistent metadata from annotations",
+					body  = function() {
 						var link = getInstance( "Link" );
 						expect( link.get_Attributes() ).notToHaveKey( "wirebox" );
 					},

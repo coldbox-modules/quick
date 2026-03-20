@@ -2729,10 +2729,20 @@ component accessors="true" {
 					var meta                   = {};
 					meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
 					meta[ "localMetadata" ]    = getMetadata( this );
+					var hasAccessorsMetadata   = false;
+					if ( meta.localMetadata.keyExists( "accessors" ) ) {
+						hasAccessorsMetadata = lCase( trim( meta.localMetadata.accessors & "" ) ) == "true";
+					}
+					// BoxLang 1.11 exposes component metadata attributes inside `annotations`.
 					if (
-						!meta[ "localMetadata" ].keyExists( "accessors" ) ||
-						meta[ "localMetadata" ].accessors == false
+						!hasAccessorsMetadata &&
+						meta.localMetadata.keyExists( "annotations" ) &&
+						isStruct( meta.localMetadata.annotations ) &&
+						meta.localMetadata.annotations.keyExists( "accessors" )
 					) {
+						hasAccessorsMetadata = lCase( trim( meta.localMetadata.annotations.accessors & "" ) ) == "true";
+					}
+					if ( !hasAccessorsMetadata ) {
 						throw(
 							type    = "QuickAccessorsMissing",
 							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
@@ -2767,7 +2777,8 @@ component accessors="true" {
 
 						if ( len( meta.originalMetadata.discriminatorValue ) ) {
 							try {
-								var parentMeta                                 = getComponentMetadata( meta.parentDefinition.meta.fullName );
+								var parentMeta                                 = reference.get_Meta().originalMetadata;
+								param parentMeta.discriminatorColumn           = "";
 								meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
 								meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
 							} catch ( any e ) {
@@ -2780,20 +2791,13 @@ component accessors="true" {
 						}
 					}
 
-					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
-						return arrayReduce(
-							getComponentMetadata( "quick.models.BaseEntity" ).functions,
-							function( acc, func ) {
-								arguments.acc[ arguments.func.name ] = "";
-								return arguments.acc;
-							},
-							{}
-						);
-					} );
-					meta[ "functionNames" ] = generateFunctionNameArray(
-						from    = meta.originalMetadata.functions,
-						without = baseEntityFunctionNames
-					);
+					var functionsForRelationshipDetection = [];
+					if ( meta.localMetadata.keyExists( "functions" ) && isArray( meta.localMetadata.functions ) ) {
+						functionsForRelationshipDetection = meta.localMetadata.functions;
+					} else if ( meta.originalMetadata.keyExists( "functions" ) && isArray( meta.originalMetadata.functions ) ) {
+						functionsForRelationshipDetection = meta.originalMetadata.functions;
+					}
+					meta[ "functionNames" ] = generateFunctionNameArray( from = functionsForRelationshipDetection );
 
 					param meta.originalMetadata.properties = [];
 
@@ -2926,18 +2930,29 @@ component accessors="true" {
 	 * @return  An attribute struct with all the keys needed.
 	 */
 	private struct function paramAttribute( required struct attr ) {
-		param attr.column                  = arguments.attr.name;
-		param attr.persistent              = true;
-		param attr.nullValue               = "";
-		param attr.convertToNull           = true;
-		param attr.casts                   = "";
-		param attr.readOnly                = false;
-		param attr.sqltype                 = "";
-		param attr.insert                  = true;
-		param attr.update                  = true;
-		param attr.virtual                 = false;
-		param attr.exclude                 = false;
-		param attr.isParentColumn          = false;
+		if (
+			!arguments.attr.keyExists( "persistent" ) &&
+			arguments.attr.keyExists( "annotations" ) &&
+			isStruct( arguments.attr.annotations ) &&
+			arguments.attr.annotations.keyExists( "persistent" )
+		) {
+			arguments.attr.persistent = arguments.attr.annotations.persistent;
+		}
+		param attr.column         = arguments.attr.name;
+		param attr.persistent     = true;
+		param attr.nullValue      = "";
+		param attr.convertToNull  = true;
+		param attr.casts          = "";
+		param attr.readOnly       = false;
+		param attr.sqltype        = "";
+		param attr.insert         = true;
+		param attr.update         = true;
+		param attr.virtual        = false;
+		param attr.exclude        = false;
+		param attr.isParentColumn = false;
+		if ( !isBoolean( attr.persistent ) ) {
+			attr.persistent = lCase( trim( attr.persistent & "" ) ) == "true";
+		}
 		variables._nullValues[ attr.name ] = attr.nullValue;
 		return arguments.attr;
 	}

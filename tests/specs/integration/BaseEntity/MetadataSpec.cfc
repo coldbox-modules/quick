@@ -94,6 +94,27 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						.notToHaveKey( "discriminatorColumn" );
 				} );
 			} );
+
+			describe( "boxlang metadata compatibility", function() {
+				it(
+					"can read accessors metadata from annotations",
+					function() {
+						expect( function() {
+							getInstance( "User" );
+						} ).notToThrow();
+					},
+					skip = !server.keyExists( "boxlang" )
+				);
+
+				it(
+					"can read property persistent metadata from annotations",
+					function() {
+						var link = getInstance( "Link" );
+						expect( link.get_Attributes() ).notToHaveKey( "wirebox" );
+					},
+					skip = !server.keyExists( "boxlang" )
+				);
+			} );
 		} );
 	}
 

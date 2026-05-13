@@ -370,22 +370,24 @@ component accessors="true" implements="IRelationship" {
 		required array keys,
 		required any baseEntity
 	) {
-		return unique(
-			arguments.entities.reduce( function( acc, entity ) {
-				var keyValues = [];
-				for ( var key in keys ) {
-					var value = structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( key ) : entity[ key ];
-					if ( entityIsNullValue( baseEntity, key, value ) ) {
-						return acc;
-					}
-					keyValues.append( value );
+		var uniqueKeys = arguments.entities.reduce( function( acc, entity ) {
+			var keyValues = [];
+			for ( var key in keys ) {
+				var value = structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( key ) : entity[ key ];
+				if ( entityIsNullValue( baseEntity, key, value ) ) {
+					return acc;
 				}
-				acc.append( keyValues.toList() );
-				return acc;
-			}, [] )
-		).map( function( key ) {
-			return key.listToArray();
-		} );
+				keyValues.append( value );
+			}
+
+			acc[ serializeJSON( keyValues ) ] = keyValues;
+			return acc;
+		}, {} );
+
+		return uniqueKeys.reduce( function( acc, _, keyValues ) {
+			acc.append( keyValues );
+			return acc;
+		}, [] );
 	}
 
 	/**

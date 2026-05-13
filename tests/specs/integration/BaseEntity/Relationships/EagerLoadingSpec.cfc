@@ -34,6 +34,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				}
 			} );
 
+			it( "preserves numeric binding types when eager loading a belongs to relationship", function() {
+				getInstance( "Post" ).with( "author" ).get();
+
+				expect( variables.queries ).toHaveLength( 2 );
+				var bindingTypes = extractBindingTypes( variables.queries[ 2 ] );
+
+				expect( bindingTypes ).notToBeEmpty();
+				for ( var bindingType in bindingTypes ) {
+					expect( bindingType ).notToInclude( "varchar" );
+					expect( bindingType ).toInclude( "integer" );
+				}
+			} );
+
 			it( "can eager load a belongs to relationship using a composite key", function() {
 				var compositeChildren = getInstance( "CompositeChild" ).with( "parent" ).get();
 				expect( compositeChildren ).toBeArray();
@@ -241,6 +254,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( posts[ 4 ].getTags()[ 3 ].getName() ).toBe( "gaming" );
 
 				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+			} );
+
+			it( "preserves numeric binding types when eager loading a belongs to many relationship", function() {
+				getInstance( "Post" ).with( "tags" ).get();
+
+				expect( variables.queries ).toHaveLength( 2 );
+				var bindingTypes = extractBindingTypes( variables.queries[ 2 ] );
+
+				expect( bindingTypes ).notToBeEmpty();
+				for ( var bindingType in bindingTypes ) {
+					expect( bindingType ).notToInclude( "varchar" );
+					expect( bindingType ).toInclude( "integer" );
+				}
 			} );
 
 			it( "can eager load a has many through relationship", function() {
@@ -767,6 +793,16 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		prc
 	) {
 		arrayAppend( variables.queries, interceptData );
+	}
+
+	private array function extractBindingTypes( required struct queryLogEntry ) {
+		return arguments.queryLogEntry.bindings
+			.filter( function( binding ) {
+				return isStruct( binding ) && ( binding.keyExists( "cfsqltype" ) || binding.keyExists( "sqltype" ) );
+			} )
+			.map( function( binding ) {
+				return lCase( binding.cfsqltype ?: binding.sqltype );
+			} );
 	}
 
 }

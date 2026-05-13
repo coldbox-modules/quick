@@ -164,7 +164,7 @@ component
 	 * @return       [any]
 	 */
 	public array function getEagerEntityKeys( required array entities, required any baseEntity ) {
-		return arguments.entities
+		var uniqueKeys = arguments.entities
 			.reduce( function( keys, entity ) {
 				var values = variables.foreignKeys
 					.map( function( foreignKey ) {
@@ -197,15 +197,16 @@ component
 					} );
 
 				if ( values.len() == variables.foreignKeys.len() ) {
-					arguments.keys[ values.toList() ] = {};
+					arguments.keys[ serializeJSON( values ) ] = values;
 				}
 
 				return arguments.keys;
-			}, {} )
-			.keyArray()
-			.map( function( key ) {
-				return key.listToArray();
-			} );
+			}, {} );
+
+		return uniqueKeys.reduce( function( acc, _, values ) {
+			acc.append( values );
+			return acc;
+		}, [] );
 	}
 
 	/**

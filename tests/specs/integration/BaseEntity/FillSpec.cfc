@@ -51,6 +51,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.retrieveAttribute( "lastName" ) ).toBe( "Vila" );
 				expect( user.retrieveAttribute( "email" ) ).toBe( "bob@vila.com" );
 			} );
+
+			it( "converts configured null values before invoking typed setters", function() {
+				var user = getInstance( "UserFill" );
+
+				expect( function() {
+					user.fill( { "updatedDate" : "" } );
+				} ).notToThrow();
+				expect( user.isNullAttribute( "updatedDate" ) ).toBeTrue();
+			} );
 		} );
 	}
 

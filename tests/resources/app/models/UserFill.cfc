@@ -9,7 +9,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
     property name="lastName";
     property name="aboutMe";
     property name="createdDate" readonly="true";
-    property name="updatedDate";
+	property name="updatedDate" type="date";
 	property name="lastLogin";
 	property name="avatarID";
 	property name="headerID";

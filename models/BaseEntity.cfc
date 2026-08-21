@@ -677,7 +677,11 @@ component accessors="true" {
 				continue;
 			}
 			var value = arguments.attributes[ key ];
-			var rs    = tryRelationshipSetter( "set#key#", { "1" : value } );
+			if ( hasAttribute( key ) && isNullValue( key, value ) ) {
+				clearAttribute( key, true );
+				continue;
+			}
+			var rs = tryRelationshipSetter( "set#key#", { "1" : value } );
 			if ( !isNull( rs ) ) {
 				continue;
 			}

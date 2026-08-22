@@ -2834,7 +2834,16 @@ component accessors="true" {
 						meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
 					}
 					arrayWrap( variables._key ).each( function( key ) {
-						if ( !meta.attributes.keyExists( key ) ) {
+						var keyIsDefined = meta.attributes.keyExists( key );
+						if ( !keyIsDefined ) {
+							for ( var attribute in meta.attributes ) {
+								if ( compareNoCase( meta.attributes[ attribute ].column, key ) == 0 ) {
+									keyIsDefined = true;
+									break;
+								}
+							}
+						}
+						if ( !keyIsDefined ) {
 							var keyProp                     = paramAttribute( { "name" : key } );
 							meta.attributes[ keyProp.name ] = keyProp;
 						}

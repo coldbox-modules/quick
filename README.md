@@ -116,11 +116,34 @@ component extends="quick.models.BaseEntity" {
     variables._queryOptions = {
         cachedWithin : createTimeSpan( 0, 0, 5, 0 )
     };
-
 }
 ```
 
 Query caching stores database results, not live Quick entities or loaded relationships. Cache lifetime and invalidation are managed by the CFML engine, so use short lifetimes for data that Quick or another process may update. For application-specific invalidation or distributed caching, cache entity mementos in CacheBox at the service layer and rehydrate them through Quick's public APIs.
+
+### Preconfigured eager loading
+
+Entities can declare relationships that should be eager loaded on every query by assigning an array of relationship paths to `variables._with`:
+
+```javascript
+component extends="quick.models.BaseEntity" accessors="true" {
+
+    variables._with = [ "author", "comments.author" ];
+
+    function author() {
+        return belongsTo( "User" );
+    }
+
+    function comments() {
+        return hasMany( "Comment" );
+    }
+
+}
+```
+
+The paths use the same dot notation as the query builder's `with()` method, so nested relationships can be preconfigured. Quick adds these relationships whenever it creates a new query for the entity, including calls such as `all()`, `get()`, `first()`, and `find()`.
+
+Preconfigured eager loading is most useful for relationships that nearly every consumer needs. Use it selectively: every configured relationship adds work to each entity query and can retrieve substantially more data than the caller needs. For relationships used only by specific operations, prefer an explicit query-level call such as `getInstance( "Post" ).with( "comments" ).get()`.
 
 ### Tests and Contributing
 

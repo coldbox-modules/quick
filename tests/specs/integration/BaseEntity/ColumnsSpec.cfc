@@ -72,6 +72,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} ).notToThrow();
 			} );
 
+			it( "does not mass assign injected non-persistent properties", function() {
+				expect( function() {
+					getInstance( "Link" ).fill( { "wirebox" : "not-the-injector" } );
+				} ).toThrow( "AttributeNotFound" );
+			} );
+
 			it( "translates attributes to their column names", function() {
 				expect( function() {
 					getInstance( "Link" ).create( { url : "https://example.com" } );

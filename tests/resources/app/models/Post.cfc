@@ -10,6 +10,7 @@ component
 	property name="createdDate"   column="created_date";
 	property name="modifiedDate"  column="modified_date";
 	property name="publishedDate" column="published_date";
+	property name="lifecycleEventVar" persistent="false";
 
 	variables._key = "post_pk";
 

@@ -99,6 +99,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "preserves null values when using BooleanCast", () => {
 				var pn = getInstance( "PhoneNumber" ).find( 3 );
+				expect(
+					getInstance( "BooleanCast@quick" ).get(
+						entity = pn,
+						key    = "confirmed",
+						value  = javacast( "null", "" )
+					)
+				).toBeNull( "BooleanCast should return native null unchanged" );
 				expect( pn.isNullAttribute( "confirmed" ) ).toBeTrue( "[confirmed] should be considered null" );
 				expect( pn.getConfirmed() ).toBe( "" );
 				// expect( function() {

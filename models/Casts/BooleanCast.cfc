@@ -15,7 +15,7 @@ component singleton {
 		any value
 	) {
 		if ( isNull( arguments.value ) ) {
-			return "";
+			return javacast( "null", "" );
 		}
 
 		return arguments.entity.isNullValue( arguments.key, arguments.value ) ? arguments.value : !!arguments.value;

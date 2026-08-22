@@ -97,6 +97,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
         */
 	}
 
+	function scopeWithFullName( qb ) {
+		qb.appendVirtualAttribute( "fullName" ).selectRaw( "CONCAT(first_name, ' ', last_name) AS fullName" );
+	}
+
 	function scopeWithLatestPostIdRelationship( qb ) {
 		qb.addSubselect(
 			"latestPostId",

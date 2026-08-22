@@ -393,7 +393,14 @@ component accessors="true" transientCache="false" {
 	 */
 	private array function getEntities( any columns, struct options = {} ) {
 		var results = variables.qb.get( argumentCollection = arguments );
-		return variables._asQuery ? results : results.map( variables.loadEntity );
+		if ( variables._asQuery ) {
+			return results;
+		}
+
+		var refreshQuery = variables.qb.clone();
+		return results.map( function( data ) {
+			return loadEntity( data, refreshQuery );
+		} );
 	}
 
 	/**
@@ -1556,7 +1563,17 @@ component accessors="true" transientCache="false" {
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function loadEntity( required struct data ) {
+	public any function loadEntity( required struct data, any refreshQuery ) {
+		var loadedData     = arguments.data;
+		var hasVirtualData = getEntity()
+			.get_virtualAttributes()
+			.some( function( attribute ) {
+				return loadedData.keyExists( attribute );
+			} );
+		if ( hasVirtualData && isNull( arguments.refreshQuery ) ) {
+			arguments.refreshQuery = variables.qb.clone();
+		}
+
 		if (
 			getEntity().get_loadChildren()
 			&&
@@ -1595,20 +1612,28 @@ component accessors="true" transientCache="false" {
 				}
 			}
 
-			return childClass
+			var childEntity = childClass
 				.assignAttributesData( arguments.data )
 				.assignOriginalAttributes( arguments.data )
 				.set_preventLazyLoading( variables._preventLazyLoading )
 				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
 				.markLoaded();
+			if ( hasVirtualData ) {
+				childEntity.set_refreshQuery( arguments.refreshQuery );
+			}
+			return childEntity;
 		} else {
-			return getEntity()
+			var entity = getEntity()
 				.newEntity()
 				.assignAttributesData( arguments.data )
 				.assignOriginalAttributes( arguments.data )
 				.set_preventLazyLoading( variables._preventLazyLoading )
 				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
 				.markLoaded();
+			if ( hasVirtualData ) {
+				entity.set_refreshQuery( arguments.refreshQuery );
+			}
+			return entity;
 		}
 	}
 

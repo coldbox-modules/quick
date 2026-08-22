@@ -200,6 +200,12 @@ component accessors="true" {
 	 */
 	property name="_virtualAttributes" persistent="false";
 
+	/**
+	 * A snapshot of the query used to load this entity. It is replayed by refresh
+	 * so scoped projections and other query customizations stay in sync.
+	 */
+	property name="_refreshQuery" persistent="false";
+
 
 	/**
 	 * A boolean flag indicating that the entity has been loaded from the database.
@@ -1068,13 +1074,19 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function fresh() {
-		return newQuery()
+		var freshEntity = isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery.clone().offset( 0 );
+		var freshData   = freshEntity
+			.from( tableName() )
 			.where( function( q ) {
 				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
-					q.where( keyName, keyValue );
+					q.where( this.qualifyColumn( keyName ), keyValue );
 				} );
 			} )
 			.first();
+		if ( !isStruct( freshData ) || structKeyExists( freshData, "isQuickEntity" ) ) {
+			return freshData;
+		}
+		return newEntity().hydrate( freshData ).set_refreshQuery( variables._refreshQuery );
 	}
 
 	/**
@@ -1086,16 +1098,21 @@ component accessors="true" {
 	public any function refresh() {
 		variables._relationshipsData   = {};
 		variables._relationshipsLoaded = {};
+		var refreshedEntity            = isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery
+			.clone()
+			.offset( 0 );
+		var refreshedData = refreshedEntity
+			.from( tableName() )
+			.where( function( q ) {
+				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
+					q.where( this.qualifyColumn( keyName ), keyValue );
+				} );
+			} )
+			.first();
 		assignAttributesData(
-			newQuery()
-				.from( tableName() )
-				.where( function( q ) {
-					arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
-						q.where( this.qualifyColumn( keyName ), keyValue );
-					} );
-				} )
-				.first()
-				.retrieveAttributesData()
+			isStruct( refreshedData ) && !structKeyExists( refreshedData, "isQuickEntity" )
+			 ? refreshedData
+			 : refreshedData.retrieveAttributesData()
 		);
 		return this;
 	}

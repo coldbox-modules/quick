@@ -94,6 +94,7 @@ component accessors="true" transientCache="false" {
 
 	function init() {
 		variables._eagerLoad                = [];
+		variables._parallelEagerLoading     = false;
 		variables._globalScopesApplied      = false;
 		variables._globalScopeExcludeAll    = false;
 		variables._asMemento                = false;
@@ -713,9 +714,11 @@ component accessors="true" transientCache="false" {
 	 * @relationName  A single relation name or array of relation
 	 *                names to eager load.
 	 *
+	 * @parallel      If true, eager loads top-level relationships concurrently.
+	 *
 	 * @return        QuickBuilder
 	 */
-	public any function with( required any relationName ) {
+	public any function with( required any relationName, boolean parallel = false ) {
 		if ( isSimpleValue( arguments.relationName ) && arguments.relationName == "" ) {
 			return this;
 		}
@@ -725,6 +728,7 @@ component accessors="true" transientCache="false" {
 			arrayWrap( arguments.relationName ),
 			true
 		);
+		variables._parallelEagerLoading = variables._parallelEagerLoading || arguments.parallel;
 
 		return this;
 	}
@@ -806,15 +810,68 @@ component accessors="true" transientCache="false" {
 		}
 
 		var eagerLoads = denestEagerLoads( variables._eagerLoad );
-		for ( var relationName in eagerLoads ) {
-			arguments.entities = eagerLoadRelation(
-				relationName,
-				eagerLoads[ relationName ],
-				arguments.entities
-			);
+		if ( variables._parallelEagerLoading && eagerLoads.count() > 1 ) {
+			eagerLoadRelationsInParallel( eagerLoads, arguments.entities );
+		} else {
+			for ( var relationName in eagerLoads ) {
+				arguments.entities = eagerLoadRelation(
+					relationName,
+					eagerLoads[ relationName ],
+					arguments.entities
+				);
+			}
 		}
 
 		return arguments.entities;
+	}
+
+	/**
+	 * Eager loads independent top-level relationships on separate threads.
+	 */
+	private void function eagerLoadRelationsInParallel( required struct eagerLoads, required array entities ) {
+		var threadNames = [];
+
+		for ( var relationName in arguments.eagerLoads ) {
+			var threadName = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
+			threadNames.append( threadName );
+			cfthread(
+				action          = "run",
+				name            = threadName,
+				builder         = this,
+				relationName    = relationName,
+				eagerLoadConfig = arguments.eagerLoads[ relationName ],
+				entities        = entities
+			) {
+				attributes.builder.eagerLoadRelation(
+					attributes.relationName,
+					attributes.eagerLoadConfig,
+					attributes.entities
+				);
+			}
+		}
+
+		cfthread(
+			action  = "join",
+			name    = threadNames.toList(),
+			timeout = 60000
+		);
+
+		threadNames.each( function( threadName ) {
+			if ( cfthread[ threadName ].status == "TERMINATED" ) {
+				var threadError = cfthread[ threadName ].error;
+				throw(
+					type    = threadError.keyExists( "type" ) ? threadError.type : "QuickParallelEagerLoadingException",
+					message = threadError.keyExists( "message" ) ? threadError.message : "A parallel eager-loading thread failed.",
+					detail  = threadError.keyExists( "detail" ) ? threadError.detail : ""
+				);
+			}
+			if ( cfthread[ threadName ].status != "COMPLETED" ) {
+				throw(
+					type    = "QuickParallelEagerLoadingTimeout",
+					message = "Parallel eager loading did not complete within 60 seconds."
+				);
+			}
+		} );
 	}
 
 	private struct function denestEagerLoads( required array eagerLoads ) {
@@ -953,7 +1010,7 @@ component accessors="true" transientCache="false" {
 	 * @doc_generic   quick.models.BaseEntity | struct
 	 * @return        [quick.models.BaseEntity] | [struct]
 	 */
-	private array function eagerLoadRelation(
+	public array function eagerLoadRelation(
 		required string relationName,
 		required struct eagerLoadConfig,
 		required array entities

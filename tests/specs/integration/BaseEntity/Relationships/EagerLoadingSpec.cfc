@@ -61,6 +61,40 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( keys ).toHaveLength( 2 );
 			} );
 
+			it( "can eager load top-level relationships in parallel", function() {
+				var callingThread = createObject( "java", "java.lang.Thread" ).currentThread().getName();
+				var eagerThreads  = {};
+				var posts         = getInstance( "Post" )
+					.with(
+						[
+							{
+								"author" : function( relationship ) {
+									eagerThreads.author = createObject( "java", "java.lang.Thread" )
+										.currentThread()
+										.getName();
+								}
+							},
+							{
+								"comments" : function( relationship ) {
+									eagerThreads.comments = createObject( "java", "java.lang.Thread" )
+										.currentThread()
+										.getName();
+								}
+							}
+						],
+						true
+					)
+					.get();
+
+				expect( posts[ 1 ].getAuthor() ).toBeInstanceOf( "app.models.User" );
+				expect( posts[ 1 ].getComments() ).toBeArray();
+				expect( eagerThreads ).toHaveKey( "author" );
+				expect( eagerThreads ).toHaveKey( "comments" );
+				expect( eagerThreads.author ).notToBe( callingThread );
+				expect( eagerThreads.comments ).notToBe( callingThread );
+				expect( eagerThreads.author ).notToBe( eagerThreads.comments );
+			} );
+
 			it( "can eager load a belongs to relationship using a composite key", function() {
 				var compositeChildren = getInstance( "CompositeChild" ).with( "parent" ).get();
 				expect( compositeChildren ).toBeArray();

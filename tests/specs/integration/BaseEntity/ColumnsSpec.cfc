@@ -48,6 +48,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( bindings[ 1 ] ).toBeStruct();
 				expect( bindings[ 1 ].value ).toBe( "firstName" );
 			} );
+
+			it( "preserves the entity key when selecting specific columns", function() {
+				var user = getInstance( "User" ).select( "username" ).findOrFail( 1 );
+
+				expect( user.getId() ).toBe( 1 );
+				expect( user.getUsername() ).toBe( "elpete" );
+			} );
+
+			it( "preserves every composite key column when selecting specific columns", function() {
+				var composite = getInstance( "Composite" ).select( "a" ).findOrFail( [ 1, 2 ] );
+
+				expect( composite.keyValues() ).toBe( [ 1, 2 ] );
+			} );
 		} );
 	}
 

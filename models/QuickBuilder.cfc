@@ -138,6 +138,27 @@ component accessors="true" transientCache="false" {
 		return this;
 	}
 
+	private void function ensureKeyColumnsSelected() {
+		var selectedColumns = variables.qb.getColumns();
+		if (
+			selectedColumns.some( function( column ) {
+				return column.type == "simple" && column.value.find( "*" );
+			} )
+		) {
+			return;
+		}
+
+		for ( var keyColumn in getEntity().keyColumns() ) {
+			var qualifiedKey = getEntity().qualifyColumn( keyColumn );
+			var hasKey       = selectedColumns.some( function( column ) {
+				return column.type == "simple" && compareNoCase( column.value, qualifiedKey ) == 0;
+			} );
+			if ( !hasKey ) {
+				variables.qb.addSelect( qualifiedKey );
+			}
+		}
+	}
+
 	/**
 	 * Adds a subselect query with the given name to the entity.
 	 * Useful for computed properties and computed relationship keys.
@@ -392,6 +413,9 @@ component accessors="true" transientCache="false" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	private array function getEntities( any columns, struct options = {} ) {
+		if ( !variables._asQuery ) {
+			ensureKeyColumnsSelected();
+		}
 		var results = variables.qb.get( argumentCollection = arguments );
 		return variables._asQuery ? results : results.map( variables.loadEntity );
 	}
@@ -1091,6 +1115,9 @@ component accessors="true" transientCache="false" {
 	 */
 	public any function first( struct options = {} ) {
 		activateGlobalScopes();
+		if ( !variables._asQuery ) {
+			ensureKeyColumnsSelected();
+		}
 
 		var result = variables.qb.first( argumentCollection = arguments );
 		return structIsEmpty( result ) ? javacast( "null", "" ) : handleTransformations(
@@ -1319,6 +1346,9 @@ component accessors="true" transientCache="false" {
 		struct options  = {}
 	) {
 		activateGlobalScopes();
+		if ( !variables._asQuery ) {
+			ensureKeyColumnsSelected();
+		}
 		var p = variables.qb.paginate(
 			arguments.page,
 			arguments.maxRows,
@@ -1346,6 +1376,9 @@ component accessors="true" transientCache="false" {
 		struct options  = {}
 	) {
 		activateGlobalScopes();
+		if ( !variables._asQuery ) {
+			ensureKeyColumnsSelected();
+		}
 		var p = variables.qb.simplePaginate(
 			arguments.page,
 			arguments.maxRows,

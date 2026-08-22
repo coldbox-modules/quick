@@ -369,12 +369,10 @@ component accessors="true" implements="IRelationship" {
 					}
 					keyValues.append( value );
 				}
-				acc.append( keyValues.toList() );
+				acc.append( keyValues );
 				return acc;
 			}, [] )
-		).map( function( key ) {
-			return key.listToArray();
-		} );
+		);
 	}
 
 	/**

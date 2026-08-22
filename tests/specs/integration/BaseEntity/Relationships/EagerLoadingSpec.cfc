@@ -243,6 +243,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
 			} );
 
+			it( "preserves numeric key types when eager loading a belongs to many relationship", function() {
+				getInstance( "Post" ).with( "tags" ).get();
+
+				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+				variables.queries[ 2 ].bindings.each( function( binding ) {
+					expect( binding.cfsqltype ).toBe( "INTEGER" );
+				} );
+			} );
+
 			it( "can eager load a has many through relationship", function() {
 				var countries = getInstance( "Country" ).with( "posts" ).get();
 				expect( countries ).toBeArray();

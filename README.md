@@ -93,6 +93,35 @@ component {
 
 Now that you've seen an example, [dig in to what you can do](https://quick.ortusbooks.com/) with Quick!
 
+### Caching queries
+
+Quick passes query options through to `queryExecute`, so applications can use the query cache provided by their CFML engine. This works with collection queries and primary-key lookups:
+
+```javascript
+var users = getInstance( "User" ).get(
+    options = { cachedWithin : createTimeSpan( 0, 0, 5, 0 ) }
+);
+
+var user = getInstance( "User" ).find(
+    rc.id,
+    { cachedWithin : createTimeSpan( 0, 0, 5, 0 ) }
+);
+```
+
+An entity can also configure defaults for every query by assigning `_queryOptions` in its pseudo-constructor:
+
+```javascript
+component extends="quick.models.BaseEntity" {
+
+    variables._queryOptions = {
+        cachedWithin : createTimeSpan( 0, 0, 5, 0 )
+    };
+
+}
+```
+
+Query caching stores database results, not live Quick entities or loaded relationships. Cache lifetime and invalidation are managed by the CFML engine, so use short lifetimes for data that Quick or another process may update. For application-specific invalidation or distributed caching, cache entity mementos in CacheBox at the service layer and rehydrate them through Quick's public APIs.
+
 ### Tests and Contributing
 
 To run the tests, first clone this repo and run a `box install`.

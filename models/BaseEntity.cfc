@@ -77,6 +77,11 @@ component accessors="true" {
 	property name="_queryOptions" persistent="false";
 
 	/**
+	 * A map of lifecycle event names to custom interception points.
+	 */
+	property name="_dispatchesEvents" persistent="false";
+
+	/**
 	 * Boolean flag to prevent inserts and updates on the entity.
 	 */
 	property
@@ -277,6 +282,7 @@ component accessors="true" {
 		param variables._discriminators    = [];
 		param variables._loadChildren      = true;
 		param variables._queryOptions      = {};
+		param variables._dispatchesEvents  = {};
 		param variables._attributes        = {};
 		param variables._columns           = {};
 		param variables._virtualAttributes = [];
@@ -3343,16 +3349,29 @@ component accessors="true" {
 				{ eventData : arguments.eventData }
 			);
 		}
-		if ( !isNull( variables._interceptorService ) ) {
-			param variables.useAnnounceMethodForInterceptorService = structKeyExists(
-				variables._interceptorService,
-				"announce"
-			);
-			if ( variables.useAnnounceMethodForInterceptorService ) {
-				variables._interceptorService.announce( "quick" & arguments.eventName, arguments.eventData );
-			} else {
-				variables._interceptorService.processState( "quick" & arguments.eventName, arguments.eventData );
+		announceInterceptionPoint( "quick" & arguments.eventName, arguments.eventData );
+		if ( variables._dispatchesEvents.keyExists( arguments.eventName ) ) {
+			for ( var interceptionPoint in arrayWrap( variables._dispatchesEvents[ arguments.eventName ] ) ) {
+				announceInterceptionPoint( interceptionPoint, arguments.eventData );
 			}
+		}
+	}
+
+	/**
+	 * Announces an interception point using the configured interceptor service.
+	 *
+	 * @interceptionPoint  The interception point to announce.
+	 * @eventData          The data associated with the interception point.
+	 */
+	private void function announceInterceptionPoint( required string interceptionPoint, required struct eventData ) {
+		if ( isNull( variables._interceptorService ) ) {
+			return;
+		}
+		param variables.useAnnounceMethodForInterceptorService = structKeyExists( variables._interceptorService, "announce" );
+		if ( variables.useAnnounceMethodForInterceptorService ) {
+			variables._interceptorService.announce( arguments.interceptionPoint, arguments.eventData );
+		} else {
+			variables._interceptorService.processState( arguments.interceptionPoint, arguments.eventData );
 		}
 	}
 

@@ -110,6 +110,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( anotherPost.isLoaded() ).toBeFalse();
 				expect( anotherPost.getBody() ).toBe( "another body" );
 				expect( anotherPost.getUser_Id() ).toBe( 1 );
+				expect( variables.queries ).toHaveLength(
+					1,
+					"Filling and associating the new post must not persist it."
+				);
 			} );
 
 			it( "can call fetch methods on the relationship builder", () => {

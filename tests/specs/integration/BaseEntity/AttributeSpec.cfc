@@ -30,6 +30,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getUsername() ).toBe( "new_username" );
 			} );
 
+			it( "prioritizes attribute aliases over conflicting column names in magic accessors", function() {
+				var entity = getInstance( "ColumnAliasCollision" );
+				entity.setActivoSN( false );
+				entity.setActivo( true );
+
+				expect( entity.getActivo() ).toBeTrue();
+				expect( entity.getActivoSN() ).toBeFalse();
+			} );
+
 			it( "can set a value to null using the `setColumnName` magic methods", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getUsername() ).toBe( "elpete" );

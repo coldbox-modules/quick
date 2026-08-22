@@ -786,6 +786,9 @@ component accessors="true" {
 	 * @return  string
 	 */
 	public string function retrieveAliasForColumn( required string column ) {
+		if ( variables._attributes.keyExists( arguments.column ) ) {
+			return variables._attributes[ arguments.column ].name;
+		}
 		return variables._columns.keyExists( arguments.column ) ? variables._columns[ arguments.column ].name : arguments.column;
 	}
 

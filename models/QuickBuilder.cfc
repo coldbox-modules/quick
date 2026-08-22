@@ -562,9 +562,10 @@ component accessors="true" transientCache="false" {
 		// This is a workaround for grammars with a parameter limit.  If the grammar
 		// has a `parameterLimit` public property, it is used to slice up the array
 		// and work it in chunks.
-		if ( structKeyExists( getEntity().newQuery().getGrammar(), "parameterLimit" ) ) {
-			var parameterLimit = getEntity().newQuery().getGrammar().parameterLimit;
-			if ( arguments.entities.len() > parameterLimit ) {
+		var grammar = getEntity().newQuery().getGrammar();
+		if ( structKeyExists( grammar, "parameterLimit" ) ) {
+			var parameterLimit = grammar.parameterLimit;
+			if ( parameterLimit > 0 && arguments.entities.len() > parameterLimit ) {
 				for ( var i = 1; i < arguments.entities.len(); i += parameterLimit ) {
 					var length = min( arguments.entities.len() - i + 1, parameterLimit );
 					var slice  = arraySlice( arguments.entities, i, length );

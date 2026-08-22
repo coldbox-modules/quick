@@ -1007,23 +1007,31 @@ component
 			return result;
 		}
 
+		var qbResult = javacast( "null", "" );
+		var qbError  = {};
 		try {
-			return super.onMissingMethod( argumentCollection = arguments );
+			qbResult = super.onMissingMethod( argumentCollection = arguments );
 		} catch ( QBMissingMethod e ) {
-			throw(
-				type    = "QuickMissingMethod",
-				message = arrayToList(
-					[
-						"Quick couldn't figure out what to do with [#arguments.missingMethodName#].",
-						"The error returned was: #e.message#",
-						"We tried checking columns, aliases, scopes, and relationships locally.",
-						"We also forwarded the call on to qb to see if it could do anything with it, but it couldn't."
-					],
-					" "
-				),
-				extendedInfo = serializeJSON( e )
-			);
+			qbError = e;
 		}
+
+		if ( !isNull( qbResult ) ) {
+			return qbResult;
+		}
+
+		throw(
+			type    = "QuickMissingMethod",
+			message = arrayToList(
+				[
+					"Quick couldn't figure out what to do with [#arguments.missingMethodName#].",
+					qbError.keyExists( "message" ) ? "The error returned was: #qbError.message#" : "qb did not return a result.",
+					"We tried checking columns, aliases, scopes, and relationships locally.",
+					"We also forwarded the call on to qb to see if it could do anything with it, but it couldn't."
+				],
+				" "
+			),
+			extendedInfo = serializeJSON( qbError )
+		);
 	}
 
 	// override's super impl

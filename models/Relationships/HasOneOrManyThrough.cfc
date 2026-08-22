@@ -226,6 +226,42 @@ component extends="quick.models.Relationships.BaseRelationship" accessors="true"
 	}
 
 	/**
+	 * Matches the array of entity results to a single value for the relation.
+	 *
+	 * @entities  The entities being eager loaded.
+	 * @results   The relationship results.
+	 * @relation  The name of the relation being loaded.
+	 *
+	 * @doc_generic  quick.models.BaseEntity
+	 * @return       [quick.models.BaseEntity]
+	 */
+	public array function matchOne(
+		required array entities,
+		required array results,
+		required string relation
+	) {
+		var dictionary = buildDictionary( arguments.results );
+		arguments.entities.each( function( entity ) {
+			var key = variables.closestToParent
+				.getLocalKeys()
+				.map( function( localKey ) {
+					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
+						localKey
+					];
+				} )
+				.toList();
+			if ( structKeyExists( dictionary, key ) ) {
+				if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+					arguments.entity.assignRelationship( relation, dictionary[ key ][ 1 ] );
+				} else {
+					arguments.entity[ relation ] = dictionary[ key ][ 1 ];
+				}
+			}
+		} );
+		return arguments.entities;
+	}
+
+	/**
 	 * Gets the query used to check for relation existance.
 	 *
 	 * @base    The base entity for the query.

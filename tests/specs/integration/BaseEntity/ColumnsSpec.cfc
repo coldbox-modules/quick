@@ -2,6 +2,48 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Columns", function() {
+			it( "caches qualified columns across entity instances", function() {
+				request.qualifiedColumnsCalls = 0;
+
+				var firstColumns          = getInstance( "QualifiedColumnsCacheEntity" ).retrieveQualifiedColumns();
+				var callsAfterFirstLookup = request.qualifiedColumnsCalls;
+				var secondColumns         = getInstance( "QualifiedColumnsCacheEntity" ).retrieveQualifiedColumns();
+
+				expect( callsAfterFirstLookup ).toBeGT( 0 );
+				expect( request.qualifiedColumnsCalls ).toBe( callsAfterFirstLookup );
+				expect( secondColumns ).toBe( firstColumns );
+
+				firstColumns.append( "mutated.column" );
+				expect( getInstance( "QualifiedColumnsCacheEntity" ).retrieveQualifiedColumns() ).notToInclude(
+					"mutated.column"
+				);
+			} );
+
+			it( "caches qualified columns separately for table aliases", function() {
+				request.qualifiedColumnsCalls = 0;
+
+				getInstance( "QualifiedColumnsCacheEntity" ).withAlias( "cached_user" ).retrieveQualifiedColumns();
+				var callsAfterFirstLookup = request.qualifiedColumnsCalls;
+				var columns               = getInstance( "QualifiedColumnsCacheEntity" )
+					.withAlias( "cached_user" )
+					.retrieveQualifiedColumns();
+
+				expect( callsAfterFirstLookup ).toBeGT( 0 );
+				expect( request.qualifiedColumnsCalls ).toBe( callsAfterFirstLookup );
+				expect( columns ).toInclude( "cached_user.id" );
+			} );
+
+			it( "keeps runtime persistent attributes isolated from declared column caches", function() {
+				var dynamicEntity = getInstance( "QualifiedColumnsCacheEntity" );
+				dynamicEntity.forceAssignAttribute( "runtime_column", "value" );
+
+				expect( dynamicEntity.retrieveQualifiedColumns() ).toInclude( "users.runtime_column" );
+				expect( dynamicEntity.newEntity().retrieveQualifiedColumns() ).toInclude( "users.runtime_column" );
+				expect( getInstance( "QualifiedColumnsCacheEntity" ).retrieveQualifiedColumns() ).notToInclude(
+					"users.runtime_column"
+				);
+			} );
+
 			it( "can access the attributes by their alias", function() {
 				var link = getInstance( "Link" ).findOrFail( 1 );
 

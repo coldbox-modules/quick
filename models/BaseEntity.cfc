@@ -564,6 +564,7 @@ component accessors="true" {
 				variables._columns[ clearedAttr.column ]     = clearedAttr;
 				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 				variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
+				variables._meta.qualifiedColumnsCacheKey = createUUID();
 			}
 		}
 		if ( arguments.setToNull ) {
@@ -932,6 +933,7 @@ component accessors="true" {
 				variables._columns[ attr.column ]            = attr;
 				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
 				variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
+				variables._meta.qualifiedColumnsCacheKey = createUUID();
 			}
 		} else {
 			guardAgainstNonExistentAttribute( arguments.name );
@@ -968,11 +970,16 @@ component accessors="true" {
 	 * @return       [string]
 	 */
 	public array function retrieveQualifiedColumns() {
-		var attributes = retrieveColumnNames();
-		arraySort( attributes, "textnocase" );
-		return attributes.map( function( column ) {
-			return this.qualifyColumn( column );
-		} );
+		var cacheKey = "quick-metadata:#variables._mapping#-qualified-columns:#variables._meta.qualifiedColumnsCacheKey#:#hash( tableName() )#";
+		return duplicate(
+			variables._cache.getOrSet( cacheKey, function() {
+				var attributes = retrieveColumnNames();
+				arraySort( attributes, "textnocase" );
+				return attributes.map( function( column ) {
+					return this.qualifyColumn( column );
+				} );
+			} )
+		);
 	}
 
 	/*=====================================
@@ -2846,10 +2853,11 @@ component accessors="true" {
 			);
 		}
 
-		variables._fullName        = variables._meta.fullName;
-		variables._entityName      = variables._meta.entityName;
-		variables._table           = variables._meta.table;
-		variables._hasParentEntity = variables._meta.hasParentEntity;
+		variables._fullName                            = variables._meta.fullName;
+		variables._entityName                          = variables._meta.entityName;
+		variables._table                               = variables._meta.table;
+		variables._hasParentEntity                     = variables._meta.hasParentEntity;
+		param variables._meta.qualifiedColumnsCacheKey = "declared";
 
 		if ( variables._hasParentEntity ) {
 			variables._parentDefinition = variables._meta.parentDefinition;

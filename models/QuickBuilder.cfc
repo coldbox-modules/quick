@@ -1020,7 +1020,7 @@ component accessors="true" transientCache="false" {
 			idQuery.where( allKeyNames[ i ], arguments.id[ i ] );
 		}
 		variables.qb.addNestedWhereQuery( idQuery, "and" );
-		return this.first();
+		return this.first( arguments.options );
 	}
 
 	/**

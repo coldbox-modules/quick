@@ -1,10 +1,35 @@
 component extends="tests.resources.ModuleIntegrationSpec" {
 
+	function beforeAll() {
+		super.beforeAll();
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "BaseEntityGetSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "BaseEntityGetSpec" );
+		super.afterAll();
+	}
+
 	function run() {
 		describe( "Get Spec", function() {
 			it( "finds an entity by the primary key", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.isLoaded() ).toBeTrue( "The user instance should be found and loaded, but was not." );
+			} );
+
+			it( "passes query options when finding an entity by primary key", function() {
+				structDelete( request, "baseEntityGetSpecPreQBExecute" );
+
+				var user                     = getInstance( "User" ).find( 1, { datasource : "quick" } );
+				var executionsWithDatasource = request.baseEntityGetSpecPreQBExecute.filter( function( execution ) {
+					return execution.options.keyExists( "datasource" );
+				} );
+
+				expect( user ).notToBeNull();
+				expect( executionsWithDatasource.len() ).toBeGT( 0 );
+				expect( executionsWithDatasource[ 1 ].options.datasource ).toBe( "quick" );
 			} );
 
 			it( "returns null if the record cannot be found", function() {
@@ -436,6 +461,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} );
 			} );
 		} );
+	}
+
+	function preQBExecute(
+		event,
+		interceptData,
+		buffer,
+		rc,
+		prc
+	) {
+		param request.baseEntityGetSpecPreQBExecute = [];
+		request.baseEntityGetSpecPreQBExecute.append( duplicate( arguments.interceptData ) );
 	}
 
 }

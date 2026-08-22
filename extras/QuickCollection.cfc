@@ -6,6 +6,22 @@
 component extends="cfcollection.models.Collection" {
 
 	/**
+	 * Returns a shallow array copy of the collection.
+	 *
+	 * Collection items can be Quick entities, which contain engine-managed
+	 * objects that cannot be deep-duplicated on every CFML engine.
+	 *
+	 * @return [any]
+	 */
+	public array function toArray() {
+		var items = [];
+		for ( var item in variables.collection ) {
+			arrayAppend( items, item );
+		}
+		return items;
+	}
+
+	/**
 	 * Returns a new QuickCollection for the passed in data.
 	 *
 	 * @data     The data to collect.

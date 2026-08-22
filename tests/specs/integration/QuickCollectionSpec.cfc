@@ -31,8 +31,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expectAll( posts.get() ).toSatisfy( function( post ) {
 						return post.isRelationshipLoaded( "author" );
 					}, "The relationship should now be loaded." );
-				},
-				skip = server.keyExists( "boxlang" )
+				}
 			);
 
 			it(
@@ -45,8 +44,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						return post.isRelationshipLoaded( "author" ) && post.isRelationshipLoaded( "tags" );
 					}, "Both relationships should be eager loaded." );
 					expect( variables.queries ).toHaveLength( 3 );
-				},
-				skip = server.keyExists( "boxlang" )
+				}
 			);
 
 			it(
@@ -60,8 +58,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						return post.isRelationshipLoaded( "author" ) && post.isRelationshipLoaded( "tags" );
 					}, "Both relationships should be loaded." );
 					expect( variables.queries ).toHaveLength( 3 );
-				},
-				skip = server.keyExists( "boxlang" )
+				}
 			);
 		} );
 	}

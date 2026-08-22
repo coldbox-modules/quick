@@ -30,6 +30,16 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getUsername() ).toBe( "elpete" );
 			} );
 
+			it( "can use a raw expression as the table source", function() {
+				var users = getInstance( "User" ).newQuery();
+				users.from( users.raw( "users" ) );
+
+				var user = users.where( "username", "elpete" ).firstOrFail();
+
+				expect( user.getId() ).toBe( 1 );
+				expect( user.getUsername() ).toBe( "elpete" );
+			} );
+
 			it( "can use a QuickBuilder instance anywhere a QueryBuilder instance is accepted", function() {
 				var users = getInstance( "User" )
 					.whereIn( "username", getInstance( "User" ).select( "username" ).where( "type", "admin" ) )

@@ -28,6 +28,22 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( author.isLoaded() ).toBeFalse( "A default model is not loaded" );
 				expect( author.retrieveAttributesData() ).toBeEmpty();
 			} );
+
+			it( "returns the default entity as a memento when requested from the relationship", function() {
+				var user            = getInstance( "User" ).findOrFail( 2 );
+				var expectedMemento = user
+					.latestPostWithEmptyDefault()
+					.get()
+					.getMemento();
+				var postMemento = user
+					.latestPostWithEmptyDefault()
+					.asMemento()
+					.get();
+
+				expect( postMemento ).toBeStruct();
+				expect( postMemento ).notToBeComponent();
+				expect( postMemento ).toBe( expectedMemento );
+			} );
 		} );
 	}
 

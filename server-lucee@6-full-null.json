@@ -1,0 +1,21 @@
+{
+    "name":"quick-lucee@6-full-null",
+    "app":{
+        "serverHomeDirectory":".engine/lucee6FullNull",
+        "cfengine":"lucee@6"
+    },
+    "jvm":{
+        "properties":{
+            "lucee.full.null.support":"true"
+        }
+    },
+    "web":{
+        "http":{
+            "port":"60299"
+        },
+        "rewrites":{
+            "enable":"true"
+        }
+    },
+    "openBrowser":"false"
+}

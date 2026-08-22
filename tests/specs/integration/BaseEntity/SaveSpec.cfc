@@ -84,7 +84,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				existingUser.save();
 				var userRowsPostSave = queryExecute( "SELECT * FROM users" );
 				expect( userRowsPostSave ).toHaveLength( 5 );
-				expect( userRowsPostSave.email ).toBe( "" );
+				if ( hasFullNullSupport() ) {
+					expect( userRowsPostSave.email ).toBeNull();
+				} else {
+					expect( userRowsPostSave.email ).toBe( "" );
+				}
 			} );
 
 			it( "uses the sqltype attribute if present for each column", function() {

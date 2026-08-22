@@ -2,10 +2,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Null Values Spec", function() {
-			it( "returns null values as a string by default", function() {
+			it( "returns database nulls according to the engine null-support mode", function() {
 				var user = getInstance( "User" ).findOrFail( 3 );
-				expect( user.getCountryId() ).toBe( "" );
-				expect( user.getMemento().countryId ).toBe( "" );
+
+				if ( hasFullNullSupport() ) {
+					expect( user.getCountryId() ).toBeNull( "The entity getter should preserve the database null." );
+					expect( user.getMemento().countryId ).toBe(
+						"",
+						"Mementifier should apply its configured nullDefaultValue."
+					);
+				} else {
+					expect( user.getCountryId() ).toBe( "" );
+					expect( user.getMemento().countryId ).toBe( "" );
+				}
 			} );
 
 			it( "saves a column containing an empty string as null in the database by default", function() {

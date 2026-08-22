@@ -15,9 +15,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					result.createdDate  = dateTimeFormat( result.createdDate, "yyyy-mm-dd hh:nn:ss" );
 					result.modifiedDate = dateTimeFormat( result.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
 				}
-
 				expect( results[ 1 ] ).toBeStruct();
-				expect( results[ 1 ] ).toBe( {
+				var expectedFirstResult = {
 					"city"            : "Salt Lake City",
 					"countryId"       : "02B84D66-0AA0-F7FB-1F71AFC954843861",
 					"createdDate"     : "2017-07-28 02:06:36",
@@ -36,9 +35,9 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					"type"            : "admin",
 					"username"        : "elpete",
 					"zip"             : "84123"
-				} );
+				};
 				expect( results[ 2 ] ).toBeStruct();
-				expect( results[ 2 ] ).toBe( {
+				var expectedSecondResult = {
 					"city"            : "Salt Lake City",
 					"countryId"       : "02B84D66-0AA0-F7FB-1F71AFC954843861",
 					"createdDate"     : "2017-07-28 02:07:16",
@@ -57,7 +56,28 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					"type"            : "limited",
 					"username"        : "johndoe",
 					"zip"             : "84123"
-				} );
+				};
+				if ( hasFullNullSupport() ) {
+					expect( results[ 1 ].email ).toBeNull();
+					expect( results[ 1 ].streetTwo ).toBeNull();
+					expect( results[ 2 ].email ).toBeNull();
+					expect( results[ 2 ].favoritePost_id ).toBeNull();
+					expect( results[ 2 ].streetTwo ).toBeNull();
+					results[ 1 ].delete( "email" );
+					results[ 1 ].delete( "streetTwo" );
+					results[ 2 ].delete( "email" );
+					results[ 2 ].delete( "favoritePost_id" );
+					results[ 2 ].delete( "streetTwo" );
+					expectedFirstResult.delete( "email" );
+					expectedFirstResult.delete( "streetTwo" );
+					expectedSecondResult.delete( "email" );
+					expectedSecondResult.delete( "favoritePost_id" );
+					expectedSecondResult.delete( "streetTwo" );
+				}
+				expect( results[ 1 ] ).toHaveLength( expectedFirstResult.count() );
+				expect( results[ 2 ] ).toHaveLength( expectedSecondResult.count() );
+				expectedFirstResult.each( ( key, value ) => expect( results[ 1 ][ key ] ).toBe( value ) );
+				expectedSecondResult.each( ( key, value ) => expect( results[ 2 ][ key ] ).toBe( value ) );
 			} );
 
 			it( "can execute with subselects", function() {
@@ -74,7 +94,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( results[ 1 ][ "latestPostId" ] ).toBe( 523526 );
 				expect( results[ 2 ] ).toBeStruct();
 				expect( results[ 2 ] ).toHaveKey( "latestPostId" );
-				expect( results[ 2 ][ "latestPostId" ] ).toBe( "" );
+				if ( hasFullNullSupport() ) {
+					expect( results[ 2 ][ "latestPostId" ] ).toBeNull();
+				} else {
+					expect( results[ 2 ][ "latestPostId" ] ).toBe( "" );
+				}
 			} );
 
 			it( "can do eager loading", function() {

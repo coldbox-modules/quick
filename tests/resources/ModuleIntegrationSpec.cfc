@@ -72,4 +72,13 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 		return arraySlice( createObject( "java", "java.util.HashSet" ).init( arguments.items ).toArray(), 1 );
 	}
 
+	/**
+	 * Returns whether the current Lucee server is running with full null support.
+	 */
+	public boolean function hasFullNullSupport() {
+		return server.keyExists( "lucee" ) &&
+		server.system.properties.keyExists( "lucee.full.null.support" ) &&
+		server.system.properties[ "lucee.full.null.support" ] == "true";
+	}
+
 }

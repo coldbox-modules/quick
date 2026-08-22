@@ -178,7 +178,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var memento          = getInstance( "User" ).findOrFail( 1 ).getMemento();
 				memento.createdDate  = dateTimeFormat( memento.createdDate, "yyyy-mm-dd hh:nn:ss" );
 				memento.modifiedDate = dateTimeFormat( memento.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
-				expect( memento ).toBe( {
+				var expected         = {
 					"id"           : 1,
 					"username"     : "elpete",
 					"firstName"    : "Eric",
@@ -190,7 +190,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					"modifiedDate" : "2017-07-28 02:06:36",
 					"type"         : "admin",
 					"email"        : "",
-					"externalId"   : "1234",
+					"externalID"   : "1234",
 					"address"      : {
 						"streetOne" : "123 Elm Street",
 						"streetTwo" : "",
@@ -199,7 +199,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						"zip"       : "84123"
 					},
 					"favoritePost_id" : "1245"
-				} );
+				};
+				if ( hasFullNullSupport() ) {
+					expect( memento.address.streetTwo ).toBeNull();
+					memento.address.delete( "streetTwo" );
+					expected.address.delete( "streetTwo" );
+				}
+				expect( memento ).toBe( expected );
 			} );
 
 			// https://github.com/coldbox-modules/quick/issues/127

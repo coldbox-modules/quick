@@ -48,7 +48,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				memento.publishedDate       = dateTimeFormat( memento.publishedDate, "yyyy-mm-dd hh:nn:ss" );
 				memento.author.createdDate  = dateTimeFormat( memento.author.createdDate, "yyyy-mm-dd hh:nn:ss" );
 				memento.author.modifiedDate = dateTimeFormat( memento.author.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
-				expect( memento ).toBe( {
+				var expected                = {
 					"post_pk"       : "1245",
 					"body"          : "My awesome post body",
 					"createdDate"   : "2017-07-28 02:07:00",
@@ -77,7 +77,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						},
 						"favoritePost_id" : "1245"
 					}
-				} );
+				};
+				if ( hasFullNullSupport() ) {
+					expect( memento.author.address.streetTwo ).toBeNull();
+					memento.author.address.delete( "streetTwo" );
+					expected.author.address.delete( "streetTwo" );
+				}
+				expect( memento ).toBe( expected );
 			} );
 
 			it( "can check if two entities are the same", function() {

@@ -3581,6 +3581,7 @@ component accessors="true" {
 		var alias = retrieveAliasForColumn( arguments.name );
 		return variables._attributes.keyExists( alias ) &&
 		variables._attributes[ alias ].update &&
+		!variables._attributes[ alias ].readOnly &&
 		!variables._attributes[ alias ].isParentColumn;
 	}
 
@@ -3595,6 +3596,7 @@ component accessors="true" {
 		var alias = retrieveAliasForColumn( arguments.name );
 		return variables._attributes.keyExists( alias ) &&
 		variables._attributes[ alias ].insert &&
+		!variables._attributes[ alias ].readOnly &&
 		!variables._attributes[ alias ].isParentColumn;
 	}
 

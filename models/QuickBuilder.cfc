@@ -476,16 +476,10 @@ component accessors="true" transientCache="false" {
 				arguments.onFalse( this );
 			}
 		} else {
-			var condition       = arguments.condition;
-			var onTrueCallback  = arguments.onTrue;
-			var onFalseCallback = arguments.onFalse;
-			var builder         = this;
+			var selectedCallback = arguments.condition ? arguments.onTrue : arguments.onFalse;
+			var builder          = this;
 			variables.qb.withScoping( function() {
-				if ( condition ) {
-					onTrueCallback( builder );
-				} else {
-					onFalseCallback( builder );
-				}
+				selectedCallback( builder );
 			} );
 		}
 

@@ -37,6 +37,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.isDirty( "username" ) ).toBeFalse();
 				expect( user.isDirty() ).toBeTrue();
 			} );
+
+			it( "can test whether the entity or a specific attribute is clean", function() {
+				var user = getInstance( "User" ).findOrFail( 1 );
+
+				expect( user.isClean() ).toBeTrue();
+				expect( user.isClean( "username" ) ).toBeTrue();
+				expect( user.isClean( "first_name" ) ).toBeTrue();
+
+				user.setUsername( "updated-username" );
+				expect( user.isClean() ).toBeFalse();
+				expect( user.isClean( "username" ) ).toBeFalse();
+				expect( user.isClean( "firstName" ) ).toBeTrue();
+			} );
 		} );
 	}
 

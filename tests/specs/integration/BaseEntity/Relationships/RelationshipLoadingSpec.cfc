@@ -78,6 +78,24 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} );
 			} );
 
+			it( "does not query a hasMany relationship when any composite local key is null", function() {
+				var user = getInstance( "User" ).findOrFail( 2 );
+
+				expect( variables.queries ).toHaveLength( 1 );
+				expect( user.getFavoritePostsComposite() ).toBeArray().toBeEmpty();
+				expect( variables.queries ).toHaveLength( 1 );
+			} );
+
+			it( "queries a hasMany relationship when all composite local keys have values", function() {
+				var user = getInstance( "User" ).findOrFail( 1 );
+
+				var favoritePosts = user.getFavoritePostsComposite();
+
+				expect( favoritePosts ).toHaveLength( 1 );
+				expect( favoritePosts[ 1 ].getPost_Pk() ).toBe( 1245 );
+				expect( variables.queries ).toHaveLength( 2 );
+			} );
+
 			it( "gets a new instance of an entity when calling fill", () => {
 				var elpete  = getInstance( "User" ).findOrFail( 1 );
 				var newPost = elpete.posts().fill( { "body" : "test body" } );

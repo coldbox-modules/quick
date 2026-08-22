@@ -216,6 +216,14 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return hasOne( "Post", "user_id" ).latest();
 	}
 
+	function favoritePostsComposite() {
+		return hasMany(
+			"Post",
+			[ "user_id", "post_pk" ],
+			[ "id", "favoritePost_id" ]
+		);
+	}
+
 	function scopeWithLatestPost( qb ) {
 		qb.addSubselect( "latestPostId", "posts.post_pk" ).with( "dynamicLatestPost" );
 	}

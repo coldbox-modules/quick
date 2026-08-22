@@ -1876,17 +1876,71 @@ component accessors="true" {
 	}
 
 	/**
-	 * Retrieves the result of a loaded relationship.
-	 * If there is no data, returns null instead.
+	 * Retrieves the result of a loaded relationship. If the relationship has not
+	 * been loaded, initializes and returns its relationship type default without
+	 * executing a query. An explicit default value can be supplied instead.
 	 *
-	 * @name  The relationship name to retrieve.
+	 * @name          The relationship name to retrieve.
+	 * @defaultValue  An optional value to assign and return when the relationship
+	 *                has not been loaded.
 	 *
 	 * @return  quick.models.BaseEntity | [quick.models.BaseEntity]
 	 */
-	public any function retrieveRelationship( required string name ) {
-		return variables._relationshipsData.keyExists( arguments.name ) ? variables._relationshipsData[ arguments.name ] : javacast(
-			"null",
-			""
+	public any function retrieveRelationship( required string name, any defaultValue ) {
+		if ( !hasRelationship( arguments.name ) ) {
+			throwRelationshipNotFound( arguments.name );
+		}
+		if ( variables._relationshipsData.keyExists( arguments.name ) ) {
+			return variables._relationshipsData[ arguments.name ];
+		}
+		if ( isRelationshipLoaded( arguments.name ) ) {
+			return javacast( "null", "" );
+		}
+
+		var relationship = resolveRelationship( arguments.name );
+		if ( arguments.keyExists( "defaultValue" ) ) {
+			assignRelationship( arguments.name, arguments.defaultValue );
+			return arguments.defaultValue;
+		}
+
+		relationship.initRelation( [ this ], arguments.name );
+		return variables._relationshipsData.keyExists( arguments.name )
+		 ? variables._relationshipsData[ arguments.name ]
+		 : javacast( "null", "" );
+	}
+
+	/**
+	 * Resolves and validates a relationship definition by name.
+	 *
+	 * @name  The relationship method name to resolve.
+	 *
+	 * @throws  RelationshipNotFound
+	 *
+	 * @return  quick.models.Relationships.BaseRelationship
+	 */
+	private any function resolveRelationship( required string name ) {
+		var relationshipName = arguments.name;
+		var relationship     = ignoreLoadedGuard( function() {
+			return invoke( this, relationshipName );
+		} );
+		if ( !isObject( relationship ) || !structKeyExists( relationship, "relationshipClass" ) ) {
+			throwRelationshipNotFound( arguments.name );
+		}
+		relationship.setRelationMethodName( arguments.name );
+		return relationship;
+	}
+
+	/**
+	 * Throws a consistent exception for an unknown relationship name.
+	 *
+	 * @name  The unknown relationship name.
+	 *
+	 * @throws  RelationshipNotFound
+	 */
+	private void function throwRelationshipNotFound( required string name ) {
+		throw(
+			type    = "RelationshipNotFound",
+			message = "The [#arguments.name#] relationship was not found on the [#entityName()#] entity."
 		);
 	}
 

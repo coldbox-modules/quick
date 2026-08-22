@@ -117,6 +117,23 @@ component accessors="true" implements="IRelationship" {
 	}
 
 	/**
+	 * Initializes a relationship to its unloaded default value.
+	 * To-one relationships default to null. Collection relationships override
+	 * this method to initialize an empty array.
+	 *
+	 * @entities  The entities on which to initialize the relationship.
+	 * @relation  The relationship name to initialize.
+	 *
+	 * @return    [quick.models.BaseEntity]
+	 */
+	public array function initRelation( required array entities, required string relation ) {
+		return arguments.entities.map( function( entity ) {
+			arguments.entity.assignRelationship( arguments.relation, javacast( "null", "" ) );
+			return arguments.entity;
+		} );
+	}
+
+	/**
 	 * Retrieves the entities for eager loading.
 	 *
 	 * @doc_generic  quick.models.BaseEntity

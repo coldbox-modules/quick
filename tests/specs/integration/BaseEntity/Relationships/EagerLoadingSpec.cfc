@@ -260,6 +260,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
 			} );
 
+			it( "preserves constraints from intermediate has many relationships", function() {
+				var country = getInstance( "Country" )
+					.with( "publishedPostTags" )
+					.findOrFail( "02B84D66-0AA0-F7FB-1F71AFC954843861" );
+
+				expect( country.getPublishedPostTags() ).toHaveLength( 2 );
+				expect( country.getPublishedPostTags()[ 1 ].getName() ).toBe( "programming" );
+				expect( country.getPublishedPostTags()[ 2 ].getName() ).toBe( "music" );
+				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+			} );
+
 			it( "can eager load a long has many through relationship", function() {
 				var countries = getInstance( "Country" ).with( "comments" ).get();
 				expect( countries ).toBeArray();

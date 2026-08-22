@@ -19,9 +19,13 @@ component extends="quick.models.BaseEntity" accessors="true" {
         request.preLoadCalled = eventData;
     }
 
-    function postLoad( eventData ) {
-        request.postLoadCalled = eventData;
-    }
+	function postLoad( eventData ) {
+		request.postLoadCalled = eventData;
+	}
+
+	function postReplicate( eventData ) {
+		request.postReplicateCalled = eventData;
+	}
 
     function preInsert( eventData ) {
         request.preInsertCalled = {

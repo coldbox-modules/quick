@@ -26,6 +26,29 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( clonedUser.isLoaded() ).toBeTrue( "The cloned user instance should be marked as loaded, but was not." );
 			} );
 
+			it( "can replicate a loaded entity as a new entity without its key", function() {
+				var user    = getInstance( "User" ).findOrFail( 1 );
+				var replica = user.replicate();
+
+				expect( replica.isLoaded() ).toBeFalse();
+				expect( replica.retrieveAttributesData() ).notToHaveKey( "id" );
+				expect( replica.getUsername() ).toBe( user.getUsername() );
+
+				replica
+					.setUsername( "replicated-user" )
+					.setEmail( "replicated@example.com" )
+					.save();
+				expect( replica.isLoaded() ).toBeTrue();
+				expect( replica.getId() ).notToBe( user.getId() );
+			} );
+
+			it( "can exclude additional attributes when replicating", function() {
+				var replica = getInstance( "User" ).findOrFail( 1 ).replicate( [ "email" ] );
+
+				expect( replica.retrieveAttributesData() ).notToHaveKey( "id" );
+				expect( replica.retrieveAttributesData() ).notToHaveKey( "email" );
+			} );
+
 			it( "can clone a QuickBuilder instance", function() {
 				var userBuilder  = getInstance( "User" ).orderBy( "id" );
 				var userBuilder2 = userBuilder.clone();

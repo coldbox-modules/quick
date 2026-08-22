@@ -1374,6 +1374,31 @@ component accessors="true" {
 		return entityClone;
 	}
 
+	/**
+	 * Creates a new, unloaded entity with this entity's attributes except for
+	 * its primary key and any additional excluded attributes.
+	 *
+	 * @except Additional attribute aliases or column names to exclude.
+	 *
+	 * @return quick.models.BaseEntity
+	 */
+	public any function replicate( array except = [] ) {
+		var attributes = retrieveAttributesData( withoutKey = true, withNulls = true );
+		for ( var attribute in arguments.except ) {
+			attributes.delete( retrieveColumnForAlias( attribute ) );
+		}
+
+		var replica = newEntity().fill( attributes );
+		replica.fireEvent(
+			"postReplicate",
+			{
+				"entity"   : replica,
+				"original" : this
+			}
+		);
+		return replica;
+	}
+
 
 
 	/*===========================================

@@ -862,6 +862,24 @@ component accessors="true" transientCache="false" {
 	}
 
 	/**
+	 * Qualifies a column using the current table for the provided query.
+	 *
+	 * @column The column to qualify.
+	 * @query  The query whose current table should be used.
+	 *
+	 * @return string
+	 */
+	public string function qualifyColumnForQuery( required string column, required any query ) {
+		var tableName = arguments.query.getTableName();
+		if ( arguments.query.getAlias() != "" ) {
+			tableName = arguments.query.getAlias();
+		}
+		return !isNull( tableName ) && isSimpleValue( tableName ) && tableName != ""
+		 ? qualifyColumn( arguments.column, tableName )
+		 : qualifyColumn( arguments.column );
+	}
+
+	/**
 	 * Returns the table name of the underlying entity
 	 */
 	public string function tableName() {

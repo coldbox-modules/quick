@@ -62,6 +62,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( users[ 2 ].getUsername() ).toBe( "elpete2" );
 			} );
 
+			it( "uses the subquery table for columns that are also entity attributes", function() {
+				var sql = getInstance( "User" )
+					.whereNotIn( "country_id", function( q ) {
+						q.from( "countries" ).select( "id" );
+					} )
+					.toSQL();
+
+				expect( sql ).toInclude( "SELECT `countries`.`id` FROM `countries`" );
+				expect( sql ).toInclude( "`users`.`country_id` NOT IN" );
+				expect( sql ).notToInclude( "SELECT `users`.`id` FROM `countries`" );
+			} );
+
 			it( "wraps scopes in parenthesis automatically if the scope contains an or clause", function() {
 				var sql = getInstance( "User" ).canView().toSQL();
 				expect( sql ).toBe(

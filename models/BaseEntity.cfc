@@ -1458,6 +1458,7 @@ component accessors="true" {
 					var relationship = invoke( attributes.entity, attributes.relationshipName );
 					relationship.setRelationMethodName( attributes.relationshipName );
 					assignRelationship( attributes.relationshipName, relationship.get() );
+					attributes.entity.fireRelationshipLoaded( attributes.relationshipName );
 				}
 			}
 			cfthread(
@@ -1471,6 +1472,7 @@ component accessors="true" {
 					var relationship = invoke( this, n );
 					relationship.setRelationMethodName( n );
 					assignRelationship( n, relationship.get() );
+					fireRelationshipLoaded( n );
 				}
 			}
 		}
@@ -1531,6 +1533,48 @@ component accessors="true" {
 			variables._relationshipsData[ arguments.name ] = arguments.value;
 		}
 		variables._relationshipsLoaded[ arguments.name ] = true;
+		return this;
+	}
+
+	/**
+	 * Fires relationship-loaded hooks for each entity in a loaded relationship.
+	 * Calls a relationship-specific method such as `postsLoaded( entity )` and
+	 * announces the `quickRelationshipLoaded` interception point.
+	 *
+	 * @name  The name of the relationship that was loaded.
+	 *
+	 * @returns  quick.models.BaseEntity
+	 */
+	public any function fireRelationshipLoaded( required string name ) {
+		if ( variables._withoutFiringEvents ) {
+			return this;
+		}
+
+		var relationshipData = retrieveRelationship( arguments.name );
+		if ( isNull( relationshipData ) ) {
+			return this;
+		}
+
+		var relationshipEntities = isArray( relationshipData ) ? relationshipData : [ relationshipData ];
+		var relationshipMethod   = arguments.name & "Loaded";
+		for ( var relatedEntity in relationshipEntities ) {
+			if ( eventMethodExists( relationshipMethod ) ) {
+				invoke(
+					this,
+					relationshipMethod,
+					{ entity : relatedEntity }
+				);
+			}
+			fireEvent(
+				"relationshipLoaded",
+				{
+					entity           : relatedEntity,
+					parent           : this,
+					relationshipName : arguments.name
+				}
+			);
+		}
+
 		return this;
 	}
 
@@ -2516,6 +2560,7 @@ component accessors="true" {
 			);
 			relationship.setRelationMethodName( relationshipName );
 			assignRelationship( relationshipName, relationship.get() );
+			fireRelationshipLoaded( relationshipName );
 		}
 
 		return retrieveRelationship( relationshipName );

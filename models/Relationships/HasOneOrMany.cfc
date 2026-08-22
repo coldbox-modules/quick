@@ -303,6 +303,31 @@ component
 	}
 
 	/**
+	 * Deletes entities matching the relationship query and synchronizes a loaded parent cache.
+	 *
+	 * @ids  An optional array of related entity ids to delete.
+	 *
+	 * @return  { "query": QueryBuilder Return Format, "result": struct }
+	 */
+	public struct function deleteAll( array ids = [] ) {
+		var result = variables.relationshipBuilder.deleteAll( arguments.ids );
+
+		if ( variables.parent.isRelationshipLoaded( variables.relationMethodName ) ) {
+			if ( arguments.ids.isEmpty() ) {
+				var loadedValue = variables.parent.retrieveRelationship( variables.relationMethodName );
+				variables.parent.assignRelationship(
+					variables.relationMethodName,
+					isArray( loadedValue ) ? [] : javacast( "null", "" )
+				);
+			} else {
+				variables.parent.clearRelationship( variables.relationMethodName );
+			}
+		}
+
+		return result;
+	}
+
+	/**
 	 * Associates an entity or key value for an entity to the parent entity.
 	 *
 	 * @entity   An entity or key value for an entity to associate.

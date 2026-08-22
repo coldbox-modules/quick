@@ -79,6 +79,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getPosts()[ 4 ].isSameAs( savedPosts[ 2 ] ) ).toBeTrue();
 			} );
 
+			it( "clears an already-loaded relationship after deleting all related entities", function() {
+				var user = getInstance( "User" ).findOrFail( 1 );
+				expect( user.getPosts() ).toHaveLength( 2 );
+
+				var result = user.posts().deleteAll();
+
+				expect( result.result.recordCount ).toBe( 2 );
+				expect( user.isRelationshipLoaded( "posts" ) ).toBeTrue();
+				expect( user.getPosts() ).toBeArray().toBeEmpty();
+				expect( user.fresh().getPosts() ).toBeArray().toBeEmpty();
+			} );
+
 			it( "can save many ids at a time", function() {
 				var newPostA = getInstance( "Post" );
 				newPostA.setBody( "A new post by me!" );

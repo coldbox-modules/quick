@@ -1067,13 +1067,19 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function fresh() {
-		return newQuery()
+		var freshEntity = isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery.clone().offset( 0 );
+		var freshData   = freshEntity
+			.from( tableName() )
 			.where( function( q ) {
 				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
-					q.where( keyName, keyValue );
+					q.where( this.qualifyColumn( keyName ), keyValue );
 				} );
 			} )
 			.first();
+		if ( !isStruct( freshData ) || structKeyExists( freshData, "isQuickEntity" ) ) {
+			return freshData;
+		}
+		return newEntity().hydrate( freshData ).set_refreshQuery( variables._refreshQuery );
 	}
 
 	/**

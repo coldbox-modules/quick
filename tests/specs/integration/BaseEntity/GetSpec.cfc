@@ -39,6 +39,22 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getFullName() ).toBe( "Ada Peterson" );
 			} );
 
+			it( "reapplies subselects when retrieving fresh and refreshed entities", function() {
+				var user = getInstance( "User" ).withLatestPostId().findOrFail( 1 );
+				expect( user.getLatestPostId() ).toBe( 523526 );
+
+				queryExecute(
+					"UPDATE `my_posts` SET `created_date` = ? WHERE `post_pk` = ?",
+					[ "2030-01-01 00:00:00", 1245 ]
+				);
+
+				var freshUser = user.fresh();
+				expect( freshUser.getLatestPostId() ).toBe( 1245 );
+
+				user.refresh();
+				expect( user.getLatestPostId() ).toBe( 1245 );
+			} );
+
 			it( "can get a fresh instance from the database", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getUsername() ).toBe( "elpete" );

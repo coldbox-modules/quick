@@ -381,6 +381,16 @@ component accessors="true" {
 		string tableName        = this.tableName(),
 		boolean useParentLookup = true
 	) {
+		if ( reFindNoCase( "\s+AS\s+", arguments.column ) ) {
+			var source = trim( reReplaceNoCase( arguments.column, "\s+AS\s+.*$", "" ) );
+			var alias  = trim( reReplaceNoCase( arguments.column, "^.*?\s+AS\s+", "" ) );
+			return qualifyColumn(
+				column          = source,
+				tableName       = arguments.tableName,
+				useParentLookup = arguments.useParentLookup
+			) & " AS " & alias;
+		}
+
 		if (
 			findNoCase( ".", arguments.column ) != 0 ||
 			!hasAttribute( arguments.column ) ||

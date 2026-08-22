@@ -77,6 +77,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( results[ 2 ][ "latestPostId" ] ).toBe( "" );
 			} );
 
+			it( "can select an aliased entity attribute when returning query data", function() {
+				var result = getInstance( "User" )
+					.select( [ "firstName AS firstName" ] )
+					.where( "id", 1 )
+					.asQuery( withAliases = false )
+					.first();
+
+				expect( result ).toBeStruct();
+				expect( result ).toHaveKey( "firstName" );
+				expect( result.firstName ).toBe( "Eric" );
+			} );
+
 			it( "can do eager loading", function() {
 				var results = getInstance( "Post" )
 					.newQuery()

@@ -37,6 +37,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			describe( "updateOrCreate", function() {
+				it( "uses attribute aliases when finding an existing entity", function() {
+					var post = getInstance( "PostAlt" ).updateOrCreate(
+						{ "id" : 1245 },
+						{ "body" : "Updated through an aliased primary key" }
+					);
+
+					expect( post.getId() ).toBe( 1245 );
+					expect( post.getBody() ).toBe( "Updated through an aliased primary key" );
+					expect( getInstance( "PostAlt" ).where( "body", "Updated through an aliased primary key" ).count() ).toBe(
+						1
+					);
+				} );
+
 				it( "updates an existing entity", function() {
 					var user = getInstance( "User" ).updateOrCreate(
 						{ "username" : "elpete" },

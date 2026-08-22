@@ -34,6 +34,35 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				},
 				skip = server.keyExists( "boxlang" )
 			);
+
+			it(
+				title = "can eager load relationships when retrieving a QuickCollection",
+				body  = function() {
+					var posts = getInstance( "CollectionPost" ).with( [ "author", "tags" ] ).get();
+
+					expect( posts ).toBeInstanceOf( "extras.QuickCollection" );
+					expectAll( posts.get() ).toSatisfy( function( post ) {
+						return post.isRelationshipLoaded( "author" ) && post.isRelationshipLoaded( "tags" );
+					}, "Both relationships should be eager loaded." );
+					expect( variables.queries ).toHaveLength( 3 );
+				},
+				skip = server.keyExists( "boxlang" )
+			);
+
+			it(
+				title = "can load multiple relationships on an existing QuickCollection",
+				body  = function() {
+					var posts = getInstance( "CollectionPost" ).all();
+
+					posts.load( [ "author", "tags" ] );
+
+					expectAll( posts.get() ).toSatisfy( function( post ) {
+						return post.isRelationshipLoaded( "author" ) && post.isRelationshipLoaded( "tags" );
+					}, "Both relationships should be loaded." );
+					expect( variables.queries ).toHaveLength( 3 );
+				},
+				skip = server.keyExists( "boxlang" )
+			);
 		} );
 	}
 

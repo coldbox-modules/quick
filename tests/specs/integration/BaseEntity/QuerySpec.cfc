@@ -51,6 +51,31 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				expect( sql ).toInclude( "UPDATE `users` SET `username` = ?" );
 			} );
+
+			it( "can upsert records through the entity query API", function() {
+				getInstance( "User" ).upsert(
+					values = [
+						{
+							"id"        : 1,
+							"username"  : "elpete",
+							"firstName" : "Updated",
+							"lastName"  : "Peterson"
+						},
+						{
+							"id"        : 99,
+							"username"  : "new-user",
+							"firstName" : "New",
+							"lastName"  : "User"
+						}
+					],
+					target     = "id",
+					update     = [ "firstName" ],
+					matchNulls = false
+				);
+
+				expect( getInstance( "User" ).findOrFail( 1 ).getFirstName() ).toBe( "Updated" );
+				expect( getInstance( "User" ).findOrFail( 99 ).getFirstName() ).toBe( "New" );
+			} );
 		} );
 	}
 

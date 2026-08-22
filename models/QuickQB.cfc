@@ -354,14 +354,27 @@ component
 		return super.update( argumentCollection = arguments );
 	}
 
+	/**
+	 * Inserts rows that do not exist and updates rows matching the target columns.
+	 *
+	 * @values          The values to insert or the columns selected by the source query.
+	 * @target          The columns used to determine whether a row already exists.
+	 * @update          The columns or explicit values to update when a row matches.
+	 * @source          An optional query builder or callback used as the source rows.
+	 * @deleteUnmatched Whether to delete target rows missing from the source, or a callback constraining those deletes.
+	 * @options         Options passed to `queryExecute`.
+	 * @toSql           Whether to return SQL instead of executing the query.
+	 * @matchNulls      Whether two NULL target values should be considered a match. Supported by MERGE grammars.
+	 */
 	public any function upsert(
 		required any values,
 		required any target,
 		any update,
 		any source,
-		boolean deleteUnmatched = false,
-		struct options          = {},
-		boolean toSql           = false
+		any deleteUnmatched = false,
+		struct options      = {},
+		boolean toSql       = false,
+		boolean matchNulls  = false
 	) {
 		if (
 			!isNull( arguments.source ) && isStruct( arguments.source ) && structKeyExists(

@@ -38,6 +38,23 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						expect( users ).toHaveLength( 1 );
 					} );
 
+					it( "uses a whereIn subquery table inside whereHas", function() {
+						queryExecute(
+							"INSERT INTO family_parents ( parentID, familyID ) VALUES ( :parentID, :familyID )",
+							{ "parentID" : 1, "familyID" : 2 },
+							{ "datasource" : "quick" }
+						);
+
+						var query = getInstance( "Registration" ).whereHas( "child", function( q ) {
+							q.whereIn( "familyID", function( subquery ) {
+								subquery.from( "family_parents" ).select( "familyID" );
+							} );
+						} );
+
+						expect( query.toSQL() ).toInclude( "SELECT `family_parents`.`familyID` FROM `family_parents`" );
+						expect( query.get() ).toBeEmpty();
+					} );
+
 					it( "automatically groups where clauses with an OR combinator inside whereHas", function() {
 						var sql = getInstance( "User" )
 							.whereHas( "posts", function( q ) {

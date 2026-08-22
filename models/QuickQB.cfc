@@ -80,6 +80,15 @@ component
 	) {
 		if ( isStruct( arguments.values ) && structKeyExists( arguments.values, "isQuickBuilder" ) ) {
 			arguments.values = arguments.values.getQB();
+		} else if ( isClosure( arguments.values ) || isCustomFunction( arguments.values ) ) {
+			var callback     = arguments.values;
+			var quickBuilder = variables.quickBuilder;
+			arguments.values = function( query ) {
+				query.setColumnFormatter( function( column ) {
+					return quickBuilder.qualifyColumnForQuery( column, query );
+				} );
+				return callback( query );
+			};
 		}
 
 		return super.whereIn( argumentCollection = arguments );

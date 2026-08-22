@@ -114,9 +114,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( pn.getConfirmed() ).toBe( "casted-null" );
 			} );
 
-			it( "correctly casts child entities", () => {
+			it( "casts single table discriminated child entities loaded through the parent", () => {
 				var product = getInstance( "BaseProduct" ).firstOrFail();
+
+				expect( product ).toBeInstanceOf( "ProductBook" );
 				expect( product.getMetadata() ).toBeStruct();
+				expect( product.getMemento().metadata ).toBeStruct();
 			} );
 
 			it( "can maintain casts when loading a discriminated child through the parent", () => {

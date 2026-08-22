@@ -41,6 +41,16 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( users[ 2 ].getId() ).toBe( 4 );
 				expect( users[ 2 ].getUsername() ).toBe( "elpete2" );
 			} );
+
+			it( "can pass simple values directly to QuickQB update", function() {
+				var sql = getInstance( "User" )
+					.newQuery()
+					.getQB()
+					.where( "id", 1 )
+					.update( values = { "username" : "someValue" }, toSql = true );
+
+				expect( sql ).toInclude( "UPDATE `users` SET `username` = ?" );
+			} );
 		} );
 	}
 

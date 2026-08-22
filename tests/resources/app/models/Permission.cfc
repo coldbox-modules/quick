@@ -7,4 +7,8 @@ component extends="quick.models.BaseEntity" accessors="true" {
         return belongsToMany( "Role" );
     }
 
+    function usersThroughRoles() {
+        return hasManyThrough( [ "roles", "users" ] );
+    }
+
 }

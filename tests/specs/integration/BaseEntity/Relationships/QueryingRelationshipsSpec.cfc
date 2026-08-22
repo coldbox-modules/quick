@@ -224,6 +224,21 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						expect( countries ).toBeArray();
 						expect( countries ).toHaveLength( 2 );
 					} );
+
+					it( "can eager load and check three nested hasManyThrough relationships", function() {
+						var query = getInstance( "Country" )
+							.with( "permissions.usersThroughRoles.commentsThroughPosts" )
+							.has( "permissions.usersThroughRoles.commentsThroughPosts" );
+
+						expect( query.toSQL() ).toInclude( "EXISTS" );
+
+						var countries = getInstance( "Country" )
+							.has( "permissions.usersThroughRoles.commentsThroughPosts" )
+							.get();
+
+						expect( countries ).toBeArray();
+						expect( countries ).toHaveLength( 2 );
+					} );
 				} );
 
 				describe( "hasOne", function() {

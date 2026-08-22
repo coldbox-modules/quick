@@ -580,14 +580,19 @@ component
 			q = q.getQB();
 		}
 
-		arguments.relationQuery = invoke(
-			arguments.relationQuery,
-			"whereExists",
-			{ "query" : q }
-		);
+		var parentQuery            = arguments.relationQuery;
+		arguments.relationQuery    = q;
+		arguments.relationshipName = listRest( arguments.relationshipName, "." );
+		var nestedQuery            = hasNested( argumentCollection = arguments );
+		if ( structKeyExists( nestedQuery, "getQB" ) ) {
+			nestedQuery = nestedQuery.getQB();
+		}
 
-		var result = hasNested( argumentCollection = arguments );
-		return structKeyExists( result, "getQB" ) ? result.getQB() : result;
+		return invoke(
+			parentQuery,
+			"whereExists",
+			{ "query" : nestedQuery }
+		);
 	}
 
 	/**

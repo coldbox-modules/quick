@@ -90,6 +90,22 @@ component accessors="true" {
 		persistent="false";
 
 	/**
+	 * Whether this entity uses soft deletes and the attribute that stores the deletion timestamp.
+	 */
+	property
+		name      ="_softDeletes"
+		default   ="false"
+		persistent="false";
+
+	/**
+	 * The attribute that stores the soft-delete timestamp.
+	 */
+	property
+		name      ="_softDeleteColumn"
+		default   ="deletedAt"
+		persistent="false";
+
+	/**
 	 * The primary key name for the entity.
 	 */
 	property
@@ -318,6 +334,8 @@ component accessors="true" {
 		param variables._discriminatorValue      = "";
 		param variables._hasDiscriminatorValue   = false;
 		param variables._singleTableInheritance  = false;
+		param variables._softDeletes             = false;
+		param variables._softDeleteColumn        = "deletedAt";
 		variables._saving                        = false;
 		return this;
 	}
@@ -1791,14 +1809,43 @@ component accessors="true" {
 			"Did you maybe mean to use `deleteAll`?"
 		);
 
-		var deleteQuery       = newQuery();
-		var entityKeyNames    = keyNames();
-		var entityKeyValues   = keyValues();
-		var deleteConstraints = deleteQuery.getQB().forNestedWhere();
-		for ( var i = 1; i <= entityKeyNames.len(); i++ ) {
-			deleteConstraints.where( entityKeyNames[ i ], entityKeyValues[ i ] );
+		if ( usesSoftDeletes() ) {
+			var column       = getSoftDeleteColumn();
+			var deletedAt    = now();
+			var deleteQuery  = newQuery().withoutGlobalScope( "softDeletes" );
+			var entityKeys   = keyNames();
+			var entityValues = keyValues();
+			for ( var i = 1; i <= entityKeys.len(); i++ ) {
+				deleteQuery.where( entityKeys[ i ], entityValues[ i ] );
+			}
+			deleteQuery.updateAll( { "#column#" : deletedAt } );
+			assignAttribute( column, deletedAt );
+			assignOriginalAttributes( retrieveAttributesData() );
+			fireEvent( "postDelete", { entity : this } );
+			return this;
 		}
-		deleteQuery.getQB().addNestedWhereQuery( deleteConstraints );
+
+		forceDelete( fireEvents = false );
+		fireEvent( "postDelete", { entity : this } );
+		return this;
+	}
+
+	/**
+	 * Permanently deletes a loaded entity, bypassing soft deletes.
+	 */
+	public any function forceDelete( boolean fireEvents = true ) {
+		guardReadOnly();
+		guardAgainstNotLoaded( "This instance is not loaded so it cannot be force deleted." );
+		if ( arguments.fireEvents ) {
+			fireEvent( "preDelete", { entity : this } );
+		}
+
+		var deleteQuery  = newQuery().withoutGlobalScope( "softDeletes" );
+		var entityKeys   = keyNames();
+		var entityValues = keyValues();
+		for ( var i = 1; i <= entityKeys.len(); i++ ) {
+			deleteQuery.where( entityKeys[ i ], entityValues[ i ] );
+		}
 		deleteQuery.delete();
 
 		if ( hasParentEntity() ) {
@@ -1813,7 +1860,9 @@ component accessors="true" {
 		}
 
 		variables._loaded = false;
-		fireEvent( "postDelete", { entity : this } );
+		if ( arguments.fireEvents ) {
+			fireEvent( "postDelete", { entity : this } );
+		}
 		return this;
 	}
 
@@ -3458,6 +3507,52 @@ component accessors="true" {
 		return this;
 	}
 
+	/**
+	 * Returns whether this entity is configured to use soft deletes.
+	 */
+	public boolean function usesSoftDeletes() {
+		return variables._softDeletes;
+	}
+
+	/**
+	 * Returns the entity attribute that stores the soft-delete timestamp.
+	 */
+	public string function getSoftDeleteColumn() {
+		return variables._softDeleteColumn;
+	}
+
+	/**
+	 * Returns whether this entity has been soft deleted.
+	 */
+	public boolean function trashed() {
+		return usesSoftDeletes() && !isNullAttribute( getSoftDeleteColumn() );
+	}
+
+	/**
+	 * Restores a soft-deleted entity.
+	 */
+	public any function restore() {
+		if ( !usesSoftDeletes() ) {
+			throw(
+				type    = "QuickSoftDeletesNotEnabled",
+				message = "[#entityName()#] is not configured to use soft deletes."
+			);
+		}
+		guardAgainstNotLoaded( "This instance is not loaded so it cannot be restored." );
+		var column = getSoftDeleteColumn();
+		newQuery()
+			.withoutGlobalScope( "softDeletes" )
+			.where( function( q ) {
+				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
+					q.where( keyName, keyValue );
+				} );
+			} )
+			.updateAll( { "#column#" : "" } );
+		clearAttribute( column );
+		assignOriginalAttributes( retrieveAttributesData() );
+		return this;
+	}
+
 
 	/**
 	 * If the quickbuilder instance exists return it, else create it, cache it and return it
@@ -3603,6 +3698,12 @@ component accessors="true" {
 				meta[ "table" ]                                    = meta.originalMetadata.table;
 				param meta.originalMetadata.readonly               = false;
 				meta[ "readonly" ]                                 = meta.originalMetadata.readonly;
+				param meta.originalMetadata.softDeletes            = false;
+				param meta.originalMetadata.softDeleteColumn       = "deletedAt";
+				meta[ "softDeletes" ] = isBoolean( meta.originalMetadata.softDeletes )
+				 ? meta.originalMetadata.softDeletes
+				 : lCase( trim( meta.originalMetadata.softDeletes & "" ) ) == "true";
+				meta[ "softDeleteColumn" ]                         = meta.originalMetadata.softDeleteColumn;
 				param meta.originalMetadata.joincolumn             = "";
 				param meta.originalMetadata.discriminatorValue     = "";
 				param meta.originalMetadata.singleTableInheritance = false;
@@ -3719,6 +3820,8 @@ component accessors="true" {
 			variables._queryOptions = { datasource : variables._meta.originalMetadata.datasource };
 		}
 		variables._readonly                = variables._meta.readonly;
+		variables._softDeletes             = variables._meta.softDeletes;
+		variables._softDeleteColumn        = variables._meta.softDeleteColumn;
 		variables._attributes              = variables._meta.attributes;
 		variables._columns                 = variables._meta.columns;
 		variables._functionNames           = variables._meta.functionNames;
@@ -3766,6 +3869,12 @@ component accessors="true" {
 					structDelete( variables, attributeName );
 				}
 			}
+		}
+		if ( variables._softDeletes && !hasAttribute( variables._softDeleteColumn ) ) {
+			throw(
+				type    = "QuickSoftDeleteColumnNotFound",
+				message = "The soft delete attribute [#variables._softDeleteColumn#] was not found on [#entityName()#]."
+			);
 		}
 		variables._casts = variables._meta.casts;
 	}

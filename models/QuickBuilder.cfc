@@ -701,6 +701,47 @@ component accessors="true" transientCache="false" {
 			}
 			variables.qb.addNestedWhereQuery( idConstraints );
 		}
+		if ( getEntity().usesSoftDeletes() ) {
+			activateGlobalScopes();
+			return updateAll( { "#getEntity().getSoftDeleteColumn()#" : now() } );
+		}
+		return variables.qb.delete();
+	}
+
+	/**
+	 * Restores all soft-deleted entities matching the configured query.
+	 */
+	public struct function restoreAll() {
+		if ( !getEntity().usesSoftDeletes() ) {
+			throw(
+				type    = "QuickSoftDeletesNotEnabled",
+				message = "[#getEntity().entityName()#] is not configured to use soft deletes."
+			);
+		}
+		withoutGlobalScope( "softDeletes" );
+		return updateAll( { "#getEntity().getSoftDeleteColumn()#" : "" } );
+	}
+
+	/**
+	 * Permanently deletes all entities matching the configured query.
+	 */
+	public struct function forceDeleteAll( array ids = [] ) {
+		getEntity().guardReadOnly();
+		if ( !arrayIsEmpty( arguments.ids ) ) {
+			variables.qb.where( function( q1 ) {
+				ids.each( function( id ) {
+					var values = arrayWrap( id );
+					getEntity().guardAgainstKeyLengthMismatch( values );
+					q1.orWhere( function( q2 ) {
+						getEntity()
+							.keyNames()
+							.each( function( keyName, i ) {
+								q2.where( keyName, values[ i ] );
+							} );
+					} );
+				} );
+			} );
+		}
 		return variables.qb.delete();
 	}
 
@@ -1766,12 +1807,34 @@ component accessors="true" transientCache="false" {
 			variables._applyingGlobalScopes = true;
 
 			if ( !variables._globalScopeExcludeAll ) {
+				if (
+					getEntity().usesSoftDeletes() &&
+					!variables._globalScopeExclusions.contains( "softdeletes" )
+				) {
+					variables.qb.whereNull( getEntity().getSoftDeleteColumn() );
+				}
 				getEntity().applyGlobalScopes( this );
 			}
 
 			variables._applyingGlobalScopes = false;
 			variables._globalScopesApplied  = true;
 		}
+		return this;
+	}
+
+	/**
+	 * Includes soft-deleted entities in this query.
+	 */
+	public any function withTrashed() {
+		return withoutGlobalScope( "softDeletes" );
+	}
+
+	/**
+	 * Restricts this query to only soft-deleted entities.
+	 */
+	public any function onlyTrashed() {
+		withoutGlobalScope( "softDeletes" );
+		variables.qb.whereNotNull( getEntity().getSoftDeleteColumn() );
 		return this;
 	}
 

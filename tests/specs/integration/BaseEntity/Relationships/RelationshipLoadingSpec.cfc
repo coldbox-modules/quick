@@ -18,6 +18,25 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				variables.queries = [];
 			} );
 
+			it( "returns empty relationship values for new entities", function() {
+				var post = getInstance( "Post" );
+				var user = getInstance( "User" );
+
+				expect( post.getAuthor() ).toBeNull();
+				expect( user.getLatestPost() ).toBeNull();
+				expect( user.getPosts() ).toBeArray().toBeEmpty();
+				expect( post.getTags() ).toBeArray().toBeEmpty();
+				expect( variables.queries ).toBeEmpty();
+			} );
+
+			it( "includes empty relationships in mementos for new entities", function() {
+				var memento = getInstance( "User" ).getMemento( includes = [ "latestPost", "posts" ] );
+
+				expect( memento.latestPost ).toBe( "" );
+				expect( memento.posts ).toBeArray().toBeEmpty();
+				expect( variables.queries ).toBeEmpty();
+			} );
+
 			describe( "Eager Loading Spec", function() {
 				it( "can load a relationship for an entity", function() {
 					var elpete = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();

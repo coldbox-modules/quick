@@ -2940,6 +2940,20 @@ component accessors="true" {
 			return retrieveRelationship( relationshipName );
 		}
 
+		if ( !isRelationshipLoaded( relationshipName ) && !isLoaded() ) {
+			var relationshipArguments = arguments.missingMethodArguments;
+			var unloadedRelationship  = ignoreLoadedGuard( function() {
+				return invoke(
+					this,
+					relationshipName,
+					relationshipArguments
+				);
+			} );
+			unloadedRelationship.setRelationMethodName( relationshipName );
+			unloadedRelationship.initRelation( [ this ], relationshipName );
+			return retrieveRelationship( relationshipName );
+		}
+
 		if ( !isRelationshipLoaded( relationshipName ) && variables._preventLazyLoading ) {
 			variables._lazyLoadingViolationCallback( this, relationshipName );
 		}

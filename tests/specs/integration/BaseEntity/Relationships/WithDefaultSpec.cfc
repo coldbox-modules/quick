@@ -2,12 +2,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "WithDefault Spec", function() {
-			it( "will throw an exception when retrieving a relation on an unloaded entity", function() {
-				var post = getInstance( "Post" );
+			it( "returns a configured default for a relation on an unloaded entity", function() {
+				var post   = getInstance( "Post" );
+				var author = post.getAuthorWithEmptyDefault();
 
-				expect( function() {
-					post.getAuthor();
-				} ).toThrow( message = "Retrieving an unloaded entity should throw an exception" );
+				expect( author ).toBeInstanceOf( "User" );
+				expect( author.isLoaded() ).toBeFalse( "A default model is not loaded" );
+				expect( author.retrieveAttributesData() ).toBeEmpty();
 			} );
 
 			it( "can load a entity and return a default entity if there is no owning entity", function() {

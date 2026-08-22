@@ -9,6 +9,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( country.getLatestPost().getPost_Pk() ).toBe( 523526 );
 				expect( country.getLatestPost().getBody() ).toBe( "My second awesome post body" );
 			} );
+
+			it( "can start with a hasOne relationship", function() {
+				var user = getInstance( "User" ).findOrFail( 1 );
+
+				expect( user.getFavoritePostAuthor() ).notToBeNull();
+				expect( user.getFavoritePostAuthor().getId() ).toBe( user.getId() );
+			} );
 		} );
 	}
 

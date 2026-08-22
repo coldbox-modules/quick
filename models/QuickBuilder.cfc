@@ -887,6 +887,9 @@ component accessors="true" transientCache="false" {
 				}
 			}
 		}
+		if ( !structKeyExists( arguments, "tableName" ) || isNull( arguments.tableName ) ) {
+			return getEntity().qualifyColumn( arguments.column );
+		}
 		return getEntity().qualifyColumn( argumentCollection = arguments );
 	}
 
@@ -1519,7 +1522,7 @@ component accessors="true" transientCache="false" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function withoutGlobalScope( any name ) {
-		if ( !structKeyExists( arguments, "name" ) ) {
+		if ( !structKeyExists( arguments, "name" ) || isNull( arguments.name ) ) {
 			variables._globalScopeExcludeAll = true;
 			return this;
 		}

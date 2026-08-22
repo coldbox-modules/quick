@@ -83,6 +83,23 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.posts().count() ).toBe( 3 );
 			} );
 
+			it( "assigns a newly created related entity to the belongsTo relationship", function() {
+				var post      = getInstance( "Post" ).findOrFail( 7777 );
+				var newAuthor = post
+					.author()
+					.create( {
+						"username"   : "relationship-author",
+						"first_name" : "Relationship",
+						"last_name"  : "Author",
+						"password"   : hash( "password" )
+					} );
+
+				expect( post.isRelationshipLoaded( "author" ) ).toBeTrue();
+				expect( post.getAuthor().isSameAs( newAuthor ) ).toBeTrue();
+				expect( post.getUser_Id() ).toBe( newAuthor.getId() );
+				expect( post.fresh().getAuthor() ).toBeNull();
+			} );
+
 			it( "can set the associated relationship by calling a relationship setter", function() {
 				var user    = getInstance( "User" ).find( 1 );
 				var newPost = getInstance( "Post" ).create( {

@@ -272,7 +272,9 @@ component
 			}, {} ),
 			force = true
 		);
-		return saveMany( argumentCollection = arguments );
+		var savedEntities = saveMany( argumentCollection = arguments );
+		variables.parent.assignRelationship( variables.relationMethodName, savedEntities );
+		return savedEntities;
 	}
 
 	/**
@@ -284,11 +286,45 @@ component
 	 * @return        [quick.models.BaseEntity]
 	 */
 	public array function saveMany( required any entities ) {
-		arguments.entities = isArray( arguments.entities ) ? arguments.entities : [ arguments.entities ];
+		arguments.entities        = isArray( arguments.entities ) ? arguments.entities : [ arguments.entities ];
+		var relationshipWasLoaded = variables.parent.isRelationshipLoaded( variables.relationMethodName );
+		var loadedEntities        = relationshipWasLoaded ? variables.parent.retrieveRelationship(
+			variables.relationMethodName
+		) : [];
 
-		return arguments.entities.map( function( entity ) {
+		var savedEntities = arguments.entities.map( function( entity ) {
 			return save( arguments.entity );
 		} );
+		if ( relationshipWasLoaded ) {
+			loadedEntities.append( savedEntities, true );
+			variables.parent.assignRelationship( variables.relationMethodName, loadedEntities );
+		}
+		return savedEntities;
+	}
+
+	/**
+	 * Deletes entities matching the relationship query and synchronizes a loaded parent cache.
+	 *
+	 * @ids  An optional array of related entity ids to delete.
+	 *
+	 * @return  { "query": QueryBuilder Return Format, "result": struct }
+	 */
+	public struct function deleteAll( array ids = [] ) {
+		var result = variables.relationshipBuilder.deleteAll( arguments.ids );
+
+		if ( variables.parent.isRelationshipLoaded( variables.relationMethodName ) ) {
+			if ( arguments.ids.isEmpty() ) {
+				var loadedValue = variables.parent.retrieveRelationship( variables.relationMethodName );
+				variables.parent.assignRelationship(
+					variables.relationMethodName,
+					isArray( loadedValue ) ? [] : javacast( "null", "" )
+				);
+			} else {
+				variables.parent.clearRelationship( variables.relationMethodName );
+			}
+		}
+
+		return result;
 	}
 
 	/**
@@ -316,12 +352,36 @@ component
 	/**
 	 * Creates a new entity, associates it to the parent entity, and returns it.
 	 *
-	 * @attributes  The attributes for the new related entity.
+	 * @attributes           The attributes for the new related entity.
+	 * @inverseRelationship  An optional relationship name on the new entity to
+	 *                       seed with the parent before saving.
 	 *
 	 * @return      quick.models.BaseEntity
 	 */
-	public any function create( struct attributes = {} ) {
-		return newEntity().fill( arguments.attributes ).save();
+	public any function create( struct attributes = {}, string inverseRelationship ) {
+		var createdEntity = newEntity().fill( arguments.attributes );
+		if ( !isNull( arguments.inverseRelationship ) ) {
+			if ( !createdEntity.hasRelationship( arguments.inverseRelationship ) ) {
+				throw(
+					type    = "RelationshipNotFound",
+					message = "The [#arguments.inverseRelationship#] relationship was not found on the [#createdEntity.entityName()#] entity."
+				);
+			}
+			createdEntity.assignRelationship( arguments.inverseRelationship, variables.parent );
+		}
+		createdEntity.save();
+
+		if ( variables.parent.isRelationshipLoaded( variables.relationMethodName ) ) {
+			var loadedValue = variables.parent.retrieveRelationship( variables.relationMethodName );
+			if ( isArray( loadedValue ) ) {
+				loadedValue.append( createdEntity );
+				variables.parent.assignRelationship( variables.relationMethodName, loadedValue );
+			} else {
+				variables.parent.assignRelationship( variables.relationMethodName, createdEntity );
+			}
+		}
+
+		return createdEntity;
 	}
 
 	/**

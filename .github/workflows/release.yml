@@ -48,6 +48,8 @@ jobs:
           box install
           git apply --unidiff-zero .github/patches/testbox-full-null.patch
           box config set modules.commandbox-dotenv.checkEnvPreServerStart=false
+          box install ${{ matrix.coldbox }} --noSave
+          git apply --unidiff-zero .github/patches/coldbox-full-null.patch
 
       - name: Start server
         env:

@@ -1,0 +1,6 @@
+diff --git a/tests/resources/app/coldbox/system/testing/VirtualApp.cfc b/tests/resources/app/coldbox/system/testing/VirtualApp.cfc
+--- a/tests/resources/app/coldbox/system/testing/VirtualApp.cfc
++++ b/tests/resources/app/coldbox/system/testing/VirtualApp.cfc
+@@ -94 +94 @@
+-		return !isNull( application.cbController );
++		return application.keyExists( "cbController" ) && !isNull( application.cbController );

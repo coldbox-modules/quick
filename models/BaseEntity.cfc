@@ -2792,7 +2792,11 @@ component accessors="true" {
 					var meta                   = {};
 					meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
 					meta[ "localMetadata" ]    = getMetadata( this );
-					var hasAccessorsMetadata   = false;
+					if ( server.keyExists( "boxlang" ) ) {
+						normalizeBoxLangMetadata( meta.originalMetadata );
+						normalizeBoxLangMetadata( meta.localMetadata );
+					}
+					var hasAccessorsMetadata = false;
 					if ( meta.localMetadata.keyExists( "accessors" ) ) {
 						hasAccessorsMetadata = lCase( trim( meta.localMetadata.accessors & "" ) ) == "true";
 					}
@@ -2855,8 +2859,11 @@ component accessors="true" {
 					}
 
 					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
+						var baseEntityMetadata = server.keyExists( "boxlang" )
+						 ? getClassMetadata( "quick.models.BaseEntity" )
+						 : getComponentMetadata( "quick.models.BaseEntity" );
 						return arrayReduce(
-							getComponentMetadata( "quick.models.BaseEntity" ).functions,
+							baseEntityMetadata.functions,
 							function( acc, func ) {
 								arguments.acc[ arguments.func.name ] = "";
 								return arguments.acc;
@@ -2917,7 +2924,61 @@ component accessors="true" {
 		}
 		variables._readonly = variables._meta.readonly;
 		explodeAttributesMetadata( variables._meta.attributes );
+		if ( server.keyExists( "boxlang" ) ) {
+			for (
+				var attributeName in retrieveAttributeNames(
+					withVirtualAttributes  = true,
+					withExcludedAttributes = true
+				)
+			) {
+				if ( variables.keyExists( attributeName ) && isNull( variables[ attributeName ] ) ) {
+					structDelete( variables, attributeName );
+				}
+			}
+		}
 		variables._casts = variables._meta.casts;
+	}
+
+	/**
+	 * Normalizes BoxLang metadata annotations to the keys Quick consumes.
+	 */
+	private void function normalizeBoxLangMetadata( required struct metadata ) {
+		if ( arguments.metadata.keyExists( "annotations" ) && isStruct( arguments.metadata.annotations ) ) {
+			for (
+				var key in [
+					"mapping",
+					"entityName",
+					"table",
+					"readonly",
+					"joincolumn",
+					"discriminatorValue",
+					"singleTableInheritance",
+					"datasource",
+					"grammar",
+					"discriminatorColumn"
+				]
+			) {
+				if ( arguments.metadata.annotations.keyExists( key ) && !isNull( arguments.metadata.annotations[ key ] ) ) {
+					arguments.metadata[ key ] = arguments.metadata.annotations[ key ];
+				}
+			}
+		}
+
+		if ( arguments.metadata.keyExists( "properties" ) && isArray( arguments.metadata.properties ) ) {
+			for ( var propertyMetadata in arguments.metadata.properties ) {
+				if ( propertyMetadata.keyExists( "annotations" ) && isStruct( propertyMetadata.annotations ) ) {
+					for ( var key in propertyMetadata.annotations ) {
+						if (
+							propertyMetadata.annotations.keyExists( key ) && !isNull(
+								propertyMetadata.annotations[ key ]
+							)
+						) {
+							propertyMetadata[ key ] = propertyMetadata.annotations[ key ];
+						}
+					}
+				}
+			}
+		}
 	}
 
 	/**

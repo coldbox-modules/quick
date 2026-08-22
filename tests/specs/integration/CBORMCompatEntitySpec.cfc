@@ -182,8 +182,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			describe( "criteria builder compatibility", function() {
 				it( "between", function() {
-					var rightNow = dateFormat( now(), "mm/dd/yyyy" );
-					var lastWeek = dateFormat( dateAdd( "d", -7, rightNow ), "mm/dd/yyyy" );
+					var rightNow = now();
+					var lastWeek = dateAdd( "d", -7, rightNow );
 					var actual   = user
 						.newCriteria()
 						.between( "created_date", rightNow, lastWeek )

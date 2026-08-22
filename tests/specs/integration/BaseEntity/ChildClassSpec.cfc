@@ -49,14 +49,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( newMemento.keyArray() ).toBe( memento.keyArray() );
 				for ( var key in newMemento.keyArray() ) {
 					if ( isDate( newMemento[ key ] ) ) {
-						expect(
-							dateCompare(
-								newMemento[ key ],
-								memento[ key ],
-								"s"
-							)
-						).toBe(
-							0,
+						expect( dateTimeFormat( newMemento[ key ], "yyyy-mm-dd HH:nn:ss" ) ).toBe(
+							dateTimeFormat( memento[ key ], "yyyy-mm-dd HH:nn:ss" ),
 							"Dates are not equal to the second. Left: #dateTimeFormat( newMemento[ key ], "MM/DD/YYYY HH:nn:ss" )# - Right: #dateTimeFormat( memento[ key ], "MM/DD/YYYY HH:nn:ss" )#"
 						);
 					} else {

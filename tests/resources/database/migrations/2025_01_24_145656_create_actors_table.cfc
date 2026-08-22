@@ -12,8 +12,8 @@ component {
             {
                 "id": "5B8A472F-56E8-4BD6-A03D-6157662937E3",
                 "name": "Tom Anks",
-                "created_date": createDateTime( 2017, 07, 28, 02, 07, 00 ),
-                "modified_date": createDateTime( 2017, 07, 28, 02, 07, 00 )
+                "created_date": "2017-07-28 02:07:00",
+                "modified_date": "2017-07-28 02:07:00"
             }
         ] );
     }

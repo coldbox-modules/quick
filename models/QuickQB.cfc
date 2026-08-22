@@ -1007,7 +1007,23 @@ component
 			return result;
 		}
 
-		return super.onMissingMethod( argumentCollection = arguments );
+		try {
+			return super.onMissingMethod( argumentCollection = arguments );
+		} catch ( QBMissingMethod e ) {
+			throw(
+				type    = "QuickMissingMethod",
+				message = arrayToList(
+					[
+						"Quick couldn't figure out what to do with [#arguments.missingMethodName#].",
+						"The error returned was: #e.message#",
+						"We tried checking columns, aliases, scopes, and relationships locally.",
+						"We also forwarded the call on to qb to see if it could do anything with it, but it couldn't."
+					],
+					" "
+				),
+				extendedInfo = serializeJSON( e )
+			);
+		}
 	}
 
 	// override's super impl

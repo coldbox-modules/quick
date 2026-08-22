@@ -2,6 +2,22 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Scope Spec", function() {
+			it( "surfaces the missing method inside a when callback", function() {
+				var exception = {};
+				try {
+					getInstance( "User" ).when( true, function( q ) {
+						q.missingScopeInsideWhen();
+					} );
+				} catch ( any e ) {
+					exception = e;
+				}
+
+				expect( exception ).notToBeEmpty();
+				expect( exception.type ).toBe( "QuickMissingMethod" );
+				expect( exception.message ).toInclude( "[missingScopeInsideWhen]" );
+				expect( exception.message ).notToInclude( "[when]" );
+			} );
+
 			it( "looks for missing methods as scopes", function() {
 				var users = getInstance( "User" ).latest().get();
 				expect( users ).toHaveLength( 5, "Five users should exist in the database and be returned." );

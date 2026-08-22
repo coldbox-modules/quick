@@ -175,6 +175,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return hasManyThrough( [ "roles", "permissions" ] );
 	}
 
+	function commentsThroughPosts() {
+		return hasManyThrough( [ "posts", "comments" ] );
+	}
+
 	function permissionsDeep() {
 		return hasManyDeep(
 			relationName = "Permission",

@@ -194,6 +194,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						expect( posts ).toBeArray();
 						expect( posts ).notToBeEmpty();
 					} );
+
+					it( "can traverse two belongsToMany relationships before a hasMany relationship", function() {
+						var posts = getInstance( "Post" ).has( "tags.posts.comments" ).get();
+
+						expect( posts ).toBeArray();
+						expect( posts ).toHaveLength( 3 );
+					} );
+
 					it( "can join after populating a cloned query builder", function() {
 						var posts = getInstance( "Post" ).newQuery();
 						posts.populateQuery( posts.getQB().clone() );
@@ -221,6 +229,21 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 					it( "can find only entities that have a related hasManyThrough entity through multiple levels using a nested hasManyThrough", function() {
 						var countries = getInstance( "Country" ).has( "commentsUsingHasManyThrough" ).get();
+						expect( countries ).toBeArray();
+						expect( countries ).toHaveLength( 2 );
+					} );
+
+					it( "can eager load and check three nested hasManyThrough relationships", function() {
+						var query = getInstance( "Country" )
+							.with( "permissions.usersThroughRoles.commentsThroughPosts" )
+							.has( "permissions.usersThroughRoles.commentsThroughPosts" );
+
+						expect( query.toSQL() ).toInclude( "EXISTS" );
+
+						var countries = getInstance( "Country" )
+							.has( "permissions.usersThroughRoles.commentsThroughPosts" )
+							.get();
+
 						expect( countries ).toBeArray();
 						expect( countries ).toHaveLength( 2 );
 					} );

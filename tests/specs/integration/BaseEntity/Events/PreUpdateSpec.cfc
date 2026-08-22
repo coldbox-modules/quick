@@ -52,6 +52,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( request.preUpdateCalled[ 1 ].entity.downloadUrl ).toBe(
 					"https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
 				);
+				expect( request.preUpdateCalled[ 1 ].originalAttributes.download_url ).toBe(
+					"https://open.spotify.com/track/4Nd5HJn4EExnLmHtClk4QV"
+				);
+				expect( request.preUpdateCalled[ 1 ].newAttributes.download_url ).toBe(
+					"https://open.spotify.com/track/0GHGd3jYqChGNxzjqgRZSv"
+				);
 				structDelete( request, "preUpdateCalled" );
 			} );
 		} );

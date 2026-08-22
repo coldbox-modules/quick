@@ -180,6 +180,33 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( p.results[ p.results.len() ].getId() ).toBe( 45 );
 			} );
 
+			it( "can retrieve entities in chunks", function() {
+				var chunks = [];
+				var query  = getInstance( "User" )
+					.orderBy( "id" )
+					.chunk( 2, function( users ) {
+						chunks.append( {
+							"size"        : users.len(),
+							"firstId"     : users[ 1 ].getId(),
+							"quickEntity" : users[ 1 ].isQuickEntity
+						} );
+						return chunks.len() < 2;
+					} );
+
+				expect( query.isQuickBuilder ).toBeTrue();
+				expect( chunks ).toHaveLength( 2 );
+				expect( chunks[ 1 ] ).toBe( {
+					"size"        : 2,
+					"firstId"     : 1,
+					"quickEntity" : true
+				} );
+				expect( chunks[ 2 ] ).toBe( {
+					"size"        : 2,
+					"firstId"     : 3,
+					"quickEntity" : true
+				} );
+			} );
+
 			it( "can eager load and paginate a Quick query", function() {
 				queryExecute( "TRUNCATE TABLE `a`" );
 				queryExecute( "TRUNCATE TABLE `b`" );

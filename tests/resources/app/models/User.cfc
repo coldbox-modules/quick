@@ -17,6 +17,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	property name="type";
 	property name="externalID";
 	property name="favoritePost_id";
+	property name="cacheMetadata" persistent="false";
 
 	property
 		name      ="address"

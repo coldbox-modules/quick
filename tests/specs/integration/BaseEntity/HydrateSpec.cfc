@@ -20,6 +20,28 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.retrieveAttribute( "last_name" ) ).toBe( "Peterson" );
 			} );
 
+			it( "ignores non-persistent struct properties when checking hydrated entities for changes", function() {
+				var memento = {
+					"cacheMetadata" : {
+						"source" : "cache",
+						"tags"   : [ "one", "two" ]
+					},
+					"id"         : 4,
+					"username"   : "elpete2",
+					"first_name" : "Another",
+					"last_name"  : "Peterson"
+				};
+				var user                 = getInstance( "User" ).hydrate( memento );
+				var updatedCacheMetadata = {
+					"source" : "refreshed-cache",
+					"tags"   : [ "three" ]
+				};
+				user.setCacheMetadata( updatedCacheMetadata );
+
+				expect( user.getCacheMetadata() ).toBe( updatedCacheMetadata );
+				expect( user.isDirty() ).toBeFalse();
+			} );
+
 			it( "can hydrate multiple entities at once from an array of structs", function() {
 				var mementos = [
 					{

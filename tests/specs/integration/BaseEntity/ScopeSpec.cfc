@@ -17,6 +17,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				fail( "Expected a QuickMissingMethod exception" );
 			} );
 
+			it( "suggests an entity function that may be missing the scope prefix", function() {
+				expect( function() {
+					getInstance( "User" ).newQuery().incorrectlyNamedScope();
+				} ).toThrow(
+					type  = "QuickMissingMethod",
+					regex = "An entity function named \[incorrectlyNamedScope\] exists.*scopeIncorrectlyNamedScope.*https://quick.ortusbooks.com/guide/getting-started/query-scopes-and-subselects"
+				);
+			} );
+
 			it( "looks for missing methods as scopes", function() {
 				var users = getInstance( "User" ).latest().get();
 				expect( users ).toHaveLength( 5, "Five users should exist in the database and be returned." );

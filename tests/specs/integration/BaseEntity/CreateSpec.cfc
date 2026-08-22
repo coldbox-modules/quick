@@ -17,6 +17,21 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				).notToBeNull();
 			} );
 
+			it( "returns a separate loaded entity without mutating the original entity", function() {
+				var originalUser = getInstance( "User" ).newEntity();
+				var createdUser  = originalUser.create( {
+					"username"   : "Dave",
+					"first_name" : "Dave",
+					"last_name"  : "Create",
+					"password"   : hash( "password" )
+				} );
+
+				expect( originalUser.isLoaded() ).toBeFalse();
+				expect( originalUser.isNullAttribute( "username" ) ).toBeTrue();
+				expect( createdUser.isLoaded() ).toBeTrue();
+				expect( createdUser.getUsername() ).toBe( "Dave" );
+			} );
+
 			it( "can ignore non-existant properties", function() {
 				var user = getInstance( "User" ).create(
 					{

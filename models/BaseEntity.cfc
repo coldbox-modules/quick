@@ -1317,6 +1317,16 @@ component accessors="true" {
 	/**
 	 * Creates a new entity with the given attributes and then saves the entity.
 	 *
+	 * This method always creates and returns a separate entity instance. It does
+	 * not fill, save, or otherwise mutate the entity on which it was called.
+	 * Assign the returned entity when it needs to be used after creation:
+	 *
+	 * ```
+	 * var user = getInstance( "User" ).newEntity();
+	 * user = user.create( { "firstName" : "Dave" } );
+	 * user.isLoaded(); // true
+	 * ```
+	 *
 	 * @attributes                   A struct of key / value pairs.
 	 * @ignoreNonExistentAttributes  If true, does not throw an exception if an
 	 *                               attribute does not exist.  Instead, it skips

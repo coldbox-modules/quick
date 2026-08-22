@@ -476,11 +476,15 @@ component accessors="true" transientCache="false" {
 				arguments.onFalse( this );
 			}
 		} else {
+			var condition       = arguments.condition;
+			var onTrueCallback  = arguments.onTrue;
+			var onFalseCallback = arguments.onFalse;
+			var builder         = this;
 			variables.qb.withScoping( function() {
 				if ( condition ) {
-					onTrue( this );
+					onTrueCallback( builder );
 				} else {
-					onFalse( this );
+					onFalseCallback( builder );
 				}
 			} );
 		}
@@ -990,7 +994,17 @@ component accessors="true" transientCache="false" {
 			return result;
 		}
 
-		return javacast( "null", "" );
+		throw(
+			type    = "QuickMissingMethod",
+			message = arrayToList(
+				[
+					"Quick couldn't figure out what to do with [#arguments.missingMethodName#].",
+					"We tried checking columns, aliases, scopes, and relationships locally.",
+					"We also forwarded the call on to qb to see if it could do anything with it, but it couldn't."
+				],
+				" "
+			)
+		);
 	}
 
 	/**

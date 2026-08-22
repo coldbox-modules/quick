@@ -36,6 +36,26 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				).notToBeNull();
 			} );
 
+			it( "persists relationships filled before creating the parent", function() {
+				var user = getInstance( "User" ).create( {
+					"username"   : "aggregate-user",
+					"first_name" : "Aggregate",
+					"last_name"  : "User",
+					"password"   : hash( "password" ),
+					"posts"      : [
+						{ "body" : "First child" },
+						{ "body" : "Second child" }
+					]
+				} );
+
+				expect( user.isLoaded() ).toBeTrue();
+				expect( user.getPosts() ).toHaveLength( 2 );
+				expect( user.getPosts()[ 1 ].isLoaded() ).toBeTrue();
+				expect( user.getPosts()[ 1 ].getUser_Id() ).toBe( user.getId() );
+				expect( user.getPosts()[ 2 ].isLoaded() ).toBeTrue();
+				expect( user.getPosts()[ 2 ].getUser_Id() ).toBe( user.getId() );
+			} );
+
 			it( "can create a new entity with a json cast", () => {
 				var newTheme = getInstance( "Theme" ).create( {
 					slug    : "theme-new",

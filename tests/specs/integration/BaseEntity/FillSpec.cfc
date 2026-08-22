@@ -60,6 +60,24 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} ).notToThrow();
 				expect( user.isNullAttribute( "updatedDate" ) ).toBeTrue();
 			} );
+
+			it( "can fill relationships on a new entity without persisting the aggregate", function() {
+				var user = getInstance( "User" ).fill( {
+					"posts" : [
+						getInstance( "Post" ).fill( { "body" : "Entity child" } ),
+						{ "body" : "Struct child" }
+					]
+				} );
+
+				expect( user.isLoaded() ).toBeFalse();
+				expect( user.getPosts() ).toHaveLength( 2 );
+				expect( user.getPosts()[ 1 ] ).toBeInstanceOf( "Post" );
+				expect( user.getPosts()[ 1 ].isLoaded() ).toBeFalse();
+				expect( user.getPosts()[ 1 ].getBody() ).toBe( "Entity child" );
+				expect( user.getPosts()[ 2 ] ).toBeInstanceOf( "Post" );
+				expect( user.getPosts()[ 2 ].isLoaded() ).toBeFalse();
+				expect( user.getPosts()[ 2 ].getBody() ).toBe( "Struct child" );
+			} );
 		} );
 	}
 

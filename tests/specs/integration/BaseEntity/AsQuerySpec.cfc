@@ -14,15 +14,16 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				for ( var result in results ) {
 					result.createdDate  = dateTimeFormat( result.createdDate, "yyyy-mm-dd hh:nn:ss" );
 					result.modifiedDate = dateTimeFormat( result.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
-					[
+					var nullableKeys    = [
 						"email",
 						"streetTwo",
 						"favoritePost_id"
-					].each( function( key ) {
+					];
+					for ( var key in nullableKeys ) {
 						if ( isNull( result[ key ] ) ) {
 							result[ key ] = "";
 						}
-					} );
+					}
 				}
 
 				expect( results[ 1 ] ).toBeStruct();

@@ -213,6 +213,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						expect( countries ).toHaveLength( 2 );
 					} );
 
+					it( "applies the same constraints as the expanded relationship path", function() {
+						var throughCountries = getInstance( "Country" )
+							.whereHas( "posts", ( q ) => q.where( "post_pk", 321 ) )
+							.get();
+						var expandedCountries = getInstance( "Country" )
+							.whereHas( "users.posts", ( q ) => q.where( "post_pk", 321 ) )
+							.get();
+
+						expect( throughCountries ).toHaveLength( 1 );
+						expect( throughCountries[ 1 ].getName() ).toBe( "Argentina" );
+						expect( throughCountries[ 1 ].getId() ).toBe( expandedCountries[ 1 ].getId() );
+					} );
+
 					it( "can find only entities that have a related hasManyThrough entity through multiple levels", function() {
 						var countries = getInstance( "Country" ).has( "comments" ).get();
 						expect( countries ).toBeArray();

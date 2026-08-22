@@ -810,7 +810,7 @@ component accessors="true" transientCache="false" {
 		}
 
 		var eagerLoads = denestEagerLoads( variables._eagerLoad );
-		if ( variables._parallelEagerLoading && eagerLoads.count() > 1 ) {
+		if ( variables._parallelEagerLoading && eagerLoads.count() > 1 && supportsParallelEagerLoading() ) {
 			eagerLoadRelationsInParallel( eagerLoads, arguments.entities );
 		} else {
 			for ( var relationName in eagerLoads ) {
@@ -829,20 +829,25 @@ component accessors="true" transientCache="false" {
 	 * Eager loads independent top-level relationships on separate threads.
 	 */
 	private void function eagerLoadRelationsInParallel( required struct eagerLoads, required array entities ) {
-		var threadNames = [];
+		var threadNames     = [];
+		var threadRelations = {};
+		var targetEntities  = arguments.entities;
 
 		for ( var relationName in arguments.eagerLoads ) {
-			var threadName = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
+			var threadName     = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
+			var threadEntities = arguments.entities.map( function( entity ) {
+				return structKeyExists( entity, "isQuickEntity" ) ? entity.clone( true ) : duplicate( entity );
+			} );
 			threadNames.append( threadName );
+			threadRelations[ threadName ] = relationName;
 			cfthread(
 				action          = "run",
 				name            = threadName,
-				builder         = this,
 				relationName    = relationName,
 				eagerLoadConfig = arguments.eagerLoads[ relationName ],
-				entities        = entities
+				entities        = threadEntities
 			) {
-				attributes.builder.eagerLoadRelation(
+				thread.entities = eagerLoadRelation(
 					attributes.relationName,
 					attributes.eagerLoadConfig,
 					attributes.entities
@@ -860,9 +865,9 @@ component accessors="true" transientCache="false" {
 			if ( cfthread[ threadName ].status == "TERMINATED" ) {
 				var threadError = cfthread[ threadName ].error;
 				throw(
-					type    = threadError.keyExists( "type" ) ? threadError.type : "QuickParallelEagerLoadingException",
-					message = threadError.keyExists( "message" ) ? threadError.message : "A parallel eager-loading thread failed.",
-					detail  = threadError.keyExists( "detail" ) ? threadError.detail : ""
+					type         = "QuickParallelEagerLoadingException",
+					message      = threadError.keyExists( "message" ) ? threadError.message : "A parallel eager-loading thread failed.",
+					extendedInfo = serializeJSON( threadError )
 				);
 			}
 			if ( cfthread[ threadName ].status != "COMPLETED" ) {
@@ -871,7 +876,29 @@ component accessors="true" transientCache="false" {
 					message = "Parallel eager loading did not complete within 60 seconds."
 				);
 			}
+
+			var relationName        = threadRelations[ threadName ];
+			var eagerLoadedEntities = cfthread[ threadName ].entities;
+			for ( var i = 1; i <= targetEntities.len(); i++ ) {
+				if ( structKeyExists( targetEntities[ i ], "isQuickEntity" ) ) {
+					var relationshipValue = eagerLoadedEntities[ i ].retrieveRelationship( relationName );
+					if ( isNull( relationshipValue ) ) {
+						targetEntities[ i ].assignRelationship( relationName );
+					} else {
+						targetEntities[ i ].assignRelationship( relationName, relationshipValue );
+					}
+				} else if ( eagerLoadedEntities[ i ].keyExists( relationName ) ) {
+					targetEntities[ i ][ relationName ] = eagerLoadedEntities[ i ][ relationName ];
+				}
+			}
 		} );
+	}
+
+	/**
+	 * Adobe ColdFusion loses CFC private-method resolution inside cfthread.
+	 */
+	private boolean function supportsParallelEagerLoading() {
+		return !findNoCase( "ColdFusion", server.coldfusion.productName );
 	}
 
 	private struct function denestEagerLoads( required array eagerLoads ) {

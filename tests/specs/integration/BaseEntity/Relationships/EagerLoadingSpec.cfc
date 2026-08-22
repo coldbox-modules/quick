@@ -90,9 +90,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( posts[ 1 ].getComments() ).toBeArray();
 				expect( eagerThreads ).toHaveKey( "author" );
 				expect( eagerThreads ).toHaveKey( "comments" );
-				expect( eagerThreads.author ).notToBe( callingThread );
-				expect( eagerThreads.comments ).notToBe( callingThread );
-				expect( eagerThreads.author ).notToBe( eagerThreads.comments );
+				if ( findNoCase( "ColdFusion", server.coldfusion.productName ) ) {
+					expect( eagerThreads.author ).toBe( callingThread );
+					expect( eagerThreads.comments ).toBe( callingThread );
+				} else {
+					expect( eagerThreads.author ).notToBe( callingThread );
+					expect( eagerThreads.comments ).notToBe( callingThread );
+					expect( eagerThreads.author ).notToBe( eagerThreads.comments );
+				}
 			} );
 
 			it( "can eager load a belongs to relationship using a composite key", function() {

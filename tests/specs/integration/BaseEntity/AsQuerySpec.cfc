@@ -12,8 +12,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( results ).toHaveLength( 2 );
 
 				for ( var result in results ) {
-					result.createdDate  = dateTimeFormat( result.createdDate, "yyyy-mm-dd hh:nn:ss" );
-					result.modifiedDate = dateTimeFormat( result.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+					result.createdDate  = formatTestTimestamp( result.createdDate );
+					result.modifiedDate = formatTestTimestamp( result.modifiedDate );
 					var nullableKeys    = [
 						"email",
 						"streetTwo",

@@ -4,3 +4,24 @@ diff --git a/tests/resources/app/coldbox/system/testing/VirtualApp.cfc b/tests/r
 @@ -94 +94 @@
 -		return !isNull( application.cbController );
 +		return application.keyExists( "cbController" ) && !isNull( application.cbController );
+@@ -112 +112 @@
+-		if ( !isNull( application.cbController ) ) {
++		if ( application.keyExists( "cbController" ) && !isNull( application.cbController ) ) {
+diff --git a/tests/resources/app/coldbox/system/logging/config/LogBoxConfig.cfc b/tests/resources/app/coldbox/system/logging/config/LogBoxConfig.cfc
+--- a/tests/resources/app/coldbox/system/logging/config/LogBoxConfig.cfc
++++ b/tests/resources/app/coldbox/system/logging/config/LogBoxConfig.cfc
+@@ -64 +64 @@
+-		if ( isNull( variables.utility ) ) {
++		if ( !variables.keyExists( "utility" ) || isNull( variables.utility ) ) {
+diff --git a/tests/resources/app/coldbox/system/core/util/Util.cfc b/tests/resources/app/coldbox/system/core/util/Util.cfc
+--- a/tests/resources/app/coldbox/system/core/util/Util.cfc
++++ b/tests/resources/app/coldbox/system/core/util/Util.cfc
+@@ -296 +296 @@
+-		if ( isNull( variables.mixerUtil ) ) {
++		if ( !variables.keyExists( "mixerUtil" ) || isNull( variables.mixerUtil ) ) {
+diff --git a/tests/resources/app/coldbox/system/logging/Logger.cfc b/tests/resources/app/coldbox/system/logging/Logger.cfc
+--- a/tests/resources/app/coldbox/system/logging/Logger.cfc
++++ b/tests/resources/app/coldbox/system/logging/Logger.cfc
+@@ -399 +399 @@
+-					if ( isNull( local.logEvent ) ) {
++					if ( !local.keyExists( "logEvent" ) || isNull( local.logEvent ) ) {

@@ -23,6 +23,9 @@ jobs:
         coldbox: ["coldbox@^7", "coldbox@^8"]
         experimental: [false]
         fullNull: ["true", "false"]
+        exclude:
+          - cfengine: "boxlang@1"
+            coldbox: "coldbox@^7"
         include:
           - cfengine: "adobe@be"
             coldbox: "coldbox@^7"

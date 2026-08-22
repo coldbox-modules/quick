@@ -184,8 +184,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "shows all the attributes in the component casing", function() {
 				var memento          = getInstance( "User" ).findOrFail( 1 ).getMemento();
-				memento.createdDate  = dateTimeFormat( memento.createdDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.modifiedDate = dateTimeFormat( memento.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+				memento.createdDate  = formatTestTimestamp( memento.createdDate );
+				memento.modifiedDate = formatTestTimestamp( memento.modifiedDate );
 				if ( isNull( memento.email ) ) {
 					memento.email = "";
 				}

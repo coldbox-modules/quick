@@ -30,6 +30,23 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( getInstance( "User" ).hasAttribute( "spawnedVirtual" ) ).toBeFalse();
 			} );
 
+			it( "can provide a default for a virtual attribute", function() {
+				var user    = getInstance( "User" ).appendVirtualAttribute( "hasPosts", false );
+				var newUser = user.newEntity();
+
+				expect( serializeJSON( user.getHasPosts() ) ).toBe( "false" );
+				expect( serializeJSON( user.getMemento().hasPosts ) ).toBe( "false" );
+				expect( serializeJSON( newUser.getHasPosts() ) ).toBe( "false" );
+				expect( serializeJSON( newUser.getMemento().hasPosts ) ).toBe( "false" );
+			} );
+
+			it( "can exclude a defaulted virtual attribute from mementos", function() {
+				var user = getInstance( "User" ).appendVirtualAttribute( "internalFlag", false, true );
+
+				expect( serializeJSON( user.getInternalFlag() ) ).toBe( "false" );
+				expect( user.getMemento() ).notToHaveKey( "internalFlag" );
+			} );
+
 			it( "can get any attribute using the `getColumnName` magic methods", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getId() ).toBe( 1 );

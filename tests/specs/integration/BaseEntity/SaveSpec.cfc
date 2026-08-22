@@ -56,6 +56,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( newUser.retrieveAttributesData() ).toHaveKey( "id" );
 			} );
 
+			it( "retrieves database-generated attributes marked to refresh on save", function() {
+				var newUser = getInstance( "DatabaseGeneratedUser" )
+					.setUsername( "database-timestamp-user" )
+					.setFirstName( "Database" )
+					.setLastName( "Timestamp" )
+					.save();
+
+				expect( newUser.getCreatedDate() ).notToBe( "" );
+				expect( newUser.getCreatedDate() ).toBeDate();
+				expect( newUser.isDirty( "createdDate" ) ).toBeFalse();
+			} );
+
 			it( "a saved entity is not dirty", function() {
 				var newUser = getInstance( "User" );
 				newUser.setUsername( "new_user" );

@@ -1450,6 +1450,7 @@ component accessors="true" {
 			}
 			builder.getQB().addNestedWhereQuery( updateConstraints );
 			builder.update( updateAttributes, arguments.options );
+			refreshAttributesOnSave();
 			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
 			fireEvent(
@@ -1486,8 +1487,9 @@ component accessors="true" {
 
 			var result = builder.insert( attrs, arguments.options );
 			retrieveKeyType().postInsert( this, result );
-			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
+			refreshAttributesOnSave();
+			assignOriginalAttributes( retrieveAttributesData() );
 			fireEvent(
 				"postInsert",
 				{
@@ -1517,6 +1519,39 @@ component accessors="true" {
 		}
 
 		return this;
+	}
+
+	/**
+	 * Refreshes attributes whose values are generated or changed by the database
+	 * during persistence.
+	 */
+	private void function refreshAttributesOnSave() {
+		var attributesToRefresh = variables._attributes.filter( function( name, attribute ) {
+			return attribute.refreshOnSave;
+		} );
+
+		if ( attributesToRefresh.isEmpty() ) {
+			return;
+		}
+
+		var refreshedEntity = newQuery()
+			.withoutGlobalScope()
+			.where( function( q ) {
+				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
+					q.where( keyName, keyValue );
+				} );
+			} )
+			.first();
+		if ( isNull( refreshedEntity ) ) {
+			return;
+		}
+
+		var refreshedData = refreshedEntity.retrieveAttributesData( withNulls = true );
+		attributesToRefresh.each( function( name, attribute ) {
+			var value                           = refreshedData[ attribute.column ];
+			variables._data[ attribute.column ] = isNull( value ) ? javacast( "null", "" ) : value;
+			variables[ attribute.name ]         = isNull( value ) ? javacast( "null", "" ) : value;
+		} );
 	}
 
 	/**
@@ -3857,6 +3892,7 @@ component accessors="true" {
 		param attr.sqltype        = "";
 		param attr.insert         = true;
 		param attr.update         = true;
+		param attr.refreshOnSave  = false;
 		param attr.virtual        = false;
 		param attr.exclude        = false;
 		param attr.isParentColumn = false;
@@ -3865,6 +3901,9 @@ component accessors="true" {
 		}
 		if ( !isBoolean( attr.fillable ) ) {
 			attr.fillable = lCase( trim( attr.fillable & "" ) ) == "true";
+		}
+		if ( !isBoolean( attr.refreshOnSave ) ) {
+			attr.refreshOnSave = lCase( trim( attr.refreshOnSave & "" ) ) == "true";
 		}
 		return arguments.attr;
 	}

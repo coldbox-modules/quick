@@ -834,10 +834,7 @@ component accessors="true" transientCache="false" {
 		var targetEntities  = arguments.entities;
 
 		for ( var relationName in arguments.eagerLoads ) {
-			var threadName     = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
-			var threadEntities = arguments.entities.map( function( entity ) {
-				return structKeyExists( entity, "isQuickEntity" ) ? entity.clone( true ) : duplicate( entity );
-			} );
+			var threadName = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
 			threadNames.append( threadName );
 			threadRelations[ threadName ] = relationName;
 			cfthread(
@@ -845,7 +842,7 @@ component accessors="true" transientCache="false" {
 				name            = threadName,
 				relationName    = relationName,
 				eagerLoadConfig = arguments.eagerLoads[ relationName ],
-				entities        = threadEntities
+				entities        = targetEntities
 			) {
 				thread.entities = eagerLoadRelation(
 					attributes.relationName,

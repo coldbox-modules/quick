@@ -65,6 +65,32 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.countryName ).toBe( "United States" );
 			} );
 
+			it( "preserves binding order when chunking a query with a bound global-scope subselect", function() {
+				var startDate = createDateTime( 2017, 1, 1, 0, 0, 0 );
+				var endDate   = createDateTime( 2018, 1, 1, 0, 0, 0 );
+				var query     = getInstance( "UserWithGlobalScope" )
+					.whereBetween( "created_date", startDate, endDate )
+					.where( "type", "admin" )
+					.activateGlobalScopes()
+					.retrieveQuery();
+				var bindingsBeforeChunk = query.getBindings().map( ( binding ) => binding.value );
+				var rows                = [];
+
+				query.chunk( 1, function( chunk ) {
+					rows.append( chunk, true );
+				} );
+
+				expect( rows ).toHaveLength( 1 );
+				expect( rows[ 1 ].username ).toBe( "elpete" );
+				expect( query.getBindings().map( ( binding ) => binding.value ) ).toBe( bindingsBeforeChunk );
+				expect( bindingsBeforeChunk ).toBe( [
+					"02B84D66-0AA0-F7FB-1F71AFC954843861",
+					startDate,
+					endDate,
+					"admin"
+				] );
+			} );
+
 			it( "subsequent entity calls using withoutGlobalScope do not cache memento keys", function() {
 				var userA = getInstance( "UserWithGlobalScope" ).findOrFail( 1 ).getMemento();
 

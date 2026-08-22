@@ -147,7 +147,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "withCount via hasManyThrough and a mixture of non-composite and composite keys works", () => {
 				var v = getInstance( "HasManyDeepKeyTest_A" )
-					.withCount( "Cs as countOfCs" )
+					.withCsCount()
 					.where( "aID", "a1" )
 					.firstOrFail();
 

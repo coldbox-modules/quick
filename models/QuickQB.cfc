@@ -404,6 +404,98 @@ component
 	}
 
 	/**
+	 * Constrains the query to entities belonging to one or more related entities.
+	 * The relationship name defaults to the lower-camel-cased related entity name.
+	 *
+	 * @related           A related Quick entity, an array of entities, or a collection of entities.
+	 * @relationshipName  The belongsTo relationship to use.
+	 * @combinator        The boolean combinator for the clause. Default: "and".
+	 *
+	 * @return            quick.models.QuickQB
+	 */
+	public QuickQB function whereBelongsTo(
+		required any related,
+		string relationshipName,
+		string combinator = "and"
+	) {
+		var relatedEntities = isArray( arguments.related )
+		 ? arguments.related
+		 : (
+			isStruct( arguments.related ) && structKeyExists( arguments.related, "isQuickEntity" )
+			 ? [ arguments.related ]
+			 : arguments.related.get()
+		);
+
+		if ( relatedEntities.isEmpty() ) {
+			throw(
+				type    = "QuickInvalidWhereBelongsTo",
+				message = "whereBelongsTo requires at least one related entity."
+			);
+		}
+
+		if ( isNull( arguments.relationshipName ) ) {
+			var relatedEntityName      = relatedEntities[ 1 ].entityName();
+			arguments.relationshipName = lCase( left( relatedEntityName, 1 ) ) & removeChars( relatedEntityName, 1, 1 );
+		}
+		var resolvedRelationshipName = arguments.relationshipName;
+
+		var relation = getEntity().ignoreLoadedGuard( function() {
+			return getEntity().withoutRelationshipConstraints( resolvedRelationshipName, function() {
+				return invoke( getEntity(), resolvedRelationshipName );
+			} );
+		} );
+
+		if ( relation.relationshipClass != "BelongsTo" ) {
+			throw(
+				type    = "QuickInvalidWhereBelongsTo",
+				message = "Relationship [#resolvedRelationshipName#] must be a belongsTo relationship."
+			);
+		}
+
+		var relatedMapping = relation.getRelated().mappingName();
+		var foreignKeys    = relation.getForeignKeys();
+		var localKeys      = relation.getLocalKeys();
+		relatedEntities.each( function( relatedEntity ) {
+			if (
+				!isStruct( relatedEntity ) ||
+				!structKeyExists( relatedEntity, "isQuickEntity" ) ||
+				relatedEntity.mappingName() != relatedMapping
+			) {
+				throw(
+					type    = "QuickInvalidWhereBelongsTo",
+					message = "All whereBelongsTo entities must match [#relatedMapping#]."
+				);
+			}
+		} );
+
+		return where(
+			column = function( q ) {
+				relatedEntities.each( function( relatedEntity ) {
+					q.orWhere( function( q2 ) {
+						for ( var i = 1; i <= foreignKeys.len(); i++ ) {
+							q2.where( foreignKeys[ i ], relatedEntity.retrieveAttribute( localKeys[ i ] ) );
+						}
+					} );
+				} );
+			},
+			combinator = arguments.combinator
+		);
+	}
+
+	/**
+	 * Adds a whereBelongsTo constraint using an OR combinator.
+	 *
+	 * @related           A related Quick entity, an array of entities, or a collection of entities.
+	 * @relationshipName  The belongsTo relationship to use.
+	 *
+	 * @return            quick.models.QuickQB
+	 */
+	public QuickQB function orWhereBelongsTo( required any related, string relationshipName ) {
+		arguments.combinator = "or";
+		return whereBelongsTo( argumentCollection = arguments );
+	}
+
+	/**
 	 * Checks for the existence of a relationship when executing the query.
 	 *
 	 * @relationshipName  The relationship to check.  Can also be a dot-delimited list of nested relationships.

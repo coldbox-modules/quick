@@ -2,6 +2,60 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Querying Relationships Spec", function() {
+			describe( "whereBelongsTo", function() {
+				it( "constrains a query using a named belongsTo relationship", function() {
+					var author = getInstance( "User" ).findOrFail( 1 );
+					var posts  = getInstance( "Post" ).whereBelongsTo( author, "author" ).get();
+
+					expect( posts ).toHaveLength( 2 );
+					expectAll( posts ).toSatisfy( function( post ) {
+						return post.getUser_Id() == author.getId();
+					} );
+				} );
+
+				it( "infers a conventional belongsTo relationship name", function() {
+					var country = getInstance( "Country" ).findOrFail( "02B84D66-0AA0-F7FB-1F71AFC954843861" );
+					var users   = getInstance( "User" ).whereBelongsTo( country ).get();
+
+					expect( users ).toHaveLength( 2 );
+					expectAll( users ).toSatisfy( function( user ) {
+						return user.getCountry_Id() == country.getId();
+					} );
+				} );
+
+				it( "constrains a query to an array of related entities", function() {
+					var authors = getInstance( "User" ).whereIn( "id", [ 1, 4 ] ).get();
+					var posts   = getInstance( "Post" ).whereBelongsTo( authors, "author" ).get();
+
+					expect( posts ).toHaveLength( 3 );
+					expectAll( posts ).toSatisfy( function( post ) {
+						return [ 1, 4 ].contains( post.getUser_Id() );
+					} );
+				} );
+
+				it( "supports composite belongsTo relationships", function() {
+					var parent = getInstance( "Composite" )
+						.where( "a", 1 )
+						.where( "b", 2 )
+						.firstOrFail();
+					var children = getInstance( "CompositeChild" ).whereBelongsTo( parent, "parent" ).get();
+
+					expect( children ).toHaveLength( 1 );
+					expect( children[ 1 ].getComposite_A() ).toBe( 1 );
+					expect( children[ 1 ].getComposite_B() ).toBe( 2 );
+				} );
+
+				it( "supports an OR combinator", function() {
+					var author = getInstance( "User" ).findOrFail( 1 );
+					var posts  = getInstance( "Post" )
+						.where( "post_pk", 7777 )
+						.orWhereBelongsTo( author, "author" )
+						.get();
+
+					expect( posts ).toHaveLength( 3 );
+				} );
+			} );
+
 			describe( "has", function() {
 				describe( "hasMany", function() {
 					it( "can find only entities that have one or more related entities", function() {

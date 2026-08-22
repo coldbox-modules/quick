@@ -108,7 +108,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
 		var allKeys = getKeys(
 			entities,
-			getLocalKeys(),
+			variables.closestToParent.getForeignKeys(),
 			arguments.baseEntity
 		);
 
@@ -117,13 +117,13 @@ component extends="quick.models.Relationships.BaseRelationship" {
 		}
 
 		performJoin( variables.relationshipBuilder );
-		var foreignKeys             = getForeignKeys();
-		var qualifiedForeignKeyList = foreignKeys
-			.reduce( function( acc, foreignKey, i ) {
+		var relatedKeys             = variables.closestToParent.getLocalKeys();
+		var qualifiedForeignKeyList = relatedKeys
+			.reduce( function( acc, relatedKey, i ) {
 				if ( i != 1 ) {
 					acc.append( "," );
 				}
-				acc.append( variables.closestToParent.qualifyColumn( foreignKey ) );
+				acc.append( variables.closestToParent.qualifyColumn( relatedKey ) );
 				return acc;
 			}, [] )
 			.toList();
@@ -142,10 +142,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
 			.where( function( q1 ) {
 				allKeys.each( function( keys ) {
 					q1.orWhere( function( q2 ) {
-						arrayZipEach( [ foreignKeys, keys ], function( foreignKey, keyValue ) {
+						arrayZipEach( [ relatedKeys, keys ], function( relatedKey, keyValue ) {
 							q2.where(
-								variables.closestToParent.qualifyColumn( foreignKey ),
-								variables.closestToParent.generateQueryParamStruct( foreignKey, keyValue )
+								variables.closestToParent.qualifyColumn( relatedKey ),
+								variables.closestToParent.generateQueryParamStruct( relatedKey, keyValue )
 							);
 						} );
 					} );
@@ -292,10 +292,11 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	) {
 		var dictionary = buildDictionary( arguments.results );
 		arguments.entities.each( function( entity ) {
-			var key = getLocalKeys()
-				.map( function( localKey ) {
-					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
-						localKey
+			var key = variables.closestToParent
+				.getForeignKeys()
+				.map( function( foreignKey ) {
+					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( foreignKey ) : entity[
+						foreignKey
 					];
 				} )
 				.toList();

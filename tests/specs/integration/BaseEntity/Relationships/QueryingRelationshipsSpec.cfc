@@ -29,7 +29,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 					expect( posts ).toHaveLength( 3 );
 					expectAll( posts ).toSatisfy( function( post ) {
-						return [ 1, 4 ].contains( post.getUser_Id() );
+						return arrayFind( [ 1, 4 ], post.getUser_Id() ) > 0;
 					} );
 				} );
 

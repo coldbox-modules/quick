@@ -349,6 +349,16 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						expect( posts ).toBeArray();
 						expect( posts ).toHaveLength( 1 );
 					} );
+
+					it( "includes entities with null foreign keys", function() {
+						var users             = getInstance( "User" ).doesntHave( "country" ).get();
+						var usersWithNullKeys = getInstance( "User" ).whereNull( "countryId" ).get();
+
+						expect( users ).toHaveLength( 1 );
+						expect( usersWithNullKeys ).toHaveLength( 1 );
+						expect( users[ 1 ].getId() ).toBe( 3 );
+						expect( users[ 1 ].getId() ).toBe( usersWithNullKeys[ 1 ].getId() );
+					} );
 				} );
 
 				describe( "belongsToMany", function() {

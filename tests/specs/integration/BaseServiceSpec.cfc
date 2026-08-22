@@ -1,5 +1,17 @@
 component extends="tests.resources.ModuleIntegrationSpec" {
 
+	function beforeAll() {
+		super.beforeAll();
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "BaseServiceSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "BaseServiceSpec" );
+		super.afterAll();
+	}
+
 	function run() {
 		describe( "BaseService Spec", function() {
 			describe( "instantiation", function() {
@@ -44,8 +56,31 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( users ).toBeArray();
 					expect( users ).toHaveLength( 2 );
 				} );
+
+				it( "passes get options through a quickService query", function() {
+					structDelete( request, "baseServiceSpecPreQBExecute" );
+
+					var users = variables.service
+						.whereNotNull( "created_date" )
+						.get( options = { datasource : "quick" } );
+
+					expect( users ).toBeArray();
+					expect( request.baseServiceSpecPreQBExecute ).toHaveLength( 1 );
+					expect( request.baseServiceSpecPreQBExecute[ 1 ].options.datasource ).toBe( "quick" );
+				} );
 			} );
 		} );
+	}
+
+	function preQBExecute(
+		event,
+		interceptData,
+		buffer,
+		rc,
+		prc
+	) {
+		param request.baseServiceSpecPreQBExecute = [];
+		request.baseServiceSpecPreQBExecute.append( duplicate( arguments.interceptData ) );
 	}
 
 }

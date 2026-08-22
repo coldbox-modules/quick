@@ -1143,7 +1143,6 @@ component accessors="true" {
 		}
 		guardNoAttributes();
 		guardReadOnly();
-		mergeAttributesFromCastCache();
 		fireEvent(
 			"preSave",
 			{
@@ -1151,6 +1150,7 @@ component accessors="true" {
 				options : arguments.options
 			}
 		);
+		mergeAttributesFromCastCache();
 		variables._saving = true;
 		var builder       = newQuery();
 		if ( variables._loaded ) {

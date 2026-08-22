@@ -75,6 +75,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				);
 				structDelete( request, "preSaveCalled" );
 			} );
+
+			it( "casts attributes assigned by a preSave method", function() {
+				var phoneNumber = getInstance( "PreSaveCastPhoneNumber" ).create( { "active" : true, "confirmed" : false } );
+
+				expect( phoneNumber.fresh().getNumber() ).toBeTrue();
+			} );
 		} );
 	}
 

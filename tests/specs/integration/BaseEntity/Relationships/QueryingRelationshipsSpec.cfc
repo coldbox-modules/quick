@@ -91,6 +91,34 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						expect( users ).toHaveLength( 1 );
 					} );
 
+					it( "can compare a column on a nested relationship using whereHasValue", function() {
+						var posts = getInstance( "Post" )
+							.whereHasValue(
+								"author.country",
+								"name",
+								"United States"
+							)
+							.orderBy( "post_pk" )
+							.get();
+
+						expect( posts ).toHaveLength( 2 );
+						expect( posts[ 1 ].getPost_Pk() ).toBe( 1245 );
+						expect( posts[ 2 ].getPost_Pk() ).toBe( 523526 );
+					} );
+
+					it( "supports custom comparison operators in whereHasValue", function() {
+						var posts = getInstance( "Post" )
+							.whereHasValue(
+								"author.country",
+								"name",
+								"<>",
+								"Argentina"
+							)
+							.get();
+
+						expect( posts ).toHaveLength( 2 );
+					} );
+
 					it( "can nest multiple levels", function() {
 						var countries = getInstance( "Country" )
 							.whereHas( "users.posts.comments", function( q ) {

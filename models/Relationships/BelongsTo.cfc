@@ -164,44 +164,43 @@ component
 	 * @return       [any]
 	 */
 	public array function getEagerEntityKeys( required array entities, required any baseEntity ) {
-		var uniqueKeys = arguments.entities
-			.reduce( function( keys, entity ) {
-				var values = variables.foreignKeys
-					.map( function( foreignKey ) {
-						return {
-							"foreignKey" : foreignKey,
-							"value"      : entityRetrieveAttribute( entity, foreignKey, baseEntity )
-						};
-					} )
-					.filter( function( map ) {
-						if ( !structKeyExists( map, "value" ) ) {
-							return false;
-						}
+		var uniqueKeys = arguments.entities.reduce( function( keys, entity ) {
+			var values = variables.foreignKeys
+				.map( function( foreignKey ) {
+					return {
+						"foreignKey" : foreignKey,
+						"value"      : entityRetrieveAttribute( entity, foreignKey, baseEntity )
+					};
+				} )
+				.filter( function( map ) {
+					if ( !structKeyExists( map, "value" ) ) {
+						return false;
+					}
 
-						if ( isNull( map.value ) ) {
-							return false;
-						}
+					if ( isNull( map.value ) ) {
+						return false;
+					}
 
-						if ( !entityHasAttribute( entity, map.foreignKey, baseEntity ) ) {
-							return false;
-						}
+					if ( !entityHasAttribute( entity, map.foreignKey, baseEntity ) ) {
+						return false;
+					}
 
-						if ( baseEntity.isNullValue( map.foreignKey, map.value ) ) {
-							return false;
-						}
+					if ( baseEntity.isNullValue( map.foreignKey, map.value ) ) {
+						return false;
+					}
 
-						return true;
-					} )
-					.map( function( map ) {
-						return map.value;
-					} );
+					return true;
+				} )
+				.map( function( map ) {
+					return map.value;
+				} );
 
-				if ( values.len() == variables.foreignKeys.len() ) {
-					arguments.keys[ serializeJSON( values ) ] = values;
-				}
+			if ( values.len() == variables.foreignKeys.len() ) {
+				arguments.keys[ serializeJSON( values ) ] = values;
+			}
 
-				return arguments.keys;
-			}, {} );
+			return arguments.keys;
+		}, {} );
 
 		return uniqueKeys.reduce( function( acc, _, values ) {
 			acc.append( values );

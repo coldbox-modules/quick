@@ -28,6 +28,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getUsername() ).toBe( "new_username" );
 			} );
 
+			it( "reapplies scoped projections when refreshing", function() {
+				var user = getInstance( "User" ).withFullName().findOrFail( 1 );
+				expect( user.getFullName() ).toBe( "Eric Peterson" );
+
+				queryExecute( "UPDATE `users` SET `first_name` = ? WHERE `id` = ?", [ "Ada", 1 ] );
+				user.refresh();
+
+				expect( user.getFirstName() ).toBe( "Ada" );
+				expect( user.getFullName() ).toBe( "Ada Peterson" );
+			} );
+
 			it( "can get a fresh instance from the database", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getUsername() ).toBe( "elpete" );

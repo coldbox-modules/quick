@@ -526,7 +526,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} ).notToThrow();
 			} );
 
-			it( "can provides default models if they are defined for the relationship", () => {
+			it( "can provide default models if they are defined for the relationship", () => {
 				var categories = getInstance( "Category" )
 					.with( "parent" )
 					.orderByAsc( "id" )
@@ -541,6 +541,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( categories[ 2 ].getParent() ).notToBeNull();
 				expect( categories[ 2 ].getParent().isLoaded() ).toBeTrue( "Category 2 should have a parent Category loaded from the database" );
 				expect( categories[ 2 ].getParent().getId() ).toBe( 1 );
+			} );
+
+			it( "caches a default model for an unmatched eager loaded relationship", () => {
+				var category = getInstance( "Category" ).with( "parent" ).findOrFail( 1 );
+
+				expect( category.isRelationshipLoaded( "parent" ) ).toBeTrue();
+				expect( function() {
+					return category.getParent().isLoaded();
+				} ).notToThrow();
+				expect( category.getParent() ).toBeInstanceOf( "Category" );
+				expect( category.getParent().isLoaded() ).toBeFalse();
 			} );
 
 			describe( "handling lazy loading", () => {

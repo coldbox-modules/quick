@@ -194,6 +194,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						expect( posts ).toBeArray();
 						expect( posts ).notToBeEmpty();
 					} );
+
+					it( "can traverse two belongsToMany relationships before a hasMany relationship", function() {
+						var posts = getInstance( "Post" ).has( "tags.posts.comments" ).get();
+
+						expect( posts ).toBeArray();
+						expect( posts ).toHaveLength( 3 );
+					} );
+
 					it( "can join after populating a cloned query builder", function() {
 						var posts = getInstance( "Post" ).newQuery();
 						posts.populateQuery( posts.getQB().clone() );

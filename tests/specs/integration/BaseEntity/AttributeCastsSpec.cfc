@@ -97,13 +97,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( theme.getConfig().primaryColor ).toBe( "orange" );
 			} );
 
-			it( "can still allow nulls when using casts", () => {
+			it( "preserves null values when using BooleanCast", () => {
 				var pn = getInstance( "PhoneNumber" ).find( 3 );
 				expect( pn.isNullAttribute( "confirmed" ) ).toBeTrue( "[confirmed] should be considered null" );
 				expect( pn.getConfirmed() ).toBe( "" );
 				// expect( function() {
 				pn.update( { "active" : false } );
 				// } ).notToThrow( message = "PhoneNumber should be able to be saved with a `null` [confirmed] value" );
+			} );
+
+			it( "allows custom casts to handle null database values", () => {
+				var pn = getInstance( "CustomCastPhoneNumber" ).find( 3 );
+
+				expect( pn.getConfirmed() ).toBe( "casted-null" );
 			} );
 
 			it( "correctly casts child entities", () => {

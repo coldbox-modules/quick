@@ -5,6 +5,7 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 	function beforeAll() {
 		super.beforeAll();
 
+		getController().getModuleService().registerAndActivateModule( "qb", "root.modules" );
 		getController().getModuleService().registerAndActivateModule( "quick", "testingModuleRoot" );
 
 		param url.reloadDatabase     = false;

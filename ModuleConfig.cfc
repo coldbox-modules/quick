@@ -59,6 +59,16 @@ component {
 			.initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
 			.initArg( name = "defaultOptions", value = settings.defaultQueryOptions )
 			.initArg( name = "utils", dsl = "QueryUtils@qb" )
+			.initArg( name = "returnFormatterRegistry", ref = "ReturnFormatterRegistry@qb" )
+			.initArg(
+				name = "validateDuplicateSelectColumns",
+				dsl  = "coldbox:moduleSettings:qb:validateDuplicateSelectColumns"
+			)
+			.initArg(
+				name = "validateQueryExecuteReturnType",
+				dsl  = "coldbox:moduleSettings:qb:validateQueryExecuteReturnType"
+			)
+			.initArg( name = "collectQueryLog", dsl = "coldbox:moduleSettings:qb:collectQueryLog" )
 			.initArg( name = "sqlCommenter", ref = "ColdBoxSQLCommenter@qb" )
 			.initArg( name = "returnFormat", value = "array" );
 

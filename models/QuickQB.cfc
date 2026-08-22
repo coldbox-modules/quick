@@ -27,12 +27,29 @@ component
 	 *
 	 * @return      quick.models.QuickQB
 	 */
-	private QuickQB function whereBasic(
-		required any column,
-		required any operator,
+	public QuickQB function where(
+		any column,
+		any operator,
 		any value,
 		string combinator = "and"
 	) {
+		if ( isClosure( arguments.column ) || isCustomFunction( arguments.column ) ) {
+			return whereNested( arguments.column, arguments.combinator );
+		}
+
+		if ( isNull( arguments.value ) && getQueryValidator().isInvalidOperator( arguments.operator ) ) {
+			arguments.value    = arguments.operator;
+			arguments.operator = "=";
+		}
+
+		if (
+			!isNull( arguments.value ) &&
+			isStruct( arguments.value ) &&
+			structKeyExists( arguments.value, "isQuickBuilder" )
+		) {
+			arguments.value = arguments.value.getQB();
+		}
+
 		if ( isSimpleValue( arguments.column ) && getEntity().hasAttribute( arguments.column ) ) {
 			arguments.value = generateQueryParamStruct(
 				column           = arguments.column,
@@ -41,7 +58,7 @@ component
 				shouldCastValues = true // we are in a where clause, so the casted values will not be persisted to the entity at this time.
 			);
 		}
-		super.whereBasic( argumentCollection = arguments );
+		super.where( argumentCollection = arguments );
 		return this;
 	}
 
@@ -55,17 +72,17 @@ component
 	 *
 	 * @return qb.models.Query.QueryBuilder
 	 */
-	private QuickQB function whereInSub(
+	public QuickQB function whereIn(
 		column,
-		query,
+		values,
 		combinator = "and",
 		negate     = false
 	) {
-		if ( isStruct( arguments.query ) && structKeyExists( arguments.query, "isQuickBuilder" ) ) {
-			arguments.query = arguments.query.getQB();
+		if ( isStruct( arguments.values ) && structKeyExists( arguments.values, "isQuickBuilder" ) ) {
+			arguments.values = arguments.values.getQB();
 		}
 
-		return super.whereInSub( argumentCollection = arguments );
+		return super.whereIn( argumentCollection = arguments );
 	}
 
 	/**
@@ -947,13 +964,17 @@ component
 	 */
 	public QueryBuilder function newQuery() {
 		var newBuilder = new quick.models.QuickQB(
-			grammar             = getGrammar(),
-			utils               = getUtils(),
-			returnFormat        = getReturnFormat(),
-			paginationCollector = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
-			columnFormatter     = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
-			parentQuery         = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery().clone(),
-			defaultOptions      = getDefaultOptions()
+			grammar                        = getGrammar(),
+			utils                          = getUtils(),
+			returnFormat                   = getReturnFormat(),
+			returnFormatterRegistry        = getReturnFormatterRegistry(),
+			paginationCollector            = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
+			columnFormatter                = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
+			parentQuery                    = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery().clone(),
+			defaultOptions                 = getDefaultOptions(),
+			validateDuplicateSelectColumns = getValidateDuplicateSelectColumns(),
+			validateQueryExecuteReturnType = getValidateQueryExecuteReturnType(),
+			collectQueryLog                = getCollectQueryLog()
 		);
 		newBuilder.setQuickBuilder( getQuickBuilder() );
 		newBuilder.setEntity( getEntity() );

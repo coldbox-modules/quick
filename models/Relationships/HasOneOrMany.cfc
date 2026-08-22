@@ -272,7 +272,9 @@ component
 			}, {} ),
 			force = true
 		);
-		return saveMany( argumentCollection = arguments );
+		var savedEntities = saveMany( argumentCollection = arguments );
+		variables.parent.assignRelationship( variables.relationMethodName, savedEntities );
+		return savedEntities;
 	}
 
 	/**
@@ -284,11 +286,20 @@ component
 	 * @return        [quick.models.BaseEntity]
 	 */
 	public array function saveMany( required any entities ) {
-		arguments.entities = isArray( arguments.entities ) ? arguments.entities : [ arguments.entities ];
+		arguments.entities        = isArray( arguments.entities ) ? arguments.entities : [ arguments.entities ];
+		var relationshipWasLoaded = variables.parent.isRelationshipLoaded( variables.relationMethodName );
+		var loadedEntities        = relationshipWasLoaded ? variables.parent.retrieveRelationship(
+			variables.relationMethodName
+		) : [];
 
-		return arguments.entities.map( function( entity ) {
+		var savedEntities = arguments.entities.map( function( entity ) {
 			return save( arguments.entity );
 		} );
+		if ( relationshipWasLoaded ) {
+			loadedEntities.append( savedEntities, true );
+			variables.parent.assignRelationship( variables.relationMethodName, loadedEntities );
+		}
+		return savedEntities;
 	}
 
 	/**

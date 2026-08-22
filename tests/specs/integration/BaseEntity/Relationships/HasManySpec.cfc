@@ -63,6 +63,22 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( posts[ 2 ].getAuthor().getId() ).toBe( user.getId() );
 			} );
 
+			it( "updates an already-loaded relationship after saving many entities", function() {
+				var user = getInstance( "User" ).find( 1 );
+				expect( user.getPosts() ).toHaveLength( 2 );
+
+				var savedPosts = user
+					.posts()
+					.saveMany( [
+						getInstance( "Post" ).fill( { "body" : "A cached post" } ),
+						getInstance( "Post" ).fill( { "body" : "Another cached post" } )
+					] );
+
+				expect( user.getPosts() ).toHaveLength( 4 );
+				expect( user.getPosts()[ 3 ].isSameAs( savedPosts[ 1 ] ) ).toBeTrue();
+				expect( user.getPosts()[ 4 ].isSameAs( savedPosts[ 2 ] ) ).toBeTrue();
+			} );
+
 			it( "can save many ids at a time", function() {
 				var newPostA = getInstance( "Post" );
 				newPostA.setBody( "A new post by me!" );
@@ -96,7 +112,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getPosts() ).toHaveLength( 2 );
 				var posts = user.setPosts( newPost );
 
-				var posts = user.fresh().getPosts();
+				var posts = user.getPosts();
 				expect( posts ).toBeArray();
 				expect( posts ).toHaveLength( 1 );
 				expect( posts[ 1 ].keyValues() ).toBe( newPost.keyValues() );

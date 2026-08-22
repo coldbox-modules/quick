@@ -163,6 +163,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( users[ 2 ].getUsername() ).toBe( "janedoe" );
 			} );
 
+			it( "can eager load relationships", function() {
+				var users = getInstance( "CompatUser" ).with( "posts" ).get();
+
+				expect( users ).toBeArray();
+				expect( users ).toHaveLength( 5 );
+				expect( users[ 1 ].isRelationshipLoaded( "posts" ) ).toBeTrue();
+				expect( users[ 1 ].retrieveRelationship( "posts" ) ).toHaveLength( 2 );
+			} );
+
 			it( "new", function() {
 				var newUser = user.new();
 				expect( newUser.isLoaded() ).toBeFalse();

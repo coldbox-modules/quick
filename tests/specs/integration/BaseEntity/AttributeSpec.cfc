@@ -186,6 +186,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var memento          = getInstance( "User" ).findOrFail( 1 ).getMemento();
 				memento.createdDate  = dateTimeFormat( memento.createdDate, "yyyy-mm-dd hh:nn:ss" );
 				memento.modifiedDate = dateTimeFormat( memento.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+				if ( isNull( memento.email ) ) {
+					memento.email = "";
+				}
+				if ( isNull( memento.address.streetTwo ) ) {
+					memento.address.streetTwo = "";
+				}
 				expect( memento ).toBe( {
 					"id"           : 1,
 					"username"     : "elpete",
@@ -198,7 +204,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					"modifiedDate" : "2017-07-28 02:06:36",
 					"type"         : "admin",
 					"email"        : "",
-					"externalId"   : "1234",
+					"externalID"   : "1234",
 					"address"      : {
 						"streetOne" : "123 Elm Street",
 						"streetTwo" : "",

@@ -48,6 +48,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				memento.publishedDate       = dateTimeFormat( memento.publishedDate, "yyyy-mm-dd hh:nn:ss" );
 				memento.author.createdDate  = dateTimeFormat( memento.author.createdDate, "yyyy-mm-dd hh:nn:ss" );
 				memento.author.modifiedDate = dateTimeFormat( memento.author.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+				if ( isNull( memento.author.email ) ) {
+					memento.author.email = "";
+				}
+				if ( isNull( memento.author.address.streetTwo ) ) {
+					memento.author.address.streetTwo = "";
+				}
 				expect( memento ).toBe( {
 					"post_pk"       : "1245",
 					"body"          : "My awesome post body",

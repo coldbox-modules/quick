@@ -108,7 +108,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	public boolean function addEagerConstraints( required array entities, required any baseEntity ) {
 		var allKeys = getKeys(
 			entities,
-			variables.closestToParent.getLocalKeys(),
+			getLocalKeys(),
 			arguments.baseEntity
 		);
 
@@ -116,8 +116,8 @@ component extends="quick.models.Relationships.BaseRelationship" {
 			return false;
 		}
 
-		performJoin();
-		var foreignKeys             = variables.closestToParent.getForeignKeys();
+		performJoin( variables.relationshipBuilder );
+		var foreignKeys             = getForeignKeys();
 		var qualifiedForeignKeyList = foreignKeys
 			.reduce( function( acc, foreignKey, i ) {
 				if ( i != 1 ) {
@@ -128,7 +128,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 			}, [] )
 			.toList();
 
-		variables.related
+		variables.relationshipBuilder
 			.when(
 				( qualifiedForeignKeyList.listLen() > 1 ),
 				function( q1 ) {
@@ -151,7 +151,6 @@ component extends="quick.models.Relationships.BaseRelationship" {
 					} );
 				} );
 			} );
-
 		return true;
 	}
 
@@ -293,7 +292,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	) {
 		var dictionary = buildDictionary( arguments.results );
 		arguments.entities.each( function( entity ) {
-			var key = variables.localKeys
+			var key = getLocalKeys()
 				.map( function( localKey ) {
 					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
 						localKey
@@ -360,7 +359,7 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	}
 
 	public array function getLocalKeys() {
-		return variables.parent.keyNames();
+		return variables.closestToParent.getForeignKeys();
 	}
 
 }

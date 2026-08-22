@@ -1415,6 +1415,20 @@ component accessors="true" {
 	}
 
 	/**
+	 * Updates a timestamp attribute to the current time and saves the entity.
+	 *
+	 * @attribute The timestamp attribute to update. Default: `modifiedDate`.
+	 * @options   Any options to pass to `queryExecute`. Default: {}.
+	 *
+	 * @return    quick.models.BaseEntity
+	 */
+	public any function touch( string attribute = "modifiedDate", struct options = {} ) {
+		guardAgainstNotLoaded( "This instance is not loaded so it cannot be touched." );
+		assignAttribute( arguments.attribute, now() );
+		return save( arguments.options );
+	}
+
+	/**
 	 * Creates a new entity with the given attributes and then saves the entity.
 	 *
 	 * @attributes                   A struct of key / value pairs.

@@ -76,6 +76,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( userRowsPostSave ).toHaveLength( 5 );
 			} );
 
+			it( "can touch an entity timestamp", function() {
+				var user             = getInstance( "User" ).findOrFail( 1 );
+				var originalModified = user.getModifiedDate();
+
+				user.touch();
+
+				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 1 );
+				expect( user.isDirty( "modifiedDate" ) ).toBeFalse();
+				expect( dateCompare( user.fresh().getModifiedDate(), originalModified ) ).toBe( 1 );
+			} );
+
 			it( "does not allow updating of column where update=false in property", function() {
 				var existingUser = getInstance( "User" ).find( 1 );
 				existingUser.setEmail( "test2@test.com" );

@@ -14,7 +14,11 @@ component singleton {
 		required string key,
 		any value
 	) {
-		return isNull( arguments.value ) ? false : !!arguments.value;
+		if ( isNull( arguments.value ) ) {
+			return javacast( "null", "" );
+		}
+
+		return arguments.entity.isNullValue( arguments.key, arguments.value ) ? arguments.value : !!arguments.value;
 	}
 
 	/**
@@ -32,6 +36,10 @@ component singleton {
 		required string key,
 		any value
 	) {
+		if ( isNull( arguments.value ) || arguments.entity.isNullValue( arguments.key, arguments.value ) ) {
+			return javacast( "null", "" );
+		}
+
 		return arguments.value ? 1 : 0;
 	}
 

@@ -616,12 +616,14 @@ component accessors="true" {
 			if ( !hasAttribute( key ) ) {
 				continue;
 			}
-			variables._data[ retrieveColumnForAlias( key ) ] = (
+			var value = castValueForGetter(
+				key,
 				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
-			) ? javacast( "null", "" ) : castValueForGetter( key, arguments.attributes[ key ] );
-			variables[ retrieveAliasForColumn( key ) ] = (
-				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
-			) ? javacast( "null", "" ) : castValueForGetter( key, arguments.attributes[ key ] );
+				 ? javacast( "null", "" )
+				 : arguments.attributes[ key ]
+			);
+			variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
+			variables[ retrieveAliasForColumn( key ) ]       = isNull( value ) ? javacast( "null", "" ) : value;
 		}
 	}
 
@@ -3456,24 +3458,26 @@ component accessors="true" {
 		}
 
 		if ( !structKeyExists( variables._casts, arguments.key ) ) {
-			return arguments.value;
-		}
-
-		if ( !isVirtualAttribute( arguments.key ) && isNullValue( arguments.key, arguments.value ) ) {
-			return arguments.value;
+			return isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value;
 		}
 
 		var castMapping = variables._casts[ arguments.key ];
 		if ( !variables._casterCache.keyExists( arguments.key ) ) {
 			variables._casterCache[ arguments.key ] = variables._wirebox.getInstance( dsl = castMapping );
 		}
-		var caster                            = variables._casterCache[ arguments.key ];
-		variables._castCache[ arguments.key ] = caster.get(
+		var caster      = variables._casterCache[ arguments.key ];
+		var castedValue = caster.get(
 			entity = this,
 			key    = arguments.key,
 			value  = isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
 		);
-		return variables._castCache[ arguments.key ];
+		if ( isNull( castedValue ) ) {
+			structDelete( variables._castCache, arguments.key );
+			return javacast( "null", "" );
+		}
+
+		variables._castCache[ arguments.key ] = castedValue;
+		return castedValue;
 	}
 
 	/**
@@ -3524,6 +3528,14 @@ component accessors="true" {
 			}
 			var caster = variables._casterCache[ key ];
 			var attrs  = caster.set( this, key, castedValue );
+			if ( isNull( attrs ) ) {
+				assignAttribute(
+					name  = key,
+					value = javacast( "null", "" ),
+					cast  = false
+				);
+				continue;
+			}
 			if ( !isStruct( attrs ) ) {
 				attrs = { "#key#" : attrs };
 			}

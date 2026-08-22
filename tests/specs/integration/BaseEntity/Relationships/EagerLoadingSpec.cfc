@@ -685,6 +685,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						);
 					}
 				} );
+
+				it( "can disable an automatically eager loaded relationship", () => {
+					var posts = getInstance( "EagerLoadedPost" )
+						.without( "comments" )
+						.preventLazyLoading()
+						.get();
+
+					expect( posts ).toHaveLength( 4 );
+					expect( posts[ 1 ].isRelationshipLoaded( "comments" ) ).toBeFalse();
+					expect( () => posts[ 1 ].getComments() ).toThrow( type = "QuickLazyLoadingException" );
+					expect( variables.queries ).toHaveLength( 1, "Only the posts query should execute." );
+				} );
 			} );
 
 			describe( "multiple nested eager loads", () => {

@@ -592,6 +592,31 @@ component accessors="true" transientCache="false" {
 	}
 
 	/**
+	 * Removes one or more relationships from the eager-load list. Omitting the
+	 * argument removes every configured eager load.
+	 *
+	 * @relationName A relationship name or array of relationship names to remove.
+	 *
+	 * @return       QuickBuilder
+	 */
+	public any function without( any relationName ) {
+		if ( isNull( arguments.relationName ) ) {
+			variables._eagerLoad = [];
+			return this;
+		}
+
+		var exclusions       = arrayWrap( arguments.relationName );
+		variables._eagerLoad = variables._eagerLoad.filter( function( eagerLoad ) {
+			var path = isStruct( arguments.eagerLoad ) ? arguments.eagerLoad.keyArray()[ 1 ] : arguments.eagerLoad;
+			return !exclusions.some( function( exclusion ) {
+				return compareNoCase( path, exclusion ) == 0 ||
+				compareNoCase( left( path, len( exclusion ) + 1 ), exclusion & "." ) == 0;
+			} );
+		} );
+		return this;
+	}
+
+	/**
 	 * Eager loads the configured relations for the retrieved entities.
 	 * Returns the retrieved entities eager loaded with the configured
 	 * relationships.

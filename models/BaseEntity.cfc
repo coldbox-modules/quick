@@ -1559,10 +1559,15 @@ component accessors="true" {
 	}
 
 	/**
-	 * Assigns a result to a relationship.
+	 * Assigns a value to an entity relationship and marks that relationship as loaded.
+	 * Accessing the relationship after assignment returns the supplied value without
+	 * executing its relationship query.  This only changes the in-memory entity: it
+	 * does not persist the relationship, synchronize keys, or validate the value.
+	 * Use `clearRelationship( name )` to remove the assigned value and loaded marker.
 	 *
-	 * @name    The name of the relationship to assign.
-	 * @value   The result for the relationship.
+	 * @name    The relationship method name to seed.
+	 * @value   The value to return for the relationship, usually an entity for a
+	 *          singular relationship or an array for a collection relationship.
 	 *
 	 * @return  quick.models.BaseEntity
 	 */

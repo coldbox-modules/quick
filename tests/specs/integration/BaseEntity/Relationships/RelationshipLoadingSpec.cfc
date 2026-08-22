@@ -144,6 +144,24 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( elpete2FavoritePost.getBody() ).toBe( "test body" );
 			} );
 
+			it( "can seed and clear a loaded relationship", function() {
+				var user          = getInstance( "User" ).findOrFail( 1 );
+				var seededPost    = getInstance( "Post" ).findOrFail( 1245 );
+				variables.queries = [];
+
+				user.assignRelationship( "posts", [ seededPost ] );
+
+				expect( user.isRelationshipLoaded( "posts" ) ).toBeTrue();
+				expect( user.getPosts() ).toHaveLength( 1 );
+				expect( user.getPosts()[ 1 ].keyValues() ).toBe( seededPost.keyValues() );
+				expect( variables.queries ).toBeEmpty();
+
+				user.clearRelationship( "posts" );
+				expect( user.isRelationshipLoaded( "posts" ) ).toBeFalse();
+				expect( user.getPosts() ).toHaveLength( 2 );
+				expect( variables.queries ).toHaveLength( 1 );
+			} );
+
 			it( "can call exists methods on a relationship class", () => {
 				var elpete = getInstance( "User" ).findOrFail( 1 );
 				expect( elpete.favoritePost().exists() ).toBeTrue();

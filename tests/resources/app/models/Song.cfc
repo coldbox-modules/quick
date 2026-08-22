@@ -1,15 +1,15 @@
 component extends="quick.models.BaseEntity" accessors="true" {
 
-	variables._dispatchesEvents = {
-		"postInsert" : "onSongCreated",
-		"postSave"   : [ "onSongSaved", "onMediaSaved" ]
-	};
-
     property name="id";
     property name="title" nullValue="REALLY_NULL";
     property name="downloadUrl" column="download_url";
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
+
+	variables._dispatchesEvents = {
+		"postInsert" : "onSongCreated",
+		"postSave"   : [ "onSongSaved", "onMediaSaved" ]
+	};
 
     function instanceReady( eventData ) {
         request.instanceReadyCalled = eventData;

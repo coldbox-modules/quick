@@ -6,6 +6,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var country = getInstance( "Country" ).create( { "name" : "Wakanda" } );
 
 				expect( country.getId() ).notToBeNumeric();
+				expect( country.getId() ).toHaveLength( 35 );
+				expect( reFindNoCase( "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{16}$", country.getId() ) ).toBe(
+					1
+				);
+				expect( getInstance( "Country" ).find( country.getId() ) ).notToBeNull();
 			} );
 		} );
 	}

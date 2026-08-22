@@ -2588,6 +2588,23 @@ component accessors="true" {
 		array exclusions              = []
 	) {
 		if ( !structKeyExists( variables, "scope#arguments.missingMethodName#" ) ) {
+			if (
+				arrayContainsNoCase( variables._meta.functionNames, arguments.missingMethodName ) &&
+				isCustomFunction( variables[ arguments.missingMethodName ] )
+			) {
+				var suggestedScopeName = "scope" & uCase( left( arguments.missingMethodName, 1 ) ) & mid(
+					arguments.missingMethodName,
+					2,
+					len( arguments.missingMethodName )
+				);
+				throw(
+					type    = "QuickMissingMethod",
+					message = "Quick could not use [#arguments.missingMethodName#] as a query scope. " &
+					"An entity function named [#arguments.missingMethodName#] exists. " &
+					"If that function is intended to be a query scope, rename it to [#suggestedScopeName#]. " &
+					"See https://quick.ortusbooks.com/guide/getting-started/query-scopes-and-subselects"
+				);
+			}
 			return;
 		}
 

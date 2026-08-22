@@ -70,6 +70,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return qb.updateAll( { "password" : "" } ).result.recordcount;
 	}
 
+	function incorrectlyNamedScope( qb ) {
+		return qb.where( "type", "admin" );
+	}
+
 	function scopeWithLatestPostId( qb ) {
 		qb.addSubselect(
 			"latestPostId",

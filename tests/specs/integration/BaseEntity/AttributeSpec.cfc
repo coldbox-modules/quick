@@ -216,6 +216,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} );
 			} );
 
+			it( "uses an explicit column when the property name is also a database column", function() {
+				var user = getInstance( "AliasedUsernameUser" ).findOrFail( 1 );
+
+				expect( user.getUsername() ).toBe( "Eric" );
+				expect( user.retrieveAttributesData() ).toHaveKey( "first_name" );
+				expect( user.retrieveAttributesData() ).notToHaveKey( "username" );
+			} );
+
 			// https://github.com/coldbox-modules/quick/issues/127
 			it( "can clear an attribute", () => {
 				var elpete = getInstance( "User" ).findOrFail( 1 );

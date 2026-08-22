@@ -327,12 +327,36 @@ component
 	/**
 	 * Creates a new entity, associates it to the parent entity, and returns it.
 	 *
-	 * @attributes  The attributes for the new related entity.
+	 * @attributes           The attributes for the new related entity.
+	 * @inverseRelationship  An optional relationship name on the new entity to
+	 *                       seed with the parent before saving.
 	 *
 	 * @return      quick.models.BaseEntity
 	 */
-	public any function create( struct attributes = {} ) {
-		return newEntity().fill( arguments.attributes ).save();
+	public any function create( struct attributes = {}, string inverseRelationship ) {
+		var createdEntity = newEntity().fill( arguments.attributes );
+		if ( !isNull( arguments.inverseRelationship ) ) {
+			if ( !createdEntity.hasRelationship( arguments.inverseRelationship ) ) {
+				throw(
+					type    = "RelationshipNotFound",
+					message = "The [#arguments.inverseRelationship#] relationship was not found on the [#createdEntity.entityName()#] entity."
+				);
+			}
+			createdEntity.assignRelationship( arguments.inverseRelationship, variables.parent );
+		}
+		createdEntity.save();
+
+		if ( variables.parent.isRelationshipLoaded( variables.relationMethodName ) ) {
+			var loadedValue = variables.parent.retrieveRelationship( variables.relationMethodName );
+			if ( isArray( loadedValue ) ) {
+				loadedValue.append( createdEntity );
+				variables.parent.assignRelationship( variables.relationMethodName, loadedValue );
+			} else {
+				variables.parent.assignRelationship( variables.relationMethodName, createdEntity );
+			}
+		}
+
+		return createdEntity;
 	}
 
 	/**

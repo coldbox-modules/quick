@@ -330,6 +330,23 @@ component
 	}
 
 	/**
+	 * Creates the related parent entity, associates it to the child, and caches
+	 * it as the loaded relationship value.  The child entity is not saved.
+	 *
+	 * @attributes  The attributes for the new related entity.
+	 *
+	 * @return      quick.models.BaseEntity
+	 */
+	public any function create( struct attributes = {} ) {
+		var createdEntity = variables.related
+			.newEntity()
+			.fill( arguments.attributes )
+			.save();
+		associate( createdEntity );
+		return createdEntity;
+	}
+
+	/**
 	 * Removes an entity as the parent of the relationship.
 	 * For example, if a Post belongs to a User, dissociate will set the
 	 * foreign key column on the Post entity to null.

@@ -121,11 +121,30 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			it( "can create new related entities directly", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getPosts() ).toHaveLength( 2 );
-				var newPost = user.posts().create( { "body" : "A new post created directly here!" } );
+				var newPost = user.posts().create( { "body" : "A new post created directly here!" }, "author" );
 				expect( newPost.isLoaded() ).toBeTrue();
 				expect( newPost.retrieveAttribute( "user_id" ) ).toBe( user.getId() );
 				expect( newPost.getBody() ).toBe( "A new post created directly here!" );
-				expect( user.fresh().getPosts() ).toHaveLength( 3 );
+				expect( newPost.isRelationshipLoaded( "author" ) ).toBeTrue();
+				expect( newPost.getAuthor().isSameAs( user ) ).toBeTrue();
+				expect( user.getPosts() ).toHaveLength( 3 );
+				expect( user.getPosts()[ 3 ].isSameAs( newPost ) ).toBeTrue();
+			} );
+
+			it( "does not initialize an unloaded parent relationship when creating", function() {
+				var user = getInstance( "User" ).find( 1 );
+
+				user.posts().create( { "body" : "A new post without loading the collection" } );
+
+				expect( user.isRelationshipLoaded( "posts" ) ).toBeFalse();
+			} );
+
+			it( "rejects an unknown inverse relationship when creating", function() {
+				var user = getInstance( "User" ).find( 1 );
+
+				expect( function() {
+					user.posts().create( { "body" : "This should not be saved" }, "missingRelationship" );
+				} ).toThrow( "RelationshipNotFound" );
 			} );
 
 			it( "can first off of the relationship", function() {

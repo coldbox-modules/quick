@@ -848,11 +848,28 @@ component accessors="true" {
 	}
 
 	/**
-	 * Returns if the entity has been edited since being loaded from the database.
+	 * Returns if the entity, or one specific attribute, has been edited since
+	 * being loaded from the database.
+	 *
+	 * @attribute An optional attribute alias or column name to inspect.
 	 *
 	 * @return  Boolean
 	 */
-	public boolean function isDirty() {
+	public boolean function isDirty( string attribute ) {
+		if ( !isNull( arguments.attribute ) ) {
+			guardAgainstNonExistentAttribute( arguments.attribute );
+			var column            = retrieveColumnForAlias( arguments.attribute );
+			var currentAttributes = retrieveAttributesData( withNulls = true );
+			var originalAttribute = {};
+			var currentAttribute  = {};
+			if ( variables._originalAttributes.keyExists( column ) ) {
+				originalAttribute[ column ] = variables._originalAttributes[ column ];
+			}
+			if ( currentAttributes.keyExists( column ) ) {
+				currentAttribute[ column ] = currentAttributes[ column ];
+			}
+			return compare( computeAttributesHash( originalAttribute ), computeAttributesHash( currentAttribute ) ) != 0;
+		}
 		param variables._originalAttributesHash = computeAttributesHash( variables._originalAttributes );
 		return compare( variables._originalAttributesHash, computeAttributesHash( retrieveAttributesData() ) ) != 0;
 	}

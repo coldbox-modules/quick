@@ -118,6 +118,30 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( dateCompare( freshUser.getModifiedDate(), originalModified ) ).toBe( 0 );
 			} );
 
+			it( "throws a helpful error when changing the key of a loaded entity", function() {
+				var existingUser = getInstance( "User" ).findOrFail( 1 );
+
+				expect( function() {
+					existingUser.setId( 2 ).save();
+				} ).toThrow( type = "QuickPrimaryKeyMutationException", regex = "cannot change its primary key" );
+			} );
+
+			it( "allows assigning the existing key value to a loaded entity", function() {
+				var existingUser = getInstance( "User" ).findOrFail( 1 );
+
+				expect( function() {
+					existingUser.setId( 1 ).save();
+				} ).notToThrow();
+			} );
+
+			it( "guards every part of a loaded composite key", function() {
+				var composite = getInstance( "Composite" ).findOrFail( [ 1, 2 ] );
+
+				expect( function() {
+					composite.setB( 1 ).save();
+				} ).toThrow( type = "QuickPrimaryKeyMutationException", regex = "primary key \[b\]" );
+			} );
+
 			it( "does not allow updating of column where update=false in property", function() {
 				var existingUser = getInstance( "User" ).find( 1 );
 				existingUser.setEmail( "test2@test.com" );

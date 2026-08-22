@@ -341,10 +341,10 @@ component
 			var keyValues       = arguments.entity;
 			arguments.entity    = variables.related.newEntity();
 			var relatedKeyNames = variables.related.keyNames();
-			arguments.entity.set_loaded( true );
 			for ( var i = 1; i <= relatedKeyNames.len(); i++ ) {
 				arguments.entity.forceAssignAttribute( relatedKeyNames[ i ], keyValues[ i ] );
 			}
+			arguments.entity.assignOriginalAttributes( arguments.entity.retrieveAttributesData() ).set_loaded( true );
 		}
 		setForeignAttributesForCreate( arguments.entity );
 		return arguments.entity.save();

@@ -104,6 +104,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getUsername() ).toBe( "elpete" );
 			} );
 
+			it( "resets the cached query when resetting an entity", function() {
+				var users = getInstance( "User" );
+
+				users.where( "id", 1 );
+
+				expect( users.reset().get() ).toHaveLength( 5 );
+			} );
+
 			it( "shows all the attributes in the memento of a newly created object", function() {
 				var memento = getInstance( "User" ).getMemento();
 				if ( structCount( memento ) != 14 ) {

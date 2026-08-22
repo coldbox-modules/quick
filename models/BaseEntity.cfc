@@ -1046,6 +1046,9 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function reset( boolean toNew = false ) {
+		if ( variables.keyExists( "_quickBuilder" ) ) {
+			structDelete( variables, "_quickBuilder" );
+		}
 		assignAttributesData( arguments.toNew ? {} : variables._originalAttributes );
 		if ( arguments.toNew ) {
 			assignOriginalAttributes( {} );

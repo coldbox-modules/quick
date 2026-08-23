@@ -3536,10 +3536,10 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function isNullValue( required string key, any value ) {
-		if ( !isDefined( "arguments.value" ) ) {
-			// There is potential for the value of an attribute to be an actuall null value
-			// We must use isDefined instead of cfparam as returning a null value from invoke
-			// into the 'default' argument of cfparam will raise an exception
+		if ( !arguments.keyExists( "value" ) ) {
+			// There is potential for the value of an attribute to be an actual null value.
+			// Returning a null value from invoke into the 'default' argument of cfparam
+			// would raise an exception, so retrieve the current value directly.
 			arguments.value = invoke( this, "get" & arguments.key );
 		}
 

@@ -37,3 +37,54 @@ diff --git a/tests/resources/app/coldbox/system/web/services/InterceptorService.
 @@ -194 +194 @@
 -		if ( !isNull( arguments.interceptData ) ) {
 +		if ( arguments.keyExists( "interceptData" ) && !isNull( arguments.interceptData ) ) {
+diff --git a/tests/resources/app/coldbox/system/testing/BaseTestCase.cfc b/tests/resources/app/coldbox/system/testing/BaseTestCase.cfc
+--- a/tests/resources/app/coldbox/system/testing/BaseTestCase.cfc
++++ b/tests/resources/app/coldbox/system/testing/BaseTestCase.cfc
+@@ -162 +162 @@
+-		if ( isNull( variables._ranBeforeAll ) ) {
++		if ( !variables.keyExists( "_ranBeforeAll" ) || isNull( variables._ranBeforeAll ) ) {
+@@ -172 +172 @@
+-		if ( isNull( variables._ranAfterAll ) ) {
++		if ( !variables.keyExists( "_ranAfterAll" ) || isNull( variables._ranAfterAll ) ) {
+@@ -784 +784 @@
+-		if ( !isNull( arguments.interceptData ) ) {
++		if ( arguments.keyExists( "interceptData" ) && !isNull( arguments.interceptData ) ) {
+@@ -847 +847 @@
+-		if ( isNull( variables.cbUtil ) ) {
++		if ( !variables.keyExists( "cbUtil" ) || isNull( variables.cbUtil ) ) {
+@@ -859 +859 @@
+-		if ( isNull( variables.env ) ) {
++		if ( !variables.keyExists( "env" ) || isNull( variables.env ) ) {
+diff --git a/tests/resources/app/coldbox/system/ioc/Builder.cfc b/tests/resources/app/coldbox/system/ioc/Builder.cfc
+--- a/tests/resources/app/coldbox/system/ioc/Builder.cfc
++++ b/tests/resources/app/coldbox/system/ioc/Builder.cfc
+@@ -82 +82 @@
+-		if ( isNull( variables.coldboxDSL ) ) {
++		if ( !variables.keyExists( "coldboxDSL" ) || isNull( variables.coldboxDSL ) ) {
+@@ -94 +94 @@
+-		if ( isNull( variables.cacheBoxDSL ) ) {
++		if ( !variables.keyExists( "cacheBoxDSL" ) || isNull( variables.cacheBoxDSL ) ) {
+@@ -106 +106 @@
+-		if ( isNull( variables.logBoxDSL ) ) {
++		if ( !variables.keyExists( "logBoxDSL" ) || isNull( variables.logBoxDSL ) ) {
+diff --git a/tests/resources/app/coldbox/system/cache/store/ConcurrentStore.cfc b/tests/resources/app/coldbox/system/cache/store/ConcurrentStore.cfc
+--- a/tests/resources/app/coldbox/system/cache/store/ConcurrentStore.cfc
++++ b/tests/resources/app/coldbox/system/cache/store/ConcurrentStore.cfc
+@@ -261 +261 @@
+-		if ( isNull( variables.collections ) ) {
++		if ( !variables.keyExists( "collections" ) || isNull( variables.collections ) ) {
+diff --git a/tests/resources/app/coldbox/system/FrameworkSupertype.cfc b/tests/resources/app/coldbox/system/FrameworkSupertype.cfc
+--- a/tests/resources/app/coldbox/system/FrameworkSupertype.cfc
++++ b/tests/resources/app/coldbox/system/FrameworkSupertype.cfc
+@@ -621 +621 @@
+-		if ( isNull( variables.asyncManager ) ) {
++		if ( !variables.keyExists( "asyncManager" ) || isNull( variables.asyncManager ) ) {
+@@ -755 +755 @@
+-		if ( isNull( variables.cbDateTimeHelper ) ) {
++		if ( !variables.keyExists( "cbDateTimeHelper" ) || isNull( variables.cbDateTimeHelper ) ) {
+diff --git a/tests/resources/app/coldbox/system/core/util/Util.cfc b/tests/resources/app/coldbox/system/core/util/Util.cfc
+--- a/tests/resources/app/coldbox/system/core/util/Util.cfc
++++ b/tests/resources/app/coldbox/system/core/util/Util.cfc
+@@ -124 +124 @@
+-		if ( isNull( variables.inetAddress ) ) {
++		if ( !variables.keyExists( "inetAddress" ) || isNull( variables.inetAddress ) ) {

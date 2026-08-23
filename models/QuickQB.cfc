@@ -407,17 +407,23 @@ component
 	 * Constrains the query to entities belonging to one or more related entities.
 	 * The relationship name defaults to the lower-camel-cased related entity name.
 	 *
-	 * @related           A related Quick entity, an array of entities, or a collection of entities.
 	 * @relationshipName  The belongsTo relationship to use.
+	 *                    A related entity can be passed here as a shortcut that infers the relationship name.
+	 * @related           A related Quick entity, an array of entities, or a collection of entities.
 	 * @combinator        The boolean combinator for the clause. Default: "and".
 	 *
 	 * @return            quick.models.QuickQB
 	 */
 	public QuickQB function whereBelongsTo(
-		required any related,
-		string relationshipName,
+		required any relationshipName,
+		any related,
 		string combinator = "and"
 	) {
+		if ( isNull( arguments.related ) ) {
+			arguments.related = arguments.relationshipName;
+			arguments.delete( "relationshipName" );
+		}
+
 		var relatedEntities = isArray( arguments.related )
 		 ? arguments.related
 		 : (
@@ -433,7 +439,7 @@ component
 			);
 		}
 
-		if ( isNull( arguments.relationshipName ) ) {
+		if ( !arguments.keyExists( "relationshipName" ) || isNull( arguments.relationshipName ) ) {
 			var relatedEntityName      = relatedEntities[ 1 ].entityName();
 			arguments.relationshipName = lCase( left( relatedEntityName, 1 ) ) & removeChars( relatedEntityName, 1, 1 );
 		}
@@ -485,12 +491,13 @@ component
 	/**
 	 * Adds a whereBelongsTo constraint using an OR combinator.
 	 *
-	 * @related           A related Quick entity, an array of entities, or a collection of entities.
 	 * @relationshipName  The belongsTo relationship to use.
+	 *                    A related entity can be passed here as a shortcut that infers the relationship name.
+	 * @related           A related Quick entity, an array of entities, or a collection of entities.
 	 *
 	 * @return            quick.models.QuickQB
 	 */
-	public QuickQB function orWhereBelongsTo( required any related, string relationshipName ) {
+	public QuickQB function orWhereBelongsTo( required any relationshipName, any related ) {
 		arguments.combinator = "or";
 		return whereBelongsTo( argumentCollection = arguments );
 	}

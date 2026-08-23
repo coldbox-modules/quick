@@ -197,7 +197,9 @@ component
 				} );
 
 			if ( values.len() == variables.foreignKeys.len() ) {
-				if ( seenKeys.add( serializeJSON( values ) ) ) {
+				var serializedKey = serializeJSON( values );
+				if ( !seenKeys.contains( serializedKey ) ) {
+					seenKeys.add( serializedKey );
 					arguments.keys.append( values );
 				}
 			}

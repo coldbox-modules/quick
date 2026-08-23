@@ -381,7 +381,9 @@ component accessors="true" implements="IRelationship" {
 				keyValues.append( value );
 			}
 
-			if ( seenKeys.add( serializeJSON( keyValues ) ) ) {
+			var serializedKey = serializeJSON( keyValues );
+			if ( !seenKeys.contains( serializedKey ) ) {
+				seenKeys.add( serializedKey );
 				acc.append( keyValues );
 			}
 			return acc;

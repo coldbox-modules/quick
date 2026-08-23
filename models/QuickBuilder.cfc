@@ -784,11 +784,18 @@ component accessors="true" transientCache="false" {
 		callback( relation );
 		var hasMatches = relation.addEagerConstraints( arguments.entities, getEntity() );
 		relation.with( renestEagerLoads( nestedEagerLoads ) );
-		return relation.match(
+		var matchedEntities = relation.match(
 			relation.initRelation( arguments.entities, arguments.relationName ),
 			hasMatches ? relation.getEager( variables._asQuery, variables._withAliases ) : [],
 			arguments.relationName
 		);
+		var loadedRelationshipName = arguments.relationName;
+		matchedEntities.each( function( entity ) {
+			if ( isStruct( arguments.entity ) && structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.fireRelationshipLoaded( loadedRelationshipName );
+			}
+		} );
+		return matchedEntities;
 	}
 
 	/**

@@ -42,7 +42,8 @@ component {
 				"quickPreUpdate",
 				"quickPostUpdate",
 				"quickPreDelete",
-				"quickPostDelete"
+				"quickPostDelete",
+				"quickRelationshipLoaded"
 			]
 		};
 

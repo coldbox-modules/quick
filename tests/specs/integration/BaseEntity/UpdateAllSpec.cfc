@@ -17,6 +17,32 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( postA.getBody() ).toBe( "The new body" );
 				expect( postB.getBody() ).toBe( "The new body" );
 			} );
+
+			it( "can update date values after switching to query results", function() {
+				var originalDate = getInstance( "User" ).findOrFail( 1 ).getModifiedDate();
+				var futureDate   = now().add( "d", 1 );
+
+				var result = getInstance( "User" )
+					.where( "id", 1 )
+					.asQuery()
+					.update( { "modified_date" : futureDate } );
+
+				expect( result.result.recordCount ).toBe( 1 );
+				expect( getInstance( "User" ).findOrFail( 1 ).getModifiedDate() ).notToBe( originalDate );
+			} );
+
+			it( "can update date values through the underlying query", function() {
+				var originalDate = getInstance( "User" ).findOrFail( 1 ).getModifiedDate();
+				var futureDate   = now().add( "d", 2 );
+
+				var result = getInstance( "User" )
+					.where( "id", 1 )
+					.retrieveQuery()
+					.update( { "modified_date" : futureDate } );
+
+				expect( result.result.recordCount ).toBe( 1 );
+				expect( getInstance( "User" ).findOrFail( 1 ).getModifiedDate() ).notToBe( originalDate );
+			} );
 		} );
 	}
 

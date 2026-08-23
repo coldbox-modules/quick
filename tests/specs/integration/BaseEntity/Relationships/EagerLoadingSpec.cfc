@@ -34,6 +34,33 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				}
 			} );
 
+			it( "preserves numeric binding types when eager loading a belongs to relationship", function() {
+				getInstance( "Post" ).with( "author" ).get();
+
+				expect( variables.queries ).toHaveLength( 2 );
+				var bindingTypes = extractBindingTypes( variables.queries[ 2 ] );
+
+				expect( bindingTypes ).notToBeEmpty();
+				for ( var bindingType in bindingTypes ) {
+					expect( bindingType ).notToInclude( "varchar" );
+					expect( bindingType ).toInclude( "integer" );
+				}
+			} );
+
+			it( "keeps belongs to eager keys that differ only by case", function() {
+				var post         = getInstance( "Post" ).firstOrFail();
+				var relationship = post.author();
+				var keys         = relationship.getEagerEntityKeys(
+					[
+						{ "user_id" : "ABC" },
+						{ "user_id" : "abc" }
+					],
+					post
+				);
+
+				expect( keys ).toHaveLength( 2 );
+			} );
+
 			it( "can eager load a belongs to relationship using a composite key", function() {
 				var compositeChildren = getInstance( "CompositeChild" ).with( "parent" ).get();
 				expect( compositeChildren ).toBeArray();
@@ -241,6 +268,34 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( posts[ 4 ].getTags()[ 3 ].getName() ).toBe( "gaming" );
 
 				expect( variables.queries ).toHaveLength( 2, "Only two queries should have been executed." );
+			} );
+
+			it( "preserves numeric binding types when eager loading a belongs to many relationship", function() {
+				getInstance( "Post" ).with( "tags" ).get();
+
+				expect( variables.queries ).toHaveLength( 2 );
+				var bindingTypes = extractBindingTypes( variables.queries[ 2 ] );
+
+				expect( bindingTypes ).notToBeEmpty();
+				for ( var bindingType in bindingTypes ) {
+					expect( bindingType ).notToInclude( "varchar" );
+					expect( bindingType ).toInclude( "integer" );
+				}
+			} );
+
+			it( "keeps relationship eager keys that differ only by case", function() {
+				var user         = getInstance( "User" ).findOrFail( 1 );
+				var relationship = user.externalThings();
+				var keys         = relationship.getKeys(
+					[
+						{ "externalID" : "ABC" },
+						{ "externalID" : "abc" }
+					],
+					[ "externalID" ],
+					user
+				);
+
+				expect( keys ).toHaveLength( 2 );
 			} );
 
 			it( "can eager load a has many through relationship", function() {
@@ -767,6 +822,16 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		prc
 	) {
 		arrayAppend( variables.queries, interceptData );
+	}
+
+	private array function extractBindingTypes( required struct queryLogEntry ) {
+		return arguments.queryLogEntry.bindings
+			.filter( function( binding ) {
+				return isStruct( binding ) && ( binding.keyExists( "cfsqltype" ) || binding.keyExists( "sqltype" ) );
+			} )
+			.map( function( binding ) {
+				return lCase( binding.keyExists( "cfsqltype" ) ? binding[ "cfsqltype" ] : binding[ "sqltype" ] );
+			} );
 	}
 
 }

@@ -164,48 +164,48 @@ component
 	 * @return       [any]
 	 */
 	public array function getEagerEntityKeys( required array entities, required any baseEntity ) {
-		return arguments.entities
-			.reduce( function( keys, entity ) {
-				var values = variables.foreignKeys
-					.map( function( foreignKey ) {
-						return {
-							"foreignKey" : foreignKey,
-							"value"      : entityRetrieveAttribute( entity, foreignKey, baseEntity )
-						};
-					} )
-					.filter( function( map ) {
-						if ( !structKeyExists( map, "value" ) ) {
-							return false;
-						}
+		var seenKeys = createObject( "java", "java.util.LinkedHashSet" ).init();
+		return arguments.entities.reduce( function( keys, entity ) {
+			var values = variables.foreignKeys
+				.map( function( foreignKey ) {
+					return {
+						"foreignKey" : foreignKey,
+						"value"      : entityRetrieveAttribute( entity, foreignKey, baseEntity )
+					};
+				} )
+				.filter( function( map ) {
+					if ( !structKeyExists( map, "value" ) ) {
+						return false;
+					}
 
-						if ( isNull( map.value ) ) {
-							return false;
-						}
+					if ( isNull( map.value ) ) {
+						return false;
+					}
 
-						if ( !entityHasAttribute( entity, map.foreignKey, baseEntity ) ) {
-							return false;
-						}
+					if ( !entityHasAttribute( entity, map.foreignKey, baseEntity ) ) {
+						return false;
+					}
 
-						if ( baseEntity.isNullValue( map.foreignKey, map.value ) ) {
-							return false;
-						}
+					if ( baseEntity.isNullValue( map.foreignKey, map.value ) ) {
+						return false;
+					}
 
-						return true;
-					} )
-					.map( function( map ) {
-						return map.value;
-					} );
+					return true;
+				} )
+				.map( function( map ) {
+					return map.value;
+				} );
 
-				if ( values.len() == variables.foreignKeys.len() ) {
-					arguments.keys[ values.toList() ] = {};
+			if ( values.len() == variables.foreignKeys.len() ) {
+				var serializedKey = serializeJSON( values );
+				if ( !seenKeys.contains( serializedKey ) ) {
+					seenKeys.add( serializedKey );
+					arguments.keys.append( values );
 				}
+			}
 
-				return arguments.keys;
-			}, {} )
-			.keyArray()
-			.map( function( key ) {
-				return key.listToArray();
-			} );
+			return arguments.keys;
+		}, [] );
 	}
 
 	/**

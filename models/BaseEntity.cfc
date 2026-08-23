@@ -263,6 +263,7 @@ component accessors="true" {
 		variables._globalScopesApplied            = false;
 		variables._ignoreNotLoadedGuard           = false;
 		variables._withoutFiringEvents            = false;
+		variables._nullValueArgumentSentinel      = createObject( "java", "java.lang.Object" ).init();
 		param variables._preventLazyLoading       = false;
 		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
@@ -3535,8 +3536,8 @@ component accessors="true" {
 	 *
 	 * @return  Boolean
 	 */
-	public boolean function isNullValue( required string key, any value ) {
-		if ( !arguments.keyExists( "value" ) ) {
+	public boolean function isNullValue( required string key, any value = variables._nullValueArgumentSentinel ) {
+		if ( variables._nullValueArgumentSentinel.equals( arguments.value ) ) {
 			// There is potential for the value of an attribute to be an actual null value.
 			// Returning a null value from invoke into the 'default' argument of cfparam
 			// would raise an exception, so retrieve the current value directly.

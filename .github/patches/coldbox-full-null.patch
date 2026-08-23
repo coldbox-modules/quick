@@ -31,3 +31,9 @@ diff --git a/tests/resources/app/coldbox/system/core/delegates/Env.cfc b/tests/r
 @@ -87 +87 @@
 -		if ( isNull( variables.javaSystem ) ) {
 +		if ( !variables.keyExists( "javaSystem" ) || isNull( variables.javaSystem ) ) {
+diff --git a/tests/resources/app/coldbox/system/web/services/InterceptorService.cfc b/tests/resources/app/coldbox/system/web/services/InterceptorService.cfc
+--- a/tests/resources/app/coldbox/system/web/services/InterceptorService.cfc
++++ b/tests/resources/app/coldbox/system/web/services/InterceptorService.cfc
+@@ -194 +194 @@
+-		if ( !isNull( arguments.interceptData ) ) {
++		if ( arguments.keyExists( "interceptData" ) && !isNull( arguments.interceptData ) ) {

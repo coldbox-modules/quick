@@ -5,7 +5,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			describe( "whereBelongsTo", function() {
 				it( "constrains a query using a named belongsTo relationship", function() {
 					var author = getInstance( "User" ).findOrFail( 1 );
-					var posts  = getInstance( "Post" ).whereBelongsTo( author, "author" ).get();
+					var posts  = getInstance( "Post" ).whereBelongsTo( "author", author ).get();
 
 					expect( posts ).toHaveLength( 2 );
 					expectAll( posts ).toSatisfy( function( post ) {
@@ -25,7 +25,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				it( "constrains a query to an array of related entities", function() {
 					var authors = getInstance( "User" ).whereIn( "id", [ 1, 4 ] ).get();
-					var posts   = getInstance( "Post" ).whereBelongsTo( authors, "author" ).get();
+					var posts   = getInstance( "Post" ).whereBelongsTo( "author", authors ).get();
 
 					expect( posts ).toHaveLength( 3 );
 					expectAll( posts ).toSatisfy( function( post ) {
@@ -38,7 +38,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						.where( "a", 1 )
 						.where( "b", 2 )
 						.firstOrFail();
-					var children = getInstance( "CompositeChild" ).whereBelongsTo( parent, "parent" ).get();
+					var children = getInstance( "CompositeChild" ).whereBelongsTo( "parent", parent ).get();
 
 					expect( children ).toHaveLength( 1 );
 					expect( children[ 1 ].getComposite_A() ).toBe( 1 );
@@ -49,7 +49,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					var author = getInstance( "User" ).findOrFail( 1 );
 					var posts  = getInstance( "Post" )
 						.where( "post_pk", 7777 )
-						.orWhereBelongsTo( author, "author" )
+						.orWhereBelongsTo( "author", author )
 						.get();
 
 					expect( posts ).toHaveLength( 3 );

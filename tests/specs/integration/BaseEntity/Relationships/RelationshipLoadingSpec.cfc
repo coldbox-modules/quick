@@ -97,13 +97,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "gets a new instance of an entity when calling fill", () => {
-				var elpete  = getInstance( "User" ).findOrFail( 1 );
-				var newPost = elpete.posts().fill( { "body" : "test body" } );
+				var elpete       = getInstance( "User" ).findOrFail( 1 );
+				var relationship = elpete.posts();
+				var newPost      = relationship.fill( { "body" : "test body" } );
+				var anotherPost  = relationship.fill( { "body" : "another body" } );
 				expect( newPost ).notToBeNull();
 				expect( newPost ).toBeInstanceOf( "Post" );
 				expect( newPost.isLoaded() ).toBeFalse();
 				expect( newPost.getBody() ).toBe( "test body" );
 				expect( newPost.getUser_Id() ).toBe( 1 );
+				expect( anotherPost ).toBeInstanceOf( "Post" );
+				expect( anotherPost.isLoaded() ).toBeFalse();
+				expect( anotherPost.getBody() ).toBe( "another body" );
+				expect( anotherPost.getUser_Id() ).toBe( 1 );
 			} );
 
 			it( "can call fetch methods on the relationship builder", () => {

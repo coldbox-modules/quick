@@ -321,7 +321,18 @@ component accessors="true" implements="IRelationship" {
 	 * @return   quick.models.BaseEntity or [quick.models.BaseEntity]
 	 */
 	public any function get() {
-		return variables.getResults();
+		var results = variables.getResults();
+		if ( isNull( results ) ) {
+			return javacast( "null", "" );
+		}
+		if (
+			!isArray( results ) &&
+			structKeyExists( results, "isQuickEntity" ) &&
+			variables.relationshipBuilder.get_asMemento()
+		) {
+			return results.getMemento( argumentCollection = variables.relationshipBuilder.get_asMementoSettings() );
+		}
+		return results;
 	}
 
 	public any function getResults() {

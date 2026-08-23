@@ -1,0 +1,9 @@
+diff --git a/modules/mementifier/interceptors/Mementifier.cfc b/modules/mementifier/interceptors/Mementifier.cfc
+--- a/modules/mementifier/interceptors/Mementifier.cfc
++++ b/modules/mementifier/interceptors/Mementifier.cfc
+@@ -89,2 +89,3 @@
+-			var dateMask                        = isNull( this.memento.dateMask ) ? variables.settings.dateMask : this.memento.dateMask;
+-			var timeMask                        = isNull( this.memento.timeMask ) ? variables.settings.timeMask : this.memento.timeMask;
++			var entityMemento                   = arguments.entity.keyExists( "memento" ) ? arguments.entity.memento : {};
++			var dateMask                        = !entityMemento.keyExists( "dateMask" ) || isNull( entityMemento.dateMask ) ? variables.settings.dateMask : entityMemento.dateMask;
++			var timeMask                        = !entityMemento.keyExists( "timeMask" ) || isNull( entityMemento.timeMask ) ? variables.settings.timeMask : entityMemento.timeMask;

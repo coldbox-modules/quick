@@ -29,6 +29,40 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				);
 			} );
 
+			it( "can paginate while ordering by a subquery attribute", function() {
+				var page = getInstance( "User" )
+					.addSubselect( "latestPostId", ( qb ) => {
+						qb.from( "my_posts" )
+							.select( "post_pk" )
+							.whereColumn( "my_posts.user_id", "=", "users.id" )
+							.orderByDesc( "published_date" )
+							.limit( 1 );
+					} )
+					.orderByDesc( "latestPostId" )
+					.paginate( page = 1, maxRows = 2 );
+
+				expect( page.results ).toHaveLength( 2 );
+				expect( page.results[ 1 ].getLatestPostId() ).notToBeNull();
+				expect( page.results[ 2 ].getLatestPostId() ).notToBeNull();
+			} );
+
+			it( "uses native SQL Server pagination when ordering by a subquery attribute", function() {
+				var sql = getInstance( "User" )
+					.addSubselect( "latestPostId", ( qb ) => {
+						qb.from( "my_posts" )
+							.select( "post_pk" )
+							.whereColumn( "my_posts.user_id", "=", "users.id" )
+							.limit( 1 );
+					} )
+					.orderByDesc( "latestPostId" )
+					.setGrammar( getInstance( "SqlServerGrammar@qb" ) )
+					.forPage( page = 1, maxRows = 2 )
+					.toSQL();
+
+				expect( sql ).toInclude( "ORDER BY [latestPostId] DESC OFFSET 0 ROWS FETCH NEXT 2 ROWS ONLY" );
+				expect( sql ).notToInclude( "ROW_NUMBER()" );
+			} );
+
 			it( "can add a subquery to an entity using a relationship", function() {
 				var elpete = getInstance( "User" ).withLatestPostIdRelationship().findOrFail( 1 );
 				expect( elpete.getLatestPostId() ).notToBeNull();

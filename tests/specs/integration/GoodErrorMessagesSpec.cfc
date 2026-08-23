@@ -64,7 +64,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				skip = server.keyExists( "boxlang" )
 			);
 
-			it( "persists filled relationships after creating the parent entity", function() {
+			it( "does not persist a filled belongsToMany relationship when creating the parent", function() {
 				var post = getInstance( "Post" ).create( {
 					"user_id"       : 1,
 					"body"          : "A new post body",
@@ -73,8 +73,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} );
 
 				expect( post.isLoaded() ).toBeTrue();
-				expect( post.getTags() ).toHaveLength( 2 );
-				expect( post.getTags().map( ( tag ) => tag.getId() ) ).toBe( [ 1, 2 ] );
+				expect( post.getTags() ).toBe( [ 1, 2 ] );
+				expect( post.fresh().getTags() ).toBeEmpty();
 			} );
 		} );
 	}

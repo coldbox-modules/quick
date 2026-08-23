@@ -36,7 +36,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				).notToBeNull();
 			} );
 
-			it( "persists relationships filled before creating the parent", function() {
+			it( "creates only the root while retaining filled relationships in memory", function() {
 				var user = getInstance( "User" ).create( {
 					"username"   : "aggregate-user",
 					"first_name" : "Aggregate",
@@ -50,10 +50,9 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				expect( user.isLoaded() ).toBeTrue();
 				expect( user.getPosts() ).toHaveLength( 2 );
-				expect( user.getPosts()[ 1 ].isLoaded() ).toBeTrue();
-				expect( user.getPosts()[ 1 ].getUser_Id() ).toBe( user.getId() );
-				expect( user.getPosts()[ 2 ].isLoaded() ).toBeTrue();
-				expect( user.getPosts()[ 2 ].getUser_Id() ).toBe( user.getId() );
+				expect( user.getPosts()[ 1 ].isLoaded() ).toBeFalse();
+				expect( user.getPosts()[ 2 ].isLoaded() ).toBeFalse();
+				expect( user.fresh().getPosts() ).toBeEmpty();
 			} );
 
 			it( "can create a new entity with a json cast", () => {

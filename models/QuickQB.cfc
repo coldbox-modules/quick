@@ -607,6 +607,36 @@ component
 	}
 
 	/**
+	 * Checks for the existence of a relationship with a column value constraint.
+	 * This is a shortcut for passing a callback containing a single `where` clause to `whereHas`.
+	 *
+	 * @relationshipName  The relationship to check.
+	 * @column            The related column to constrain.
+	 * @operator          The operator or value for the constraint. When `value` is omitted, this is treated as the value and the operator is `=`.
+	 * @value             The optional value with which to constrain the related column.
+	 *
+	 * @return            quick.models.QuickQB
+	 */
+	public QuickQB function whereHasValue(
+		required string relationshipName,
+		required any column,
+		required any operator,
+		any value
+	) {
+		var whereArguments = {
+			"column"   : arguments.column,
+			"operator" : arguments.operator
+		};
+		if ( structKeyExists( arguments, "value" ) ) {
+			whereArguments[ "value" ] = arguments.value;
+		}
+
+		return whereHas( arguments.relationshipName, function( q ) {
+			invoke( q, "where", whereArguments );
+		} );
+	}
+
+	/**
 	 * Checks for the absence of a relationship when executing the query.
 	 * The absence check is constrained by a closure.
 	 *

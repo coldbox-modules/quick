@@ -88,3 +88,18 @@ diff --git a/tests/resources/app/coldbox/system/core/util/Util.cfc b/tests/resou
 @@ -124 +124 @@
 -		if ( isNull( variables.inetAddress ) ) {
 +		if ( !variables.keyExists( "inetAddress" ) || isNull( variables.inetAddress ) ) {
+diff --git a/tests/resources/app/coldbox/system/cache/config/CacheBoxConfig.cfc b/tests/resources/app/coldbox/system/cache/config/CacheBoxConfig.cfc
+--- a/tests/resources/app/coldbox/system/cache/config/CacheBoxConfig.cfc
++++ b/tests/resources/app/coldbox/system/cache/config/CacheBoxConfig.cfc
+@@ -107 +107 @@
+-		if ( !isNull( cacheBoxDSL.logBoxConfig ) ) {
++		if ( structKeyExists( cacheBoxDSL, "logBoxConfig" ) && !isNull( cacheBoxDSL.logBoxConfig ) ) {
+@@ -112 +112 @@
+-		if ( !isNull( cacheBoxDSL.scopeRegistration ) ) {
++		if ( structKeyExists( cacheBoxDSL, "scopeRegistration" ) && !isNull( cacheBoxDSL.scopeRegistration ) ) {
+@@ -117 +117 @@
+-		if ( !isNull( cacheBoxDSL.caches ) ) {
++		if ( structKeyExists( cacheBoxDSL, "caches" ) && !isNull( cacheBoxDSL.caches ) ) {
+@@ -125 +125 @@
+-		if ( !isNull( cacheBoxDSL.listeners ) ) {
++		if ( structKeyExists( cacheBoxDSL, "listeners" ) && !isNull( cacheBoxDSL.listeners ) ) {

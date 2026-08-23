@@ -156,13 +156,13 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	}
 
 	function newCriteria() {
-		return variables._wirebox
+		var criteria = variables._wirebox
 			.getInstance( "CBORMCriteriaBuilderCompat@quick" )
 			.setEntity( this )
 			.setReturnFormat( "array" )
-			.mergeDefaultOptions( variables._queryOptions )
-			.from( tableName() )
-			.addSelect( retrieveQualifiedColumns() );
+			.mergeDefaultOptions( variables._queryOptions );
+
+		return criteria.from( tableSource( criteria ) ).addSelect( retrieveQualifiedColumns() );
 	}
 
 	private void function guardAgainstCompositePrimaryKeys() {

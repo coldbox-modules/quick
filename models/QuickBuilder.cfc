@@ -1573,7 +1573,7 @@ component accessors="true" transientCache="false" {
 	 * @return  quick.models.QuickQB
 	 */
 	public any function newQuickQB() {
-		return variables._wirebox
+		var newQB = variables._wirebox
 			.getInstance( "QuickQB@quick" )
 			.setQuickBuilder( this )
 			.setEntity( getEntity() )
@@ -1581,8 +1581,9 @@ component accessors="true" transientCache="false" {
 			.mergeDefaultOptions( getEntity().get_queryOptions() )
 			.setColumnFormatter( function( column ) {
 				return qualifyColumn( column );
-			} )
-			.from( getEntity().tableName() );
+			} );
+
+		return newQB.from( getEntity().tableSource( newQB ) );
 	}
 
 	public any function retrieveQuery() {

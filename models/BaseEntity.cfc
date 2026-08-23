@@ -363,6 +363,21 @@ component accessors="true" {
 	}
 
 	/**
+	 * Returns the table source for this entity's queries.
+	 *
+	 * Override this method to return a raw expression or another qb-supported
+	 * table source. The configured table name remains available for qualifying
+	 * entity columns.
+	 *
+	 * @builder  The builder that will receive the table source.
+	 *
+	 * @return   any
+	 */
+	public any function tableSource( required any builder ) {
+		return tableName();
+	}
+
+	/**
 	 * Returns the table name for this entity.
 	 *
 	 * @return  String
@@ -1091,7 +1106,7 @@ component accessors="true" {
 		var hasRefreshQuery = variables.keyExists( "_refreshQuery" ) && !isNull( variables._refreshQuery );
 		var freshEntity     = hasRefreshQuery ? variables._refreshQuery.clone().offset( 0 ) : newQuery();
 		var freshData       = freshEntity
-			.from( tableName() )
+			.from( tableSource( freshEntity ) )
 			.where( function( q ) {
 				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
 					q.where( this.qualifyColumn( keyName ), keyValue );
@@ -1118,7 +1133,7 @@ component accessors="true" {
 			.clone()
 			.offset( 0 );
 		var refreshedData = refreshedEntity
-			.from( tableName() )
+			.from( tableSource( refreshedEntity ) )
 			.where( function( q ) {
 				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
 					q.where( this.qualifyColumn( keyName ), keyValue );
@@ -2356,8 +2371,10 @@ component accessors="true" {
 			.setReturnFormat( "array" )
 			.set_preventLazyLoading( variables._preventLazyLoading )
 			.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
-			.mergeDefaultOptions( variables._queryOptions )
-			.from( tableName() )
+			.mergeDefaultOptions( variables._queryOptions );
+
+		newBuilder
+			.from( tableSource( newBuilder ) )
 			.addSelect( retrieveQualifiedColumns() )
 			.with( variables._with );
 

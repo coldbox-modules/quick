@@ -20,4 +20,8 @@ component
 		return hasManyThrough( [ "Bs", "Cs" ] )
 	}
 
+	function scopeWithCsCount( qb ) {
+		qb.withCount( "Cs as countOfCs" );
+	}
+
 }

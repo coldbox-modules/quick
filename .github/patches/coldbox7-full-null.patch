@@ -1,0 +1,45 @@
+diff --git a/tests/resources/app/coldbox/system/core/util/Util.cfc b/tests/resources/app/coldbox/system/core/util/Util.cfc
+--- a/tests/resources/app/coldbox/system/core/util/Util.cfc
++++ b/tests/resources/app/coldbox/system/core/util/Util.cfc
+@@ -12 +12 @@
+-		if ( isNull( variables.engineMappingHelper ) ) {
++		if ( !variables.keyExists( "engineMappingHelper" ) || isNull( variables.engineMappingHelper ) ) {
+diff --git a/tests/resources/app/coldbox/system/logging/LogEvent.cfc b/tests/resources/app/coldbox/system/logging/LogEvent.cfc
+--- a/tests/resources/app/coldbox/system/logging/LogEvent.cfc
++++ b/tests/resources/app/coldbox/system/logging/LogEvent.cfc
+@@ -61 +61 @@
+-		if ( isNull( variables.xmlConverter ) ) {
++		if ( !variables.keyExists( "xmlConverter" ) || isNull( variables.xmlConverter ) ) {
+@@ -68 +68 @@
+-		if ( isNull( variables.util ) ) {
++		if ( !variables.keyExists( "util" ) || isNull( variables.util ) ) {
+diff --git a/tests/resources/app/coldbox/system/cache/AbstractCacheBoxProvider.cfc b/tests/resources/app/coldbox/system/cache/AbstractCacheBoxProvider.cfc
+--- a/tests/resources/app/coldbox/system/cache/AbstractCacheBoxProvider.cfc
++++ b/tests/resources/app/coldbox/system/cache/AbstractCacheBoxProvider.cfc
+@@ -115 +115 @@
+-		if ( isNull( variables.utility ) ) {
++		if ( !variables.keyExists( "utility" ) || isNull( variables.utility ) ) {
+@@ -428 +428 @@
+-		if ( isNull( variables.uuidHelper ) ) {
++		if ( !variables.keyExists( "uuidHelper" ) || isNull( variables.uuidHelper ) ) {
+diff --git a/tests/resources/app/coldbox/system/cache/CacheFactory.cfc b/tests/resources/app/coldbox/system/cache/CacheFactory.cfc
+--- a/tests/resources/app/coldbox/system/cache/CacheFactory.cfc
++++ b/tests/resources/app/coldbox/system/cache/CacheFactory.cfc
+@@ -484 +484 @@
+-		if ( isNull( variables.config ) ) {
++		if ( !variables.keyExists( "config" ) || isNull( variables.config ) ) {
+diff --git a/tests/resources/app/coldbox/system/remote/ColdboxProxy.cfc b/tests/resources/app/coldbox/system/remote/ColdboxProxy.cfc
+--- a/tests/resources/app/coldbox/system/remote/ColdboxProxy.cfc
++++ b/tests/resources/app/coldbox/system/remote/ColdboxProxy.cfc
+@@ -342 +342 @@
+-		if ( isNull( variables.util ) ) {
++		if ( !variables.keyExists( "util" ) || isNull( variables.util ) ) {
+@@ -354 +354 @@
+-		if ( isNull( variables.remotingUtil ) ) {
++		if ( !variables.keyExists( "remotingUtil" ) || isNull( variables.remotingUtil ) ) {
+diff --git a/tests/resources/app/coldbox/system/web/context/RequestContext.cfc b/tests/resources/app/coldbox/system/web/context/RequestContext.cfc
+--- a/tests/resources/app/coldbox/system/web/context/RequestContext.cfc
++++ b/tests/resources/app/coldbox/system/web/context/RequestContext.cfc
+@@ -1576 +1576 @@
+-		if ( isNull( variables.privateContext.response ) ) {
++		if ( !variables.privateContext.keyExists( "response" ) || isNull( variables.privateContext.response ) ) {

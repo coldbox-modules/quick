@@ -89,6 +89,9 @@ jobs:
           box config set modules.commandbox-dotenv.checkEnvPreServerStart=false
           box install ${{ matrix.coldbox }} --noSave
           git apply --unidiff-zero .github/patches/coldbox-full-null.patch
+          if [ "${{ matrix.coldbox }}" = "coldbox@^7" ]; then
+            git apply --unidiff-zero .github/patches/coldbox7-full-null.patch
+          fi
 
       - name: Start server
         env:

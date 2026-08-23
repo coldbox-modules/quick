@@ -3092,8 +3092,8 @@ component accessors="true" {
 	}
 
 	/**
-	 * Creates an internal property struct for each non-persistent, non-injected
-	 * property declared on the entity.
+	 * Creates an internal property struct for each explicitly fillable,
+	 * non-persistent, non-injected property declared on the entity.
 	 *
 	 * @properties  The array of properties declared on the entity.
 	 *
@@ -3105,7 +3105,12 @@ component accessors="true" {
 			var annotations = newProp.keyExists( "annotations" ) && isStruct( newProp.annotations )
 			 ? newProp.annotations
 			 : {};
-			if ( newProp.persistent || newProp.keyExists( "inject" ) || annotations.keyExists( "inject" ) ) {
+			if (
+				newProp.persistent ||
+				!newProp.fillable ||
+				newProp.keyExists( "inject" ) ||
+				annotations.keyExists( "inject" )
+			) {
 				return arguments.acc;
 			}
 			arguments.acc[ newProp.name ] = newProp;
@@ -3185,8 +3190,17 @@ component accessors="true" {
 		) {
 			arguments.attr.persistent = arguments.attr.annotations.persistent;
 		}
+		if (
+			!arguments.attr.keyExists( "fillable" ) &&
+			arguments.attr.keyExists( "annotations" ) &&
+			isStruct( arguments.attr.annotations ) &&
+			arguments.attr.annotations.keyExists( "fillable" )
+		) {
+			arguments.attr.fillable = arguments.attr.annotations.fillable;
+		}
 		param attr.column         = arguments.attr.name;
 		param attr.persistent     = true;
+		param attr.fillable       = false;
 		param attr.nullValue      = "";
 		param attr.convertToNull  = true;
 		param attr.casts          = "";
@@ -3199,6 +3213,9 @@ component accessors="true" {
 		param attr.isParentColumn = false;
 		if ( !isBoolean( attr.persistent ) ) {
 			attr.persistent = lCase( trim( attr.persistent & "" ) ) == "true";
+		}
+		if ( !isBoolean( attr.fillable ) ) {
+			attr.fillable = lCase( trim( attr.fillable & "" ) ) == "true";
 		}
 		variables._nullValues[ attr.name ] = attr.nullValue;
 		return arguments.attr;

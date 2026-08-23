@@ -25,3 +25,9 @@ diff --git a/tests/resources/app/coldbox/system/logging/Logger.cfc b/tests/resou
 @@ -399 +399 @@
 -					if ( isNull( local.logEvent ) ) {
 +					if ( !local.keyExists( "logEvent" ) || isNull( local.logEvent ) ) {
+diff --git a/tests/resources/app/coldbox/system/core/delegates/Env.cfc b/tests/resources/app/coldbox/system/core/delegates/Env.cfc
+--- a/tests/resources/app/coldbox/system/core/delegates/Env.cfc
++++ b/tests/resources/app/coldbox/system/core/delegates/Env.cfc
+@@ -87 +87 @@
+-		if ( isNull( variables.javaSystem ) ) {
++		if ( !variables.keyExists( "javaSystem" ) || isNull( variables.javaSystem ) ) {

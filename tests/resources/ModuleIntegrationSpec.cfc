@@ -76,15 +76,15 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 	 * Formats database timestamps without relying on engine-specific date mask parsing.
 	 */
 	public string function formatTestTimestamp( required date timestamp ) {
-		return [
+		return arrayToList( [
 			year( arguments.timestamp ),
 			numberFormat( month( arguments.timestamp ), "00" ),
 			numberFormat( day( arguments.timestamp ), "00" )
-		].toList( "-" ) & " " & [
+		], "-" ) & " " & arrayToList( [
 			numberFormat( hour( arguments.timestamp ), "00" ),
 			numberFormat( minute( arguments.timestamp ), "00" ),
 			numberFormat( second( arguments.timestamp ), "00" )
-		].toList( ":" );
+		], ":" );
 	}
 
 }

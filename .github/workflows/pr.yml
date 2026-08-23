@@ -26,13 +26,18 @@ jobs:
         exclude:
           - cfengine: "boxlang@1"
             coldbox: "coldbox@^7"
+          - cfengine: "adobe@2021"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
+          - cfengine: "adobe@2023"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
+          - cfengine: "adobe@2025"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
         include:
           - cfengine: "adobe@be"
             coldbox: "coldbox@^7"
-            experimental: true
-            fullNull: "true"
-          - cfengine: "adobe@be"
-            coldbox: "coldbox@^8"
             experimental: true
             fullNull: "true"
           - cfengine: "boxlang@be"

@@ -78,6 +78,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} ).toThrow( "AttributeNotFound" );
 			} );
 
+			it( "does not mass assign non-persistent properties unless explicitly fillable", function() {
+				expect( function() {
+					getInstance( "Post" ).fill( { "internalLifecycleState" : "internal-only" } );
+				} ).toThrow( "AttributeNotFound" );
+			} );
+
 			it( "translates attributes to their column names", function() {
 				expect( function() {
 					getInstance( "Link" ).create( { url : "https://example.com" } );

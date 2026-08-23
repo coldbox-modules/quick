@@ -19,4 +19,8 @@ component extends="quick.models.CBORMCompatEntity" table="users" accessors="true
         inverse="true"
         lazy="extra";
 
+    function posts() {
+        return hasMany( "Post", "user_id" );
+    }
+
 }

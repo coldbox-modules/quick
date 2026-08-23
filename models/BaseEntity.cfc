@@ -324,7 +324,7 @@ component accessors="true" {
 	 * @return  quick.models.KeyTypes.KeyType
 	 */
 	private KeyType function retrieveKeyType() {
-		if ( isNull( variables.__keyType__ ) ) {
+		if ( !variables.keyExists( "__keyType__" ) || isNull( variables.__keyType__ ) ) {
 			variables.__keyType__ = keyType();
 		}
 		return variables.__keyType__;
@@ -1087,8 +1087,9 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function fresh() {
-		var freshEntity = isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery.clone().offset( 0 );
-		var freshData   = freshEntity
+		var hasRefreshQuery = variables.keyExists( "_refreshQuery" ) && !isNull( variables._refreshQuery );
+		var freshEntity     = hasRefreshQuery ? variables._refreshQuery.clone().offset( 0 ) : newQuery();
+		var freshData       = freshEntity
 			.from( tableName() )
 			.where( function( q ) {
 				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
@@ -1099,7 +1100,8 @@ component accessors="true" {
 		if ( !isStruct( freshData ) || structKeyExists( freshData, "isQuickEntity" ) ) {
 			return freshData;
 		}
-		return newEntity().hydrate( freshData ).set_refreshQuery( variables._refreshQuery );
+		var entity = newEntity().hydrate( freshData );
+		return hasRefreshQuery ? entity.set_refreshQuery( variables._refreshQuery ) : entity;
 	}
 
 	/**
@@ -1111,7 +1113,7 @@ component accessors="true" {
 	public any function refresh() {
 		variables._relationshipsData   = {};
 		variables._relationshipsLoaded = {};
-		var refreshedEntity            = isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery
+		var refreshedEntity            = !variables.keyExists( "_refreshQuery" ) || isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery
 			.clone()
 			.offset( 0 );
 		var refreshedData = refreshedEntity

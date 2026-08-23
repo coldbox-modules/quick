@@ -30,11 +30,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getUsername() ).toBe( "elpete" );
 			} );
 
-			it( "can use a raw expression as the table source", function() {
-				var users = getInstance( "User" ).newQuery();
-				users.from( users.raw( "users" ) );
+			it( "can define a raw table source on an entity", function() {
+				var users = getInstance( "RawExpressionUser" ).where( "username", "elpete" );
+				expect( users.toSQL() ).toInclude( "FROM users FORCE INDEX (PRIMARY)" );
 
-				var user = users.where( "username", "elpete" ).firstOrFail();
+				var user = users.firstOrFail();
 
 				expect( user.getId() ).toBe( 1 );
 				expect( user.getUsername() ).toBe( "elpete" );

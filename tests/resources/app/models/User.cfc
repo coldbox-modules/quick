@@ -236,6 +236,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		return hasOne( "Post", "post_pk", "favoritePost_id" );
 	}
 
+	function favoritePostAuthor() {
+		return hasOneThrough( [ "favoritePost", "author" ] );
+	}
+
 	function latestPostWithEmptyDefault() {
 		return hasOne( "Post", "user_id" ).latest().withDefault();
 	}

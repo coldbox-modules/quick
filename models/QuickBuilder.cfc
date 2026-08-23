@@ -95,7 +95,7 @@ component accessors="true" transientCache="false" {
 		variables._asQuery                  = false;
 		variables._withAliases              = false;
 		param variables._preventLazyLoading = false;
-		if ( isNull( variables._lazyLoadingViolationCallback ) ) {
+		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
 				throw(
 					type    = "QuickLazyLoadingException",

@@ -131,9 +131,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "can add a subquery to an entity using a hasManyThrough relationship with table aliases", function() {
-				// expect( () => {
 				var rmmeAs = getInstance( "RMME_A" ).asMemento( includes = [ "C" ] ).get();
-				// } ).notToThrow();
+
+				expect( rmmeAs ).toHaveLength( 1 );
+				expect( rmmeAs[ 1 ].C ).toHaveLength( 1 );
+				expect( rmmeAs[ 1 ].C[ 1 ].inlined_dValue ).toBe( 42 );
 			} );
 		} );
 	}

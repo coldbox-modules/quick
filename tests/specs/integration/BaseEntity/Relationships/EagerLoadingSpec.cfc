@@ -47,6 +47,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				}
 			} );
 
+			it( "keeps belongs to eager keys that differ only by case", function() {
+				var post         = getInstance( "Post" ).firstOrFail();
+				var relationship = post.author();
+				var keys         = relationship.getEagerEntityKeys(
+					[ { "user_id" : "ABC" }, { "user_id" : "abc" } ],
+					post
+				);
+
+				expect( keys ).toHaveLength( 2 );
+			} );
+
 			it( "can eager load a belongs to relationship using a composite key", function() {
 				var compositeChildren = getInstance( "CompositeChild" ).with( "parent" ).get();
 				expect( compositeChildren ).toBeArray();
@@ -267,6 +278,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( bindingType ).notToInclude( "varchar" );
 					expect( bindingType ).toInclude( "integer" );
 				}
+			} );
+
+			it( "keeps relationship eager keys that differ only by case", function() {
+				var user         = getInstance( "User" ).findOrFail( 1 );
+				var relationship = user.externalThings();
+				var keys         = relationship.getKeys(
+					[ { "externalID" : "ABC" }, { "externalID" : "abc" } ],
+					[ "externalID" ],
+					user
+				);
+
+				expect( keys ).toHaveLength( 2 );
 			} );
 
 			it( "can eager load a has many through relationship", function() {

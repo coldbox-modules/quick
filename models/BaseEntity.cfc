@@ -691,6 +691,12 @@ component accessors="true" {
 			if ( isNull( arguments.attributes[ key ] ) || !structKeyExists( arguments.attributes, key ) ) {
 				if ( hasAttribute( key ) ) {
 					clearAttribute( key, true );
+				} else if ( hasNonPersistentProperty( key ) ) {
+					invoke(
+						this,
+						"set#variables._meta.nonPersistentProperties[ key ].name#",
+						{ "1" : javacast( "null", "" ) }
+					);
 				} else if ( !arguments.ignoreNonExistentAttributes ) {
 					guardAgainstNonExistentAttribute( key );
 				}
@@ -710,6 +716,12 @@ component accessors="true" {
 				invoke(
 					this,
 					"set#retrieveAliasForColumn( key )#",
+					{ "1" : value }
+				);
+			} else if ( hasNonPersistentProperty( key ) ) {
+				invoke(
+					this,
+					"set#variables._meta.nonPersistentProperties[ key ].name#",
 					{ "1" : value }
 				);
 			} else if ( !arguments.ignoreNonExistentAttributes ) {
@@ -2935,10 +2947,15 @@ component accessors="true" {
 					);
 
 					param meta.originalMetadata.properties = [];
+					param meta.localMetadata.properties    = [];
 
 					meta[ "attributes" ] = generateAttributesFromProperties(
 						meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
 					);
+					meta[ "nonPersistentProperties" ] = generateNonPersistentProperties( meta.localMetadata.properties );
+					if ( meta.hasParentEntity ) {
+						meta.nonPersistentProperties.append( meta.parentDefinition.meta.nonPersistentProperties, false );
+					}
 					if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
 						meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
 					}
@@ -3074,6 +3091,42 @@ component accessors="true" {
 		}, {} );
 	}
 
+	/**
+	 * Creates an internal property struct for each explicitly fillable,
+	 * non-persistent, non-injected property declared on the entity.
+	 *
+	 * @properties  The array of properties declared on the entity.
+	 *
+	 * @return      A struct of non-persistent properties for the entity.
+	 */
+	private struct function generateNonPersistentProperties( required array properties ) {
+		return arguments.properties.reduce( function( acc, prop ) {
+			var newProp     = paramAttribute( arguments.prop );
+			var annotations = newProp.keyExists( "annotations" ) && isStruct( newProp.annotations )
+			 ? newProp.annotations
+			 : {};
+			if (
+				newProp.persistent ||
+				!newProp.fillable ||
+				newProp.keyExists( "inject" ) ||
+				annotations.keyExists( "inject" )
+			) {
+				return arguments.acc;
+			}
+			arguments.acc[ newProp.name ] = newProp;
+			return arguments.acc;
+		}, {} );
+	}
+
+	/**
+	 * Returns whether the entity declares a fillable non-persistent property.
+	 *
+	 * @name  The property name to check.
+	 */
+	private boolean function hasNonPersistentProperty( required string name ) {
+		return variables._meta.nonPersistentProperties.keyExists( arguments.name );
+	}
+
 	private struct function generateCastsFromProperties( required array properties ) {
 		return arguments.properties.reduce( function( acc, prop ) {
 			if ( !arguments.prop.keyExists( "casts" ) || arguments.prop.casts == "" ) {
@@ -3137,8 +3190,17 @@ component accessors="true" {
 		) {
 			arguments.attr.persistent = arguments.attr.annotations.persistent;
 		}
+		if (
+			!arguments.attr.keyExists( "fillable" ) &&
+			arguments.attr.keyExists( "annotations" ) &&
+			isStruct( arguments.attr.annotations ) &&
+			arguments.attr.annotations.keyExists( "fillable" )
+		) {
+			arguments.attr.fillable = arguments.attr.annotations.fillable;
+		}
 		param attr.column         = arguments.attr.name;
 		param attr.persistent     = true;
+		param attr.fillable       = false;
 		param attr.nullValue      = "";
 		param attr.convertToNull  = true;
 		param attr.casts          = "";
@@ -3151,6 +3213,9 @@ component accessors="true" {
 		param attr.isParentColumn = false;
 		if ( !isBoolean( attr.persistent ) ) {
 			attr.persistent = lCase( trim( attr.persistent & "" ) ) == "true";
+		}
+		if ( !isBoolean( attr.fillable ) ) {
+			attr.fillable = lCase( trim( attr.fillable & "" ) ) == "true";
 		}
 		variables._nullValues[ attr.name ] = attr.nullValue;
 		return arguments.attr;
@@ -3365,8 +3430,10 @@ component accessors="true" {
 	 */
 	private boolean function isReadOnlyAttribute( required string name ) {
 		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._attributes.keyExists( alias ) &&
-		variables._attributes[ alias ].readOnly;
+		return ( variables._attributes.keyExists( alias ) && variables._attributes[ alias ].readOnly ) || (
+			variables._meta.nonPersistentProperties.keyExists( arguments.name ) &&
+			variables._meta.nonPersistentProperties[ arguments.name ].readOnly
+		);
 	}
 
 	/**

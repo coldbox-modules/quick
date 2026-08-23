@@ -159,6 +159,20 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} ).toThrow( "RelationshipNotFound" );
 			} );
 
+			it( "can set non-persistent properties when creating related entities", function() {
+				var user    = getInstance( "User" ).find( 1 );
+				var newPost = user
+					.posts()
+					.create( {
+						"body"              : "A post with transient lifecycle state",
+						"lifecycleEventVar" : "skip-events"
+					} );
+
+				expect( newPost.isLoaded() ).toBeTrue();
+				expect( newPost.getLifecycleEventVar() ).toBe( "skip-events" );
+				expect( newPost.fresh().getLifecycleEventVar() ).toBeNull();
+			} );
+
 			it( "can first off of the relationship", function() {
 				var user = getInstance( "User" ).find( 1 );
 				var post = user.posts().first();

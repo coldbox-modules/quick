@@ -370,7 +370,8 @@ component accessors="true" implements="IRelationship" {
 		required array keys,
 		required any baseEntity
 	) {
-		var uniqueKeys = arguments.entities.reduce( function( acc, entity ) {
+		var seenKeys = createObject( "java", "java.util.LinkedHashSet" ).init();
+		return arguments.entities.reduce( function( acc, entity ) {
 			var keyValues = [];
 			for ( var key in keys ) {
 				var value = structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( key ) : entity[ key ];
@@ -380,12 +381,9 @@ component accessors="true" implements="IRelationship" {
 				keyValues.append( value );
 			}
 
-			acc[ serializeJSON( keyValues ) ] = keyValues;
-			return acc;
-		}, {} );
-
-		return uniqueKeys.reduce( function( acc, _, keyValues ) {
-			acc.append( keyValues );
+			if ( seenKeys.add( serializeJSON( keyValues ) ) ) {
+				acc.append( keyValues );
+			}
 			return acc;
 		}, [] );
 	}

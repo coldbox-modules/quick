@@ -51,7 +51,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var post         = getInstance( "Post" ).firstOrFail();
 				var relationship = post.author();
 				var keys         = relationship.getEagerEntityKeys(
-					[ { "user_id" : "ABC" }, { "user_id" : "abc" } ],
+					[
+						{ "user_id" : "ABC" },
+						{ "user_id" : "abc" }
+					],
 					post
 				);
 
@@ -284,7 +287,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var user         = getInstance( "User" ).findOrFail( 1 );
 				var relationship = user.externalThings();
 				var keys         = relationship.getKeys(
-					[ { "externalID" : "ABC" }, { "externalID" : "abc" } ],
+					[
+						{ "externalID" : "ABC" },
+						{ "externalID" : "abc" }
+					],
 					[ "externalID" ],
 					user
 				);
@@ -824,7 +830,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				return isStruct( binding ) && ( binding.keyExists( "cfsqltype" ) || binding.keyExists( "sqltype" ) );
 			} )
 			.map( function( binding ) {
-				return lCase( binding.cfsqltype ?: binding.sqltype );
+				return lCase( binding.keyExists( "cfsqltype" ) ? binding[ "cfsqltype" ] : binding[ "sqltype" ] );
 			} );
 	}
 

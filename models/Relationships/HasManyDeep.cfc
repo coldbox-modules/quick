@@ -206,7 +206,12 @@ component
 	}
 
 	public any function getResults() {
-		if ( variables.parent.isNullValue( variables.localKeys[ 1 ] ) ) {
+		if (
+			variables.parent.isNullValue(
+				variables.localKeys[ 1 ],
+				variables.parent.retrieveAttribute( variables.localKeys[ 1 ] )
+			)
+		) {
 			return variables.related.newCollection();
 		} else {
 			return variables.relationshipBuilder.get();

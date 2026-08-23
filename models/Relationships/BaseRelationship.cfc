@@ -386,7 +386,7 @@ component accessors="true" implements="IRelationship" {
 	 */
 	public boolean function fieldsAreNull( required any entity, required array fields ) {
 		for ( var field in arguments.fields ) {
-			if ( !arguments.entity.isNullValue( field ) ) {
+			if ( !arguments.entity.isNullValue( field, arguments.entity.retrieveAttribute( field ) ) ) {
 				return false;
 			}
 		}

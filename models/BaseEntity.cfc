@@ -159,11 +159,6 @@ component accessors="true" {
 	property name="_relationshipsLoaded" persistent="false";
 
 	/**
-	 * Relationships filled while this entity is new and waiting to be persisted.
-	 */
-	property name="_deferredRelationships" persistent="false";
-
-	/**
 	 * Discriminated chilrent property
 	 **/
 	property name="_discriminations" persistent="false";
@@ -275,7 +270,6 @@ component accessors="true" {
 		param variables._data                     = {};
 		param variables._relationshipsData        = {};
 		param variables._relationshipsLoaded      = {};
-		variables._deferredRelationships          = [];
 		param variables._with                     = [];
 		variables._withoutRelationshipConstraints = createObject( "java", "java.util.HashSet" ).init();
 		variables._applyingGlobalScopes           = false;
@@ -1290,10 +1284,9 @@ component accessors="true" {
 		if ( arguments.toNew ) {
 			assignOriginalAttributes( {} );
 		}
-		variables._relationshipsData     = {};
-		variables._relationshipsLoaded   = {};
-		variables._deferredRelationships = [];
-		variables._loaded                = arguments.toNew ? false : variables._loaded;
+		variables._relationshipsData   = {};
+		variables._relationshipsLoaded = {};
+		variables._loaded              = arguments.toNew ? false : variables._loaded;
 
 		return this;
 	}
@@ -1501,15 +1494,6 @@ component accessors="true" {
 					"entity"  : this,
 					"options" : arguments.options
 				}
-			);
-		}
-		var deferredRelationships        = variables._deferredRelationships.duplicate();
-		variables._deferredRelationships = [];
-		for ( var relationshipName in deferredRelationships ) {
-			invoke(
-				this,
-				"set#relationshipName#",
-				{ "1" : retrieveRelationship( relationshipName ) }
 			);
 		}
 		variables._saving = false;
@@ -1970,9 +1954,8 @@ component accessors="true" {
 	 * @returns  quick.models.BaseEntity
 	 */
 	public any function clearRelationships() {
-		variables._relationshipsData     = {};
-		variables._relationshipsLoaded   = {};
-		variables._deferredRelationships = [];
+		variables._relationshipsData   = {};
+		variables._relationshipsLoaded = {};
 		return this;
 	}
 
@@ -1986,7 +1969,6 @@ component accessors="true" {
 	public any function clearRelationship( required string name ) {
 		variables._relationshipsData.delete( arguments.name );
 		variables._relationshipsLoaded.delete( arguments.name );
-		variables._deferredRelationships.delete( arguments.name );
 		return this;
 	}
 
@@ -3013,9 +2995,6 @@ component accessors="true" {
 				 ? relationshipValue.map( fillRelatedEntity )
 				 : fillRelatedEntity( relationshipValue );
 				assignRelationship( relationshipName, filledRelationship );
-				if ( !variables._deferredRelationships.findNoCase( relationshipName ) ) {
-					variables._deferredRelationships.append( relationshipName );
-				}
 				return filledRelationship;
 			}
 			guardAgainstNotLoaded(

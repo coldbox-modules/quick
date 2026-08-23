@@ -20,6 +20,6 @@
     "openBrowser":"false",
     "env":{},
     "scripts":{
-        "onServerInitialInstall":"install bx-esapi --noSave"
+        "onServerInitialInstall":"install bx-esapi,bx-mysql --noSave"
     }
 }

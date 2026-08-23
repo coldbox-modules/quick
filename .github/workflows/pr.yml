@@ -19,8 +19,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "lucee@6", "adobe@2021", "adobe@2023", "adobe@2025", "boxlang-cfml@1"]
+        cfengine: ["lucee@5", "lucee@6", "adobe@2021", "adobe@2023", "adobe@2025", "boxlang@1", "boxlang-cfml@1"]
         coldbox: ["coldbox@^7", "coldbox@^8"]
+        experimental: [false]
+        fullNull: ["true", "false"]
+        exclude:
+          - cfengine: "boxlang@1"
+            coldbox: "coldbox@^7"
+          - cfengine: "adobe@2021"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
+          - cfengine: "adobe@2023"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
+          - cfengine: "adobe@2025"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
+        include:
+          - cfengine: "adobe@be"
+            coldbox: "coldbox@^7"
+            experimental: true
+            fullNull: "true"
+          - cfengine: "boxlang@be"
+            coldbox: "coldbox@^8"
+            experimental: true
+            fullNull: "true"
     services:
       mysql:
         image: mysql:5.7
@@ -50,10 +73,18 @@ jobs:
       - name: Install dependencies
         run: |
           box install
+          git apply --unidiff-zero .github/patches/testbox-full-null.patch
+          git apply --unidiff-zero .github/patches/mementifier-full-null.patch
           box config set modules.commandbox-dotenv.checkEnvPreServerStart=false
+          box install ${{ matrix.coldbox }} --noSave
+          git apply --unidiff-zero .github/patches/coldbox-full-null.patch
+          if [ "${{ matrix.coldbox }}" = "coldbox@^7" ]; then
+            git apply --unidiff-zero .github/patches/coldbox7-full-null.patch
+          fi
 
       - name: Start server
         env:
+          FULL_NULL: ${{ matrix.fullNull }}
           DB_HOST: localhost
           DB_PORT: ${{ job.services.mysql.ports[3306] }}
           DB_NAME: quick
@@ -65,11 +96,13 @@ jobs:
 
       - name: Run TestBox Tests
         env:
+          FULL_NULL: ${{ matrix.fullNull }}
           DB_HOST: localhost
           DB_PORT: ${{ job.services.mysql.ports[3306] }}
           DB_NAME: quick
           DB_USER: quick
           DB_PASSWORD: quick
+        continue-on-error: ${{ matrix.experimental }}
         run: box testbox run
 
   format:

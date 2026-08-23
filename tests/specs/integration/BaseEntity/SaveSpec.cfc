@@ -84,7 +84,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				existingUser.save();
 				var userRowsPostSave = queryExecute( "SELECT * FROM users" );
 				expect( userRowsPostSave ).toHaveLength( 5 );
-				expect( userRowsPostSave.email ).toBe( "" );
+				expect( getInstance( "User" ).findOrFail( 1 ).isNullAttribute( "email" ) ).toBeTrue();
 			} );
 
 			it( "uses the sqltype attribute if present for each column", function() {

@@ -2,10 +2,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Null Values Spec", function() {
-			it( "returns null values as a string by default", function() {
+			it( "returns database nulls as null attributes by default", function() {
 				var user = getInstance( "User" ).findOrFail( 3 );
-				expect( user.getCountryId() ).toBe( "" );
-				expect( user.getMemento().countryId ).toBe( "" );
+				expect( user.isNullAttribute( "countryId" ) ).toBeTrue();
+				expect( user.isNullValue( "countryId", user.getMemento().countryId ) ).toBeTrue();
 			} );
 
 			it( "saves a column containing an empty string as null in the database by default", function() {

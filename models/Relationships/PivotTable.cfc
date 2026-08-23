@@ -39,7 +39,7 @@ component accessors="true" {
 			return columnName;
 		}
 
-		return isNull( variables.alias ) ? "#variables.table#.#arguments.columnName#" : "#variables.alias#.#arguments.columnName#";
+		return !variables.keyExists( "alias" ) || isNull( variables.alias ) ? "#variables.table#.#arguments.columnName#" : "#variables.alias#.#arguments.columnName#";
 	}
 
 	public array function getWheres() {

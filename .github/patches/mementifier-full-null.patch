@@ -1,0 +1,34 @@
+diff --git a/modules/mementifier/interceptors/Mementifier.cfc b/modules/mementifier/interceptors/Mementifier.cfc
+--- a/modules/mementifier/interceptors/Mementifier.cfc
++++ b/modules/mementifier/interceptors/Mementifier.cfc
+@@ -89,2 +89,3 @@
+-			var dateMask                        = isNull( this.memento.dateMask ) ? variables.settings.dateMask : this.memento.dateMask;
+-			var timeMask                        = isNull( this.memento.timeMask ) ? variables.settings.timeMask : this.memento.timeMask;
++			var entityMemento                   = structKeyExists( arguments.entity, "memento" ) ? arguments.entity.memento : {};
++			var dateMask                        = !entityMemento.keyExists( "dateMask" ) || isNull( entityMemento.dateMask ) ? variables.settings.dateMask : entityMemento.dateMask;
++			var timeMask                        = !entityMemento.keyExists( "timeMask" ) || isNull( entityMemento.timeMask ) ? variables.settings.timeMask : entityMemento.timeMask;
+@@ -150,12 +151,12 @@
+-			"autoCastBooleans" : isNull( this.memento.autoCastBooleans ) ? variables.$mementifierSettings.autoCastBooleans : this.memento.autoCastBooleans,
+-			"dateMask"         : isNull( this.memento.dateMask ) ? variables.$mementifierSettings.dateMask : this.memento.dateMask,
+-			"defaults"         : isNull( this.memento.defaults ) ? {} : this.memento.defaults,
+-			"defaultIncludes"  : isNull( this.memento.defaultIncludes ) ? [] : this.memento.defaultIncludes,
+-			"defaultExcludes"  : isNull( this.memento.defaultExcludes ) ? [] : this.memento.defaultExcludes,
+-			"iso8601Format"    : isNull( this.memento.iso8601Format ) ? variables.$mementifierSettings.iso8601Format : this.memento.iso8601Format,
+-			"mappers"          : isNull( this.memento.mappers ) ? {} : this.memento.mappers,
+-			"neverInclude"     : isNull( this.memento.neverInclude ) ? [] : this.memento.neverInclude,
+-			"ormAutoIncludes"  : isNull( this.memento.ormAutoIncludes ) ? variables.$mementifierSettings.ormAutoIncludes : this.memento.ormAutoIncludes,
+-			"profiles"         : isNull( this.memento.profiles ) ? {} : this.memento.profiles,
+-			"timeMask"         : isNull( this.memento.timeMask ) ? variables.$mementifierSettings.timeMask : this.memento.timeMask,
+-			"trustedGetters"   : isNull( this.memento.trustedGetters ) ? variables.$mementifierSettings.trustedGetters : this.memento.trustedGetters
++			"autoCastBooleans" : !this.memento.keyExists( "autoCastBooleans" ) || isNull( this.memento.autoCastBooleans ) ? variables.$mementifierSettings.autoCastBooleans : this.memento.autoCastBooleans,
++			"dateMask"         : !this.memento.keyExists( "dateMask" ) || isNull( this.memento.dateMask ) ? variables.$mementifierSettings.dateMask : this.memento.dateMask,
++			"defaults"         : !this.memento.keyExists( "defaults" ) || isNull( this.memento.defaults ) ? {} : this.memento.defaults,
++			"defaultIncludes"  : !this.memento.keyExists( "defaultIncludes" ) || isNull( this.memento.defaultIncludes ) ? [] : this.memento.defaultIncludes,
++			"defaultExcludes"  : !this.memento.keyExists( "defaultExcludes" ) || isNull( this.memento.defaultExcludes ) ? [] : this.memento.defaultExcludes,
++			"iso8601Format"    : !this.memento.keyExists( "iso8601Format" ) || isNull( this.memento.iso8601Format ) ? variables.$mementifierSettings.iso8601Format : this.memento.iso8601Format,
++			"mappers"          : !this.memento.keyExists( "mappers" ) || isNull( this.memento.mappers ) ? {} : this.memento.mappers,
++			"neverInclude"     : !this.memento.keyExists( "neverInclude" ) || isNull( this.memento.neverInclude ) ? [] : this.memento.neverInclude,
++			"ormAutoIncludes"  : !this.memento.keyExists( "ormAutoIncludes" ) || isNull( this.memento.ormAutoIncludes ) ? variables.$mementifierSettings.ormAutoIncludes : this.memento.ormAutoIncludes,
++			"profiles"         : !this.memento.keyExists( "profiles" ) || isNull( this.memento.profiles ) ? {} : this.memento.profiles,
++			"timeMask"         : !this.memento.keyExists( "timeMask" ) || isNull( this.memento.timeMask ) ? variables.$mementifierSettings.timeMask : this.memento.timeMask,
++			"trustedGetters"   : !this.memento.keyExists( "trustedGetters" ) || isNull( this.memento.trustedGetters ) ? variables.$mementifierSettings.trustedGetters : this.memento.trustedGetters

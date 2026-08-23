@@ -159,7 +159,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				post.author()
 					.dissociate()
 					.save();
-				expect( post.retrieveAttribute( "user_id" ) ).toBe( "" );
+				expect( post.isNullAttribute( "user_id" ) ).toBeTrue();
 				expect(
 					getInstance( "User" )
 						.find( userId )

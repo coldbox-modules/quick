@@ -12,8 +12,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( results ).toHaveLength( 2 );
 
 				for ( var result in results ) {
-					result.createdDate  = dateTimeFormat( result.createdDate, "yyyy-mm-dd hh:nn:ss" );
-					result.modifiedDate = dateTimeFormat( result.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+					result.createdDate  = formatTestTimestamp( result.createdDate );
+					result.modifiedDate = formatTestTimestamp( result.modifiedDate );
+					var nullableKeys    = [
+						"email",
+						"streetTwo",
+						"favoritePost_id"
+					];
+					for ( var key in nullableKeys ) {
+						if ( isNull( result[ key ] ) ) {
+							result[ key ] = "";
+						}
+					}
 				}
 
 				expect( results[ 1 ] ).toBeStruct();
@@ -74,7 +84,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( results[ 1 ][ "latestPostId" ] ).toBe( 523526 );
 				expect( results[ 2 ] ).toBeStruct();
 				expect( results[ 2 ] ).toHaveKey( "latestPostId" );
-				expect( results[ 2 ][ "latestPostId" ] ).toBe( "" );
+				expect( isNull( results[ 2 ][ "latestPostId" ] ) ? "" : results[ 2 ][ "latestPostId" ] ).toBe( "" );
 			} );
 
 			it( "can select an aliased entity attribute when returning query data", function() {

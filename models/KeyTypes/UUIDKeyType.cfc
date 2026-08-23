@@ -16,7 +16,12 @@ component implements="KeyType" {
 			.keyNames()
 			.each( function( keyName ) {
 				if ( entity.isNullAttribute( keyName ) ) {
-					entity.assignAttribute( keyName, createUUID() );
+					var uuid      = createUUID();
+					var uuidParts = listToArray( uuid, "-" );
+					if ( uuidParts.len() == 5 ) {
+						uuid = "#uuidParts[ 1 ]#-#uuidParts[ 2 ]#-#uuidParts[ 3 ]#-#uuidParts[ 4 ]##uuidParts[ 5 ]#";
+					}
+					entity.assignAttribute( keyName, uuid );
 				}
 			} );
 	}

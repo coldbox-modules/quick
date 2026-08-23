@@ -41,13 +41,23 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "returns retrieved relationships", function() {
-				var post                    = getInstance( "Post" ).with( "author" ).findOrFail( 1245 );
-				var memento                 = post.getMemento( includes = "author" );
-				memento.createdDate         = dateTimeFormat( memento.createdDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.modifiedDate        = dateTimeFormat( memento.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.publishedDate       = dateTimeFormat( memento.publishedDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.author.createdDate  = dateTimeFormat( memento.author.createdDate, "yyyy-mm-dd hh:nn:ss" );
-				memento.author.modifiedDate = dateTimeFormat( memento.author.modifiedDate, "yyyy-mm-dd hh:nn:ss" );
+				var post                       = getInstance( "Post" ).with( "author" ).findOrFail( 1245 );
+				var memento                    = post.getMemento( includes = "author" );
+				memento.createdDate            = formatTestTimestamp( memento.createdDate );
+				memento.modifiedDate           = formatTestTimestamp( memento.modifiedDate );
+				memento.publishedDate          = formatTestTimestamp( memento.publishedDate );
+				memento.author.createdDate     = formatTestTimestamp( memento.author.createdDate );
+				memento.author.modifiedDate    = formatTestTimestamp( memento.author.modifiedDate );
+				memento.post_pk                = memento.post_pk & "";
+				memento.user_id                = memento.user_id & "";
+				memento.author.id              = memento.author.id & "";
+				memento.author.favoritePost_id = memento.author.favoritePost_id & "";
+				if ( isNull( memento.author.email ) ) {
+					memento.author.email = "";
+				}
+				if ( isNull( memento.author.address.streetTwo ) ) {
+					memento.author.address.streetTwo = "";
+				}
 				expect( memento ).toBe( {
 					"post_pk"       : "1245",
 					"body"          : "My awesome post body",

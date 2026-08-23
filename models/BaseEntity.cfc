@@ -263,8 +263,9 @@ component accessors="true" {
 		variables._globalScopesApplied            = false;
 		variables._ignoreNotLoadedGuard           = false;
 		variables._withoutFiringEvents            = false;
+		variables._nullValueArgumentSentinel      = createObject( "java", "java.lang.Object" ).init();
 		param variables._preventLazyLoading       = false;
-		if ( isNull( variables._lazyLoadingViolationCallback ) ) {
+		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
 				throw(
 					type    = "QuickLazyLoadingException",
@@ -324,7 +325,7 @@ component accessors="true" {
 	 * @return  quick.models.KeyTypes.KeyType
 	 */
 	private KeyType function retrieveKeyType() {
-		if ( isNull( variables.__keyType__ ) ) {
+		if ( !variables.keyExists( "__keyType__" ) || isNull( variables.__keyType__ ) ) {
 			variables.__keyType__ = keyType();
 		}
 		return variables.__keyType__;
@@ -1087,8 +1088,9 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function fresh() {
-		var freshEntity = isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery.clone().offset( 0 );
-		var freshData   = freshEntity
+		var hasRefreshQuery = variables.keyExists( "_refreshQuery" ) && !isNull( variables._refreshQuery );
+		var freshEntity     = hasRefreshQuery ? variables._refreshQuery.clone().offset( 0 ) : newQuery();
+		var freshData       = freshEntity
 			.from( tableName() )
 			.where( function( q ) {
 				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
@@ -1099,7 +1101,8 @@ component accessors="true" {
 		if ( !isStruct( freshData ) || structKeyExists( freshData, "isQuickEntity" ) ) {
 			return freshData;
 		}
-		return newEntity().hydrate( freshData ).set_refreshQuery( variables._refreshQuery );
+		var entity = newEntity().hydrate( freshData );
+		return hasRefreshQuery ? entity.set_refreshQuery( variables._refreshQuery ) : entity;
 	}
 
 	/**
@@ -1111,7 +1114,7 @@ component accessors="true" {
 	public any function refresh() {
 		variables._relationshipsData   = {};
 		variables._relationshipsLoaded = {};
-		var refreshedEntity            = isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery
+		var refreshedEntity            = !variables.keyExists( "_refreshQuery" ) || isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery
 			.clone()
 			.offset( 0 );
 		var refreshedData = refreshedEntity
@@ -2792,7 +2795,11 @@ component accessors="true" {
 					var meta                   = {};
 					meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
 					meta[ "localMetadata" ]    = getMetadata( this );
-					var hasAccessorsMetadata   = false;
+					if ( server.keyExists( "boxlang" ) ) {
+						normalizeBoxLangMetadata( meta.originalMetadata );
+						normalizeBoxLangMetadata( meta.localMetadata );
+					}
+					var hasAccessorsMetadata = false;
 					if ( meta.localMetadata.keyExists( "accessors" ) ) {
 						hasAccessorsMetadata = lCase( trim( meta.localMetadata.accessors & "" ) ) == "true";
 					}
@@ -2855,8 +2862,11 @@ component accessors="true" {
 					}
 
 					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
+						var baseEntityMetadata = server.keyExists( "boxlang" )
+						 ? getClassMetadata( "quick.models.BaseEntity" )
+						 : getComponentMetadata( "quick.models.BaseEntity" );
 						return arrayReduce(
-							getComponentMetadata( "quick.models.BaseEntity" ).functions,
+							baseEntityMetadata.functions,
 							function( acc, func ) {
 								arguments.acc[ arguments.func.name ] = "";
 								return arguments.acc;
@@ -2917,7 +2927,61 @@ component accessors="true" {
 		}
 		variables._readonly = variables._meta.readonly;
 		explodeAttributesMetadata( variables._meta.attributes );
+		if ( server.keyExists( "boxlang" ) ) {
+			for (
+				var attributeName in retrieveAttributeNames(
+					withVirtualAttributes  = true,
+					withExcludedAttributes = true
+				)
+			) {
+				if ( variables.keyExists( attributeName ) && isNull( variables[ attributeName ] ) ) {
+					structDelete( variables, attributeName );
+				}
+			}
+		}
 		variables._casts = variables._meta.casts;
+	}
+
+	/**
+	 * Normalizes BoxLang metadata annotations to the keys Quick consumes.
+	 */
+	private void function normalizeBoxLangMetadata( required struct metadata ) {
+		if ( arguments.metadata.keyExists( "annotations" ) && isStruct( arguments.metadata.annotations ) ) {
+			for (
+				var key in [
+					"mapping",
+					"entityName",
+					"table",
+					"readonly",
+					"joincolumn",
+					"discriminatorValue",
+					"singleTableInheritance",
+					"datasource",
+					"grammar",
+					"discriminatorColumn"
+				]
+			) {
+				if ( arguments.metadata.annotations.keyExists( key ) && !isNull( arguments.metadata.annotations[ key ] ) ) {
+					arguments.metadata[ key ] = arguments.metadata.annotations[ key ];
+				}
+			}
+		}
+
+		if ( arguments.metadata.keyExists( "properties" ) && isArray( arguments.metadata.properties ) ) {
+			for ( var propertyMetadata in arguments.metadata.properties ) {
+				if ( propertyMetadata.keyExists( "annotations" ) && isStruct( propertyMetadata.annotations ) ) {
+					for ( var key in propertyMetadata.annotations ) {
+						if (
+							propertyMetadata.annotations.keyExists( key ) && !isNull(
+								propertyMetadata.annotations[ key ]
+							)
+						) {
+							propertyMetadata[ key ] = propertyMetadata.annotations[ key ];
+						}
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -3472,11 +3536,11 @@ component accessors="true" {
 	 *
 	 * @return  Boolean
 	 */
-	public boolean function isNullValue( required string key, any value ) {
-		if ( !isDefined( "arguments.value" ) ) {
-			// There is potential for the value of an attribute to be an actuall null value
-			// We must use isDefined instead of cfparam as returning a null value from invoke
-			// into the 'default' argument of cfparam will raise an exception
+	public boolean function isNullValue( required string key, any value = variables._nullValueArgumentSentinel ) {
+		if ( variables._nullValueArgumentSentinel.equals( arguments.value ) ) {
+			// There is potential for the value of an attribute to be an actual null value.
+			// Returning a null value from invoke into the 'default' argument of cfparam
+			// would raise an exception, so retrieve the current value directly.
 			arguments.value = invoke( this, "get" & arguments.key );
 		}
 

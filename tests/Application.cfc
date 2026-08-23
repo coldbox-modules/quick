@@ -1,5 +1,6 @@
 component {
 
+    this.enableNullSupport = shouldEnableFullNullSupport();
     this.name = "ColdBoxTestingSuite" & hash(getCurrentTemplatePath());
     this.sessionManagement  = true;
     this.setClientCookies   = true;
@@ -26,6 +27,12 @@ component {
     this.mappings[ "/testbox" ] = rootPath & "/testbox";
 
     this.datasource = "quick";
+
+    private boolean function shouldEnableFullNullSupport() {
+        var system = createObject( "java", "java.lang.System" );
+        var value  = system.getEnv( "FULL_NULL" );
+        return isNull( value ) ? false : !!value;
+    }
 
     function onApplicationStart() {
         param url.reloadDatabase = true;

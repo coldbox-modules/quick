@@ -100,12 +100,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			it( "preserves null values when using BooleanCast", () => {
 				var pn = getInstance( "PhoneNumber" ).find( 3 );
 				expect( pn.isNullAttribute( "confirmed" ) ).toBeTrue( "[confirmed] should be considered null" );
-				expect( pn.getConfirmed() ).toBe( "" );
 
 				pn.update( { "active" : false } ).refresh();
 
 				expect( pn.isNullAttribute( "confirmed" ) ).toBeTrue( "[confirmed] should remain null after saving" );
-				expect( pn.getConfirmed() ).toBe( "" );
 			} );
 
 			it( "allows custom casts to handle null database values", () => {

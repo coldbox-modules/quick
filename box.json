@@ -35,7 +35,7 @@
     },
     "devDependencies":{
         "coldbox":"^8.0.0",
-        "testbox":"^6.0.0",
+        "testbox":"^7.0.0",
         "cfcollection":"^3.6.4",
         "cfmigrations":"^5.0.0"
     },

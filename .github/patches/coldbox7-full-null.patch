@@ -43,3 +43,9 @@ diff --git a/tests/resources/app/coldbox/system/web/context/RequestContext.cfc b
 @@ -1576 +1576 @@
 -		if ( isNull( variables.privateContext.response ) ) {
 +		if ( !variables.privateContext.keyExists( "response" ) || isNull( variables.privateContext.response ) ) {
+diff --git a/modules/str/modules/cbjavaloader/models/javaloader/JavaLoader.cfc b/modules/str/modules/cbjavaloader/models/javaloader/JavaLoader.cfc
+--- a/modules/str/modules/cbjavaloader/models/javaloader/JavaLoader.cfc
++++ b/modules/str/modules/cbjavaloader/models/javaloader/JavaLoader.cfc
+@@ -570 +570 @@
+-		returntype="string"
++		returntype="void"

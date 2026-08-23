@@ -35,7 +35,9 @@ component extends="quick.models.BaseEntity" accessors="true" {
     function preUpdate( eventData ) {
         param request.preUpdateCalled = [];
         arrayAppend( request.preUpdateCalled, {
-            "entity": eventData.entity.getMemento()
+            "entity": eventData.entity.getMemento(),
+            "originalAttributes": eventData.originalAttributes,
+            "newAttributes": eventData.newAttributes
         } );
     }
 

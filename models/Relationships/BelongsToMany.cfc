@@ -599,8 +599,9 @@ component
 			attributes[ column ] = isNull( value ) ? javacast( "null", "" ) : value;
 		}
 
-		var mapping = isNull( variables.pivotEntity ) ? "Pivot@quick" : variables.pivotEntity;
-		var pivot   = variables.wirebox.getInstance( mapping );
+		var hasCustomPivot = structKeyExists( variables, "pivotEntity" );
+		var mapping        = hasCustomPivot ? variables.pivotEntity : "Pivot@quick";
+		var pivot          = variables.wirebox.getInstance( mapping );
 		if ( !structKeyExists( pivot, "isPivot" ) ) {
 			throw(
 				type    = "QuickInvalidPivotModel",
@@ -608,7 +609,7 @@ component
 			);
 		}
 
-		if ( !isNull( variables.pivotEntity ) ) {
+		if ( hasCustomPivot ) {
 			for ( var attributeName in attributes ) {
 				if ( !pivot.hasAttribute( attributeName ) ) {
 					throw(

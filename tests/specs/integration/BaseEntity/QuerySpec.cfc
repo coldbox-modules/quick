@@ -53,7 +53,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "can upsert records through the entity query API", function() {
-				getInstance( "User" ).upsert(
+				var result = getInstance( "User" ).upsert(
 					values = [
 						{
 							"id"        : 1,
@@ -73,8 +73,69 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					matchNulls = false
 				);
 
+				expect( result ).toBeStruct();
+				expect( result ).toHaveKey( "query" );
+				expect( result ).toHaveKey( "result" );
 				expect( getInstance( "User" ).findOrFail( 1 ).getFirstName() ).toBe( "Updated" );
 				expect( getInstance( "User" ).findOrFail( 99 ).getFirstName() ).toBe( "New" );
+			} );
+
+			it( "guards read-only entities and attributes when upserting", function() {
+				expect( function() {
+					getInstance( "Referral" ).upsert(
+						values = [ { "id" : 1, "type" : "external" } ],
+						target = "id",
+						update = [ "type" ],
+						toSql  = true
+					);
+				} ).toThrow( "QuickReadOnlyException" );
+
+				expect( function() {
+					getInstance( "Link" ).upsert(
+						values = [
+							{
+								"link_id"     : 1,
+								"url"         : "https://example.com",
+								"createdDate" : now()
+							}
+						],
+						target = "link_id",
+						update = [ "url" ],
+						toSql  = true
+					);
+				} ).toThrow( "QuickReadOnlyException" );
+
+				expect( function() {
+					getInstance( "Link" ).upsert(
+						values = [
+							{
+								"link_id" : 1,
+								"url"     : "https://example.com"
+							}
+						],
+						target = "link_id",
+						update = { "createdDate" : now() },
+						toSql  = true
+					);
+				} ).toThrow( "QuickReadOnlyException" );
+			} );
+
+			it( "can force an upsert of read-only attributes like updateAll", function() {
+				var sql = getInstance( "Link" ).upsert(
+					values = [
+						{
+							"link_id"     : 1,
+							"url"         : "https://example.com",
+							"createdDate" : now()
+						}
+					],
+					target = "link_id",
+					update = { "createdDate" : now() },
+					toSql  = true,
+					force  = true
+				);
+
+				expect( sql ).toInclude( "`created_date`" );
 			} );
 		} );
 	}

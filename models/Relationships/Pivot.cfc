@@ -11,10 +11,10 @@ component
 	readonly ="true"
 {
 
-	this.isPivot = true;
-
 	property name="_pivotParent"  persistent="false";
 	property name="_pivotRelated" persistent="false";
+
+	this.isPivot = true;
 
 	/**
 	 * Configures and hydrates this pivot for a relationship result.

@@ -561,9 +561,17 @@ component
 	 * Adds any pivot columns not already present to the related select list.
 	 */
 	private void function addPivotSelects() {
-		var columns = duplicate( variables.foreignPivotKeys )
-			.append( variables.relatedPivotKeys, true )
-			.append( variables.pivotColumns, true );
+		var columns = duplicate( variables.foreignPivotKeys );
+		arrayAppend(
+			columns,
+			variables.relatedPivotKeys,
+			true
+		);
+		arrayAppend(
+			columns,
+			variables.pivotColumns,
+			true
+		);
 
 		for ( var column in columns ) {
 			if ( variables.pivotColumnAliases.keyExists( column ) ) {
@@ -611,9 +619,16 @@ component
 			}
 		}
 
+		var keyNames = duplicate( variables.foreignPivotKeys );
+		arrayAppend(
+			keyNames,
+			variables.relatedPivotKeys,
+			true
+		);
+
 		pivot.configurePivot(
 			table      = listFirst( variables.table, " " ),
-			keyNames   = duplicate( variables.foreignPivotKeys ).append( variables.relatedPivotKeys, true ),
+			keyNames   = keyNames,
 			attributes = attributes,
 			parent     = variables.parent,
 			related    = arguments.entity
@@ -652,8 +667,14 @@ component
 	 * @return           The number of updated rows.
 	 */
 	public any function updateExistingPivot( required any id, required struct pivotAttributes ) {
-		var attributes = buildPivotWriteAttributes( arguments.pivotAttributes, false );
-		for ( var key in duplicate( variables.foreignPivotKeys ).append( variables.relatedPivotKeys, true ) ) {
+		var attributes    = buildPivotWriteAttributes( arguments.pivotAttributes, false );
+		var protectedKeys = duplicate( variables.foreignPivotKeys );
+		arrayAppend(
+			protectedKeys,
+			variables.relatedPivotKeys,
+			true
+		);
+		for ( var key in protectedKeys ) {
 			attributes.delete( key );
 		}
 

@@ -79,12 +79,29 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			it( "can touch an entity timestamp", function() {
 				var user             = getInstance( "User" ).findOrFail( 1 );
 				var originalModified = user.getModifiedDate();
+				var originalFirstName = user.getFirstName();
+
+				user.setFirstName( "This must not be persisted" );
 
 				user.touch();
 
 				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 1 );
+				expect( user.getFirstName() ).toBe( originalFirstName );
 				expect( user.isDirty( "modifiedDate" ) ).toBeFalse();
-				expect( dateCompare( user.fresh().getModifiedDate(), originalModified ) ).toBe( 1 );
+				var freshUser = user.fresh();
+				expect( dateCompare( freshUser.getModifiedDate(), originalModified ) ).toBe( 1 );
+				expect( freshUser.getFirstName() ).toBe( originalFirstName );
+			} );
+
+			it( "can override the timestamp fields used by touch", function() {
+				var user             = getInstance( "CustomTimestampUser" ).findOrFail( 1 );
+				var originalCreated  = user.getCreatedDate();
+				var originalModified = user.getModifiedDate();
+
+				user.touch();
+
+				expect( dateCompare( user.getCreatedDate(), originalCreated ) ).toBe( 1 );
+				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 0 );
 			} );
 
 			it( "does not allow updating of column where update=false in property", function() {

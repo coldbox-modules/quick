@@ -2602,8 +2602,12 @@ component accessors="true" {
 
 		var relationshipName = variables._str.slice( arguments.missingMethodName, 4 );
 
-		if ( !hasRelationship( relationshipName ) ) {
+		if ( !hasRelationship( relationshipName ) && !isRelationshipLoaded( relationshipName ) ) {
 			return;
+		}
+
+		if ( isRelationshipLoaded( relationshipName ) ) {
+			return retrieveRelationship( relationshipName );
 		}
 
 		if ( !isRelationshipLoaded( relationshipName ) && variables._preventLazyLoading ) {

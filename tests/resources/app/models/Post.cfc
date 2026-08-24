@@ -45,6 +45,69 @@ component
 		);
 	}
 
+	function tagsWithPivot() {
+		return belongsToMany(
+			"Tag",
+			"my_posts_tags",
+			"custom_post_pk",
+			"tag_id"
+		).withPivot( [ "context", "active" ] );
+	}
+
+	function tagsAsSubscriptions() {
+		return belongsToMany(
+			"Tag",
+			"my_posts_tags",
+			"custom_post_pk",
+			"tag_id"
+		)
+			.withPivot( "context" )
+			.as( "subscription" );
+	}
+
+	function tagsWithCustomPivot() {
+		return belongsToMany(
+			"Tag",
+			"my_posts_tags",
+			"custom_post_pk",
+			"tag_id"
+		)
+			.using( "PostTag" )
+			.withPivot( [ "context", "active" ] );
+	}
+
+	function activeTags() {
+		return belongsToMany(
+			"Tag",
+			"my_posts_tags",
+			"custom_post_pk",
+			"tag_id"
+		)
+			.withPivot( [ "context", "active" ] )
+			.wherePivot( "active", true )
+			.orderByPivot( "context" );
+	}
+
+	function defaultActiveTags() {
+		return belongsToMany(
+			"Tag",
+			"my_posts_tags",
+			"custom_post_pk",
+			"tag_id"
+		)
+			.withPivot( [ "context", "active" ] )
+			.withPivotValue( "active", true );
+	}
+
+	function timestampedTags() {
+		return belongsToMany(
+			"Tag",
+			"my_posts_tags",
+			"custom_post_pk",
+			"tag_id"
+		).withTimestamps( "created_date", "modified_date" );
+	}
+
 	function comments() {
 		return polymorphicHasMany( "Comment", "commentable" );
 	}

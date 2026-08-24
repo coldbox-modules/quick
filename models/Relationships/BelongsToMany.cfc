@@ -136,6 +136,7 @@ component
 		variables.pivotColumnAliases    = {};
 		variables.pivotValues           = {};
 		variables.pivotTimestampColumns = [];
+		variables.pivotEntity           = "";
 
 		super.init(
 			related            = arguments.related,
@@ -400,6 +401,9 @@ component
 	 * Uses a custom Pivot entity mapping for hydrated intermediate rows.
 	 */
 	public BelongsToMany function using( required string pivotEntity ) {
+		if ( !len( trim( arguments.pivotEntity ) ) ) {
+			throw( type = "QuickInvalidPivotModel", message = "A custom pivot model mapping cannot be empty." );
+		}
 		variables.pivotEntity = arguments.pivotEntity;
 		return this;
 	}
@@ -599,7 +603,7 @@ component
 			attributes[ column ] = isNull( value ) ? javacast( "null", "" ) : value;
 		}
 
-		var hasCustomPivot = structKeyExists( variables, "pivotEntity" );
+		var hasCustomPivot = len( variables.pivotEntity ) > 0;
 		var mapping        = hasCustomPivot ? variables.pivotEntity : "Pivot@quick";
 		var pivot          = variables.wirebox.getInstance( mapping );
 		if ( !structKeyExists( pivot, "isPivot" ) ) {

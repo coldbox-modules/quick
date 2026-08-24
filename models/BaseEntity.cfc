@@ -1393,6 +1393,39 @@ component accessors="true" {
 		return newEntity().fill( arguments.attributes, arguments.ignoreNonExistentAttributes ).save( arguments.options );
 	}
 
+	/**
+	 * Creates new entities for each provided attribute struct and returns them in
+	 * the entity's configured collection type.
+	 *
+	 * Each entity is saved independently so casts, generated keys, timestamps,
+	 * and entity lifecycle events behave the same as they do for `create`.
+	 *
+	 * @attributes                   An array of attribute structs.
+	 * @ignoreNonExistentAttributes  If true, skips attributes that do not exist.
+	 * @options                      Any options to pass to `queryExecute`. Default: {}.
+	 *
+	 * @throws                       QuickReadOnlyException
+	 *
+	 * @return                       array of quick.models.BaseEntity
+	 */
+	public any function createAll(
+		array attributes                    = [],
+		boolean ignoreNonExistentAttributes = false,
+		struct options                      = {}
+	) {
+		var ignoreAttributes = arguments.ignoreNonExistentAttributes;
+		var queryOptions     = arguments.options;
+		return newCollection(
+			arguments.attributes.map( function( entityAttributes ) {
+				return create(
+					attributes                  = entityAttributes,
+					ignoreNonExistentAttributes = ignoreAttributes,
+					options                     = queryOptions
+				);
+			} )
+		);
+	}
+
 	/*=====================================
     =            Relationships            =
     =====================================*/

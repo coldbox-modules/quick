@@ -88,6 +88,17 @@ component
 			.orderByPivot( "context" );
 	}
 
+	function defaultActiveTags() {
+		return belongsToMany(
+			"Tag",
+			"my_posts_tags",
+			"custom_post_pk",
+			"tag_id"
+		)
+			.withPivot( [ "context", "active" ] )
+			.withPivotValue( "active", true );
+	}
+
 	function timestampedTags() {
 		return belongsToMany(
 			"Tag",

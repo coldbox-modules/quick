@@ -76,6 +76,11 @@ component accessors="true" transientCache="false" {
 	property name="_asMementoSettings";
 
 	/**
+	 * Callbacks applied to each hydrated entity before return transformations.
+	 */
+	property name="_entityTransformers";
+
+	/**
 	 * Used to quickly identify QueryBuilder instances
 	 * instead of resorting to `isInstanceOf` which is slow.
 	 */
@@ -94,6 +99,7 @@ component accessors="true" transientCache="false" {
 		variables._asMemento                = false;
 		variables._asQuery                  = false;
 		variables._withAliases              = false;
+		variables._entityTransformers       = [];
 		param variables._preventLazyLoading = false;
 		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
@@ -106,6 +112,18 @@ component accessors="true" transientCache="false" {
 		variables._asMementoSettings     = {};
 		variables._globalScopeExclusions = [];
 		variables.aliasMap               = {};
+		return this;
+	}
+
+	/**
+	 * Adds a callback that transforms each hydrated entity before it is returned.
+	 *
+	 * @transformer  The callback accepting and returning an entity.
+	 *
+	 * @return       quick.models.QuickBuilder
+	 */
+	public QuickBuilder function addEntityTransformer( required any transformer ) {
+		variables._entityTransformers.append( arguments.transformer );
 		return this;
 	}
 
@@ -1489,6 +1507,16 @@ component accessors="true" transientCache="false" {
 	 * @return any
 	 */
 	private any function handleTransformations( entity ) {
+		if ( !variables._asQuery ) {
+			if ( isArray( arguments.entity ) ) {
+				arguments.entity = arguments.entity.map( function( item ) {
+					return applyEntityTransformers( arguments.item );
+				} );
+			} else if ( !isNull( arguments.entity ) ) {
+				arguments.entity = applyEntityTransformers( arguments.entity );
+			}
+		}
+
 		if ( !variables._asMemento ) {
 			return arguments.entity;
 		}
@@ -1500,6 +1528,15 @@ component accessors="true" transientCache="false" {
 		return arguments.entity.map( function( e ) {
 			return e.getMemento( argumentCollection = variables._asMementoSettings );
 		} );
+	}
+
+	/**
+	 * Applies all configured entity transformers to one hydrated entity.
+	 */
+	private any function applyEntityTransformers( required any entity ) {
+		return variables._entityTransformers.reduce( function( transformed, transformer ) {
+			return arguments.transformer( arguments.transformed );
+		}, arguments.entity );
 	}
 
 	/**
@@ -1741,6 +1778,7 @@ component accessors="true" transientCache="false" {
 		newBuilder.set_withAliases( this.get_withAliases() );
 		newBuilder.set_asMemento( this.get_asMemento() );
 		newBuilder.set_asMementoSettings( this.get_asMementoSettings() );
+		newBuilder.set_entityTransformers( this.get_entityTransformers() );
 		return newBuilder;
 	}
 

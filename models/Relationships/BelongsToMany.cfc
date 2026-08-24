@@ -58,6 +58,36 @@ component
 	property name="tableSuffix" type="string";
 
 	/**
+	 * Additional pivot columns to hydrate on the pivot model.
+	 */
+	property name="pivotColumns" type="array";
+
+	/**
+	 * The relationship name used to expose the hydrated pivot model.
+	 */
+	property name="pivotAccessor" type="string";
+
+	/**
+	 * An optional custom Pivot entity mapping.
+	 */
+	property name="pivotEntity";
+
+	/**
+	 * Internal aliases used to keep pivot columns separate from related columns.
+	 */
+	property name="pivotColumnAliases" type="struct";
+
+	/**
+	 * Values applied to pivot writes and relationship constraints.
+	 */
+	property name="pivotValues" type="struct";
+
+	/**
+	 * Configured created and modified timestamp columns for pivot writes.
+	 */
+	property name="pivotTimestampColumns" type="array";
+
+	/**
 	 * Used to check for the type of relationship more quickly than using isInstanceOf.
 	 */
 	this.relationshipClass = "BelongsToMany";
@@ -94,21 +124,32 @@ component
 		required array relatedKeys,
 		boolean withConstraints = true
 	) {
-		variables.table            = arguments.table;
-		variables.parentKeys       = arguments.parentKeys;
-		variables.foreignKeys      = arguments.parentKeys;
-		variables.relatedKeys      = arguments.relatedKeys;
-		variables.relatedPivotKeys = arguments.relatedPivotKeys;
-		variables.foreignPivotKeys = arguments.foreignPivotKeys;
-		variables.tablePrefix      = "";
+		variables.table                 = arguments.table;
+		variables.parentKeys            = arguments.parentKeys;
+		variables.foreignKeys           = arguments.parentKeys;
+		variables.relatedKeys           = arguments.relatedKeys;
+		variables.relatedPivotKeys      = arguments.relatedPivotKeys;
+		variables.foreignPivotKeys      = arguments.foreignPivotKeys;
+		variables.tablePrefix           = "";
+		variables.pivotColumns          = [];
+		variables.pivotAccessor         = "pivot";
+		variables.pivotColumnAliases    = {};
+		variables.pivotValues           = {};
+		variables.pivotTimestampColumns = [];
 
-		return super.init(
+		super.init(
 			related            = arguments.related,
 			relationName       = arguments.relationName,
 			relationMethodName = arguments.relationMethodName,
 			parent             = arguments.parent,
 			withConstraints    = arguments.withConstraints
 		);
+
+		variables.relationshipBuilder.addEntityTransformer( function( entity ) {
+			return hydratePivot( arguments.entity );
+		} );
+
+		return this;
 	}
 
 	/**
@@ -128,6 +169,7 @@ component
 	 */
 	public void function addConstraints() {
 		performJoin();
+		addPivotSelects();
 		addWhereConstraints();
 	}
 
@@ -149,10 +191,7 @@ component
 		}
 
 		performJoin();
-		variables.foreignPivotKeys.each( function( foreignPivotKey ) {
-			variables.relationshipBuilder.addSelect( listLast( variables.table, " " ) & "." & foreignPivotKey );
-			variables.relationshipBuilder.appendVirtualAttribute( name = foreignPivotKey, excludeFromMemento = true );
-		} );
+		addPivotSelects();
 
 		variables.relationshipBuilder.where( function( q1 ) {
 			allKeys.each( function( keys ) {
@@ -239,10 +278,13 @@ component
 	 */
 	public struct function buildDictionary( required array results ) {
 		return arguments.results.reduce( function( dict, result ) {
+			var pivot = structKeyExists( arguments.result, "isQuickEntity" )
+			 ? arguments.result.retrieveRelationship( variables.pivotAccessor )
+			 : {};
 			var key = variables.foreignPivotKeys
 				.map( function( foreignPivotKey ) {
-					return structKeyExists( result, "isQuickEntity" ) ? result.retrieveAttribute( foreignPivotKey ) : result[
-						foreignPivotKey
+					return structKeyExists( result, "isQuickEntity" ) ? pivot.retrieveAttribute( foreignPivotKey ) : result[
+						variables.pivotColumnAliases[ foreignPivotKey ]
 					];
 				} )
 				.toList();
@@ -321,15 +363,321 @@ component
 	}
 
 	/**
+	 * Includes additional intermediate-table columns on each related entity's Pivot model.
+	 * Accepts a column name, comma-delimited list, or array.
+	 *
+	 * @columns  The pivot columns to include.
+	 *
+	 * @return   quick.models.Relationships.BelongsToMany
+	 */
+	public BelongsToMany function withPivot( required any columns ) {
+		var normalizedColumns = isArray( arguments.columns )
+		 ? arguments.columns
+		 : listToArray( arguments.columns );
+
+		for ( var column in normalizedColumns ) {
+			if ( !variables.pivotColumns.findNoCase( column ) ) {
+				variables.pivotColumns.append( column );
+			}
+		}
+
+		addPivotSelects();
+		return this;
+	}
+
+	/**
+	 * Uses a custom loaded-relationship name instead of `pivot`.
+	 */
+	public BelongsToMany function as( required string accessor ) {
+		if ( !len( trim( arguments.accessor ) ) ) {
+			throw( type = "QuickInvalidPivotAccessor", message = "A pivot accessor cannot be empty." );
+		}
+		variables.pivotAccessor = arguments.accessor;
+		return this;
+	}
+
+	/**
+	 * Uses a custom Pivot entity mapping for hydrated intermediate rows.
+	 */
+	public BelongsToMany function using( required string pivotEntity ) {
+		variables.pivotEntity = arguments.pivotEntity;
+		return this;
+	}
+
+	/**
+	 * Includes and maintains timestamp columns on pivot writes.
+	 */
+	public BelongsToMany function withTimestamps( string createdAt = "created_at", string modifiedAt = "updated_at" ) {
+		variables.pivotTimestampColumns = [
+			arguments.createdAt,
+			arguments.modifiedAt
+		];
+		return withPivot( variables.pivotTimestampColumns );
+	}
+
+	/**
+	 * Adds a where constraint using a qualified pivot column.
+	 */
+	public BelongsToMany function wherePivot(
+		required string column,
+		any operator,
+		any value,
+		string combinator = "and"
+	) {
+		if ( !arguments.keyExists( "value" ) || isNull( arguments.value ) ) {
+			arguments.value    = arguments.operator;
+			arguments.operator = "=";
+		}
+		variables.relationshipBuilder.where(
+			column     = qualifyPivotColumn( arguments.column ),
+			operator   = arguments.operator,
+			value      = arguments.value,
+			combinator = arguments.combinator
+		);
+		return this;
+	}
+
+	/**
+	 * Adds an or-where constraint using a qualified pivot column.
+	 */
+	public BelongsToMany function orWherePivot(
+		required string column,
+		any operator,
+		any value
+	) {
+		arguments.combinator = "or";
+		return wherePivot( argumentCollection = arguments );
+	}
+
+	/**
+	 * Adds a where-in constraint using a qualified pivot column.
+	 */
+	public BelongsToMany function wherePivotIn(
+		required string column,
+		required any values,
+		string combinator = "and"
+	) {
+		variables.relationshipBuilder.whereIn(
+			qualifyPivotColumn( arguments.column ),
+			arguments.values,
+			arguments.combinator
+		);
+		return this;
+	}
+
+	/**
+	 * Adds a where-not-in constraint using a qualified pivot column.
+	 */
+	public BelongsToMany function wherePivotNotIn(
+		required string column,
+		required any values,
+		string combinator = "and"
+	) {
+		variables.relationshipBuilder.whereNotIn(
+			qualifyPivotColumn( arguments.column ),
+			arguments.values,
+			arguments.combinator
+		);
+		return this;
+	}
+
+	/**
+	 * Adds a where-between constraint using a qualified pivot column.
+	 */
+	public BelongsToMany function wherePivotBetween(
+		required string column,
+		required any start,
+		required any end,
+		string combinator = "and"
+	) {
+		variables.relationshipBuilder.whereBetween(
+			qualifyPivotColumn( arguments.column ),
+			arguments.start,
+			arguments.end,
+			arguments.combinator
+		);
+		return this;
+	}
+
+	/**
+	 * Adds a where-not-between constraint using a qualified pivot column.
+	 */
+	public BelongsToMany function wherePivotNotBetween(
+		required string column,
+		required any start,
+		required any end,
+		string combinator = "and"
+	) {
+		variables.relationshipBuilder.whereNotBetween(
+			qualifyPivotColumn( arguments.column ),
+			arguments.start,
+			arguments.end,
+			arguments.combinator
+		);
+		return this;
+	}
+
+	/**
+	 * Adds a where-null constraint using a qualified pivot column.
+	 */
+	public BelongsToMany function wherePivotNull( required string column, string combinator = "and" ) {
+		variables.relationshipBuilder.whereNull( qualifyPivotColumn( arguments.column ), arguments.combinator );
+		return this;
+	}
+
+	/**
+	 * Adds a where-not-null constraint using a qualified pivot column.
+	 */
+	public BelongsToMany function wherePivotNotNull( required string column, string combinator = "and" ) {
+		variables.relationshipBuilder.whereNotNull( qualifyPivotColumn( arguments.column ), arguments.combinator );
+		return this;
+	}
+
+	/**
+	 * Orders the related results using a qualified pivot column.
+	 */
+	public BelongsToMany function orderByPivot( required string column, string direction = "asc" ) {
+		variables.relationshipBuilder.orderBy( qualifyPivotColumn( arguments.column ), arguments.direction );
+		return this;
+	}
+
+	/**
+	 * Orders the related results descending using a qualified pivot column.
+	 */
+	public BelongsToMany function orderByPivotDesc( required string column ) {
+		return orderByPivot( arguments.column, "desc" );
+	}
+
+	/**
+	 * Constrains a pivot value and uses it as a default for pivot writes.
+	 */
+	public BelongsToMany function withPivotValue( required string column, required any value ) {
+		variables.pivotValues[ arguments.column ] = arguments.value;
+		withPivot( arguments.column );
+		return wherePivot( arguments.column, arguments.value );
+	}
+
+	/**
+	 * Adds any pivot columns not already present to the related select list.
+	 */
+	private void function addPivotSelects() {
+		var columns = duplicate( variables.foreignPivotKeys )
+			.append( variables.relatedPivotKeys, true )
+			.append( variables.pivotColumns, true );
+
+		for ( var column in columns ) {
+			if ( variables.pivotColumnAliases.keyExists( column ) ) {
+				continue;
+			}
+
+			var aliasName                          = "__quick_pivot_#variables.pivotColumnAliases.count() + 1#";
+			variables.pivotColumnAliases[ column ] = aliasName;
+			variables.relationshipBuilder.addSelect( "#qualifyPivotColumn( column )# AS #aliasName#" );
+			variables.relationshipBuilder.appendVirtualAttribute( name = aliasName, excludeFromMemento = true );
+		}
+	}
+
+	/**
+	 * Hydrates and assigns a Pivot model to a related entity.
+	 */
+	private any function hydratePivot( required any entity ) {
+		if ( !structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+			return arguments.entity;
+		}
+
+		var attributes = {};
+		for ( var column in variables.pivotColumnAliases ) {
+			var value            = arguments.entity.retrieveAttribute( variables.pivotColumnAliases[ column ] );
+			attributes[ column ] = isNull( value ) ? javacast( "null", "" ) : value;
+		}
+
+		var mapping = isNull( variables.pivotEntity ) ? "Pivot@quick" : variables.pivotEntity;
+		var pivot   = variables.wirebox.getInstance( mapping );
+		if ( !structKeyExists( pivot, "isPivot" ) ) {
+			throw(
+				type    = "QuickInvalidPivotModel",
+				message = "The custom pivot model [#mapping#] must extend [quick.models.Relationships.Pivot]."
+			);
+		}
+
+		if ( !isNull( variables.pivotEntity ) ) {
+			for ( var attributeName in attributes ) {
+				if ( !pivot.hasAttribute( attributeName ) ) {
+					throw(
+						type    = "QuickPivotAttributeNotFound",
+						message = "The pivot attribute [#attributeName#] is not declared on [#mapping#]."
+					);
+				}
+			}
+		}
+
+		pivot.configurePivot(
+			table      = listFirst( variables.table, " " ),
+			keyNames   = duplicate( variables.foreignPivotKeys ).append( variables.relatedPivotKeys, true ),
+			attributes = attributes,
+			parent     = variables.parent,
+			related    = arguments.entity
+		);
+		arguments.entity.assignRelationship( variables.pivotAccessor, pivot );
+		return arguments.entity;
+	}
+
+	/**
+	 * Qualifies a pivot column unless it is already qualified.
+	 */
+	private string function qualifyPivotColumn( required string column ) {
+		return find( ".", arguments.column ) ? arguments.column : "#listLast( variables.table, " " )#.#arguments.column#";
+	}
+
+	/**
 	 * Associates one or more ids of the related entity to the parent entity.
 	 *
-	 * @id      The id or array of ids of the related entity.
+	 * @id               The id or array of ids of the related entity.
+	 * @pivotAttributes  Additional attributes for each inserted pivot row.
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function attach( required any id ) {
-		variables.newPivotStatement().insert( parseIdsForInsert( arguments.id ) );
+	public any function attach( required any id, struct pivotAttributes = {} ) {
+		var attributes = buildPivotWriteAttributes( arguments.pivotAttributes, true );
+		variables.newPivotStatement().insert( parseIdsForInsert( arguments.id, attributes ) );
 		return variables.parent;
+	}
+
+	/**
+	 * Updates an existing intermediate-table row for the parent and related id.
+	 *
+	 * @id               The related entity id or composite id values.
+	 * @pivotAttributes  The pivot values to update. Pivot keys cannot be overwritten.
+	 *
+	 * @return           The number of updated rows.
+	 */
+	public any function updateExistingPivot( required any id, required struct pivotAttributes ) {
+		var attributes = buildPivotWriteAttributes( arguments.pivotAttributes, false );
+		for ( var key in duplicate( variables.foreignPivotKeys ).append( variables.relatedPivotKeys, true ) ) {
+			attributes.delete( key );
+		}
+
+		var query = variables.newPivotStatement();
+		arrayZipEach(
+			[
+				variables.foreignPivotKeys,
+				variables.parentKeys
+			],
+			function( foreignPivotKey, parentKey ) {
+				query.where( foreignPivotKey, variables.parent.retrieveAttribute( parentKey ) );
+			}
+		);
+		arrayZipEach(
+			[
+				variables.relatedPivotKeys,
+				parseIds( arguments.id )[ 1 ]
+			],
+			function( pivotKey, value ) {
+				query.where( pivotKey, value );
+			}
+		);
+
+		return query.update( attributes );
 	}
 
 	/**
@@ -396,7 +744,7 @@ component
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function sync( required any id ) {
+	public any function sync( required any id, struct pivotAttributes = {} ) {
 		var foreignPivotKeyValues = variables.parentKeys.map( function( parentKey ) {
 			return variables.parent.retrieveAttribute( parentKey );
 		} );
@@ -414,7 +762,7 @@ component
 				);
 			} )
 			.delete();
-		return variables.attach( arguments.id );
+		return attach( arguments.id, arguments.pivotAttributes );
 	}
 
 	/**
@@ -455,10 +803,11 @@ component
 	 * @doc_generic  any,any
 	 * @return       [{any: any}]
 	 */
-	public array function parseIdsForInsert( required any value ) {
+	public array function parseIdsForInsert( required any value, struct pivotAttributes = {} ) {
 		var foreignPivotKeyValues = variables.parentKeys.map( function( parentKey ) {
 			return variables.parent.retrieveAttribute( parentKey );
 		} );
+		var additionalPivotAttributes = arguments.pivotAttributes;
 		return arrayWrap( arguments.value ).map( function( values ) {
 			// If the value is not a simple value, we will assume
 			// it is an entity and return its key value.
@@ -485,8 +834,29 @@ component
 					insertRecord[ relatedPivotKey ] = val;
 				}
 			);
+			insertRecord.append( additionalPivotAttributes, false );
 			return insertRecord;
 		} );
+	}
+
+	/**
+	 * Combines configured and supplied values and maintains pivot timestamps.
+	 */
+	private struct function buildPivotWriteAttributes( struct attributes = {}, boolean inserting = false ) {
+		var values = duplicate( variables.pivotValues );
+		values.append( arguments.attributes, true );
+
+		if ( variables.pivotTimestampColumns.len() == 2 ) {
+			var timestamp = now();
+			if ( arguments.inserting && !values.keyExists( variables.pivotTimestampColumns[ 1 ] ) ) {
+				values[ variables.pivotTimestampColumns[ 1 ] ] = timestamp;
+			}
+			if ( !values.keyExists( variables.pivotTimestampColumns[ 2 ] ) ) {
+				values[ variables.pivotTimestampColumns[ 2 ] ] = timestamp;
+			}
+		}
+
+		return values;
 	}
 
 	/**

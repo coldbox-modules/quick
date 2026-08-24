@@ -19,6 +19,98 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( posts ).toBeArray();
 				expect( posts ).toHaveLength( 2 );
 			} );
+
+			it( "hydrates declared pivot columns on a pivot model", function() {
+				var post  = getInstance( "Post" ).findOrFail( 1245 );
+				var tag   = post.getTagsWithPivot()[ 1 ];
+				var pivot = tag.getPivot();
+
+				expect( pivot ).toBeInstanceOf( "quick.models.Relationships.Pivot" );
+				expect( pivot.isLoaded() ).toBeTrue();
+				expect( pivot.getCustom_post_pk() ).toBe( post.getPost_pk() );
+				expect( pivot.getTag_id() ).toBe( tag.getId() );
+				expect( pivot.getContext() ).toBe( "primary" );
+				expect( pivot.getActive() ).toBeTrue();
+				expect( pivot.getPivotParent() ).toBe( post );
+				expect( pivot.getPivotRelated() ).toBe( tag );
+				expect( pivot.getMemento() ).toInclude( {
+					"custom_post_pk" : 1245,
+					"tag_id"         : 1,
+					"context"        : "primary"
+				} );
+			} );
+
+			it( "hydrates the correct pivot for every eagerly loaded parent", function() {
+				var posts = getInstance( "Post" )
+					.with( "tagsWithPivot" )
+					.whereIn( "post_pk", [ 1245, 523526 ] )
+					.orderBy( "post_pk" )
+					.get();
+
+				var firstPostTag  = posts[ 1 ].getTagsWithPivot()[ 1 ];
+				var secondPostTag = posts[ 2 ].getTagsWithPivot()[ 1 ];
+
+				expect( firstPostTag.getPivot().getCustom_post_pk() ).toBe( posts[ 1 ].getPost_pk() );
+				expect( secondPostTag.getPivot().getCustom_post_pk() ).toBe( posts[ 2 ].getPost_pk() );
+				expect( firstPostTag.getPivot().getContext() ).notToBe( secondPostTag.getPivot().getContext() );
+			} );
+
+			it( "can customize the pivot accessor", function() {
+				var tag = getInstance( "Post" ).findOrFail( 1245 ).getTagsAsSubscriptions()[ 1 ];
+
+				expect( tag.isRelationshipLoaded( "subscription" ) ).toBeTrue();
+				expect( tag.getSubscription().getContext() ).toBe( "primary" );
+			} );
+
+			it( "can hydrate a custom pivot model with casts and behavior", function() {
+				var pivot = getInstance( "Post" ).findOrFail( 1245 ).getTagsWithCustomPivot()[ 1 ].getPivot();
+
+				expect( pivot ).toBeInstanceOf( "app.models.PostTag" );
+				expect( pivot.getActive() ).toBeBoolean().toBeTrue();
+				expect( pivot.describe() ).toBe( "primary:1" );
+			} );
+
+			it( "can constrain and order by pivot columns", function() {
+				var tags = getInstance( "Post" ).findOrFail( 523526 ).getActiveTags();
+
+				expect( tags ).toHaveLength( 2 );
+				expect( tags[ 1 ].getPivot().getContext() ).toBe( "published" );
+				expect( tags[ 2 ].getPivot().getContext() ).toBe( "review" );
+			} );
+
+			it( "writes and updates additional pivot attributes", function() {
+				var post = getInstance( "Post" ).findOrFail( 1245 );
+
+				post.tagsWithPivot().attach( 3, { "context" : "new", "active" : true } );
+				var attached = post.tagsWithPivot().findOrFail( 3 );
+				expect( attached.getPivot().getContext() ).toBe( "new" );
+				expect( attached.getPivot().getActive() ).toBeTrue();
+
+				post.tagsWithPivot()
+					.updateExistingPivot(
+						3,
+						{
+							"context" : "updated",
+							"active"  : false
+						}
+					);
+				var updated = post.tagsWithPivot().findOrFail( 3 );
+				expect( updated.getPivot().getContext() ).toBe( "updated" );
+				expect( updated.getPivot().getActive() ).toBeFalse();
+			} );
+
+			it( "maintains configured pivot timestamps", function() {
+				var post = getInstance( "Post" ).findOrFail( 321 );
+
+				post.timestampedTags().attach( 1 );
+				var pivot = post
+					.timestampedTags()
+					.findOrFail( 1 )
+					.getPivot();
+
+				expect( pivot.getCreated_date() ).notToBeNull();
+				expect( pivot.getModified_date() ).notToBeNull();
+			} );
 		} );
 	}
 

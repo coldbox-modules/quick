@@ -2960,11 +2960,13 @@ component accessors="true" {
 							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
 						);
 					}
-					meta[ "fullName" ]                                 = meta.originalMetadata.fullname;
-					param meta.originalMetadata.mapping                = listLast( meta.originalMetadata.fullname, "." );
-					meta[ "mapping" ]                                  = meta.originalMetadata.mapping;
-					param meta.originalMetadata.entityName             = listLast( meta.originalMetadata.name, "." );
-					meta[ "entityName" ]                               = meta.originalMetadata.entityName;
+					meta[ "fullName" ]                     = meta.originalMetadata.fullname;
+					param meta.originalMetadata.mapping    = listLast( meta.originalMetadata.fullname, "." );
+					meta[ "mapping" ]                      = meta.originalMetadata.mapping;
+					param meta.originalMetadata.entityName = listLast( meta.originalMetadata.name, "." );
+					meta[ "entityName" ]                   = meta.originalMetadata.entityName;
+					param meta.localMetadata.properties    = [];
+					guardDuplicatePropertyNames( meta.localMetadata, meta.mapping );
 					param meta.originalMetadata.table                  = variables._str.plural( variables._str.snake( meta.entityName ) );
 					meta[ "table" ]                                    = meta.originalMetadata.table;
 					param meta.originalMetadata.readonly               = false;
@@ -3210,6 +3212,75 @@ component accessors="true" {
 	 */
 	private boolean function hasNonPersistentProperty( required string name ) {
 		return variables._meta.nonPersistentProperties.keyExists( arguments.name );
+	}
+
+	private void function guardDuplicatePropertyNames( required struct metadata, required string mapping ) {
+		var propertyNames = {};
+		var entityMapping = arguments.mapping;
+		arguments.metadata.properties.each( function( prop ) {
+			if ( propertyNames.keyExists( arguments.prop.name ) ) {
+				throwDuplicateProperty( entityMapping, arguments.prop.name );
+			}
+			propertyNames[ arguments.prop.name ] = true;
+		} );
+
+		// Some engines collapse duplicate declarations in component metadata. In
+		// that case, inspect the local component source when it is available.
+		if ( !arguments.metadata.keyExists( "path" ) || !fileExists( arguments.metadata.path ) ) {
+			return;
+		}
+
+		propertyNames = {};
+		var source    = fileRead( arguments.metadata.path );
+		source        = reReplace(
+			source,
+			"(?s)/[*].*?[*]/|<!---.*?--->",
+			" ",
+			"all"
+		);
+		source            = reReplace( source, "(?m)//.*$", " ", "all" );
+		var propertyToken = chr( 60 ) & "cfproperty";
+		var declarations  = reMatchNoCase( "(?is)(^|[^a-z0-9_])(property|#propertyToken#)\s[^;>]*", source );
+		declarations.each( function( declaration ) {
+			var nameAssignment = reFindNoCase(
+				"name\s*=\s*",
+				arguments.declaration,
+				1,
+				true
+			);
+			if ( nameAssignment.pos[ 1 ] == 0 ) {
+				return;
+			}
+			var valueStart = nameAssignment.pos[ 1 ] + nameAssignment.len[ 1 ];
+			var quote      = mid( arguments.declaration, valueStart, 1 );
+			if ( quote != chr( 34 ) && quote != chr( 39 ) ) {
+				return;
+			}
+			var valueEnd = find(
+				quote,
+				arguments.declaration,
+				valueStart + 1
+			);
+			if ( valueEnd == 0 ) {
+				return;
+			}
+			var propertyName = mid(
+				arguments.declaration,
+				valueStart + 1,
+				valueEnd - valueStart - 1
+			);
+			if ( propertyNames.keyExists( propertyName ) ) {
+				throwDuplicateProperty( entityMapping, propertyName );
+			}
+			propertyNames[ propertyName ] = true;
+		} );
+	}
+
+	private void function throwDuplicateProperty( required string mapping, required string propertyName ) {
+		throw(
+			type    = "QuickDuplicateProperty",
+			message = "[#arguments.mapping#] declares more than one property named [#arguments.propertyName#]. Property names must be unique."
+		);
 	}
 
 	private struct function generateCastsFromProperties( required array properties ) {

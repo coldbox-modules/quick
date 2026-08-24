@@ -493,14 +493,120 @@ component accessors="true" transientCache="false" {
 			getEntity().guardReadOnly();
 			getEntity().guardAgainstReadOnlyAttributes( arguments.attributes );
 		}
-		var updateAttributes = {};
+		return variables.qb.update( prepareBulkMutationAttributes( arguments.attributes ) );
+	}
+
+	/**
+	 * Inserts rows that do not exist and updates rows matching the target columns.
+	 *
+	 * Like `updateAll`, this is a bulk mutation. It applies Quick attribute metadata
+	 * and read-only guards, but does not hydrate entities or fire per-entity events.
+	 *
+	 * @values          The values to insert or the columns selected by the source query.
+	 * @target          The columns used to determine whether a row already exists.
+	 * @update          The columns or explicit values to update when a row matches.
+	 * @source          An optional query builder or callback used as the source rows.
+	 * @deleteUnmatched Whether to delete target rows missing from the source, or a callback constraining those deletes.
+	 * @options         Options passed to `queryExecute`.
+	 * @toSql           Whether to return SQL instead of executing the query.
+	 * @matchNulls      Whether two NULL target values should be considered a match. Supported by MERGE grammars.
+	 * @force           If true, skips read-only entity and read-only attribute checks.
+	 *
+	 * @throws          QuickReadOnlyException
+	 *
+	 * @return          The qb bulk execution result, or SQL when `toSql` is true.
+	 */
+	public any function upsert(
+		required any values,
+		required any target,
+		any update,
+		any source,
+		any deleteUnmatched = false,
+		struct options      = {},
+		boolean toSql       = false,
+		boolean matchNulls  = false,
+		boolean force       = false
+	) {
+		if ( !arguments.force ) {
+			getEntity().guardReadOnly();
+			guardBulkMutationAttributes( arguments.values );
+			if ( structKeyExists( arguments, "update" ) ) {
+				guardBulkMutationAttributes( arguments.update );
+			}
+		}
+
+		arguments.values = prepareBulkMutationValues( arguments.values );
+		if ( structKeyExists( arguments, "update" ) && isStruct( arguments.update ) ) {
+			arguments.update = prepareBulkMutationAttributes( arguments.update );
+		}
+
+		var qbArguments = duplicate( arguments );
+		structDelete( qbArguments, "force" );
+		return variables.qb.upsert( argumentCollection = qbArguments );
+	}
+
+	/**
+	 * Applies Quick query parameter metadata to a bulk mutation attribute struct.
+	 */
+	private struct function prepareBulkMutationAttributes( required struct attributes ) {
+		var preparedAttributes = {};
 		for ( var key in arguments.attributes ) {
-			updateAttributes[ key ] = getEntity().generateQueryParamStruct(
+			preparedAttributes[ key ] = getEntity().generateQueryParamStruct(
 				column = key,
 				value  = isNull( arguments.attributes[ key ] ) ? javacast( "null", "" ) : arguments.attributes[ key ]
 			);
 		}
-		return variables.qb.update( updateAttributes );
+		return preparedAttributes;
+	}
+
+	/**
+	 * Applies Quick query parameter metadata to literal upsert rows.
+	 */
+	private any function prepareBulkMutationValues( required any values ) {
+		if ( isArray( arguments.values ) ) {
+			var preparedValues = [];
+			for ( var value in arguments.values ) {
+				preparedValues.append( isStruct( value ) ? prepareBulkMutationAttributes( value ) : value );
+			}
+			return preparedValues;
+		}
+
+		if (
+			isStruct( arguments.values ) &&
+			!structKeyExists( arguments.values, "isBuilder" ) &&
+			!structKeyExists( arguments.values, "isQuickBuilder" )
+		) {
+			return prepareBulkMutationAttributes( arguments.values );
+		}
+
+		return arguments.values;
+	}
+
+	/**
+	 * Guards literal rows or column collections used by a bulk mutation.
+	 */
+	private void function guardBulkMutationAttributes( required any attributes ) {
+		if ( isArray( arguments.attributes ) ) {
+			for ( var item in arguments.attributes ) {
+				guardBulkMutationAttributes( item );
+			}
+			return;
+		}
+
+		if (
+			isStruct( arguments.attributes ) &&
+			!structKeyExists( arguments.attributes, "isBuilder" ) &&
+			!structKeyExists( arguments.attributes, "isQuickBuilder" )
+		) {
+			getEntity().guardAgainstReadOnlyAttributes( arguments.attributes );
+			return;
+		}
+
+		if ( isSimpleValue( arguments.attributes ) ) {
+			for ( var attribute in listToArray( arguments.attributes ) ) {
+				getEntity().guardAgainstReadOnlyAttributes( { "#attribute#" : true } );
+			}
+		}
 	}
 
 	/**

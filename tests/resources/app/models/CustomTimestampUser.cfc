@@ -1,4 +1,8 @@
-component extends="quick.models.BaseEntity" accessors="true" table="users" {
+component
+	extends  ="quick.models.BaseEntity"
+	accessors="true"
+	table    ="users"
+{
 
 	property name="id";
 	property name="createdDate"  column="created_date";

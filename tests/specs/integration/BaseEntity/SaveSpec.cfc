@@ -77,8 +77,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "can touch an entity timestamp", function() {
-				var user             = getInstance( "User" ).findOrFail( 1 );
-				var originalModified = user.getModifiedDate();
+				var user              = getInstance( "User" ).findOrFail( 1 );
+				var originalModified  = user.getModifiedDate();
 				var originalFirstName = user.getFirstName();
 
 				user.setFirstName( "This must not be persisted" );

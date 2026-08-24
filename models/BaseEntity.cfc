@@ -440,6 +440,15 @@ component accessors="true" {
 	}
 
 	/**
+	 * Returns the timestamp fields updated by `touch`.
+	 *
+	 * @return  [String]
+	 */
+	public array function timestampFields() {
+		return [ "modifiedDate" ];
+	}
+
+	/**
 	 * Returns the column name for the primary key.
 	 *
 	 * @doc_generic  String
@@ -1415,16 +1424,20 @@ component accessors="true" {
 	}
 
 	/**
-	 * Updates a timestamp attribute to the current time and saves the entity.
+	 * Resets the entity to its clean state, updates its timestamp fields to the
+	 * current time, and saves the entity.
 	 *
-	 * @attribute The timestamp attribute to update. Default: `modifiedDate`.
-	 * @options   Any options to pass to `queryExecute`. Default: {}.
+	 * @options Any options to pass to `queryExecute`. Default: {}.
 	 *
 	 * @return    quick.models.BaseEntity
 	 */
-	public any function touch( string attribute = "modifiedDate", struct options = {} ) {
+	public any function touch( struct options = {} ) {
 		guardAgainstNotLoaded( "This instance is not loaded so it cannot be touched." );
-		assignAttribute( arguments.attribute, now() );
+		reset();
+		var timestamp = now();
+		timestampFields().each( function( field ) {
+			assignAttribute( arguments.field, timestamp );
+		} );
 		return save( arguments.options );
 	}
 

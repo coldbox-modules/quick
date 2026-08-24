@@ -593,7 +593,7 @@ component accessors="true" transientCache="false" {
 
 	/**
 	 * Removes one or more relationships from the eager-load list. Omitting the
-	 * argument removes every configured eager load.
+	 * argument leaves the eager-load list unchanged.
 	 *
 	 * @relationName A relationship name or array of relationship names to remove.
 	 *
@@ -601,7 +601,6 @@ component accessors="true" transientCache="false" {
 	 */
 	public any function without( any relationName ) {
 		if ( isNull( arguments.relationName ) ) {
-			variables._eagerLoad = [];
 			return this;
 		}
 
@@ -613,6 +612,16 @@ component accessors="true" transientCache="false" {
 				compareNoCase( left( path, len( exclusion ) + 1 ), exclusion & "." ) == 0;
 			} );
 		} );
+		return this;
+	}
+
+	/**
+	 * Removes every configured eager load.
+	 *
+	 * @return QuickBuilder
+	 */
+	public any function clearEagerLoads() {
+		variables._eagerLoad = [];
 		return this;
 	}
 

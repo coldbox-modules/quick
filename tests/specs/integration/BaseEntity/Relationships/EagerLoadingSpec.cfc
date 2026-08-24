@@ -699,7 +699,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} );
 
 				it( "does not clear eager loads when without is called without arguments", () => {
-					var posts = getInstance( "EagerLoadedPost" ).without().preventLazyLoading().get();
+					var posts = getInstance( "EagerLoadedPost" )
+						.without()
+						.preventLazyLoading()
+						.get();
 
 					expect( posts ).toHaveLength( 4 );
 					expect( posts[ 1 ].isRelationshipLoaded( "comments" ) ).toBeTrue();
@@ -707,7 +710,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} );
 
 				it( "can explicitly clear all eager loads", () => {
-					var posts = getInstance( "EagerLoadedPost" ).clearEagerLoads().preventLazyLoading().get();
+					var posts = getInstance( "EagerLoadedPost" )
+						.clearEagerLoads()
+						.preventLazyLoading()
+						.get();
 
 					expect( posts ).toHaveLength( 4 );
 					expect( posts[ 1 ].isRelationshipLoaded( "comments" ) ).toBeFalse();

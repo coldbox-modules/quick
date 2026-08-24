@@ -63,6 +63,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( sql ).notToInclude( "ROW_NUMBER()" );
 			} );
 
+			it( "keeps scoped subselects when retrieving all entities", function() {
+				var users = getInstance( "User" ).withLatestPostId().all();
+
+				expect( users ).toHaveLength( 5 );
+				expect( users[ 1 ].getLatestPostId() ).toBe( 523526 );
+				expect( variables.queries ).toHaveLength(
+					1,
+					"Only one query should have been executed. #arrayLen( variables.queries )# were instead."
+				);
+			} );
+
 			it( "can add a subquery to an entity using a relationship", function() {
 				var elpete = getInstance( "User" ).withLatestPostIdRelationship().findOrFail( 1 );
 				expect( elpete.getLatestPostId() ).notToBeNull();

@@ -39,6 +39,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( entity.getActivoSN() ).toBeFalse();
 			} );
 
+			it( "rejects duplicate property names", function() {
+				expect( function() {
+					getInstance( "DuplicateUsernamePropertyUser" );
+				} ).toThrow( "QuickDuplicateProperty" );
+			} );
+
 			it( "can set a value to null using the `setColumnName` magic methods", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getUsername() ).toBe( "elpete" );

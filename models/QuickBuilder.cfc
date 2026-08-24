@@ -1393,6 +1393,34 @@ component accessors="true" transientCache="false" {
 	}
 
 	/**
+	 * Retrieves the configured query in chunks and passes hydrated entities to
+	 * the callback. Returning false from the callback stops further retrieval.
+	 *
+	 * @max      The maximum number of entities in each chunk.
+	 * @callback The callback invoked for each entity collection.
+	 * @options  Any options to pass to `queryExecute`. Default: {}.
+	 *
+	 * @return   quick.models.QuickBuilder
+	 */
+	public any function chunk(
+		required numeric max,
+		required callback,
+		struct options = {}
+	) {
+		activateGlobalScopes();
+		variables.qb.chunk(
+			arguments.max,
+			function( rows ) {
+				var entities   = variables._asQuery ? arguments.rows : arguments.rows.map( variables.loadEntity );
+				var collection = getEntity().newCollection( handleTransformations( eagerLoadRelations( entities ) ) );
+				return callback( collection );
+			},
+			arguments.options
+		);
+		return this;
+	}
+
+	/**
 	 * Returns a Pagination Collection of entities.
 	 *
 	 * @page     The page of results to return.

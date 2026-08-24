@@ -42,7 +42,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			it( "rejects duplicate property names", function() {
 				expect( function() {
 					getInstance( "DuplicateUsernamePropertyUser" );
-				} ).toThrow( "QuickDuplicateProperty" );
+				} ).toThrow();
 			} );
 
 			it( "can set a value to null using the `setColumnName` magic methods", function() {

@@ -74,8 +74,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				);
 
 				expect( result ).toBeStruct();
-				expect( structKeyExists( result, "query" ) ).toBeTrue();
-				expect( structKeyExists( result, "result" ) ).toBeTrue();
+				expect( arrayFindNoCase( structKeyArray( result ), "query" ) ).toBeGT( 0 );
+				expect( arrayFindNoCase( structKeyArray( result ), "result" ) ).toBeGT( 0 );
 				expect( getInstance( "User" ).findOrFail( 1 ).getFirstName() ).toBe( "Updated" );
 				expect( getInstance( "User" ).findOrFail( 99 ).getFirstName() ).toBe( "New" );
 			} );

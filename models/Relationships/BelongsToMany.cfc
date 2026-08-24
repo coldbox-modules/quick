@@ -650,6 +650,31 @@ component
 	}
 
 	/**
+	 * Creates a new related entity and attaches it to the parent through the pivot table.
+	 *
+	 * @attributes                   Attributes for the related entity.
+	 * @pivotAttributes              Additional attributes for the pivot row.
+	 * @ignoreNonExistentAttributes  Whether to ignore attributes not defined on the related entity.
+	 * @options                      Options passed to the related entity save query.
+	 *
+	 * @return  quick.models.BaseEntity
+	 */
+	public any function create(
+		struct attributes                   = {},
+		struct pivotAttributes              = {},
+		boolean ignoreNonExistentAttributes = false,
+		struct options                      = {}
+	) {
+		var entity = variables.related.create(
+			arguments.attributes,
+			arguments.ignoreNonExistentAttributes,
+			arguments.options
+		);
+		attach( entity, arguments.pivotAttributes );
+		return entity;
+	}
+
+	/**
 	 * Associates one or more ids of the related entity to the parent entity.
 	 *
 	 * @id               The id or array of ids of the related entity.

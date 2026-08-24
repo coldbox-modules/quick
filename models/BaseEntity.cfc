@@ -911,6 +911,31 @@ component accessors="true" {
 	}
 
 	/**
+	 * Returns whether the entity, or one specific attribute, is unchanged from
+	 * its originally loaded state.
+	 *
+	 * @attribute An optional attribute alias or column name to inspect.
+	 */
+	public boolean function isClean( string attribute ) {
+		if ( isNull( arguments.attribute ) ) {
+			return !isDirty();
+		}
+
+		guardAgainstNonExistentAttribute( arguments.attribute );
+		var column            = retrieveColumnForAlias( arguments.attribute );
+		var currentAttributes = retrieveAttributesData( withNulls = true );
+		var originalAttribute = {};
+		var currentAttribute  = {};
+		if ( variables._originalAttributes.keyExists( column ) ) {
+			originalAttribute[ column ] = variables._originalAttributes[ column ];
+		}
+		if ( currentAttributes.keyExists( column ) ) {
+			currentAttribute[ column ] = currentAttributes[ column ];
+		}
+		return compare( computeAttributesHash( originalAttribute ), computeAttributesHash( currentAttribute ) ) == 0;
+	}
+
+	/**
 	 * Retrieves a value for an attribute.
 	 *
 	 * @name           The name of the attribute to retrieve.

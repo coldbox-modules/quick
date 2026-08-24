@@ -6,6 +6,11 @@ component extends="quick.models.BaseEntity" accessors="true" {
     property name="createdDate" column="created_date";
     property name="modifiedDate" column="modified_date";
 
+	variables._dispatchesEvents = {
+		"postInsert" : "onSongCreated",
+		"postSave"   : [ "onSongSaved", "onMediaSaved" ]
+	};
+
     function instanceReady( eventData ) {
         request.instanceReadyCalled = eventData;
     }

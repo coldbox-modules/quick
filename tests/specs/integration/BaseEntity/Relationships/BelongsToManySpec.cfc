@@ -162,6 +162,26 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( pivot.getCreated_date() ).notToBeNull();
 				expect( pivot.getModified_date() ).notToBeNull();
 			} );
+
+			it( "creates and attaches a related entity", function() {
+				var post = getInstance( "Post" ).findOrFail( 1245 );
+				var tag  = post
+					.tagsWithPivot()
+					.create(
+						{ "name" : "testing" },
+						{
+							"context" : "created through relationship",
+							"active"  : true
+						}
+					);
+
+				expect( tag ).toBeInstanceOf( "Tag" );
+				expect( tag.isLoaded() ).toBeTrue();
+
+				var attached = post.tagsWithPivot().findOrFail( tag.getId() );
+				expect( attached.getPivot().getContext() ).toBe( "created through relationship" );
+				expect( attached.getPivot().getActive() ).toBeTrue();
+			} );
 		} );
 	}
 

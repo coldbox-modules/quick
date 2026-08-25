@@ -1903,7 +1903,7 @@ component accessors="true" {
 		}
 
 		if ( !isLoaded() ) {
-			return invoke( this, "get#arguments.name#" );
+			return onMissingMethod( "get#arguments.name#", {} );
 		}
 		return javacast( "null", "" );
 	}

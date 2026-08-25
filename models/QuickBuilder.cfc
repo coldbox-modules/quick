@@ -835,13 +835,20 @@ component accessors="true" transientCache="false" {
 		var threadResults   = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
 
 		for ( var relationName in arguments.eagerLoads ) {
-			var threadName     = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
-			var threadEntities = [];
+			var threadName   = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
+			var entityStates = [];
 			for ( var entity in arguments.entities ) {
-				threadEntities.append(
+				entityStates.append(
 					structKeyExists( entity, "isQuickEntity" )
-					 ? entity.newEntity().hydrate( entity.retrieveAttributesData( withNulls = true ) )
-					 : duplicate( entity )
+					 ? {
+						"isQuickEntity" : true,
+						"mappingName"   : entity.mappingName(),
+						"attributes"    : entity.retrieveAttributesData( withNulls = true )
+					}
+					 : {
+						"isQuickEntity" : false,
+						"value"         : duplicate( entity )
+					}
 				);
 			}
 			threadNames.append( threadName );
@@ -852,13 +859,21 @@ component accessors="true" transientCache="false" {
 				threadName      = threadName,
 				relationName    = relationName,
 				eagerLoadConfig = arguments.eagerLoads[ relationName ],
-				entities        = threadEntities,
+				entityStates    = entityStates,
 				results         = threadResults
 			) {
+				var workerEntities = [];
+				for ( var entityState in attributes.entityStates ) {
+					workerEntities.append(
+						entityState.isQuickEntity
+						 ? getEntity().newEntity( entityState.mappingName ).hydrate( entityState.attributes )
+						 : entityState.value
+					);
+				}
 				var loadedEntities = eagerLoadRelation(
 					attributes.relationName,
 					attributes.eagerLoadConfig,
-					attributes.entities
+					workerEntities
 				);
 				var relationshipValues = [];
 				for ( var entity in loadedEntities ) {

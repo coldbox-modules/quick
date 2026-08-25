@@ -161,7 +161,8 @@ component accessors="true" {
 	/**
 	 * A map of relationship methods that return collections.
 	 */
-	property name="_collectionRelationships" persistent="false";
+	property name="_collectionRelationships"     persistent="false";
+	property name="_relationshipCollectionProbe" persistent="false";
 
 	/**
 	 * Discriminated chilrent property
@@ -269,13 +270,16 @@ component accessors="true" {
 	private any function assignDefaultProperties() {
 		assignAttributesData( {} );
 		assignOriginalAttributes( {} );
-		variables._globalScopeExclusions          = [];
-		param variables._key                      = "id";
-		param variables._meta                     = {};
-		param variables._data                     = {};
-		param variables._relationshipsData        = {};
-		param variables._relationshipsLoaded      = {};
-		param variables._collectionRelationships  = {};
+		variables._globalScopeExclusions         = [];
+		param variables._key                     = "id";
+		param variables._meta                    = {};
+		param variables._data                    = {};
+		param variables._relationshipsData       = {};
+		param variables._relationshipsLoaded     = {};
+		param variables._collectionRelationships = {};
+		variables._relationshipCollectionProbe   = createObject( "java", "java.util.concurrent.atomic.AtomicBoolean" ).init(
+			false
+		);
 		param variables._with                     = [];
 		variables._withoutRelationshipConstraints = createObject( "java", "java.util.HashSet" ).init();
 		variables._applyingGlobalScopes           = false;
@@ -1930,16 +1934,12 @@ component accessors="true" {
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
 	private any function resolveRelationship( required string name ) {
-		var relationshipName                   = arguments.name;
-		var collectionProbe                    = createObject( "java", "java.util.concurrent.atomic.AtomicBoolean" ).init( false );
-		variables._relationshipCollectionProbe = collectionProbe;
-		try {
-			var relationship = ignoreLoadedGuard( function() {
-				return invoke( this, relationshipName );
-			} );
-		} finally {
-			structDelete( variables, "_relationshipCollectionProbe" );
-		}
+		var relationshipName = arguments.name;
+		var collectionProbe  = variables._relationshipCollectionProbe;
+		collectionProbe.set( false );
+		var relationship = ignoreLoadedGuard( function() {
+			return invoke( this, relationshipName );
+		} );
 		if ( collectionProbe.get() ) {
 			variables._collectionRelationships[ arguments.name ] = true;
 		}

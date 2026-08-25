@@ -1424,8 +1424,8 @@ component accessors="true" {
 	}
 
 	/**
-	 * Resets the entity to its clean state, updates its timestamp fields to the
-	 * current time, and saves the entity.
+	 * Saves updated timestamp fields from the entity's clean state, then restores
+	 * any dirty attribute values that existed before the touch.
 	 *
 	 * @options Any options to pass to `queryExecute`. Default: {}.
 	 *
@@ -1433,12 +1433,34 @@ component accessors="true" {
 	 */
 	public any function touch( struct options = {} ) {
 		guardAgainstNotLoaded( "This instance is not loaded so it cannot be touched." );
-		reset();
-		var timestamp = now();
-		timestampFields().each( function( field ) {
+		var currentAttributes  = retrieveAttributesData();
+		var originalAttributes = duplicate( variables._originalAttributes );
+		var fields             = timestampFields();
+		var timestamp          = now();
+
+		assignAttributesData( originalAttributes );
+		fields.each( function( field ) {
 			assignAttribute( arguments.field, timestamp );
 		} );
-		return save( arguments.options );
+
+		try {
+			save( arguments.options );
+			var touchedAttributes = fields.reduce( function( attributes, field ) {
+				arguments.attributes[ arguments.field ] = retrieveAttribute( arguments.field );
+				return arguments.attributes;
+			}, {} );
+		} catch ( any e ) {
+			assignAttributesData( currentAttributes );
+			assignOriginalAttributes( originalAttributes );
+			rethrow;
+		}
+
+		assignAttributesData( currentAttributes );
+		touchedAttributes.each( function( field, value ) {
+			assignAttribute( arguments.field, arguments.value );
+		} );
+
+		return this;
 	}
 
 	/**

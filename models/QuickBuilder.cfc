@@ -914,7 +914,7 @@ component accessors="true" transientCache="false" {
 	 * Adobe ColdFusion loses CFC private-method resolution inside cfthread.
 	 */
 	private boolean function supportsParallelEagerLoading() {
-		return !findNoCase( "ColdFusion", server.coldfusion.productName );
+		return !server.keyExists( "coldfusion" ) || !findNoCase( "ColdFusion", server.coldfusion.productName );
 	}
 
 	private struct function denestEagerLoads( required array eagerLoads ) {

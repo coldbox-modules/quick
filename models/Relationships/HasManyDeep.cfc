@@ -7,10 +7,6 @@ component
 	accessors ="true"
 {
 
-	public any function getUnloadedDefault() {
-		return [];
-	}
-
 	/**
 	 * The through parent entities being traversed.
 	 */
@@ -441,6 +437,10 @@ component
 			"foreignKeys" : arguments.foreignKeys,
 			"localKeys"   : arguments.localKeys
 		};
+	}
+
+	public any function getUnloadedDefault() {
+		return [];
 	}
 
 }

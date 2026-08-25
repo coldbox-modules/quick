@@ -16,10 +16,6 @@
  */
 component extends="quick.models.Relationships.BaseRelationship" {
 
-	public any function getUnloadedDefault() {
-		return newDefaultEntity();
-	}
-
 	/**
 	 * An array of relationships between the parent entity and the related entity.
 	 */
@@ -353,6 +349,10 @@ component extends="quick.models.Relationships.BaseRelationship" {
 
 	public array function getLocalKeys() {
 		return variables.closestToParent.getForeignKeys();
+	}
+
+	public any function getUnloadedDefault() {
+		return newDefaultEntity();
 	}
 
 }

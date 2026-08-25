@@ -21,10 +21,6 @@ component
 	accessors ="true"
 {
 
-	public any function getUnloadedDefault() {
-		return newDefaultEntity();
-	}
-
 	/**
 	 * An alias for the parent entity.
 	 */
@@ -469,6 +465,10 @@ component
 			"foreignKeys" : arguments.foreignKeys,
 			"localKeys"   : arguments.localKeys
 		};
+	}
+
+	public any function getUnloadedDefault() {
+		return newDefaultEntity();
 	}
 
 }

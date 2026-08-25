@@ -17,10 +17,6 @@
  */
 component extends="quick.models.Relationships.HasOneOrMany" {
 
-	public any function getUnloadedDefault() {
-		return newDefaultEntity();
-	}
-
 	/**
 	 * Returns the result of the relationship.
 	 *
@@ -110,6 +106,10 @@ component extends="quick.models.Relationships.HasOneOrMany" {
 			);
 		}
 		query.addNestedWhereQuery( constraints );
+	}
+
+	public any function getUnloadedDefault() {
+		return newDefaultEntity();
 	}
 
 }

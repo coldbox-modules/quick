@@ -17,10 +17,6 @@
  */
 component extends="quick.models.Relationships.HasOneOrManyThrough" {
 
-	public any function getUnloadedDefault() {
-		return [];
-	}
-
 	/**
 	 * Returns the result of the relationship.
 	 *
@@ -85,6 +81,10 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 			}
 		}
 		return arguments.entities;
+	}
+
+	public any function getUnloadedDefault() {
+		return [];
 	}
 
 }

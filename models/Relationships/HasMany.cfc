@@ -16,10 +16,6 @@
  */
 component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 
-	public any function getUnloadedDefault() {
-		return [];
-	}
-
 	/**
 	 * Returns the result of the relationship.
 	 *
@@ -72,6 +68,10 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 		required string relation
 	) {
 		return matchMany( argumentCollection = arguments );
+	}
+
+	public any function getUnloadedDefault() {
+		return [];
 	}
 
 }

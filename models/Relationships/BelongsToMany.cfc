@@ -21,10 +21,6 @@ component
 	accessors ="true"
 {
 
-	public any function getUnloadedDefault() {
-		return [];
-	}
-
 	/**
 	 * The pivot table name between relationships.
 	 */
@@ -1093,6 +1089,10 @@ component
 			"foreignKeys" : arguments.foreignKeys,
 			"localKeys"   : arguments.localKeys
 		};
+	}
+
+	public any function getUnloadedDefault() {
+		return [];
 	}
 
 }

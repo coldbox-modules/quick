@@ -21,6 +21,10 @@ component
 	accessors ="true"
 {
 
+	public any function getUnloadedDefault() {
+		return [];
+	}
+
 	/**
 	 * The pivot table name between relationships.
 	 */

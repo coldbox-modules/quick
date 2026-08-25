@@ -21,6 +21,10 @@ component
 	accessors ="true"
 {
 
+	public any function getUnloadedDefault() {
+		return newDefaultEntity();
+	}
+
 	/**
 	 * An alias for the parent entity.
 	 */

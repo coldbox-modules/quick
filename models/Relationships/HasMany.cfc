@@ -16,6 +16,10 @@
  */
 component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 
+	public any function getUnloadedDefault() {
+		return [];
+	}
+
 	/**
 	 * Returns the result of the relationship.
 	 *

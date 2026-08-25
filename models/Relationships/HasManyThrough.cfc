@@ -17,6 +17,10 @@
  */
 component extends="quick.models.Relationships.HasOneOrManyThrough" {
 
+	public any function getUnloadedDefault() {
+		return [];
+	}
+
 	/**
 	 * Returns the result of the relationship.
 	 *

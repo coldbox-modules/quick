@@ -105,6 +105,13 @@ component accessors="true" implements="IRelationship" {
 	}
 
 	/**
+	 * Returns the unloaded default value for this relationship without querying.
+	 */
+	public any function getUnloadedDefault() {
+		return javacast( "null", "" );
+	}
+
+	/**
 	 * Sets the relation method name for this relationship.
 	 *
 	 * @name     The relation method name for this relationship.

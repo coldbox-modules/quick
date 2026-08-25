@@ -7,6 +7,10 @@ component
 	accessors ="true"
 {
 
+	public any function getUnloadedDefault() {
+		return [];
+	}
+
 	/**
 	 * The through parent entities being traversed.
 	 */

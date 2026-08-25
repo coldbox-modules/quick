@@ -20,6 +20,10 @@
  */
 component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors="true" {
 
+	public any function getUnloadedDefault() {
+		return [];
+	}
+
 	/**
 	 * Returns the result of the relationship.
 	 *

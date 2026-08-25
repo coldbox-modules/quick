@@ -17,6 +17,10 @@
  */
 component extends="quick.models.Relationships.HasOneOrMany" {
 
+	public any function getUnloadedDefault() {
+		return newDefaultEntity();
+	}
+
 	/**
 	 * Returns the result of the relationship.
 	 *

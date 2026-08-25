@@ -104,8 +104,4 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 		query.addNestedWhereQuery( constraints );
 	}
 
-	public any function getUnloadedDefault() {
-		return newDefaultEntity();
-	}
-
 }

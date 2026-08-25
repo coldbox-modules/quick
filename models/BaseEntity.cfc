@@ -1903,7 +1903,7 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		var unloadedDefault = relationship.getUnloadedDefault();
+		var unloadedDefault = relationship.relationshipCardinality == "many" ? [] : relationship.newDefaultEntity();
 		if ( isNull( unloadedDefault ) ) {
 			variables._relationshipsLoaded[ arguments.name ] = true;
 			return javacast( "null", "" );

@@ -30,7 +30,8 @@ component
 	/**
 	 * Used to check for the type of relationship more quickly than using isInstanceOf.
 	 */
-	this.relationshipClass = "HasManyDeep";
+	this.relationshipClass       = "HasManyDeep";
+	this.relationshipCardinality = "many";
 
 	/**
 	 * Creates a HasManyDeep relationship.
@@ -437,10 +438,6 @@ component
 			"foreignKeys" : arguments.foreignKeys,
 			"localKeys"   : arguments.localKeys
 		};
-	}
-
-	public any function getUnloadedDefault() {
-		return [];
 	}
 
 }

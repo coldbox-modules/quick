@@ -16,6 +16,8 @@
  */
 component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 
+	this.relationshipCardinality = "many";
+
 	/**
 	 * Returns the result of the relationship.
 	 *
@@ -68,10 +70,6 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 		required string relation
 	) {
 		return matchMany( argumentCollection = arguments );
-	}
-
-	public any function getUnloadedDefault() {
-		return [];
 	}
 
 }

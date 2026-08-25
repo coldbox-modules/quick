@@ -17,6 +17,8 @@
  */
 component extends="quick.models.Relationships.HasOneOrManyThrough" {
 
+	this.relationshipCardinality = "many";
+
 	/**
 	 * Returns the result of the relationship.
 	 *
@@ -81,10 +83,6 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 			}
 		}
 		return arguments.entities;
-	}
-
-	public any function getUnloadedDefault() {
-		return [];
 	}
 
 }

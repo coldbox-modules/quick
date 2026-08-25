@@ -351,8 +351,4 @@ component extends="quick.models.Relationships.BaseRelationship" {
 		return variables.closestToParent.getForeignKeys();
 	}
 
-	public any function getUnloadedDefault() {
-		return newDefaultEntity();
-	}
-
 }

@@ -56,7 +56,8 @@ component accessors="true" implements="IRelationship" {
 	/**
 	 * Used to check for the type of relationship more quickly than using isInstanceOf.
 	 */
-	this.relationshipClass = "BaseRelationship";
+	this.relationshipClass       = "BaseRelationship";
+	this.relationshipCardinality = "one";
 
 	/**
 	 * Creates a new relationship component to query and retrieve results.
@@ -102,13 +103,6 @@ component accessors="true" implements="IRelationship" {
 			type    = "NotImplemented",
 			message = "The `addConstraints` method must be implemented in the concrete relationship."
 		);
-	}
-
-	/**
-	 * Returns the unloaded default value for this relationship without querying.
-	 */
-	public any function getUnloadedDefault() {
-		return javacast( "null", "" );
 	}
 
 	/**

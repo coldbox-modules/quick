@@ -90,7 +90,8 @@ component
 	/**
 	 * Used to check for the type of relationship more quickly than using isInstanceOf.
 	 */
-	this.relationshipClass = "BelongsToMany";
+	this.relationshipClass       = "BelongsToMany";
+	this.relationshipCardinality = "many";
 
 	/**
 	 * Creates a BelongsToMany relationship.
@@ -1089,10 +1090,6 @@ component
 			"foreignKeys" : arguments.foreignKeys,
 			"localKeys"   : arguments.localKeys
 		};
-	}
-
-	public any function getUnloadedDefault() {
-		return [];
 	}
 
 }

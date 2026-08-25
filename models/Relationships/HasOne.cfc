@@ -108,8 +108,4 @@ component extends="quick.models.Relationships.HasOneOrMany" {
 		query.addNestedWhereQuery( constraints );
 	}
 
-	public any function getUnloadedDefault() {
-		return newDefaultEntity();
-	}
-
 }

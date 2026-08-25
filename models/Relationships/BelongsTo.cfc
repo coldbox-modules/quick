@@ -467,8 +467,4 @@ component
 		};
 	}
 
-	public any function getUnloadedDefault() {
-		return newDefaultEntity();
-	}
-
 }

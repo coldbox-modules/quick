@@ -847,14 +847,27 @@ component accessors="true" transientCache="false" {
 				entities        = targetEntities,
 				results         = threadResults
 			) {
-				attributes.results.put(
-					attributes.threadName,
-					eagerLoadRelation(
-						attributes.relationName,
-						attributes.eagerLoadConfig,
-						attributes.entities
-					)
+				var loadedEntities = eagerLoadRelation(
+					attributes.relationName,
+					attributes.eagerLoadConfig,
+					attributes.entities
 				);
+				var relationshipValues = createObject( "java", "java.util.ArrayList" ).init();
+				for ( var entity in loadedEntities ) {
+					if ( structKeyExists( entity, "isQuickEntity" ) ) {
+						var relationshipValue = entity.retrieveRelationship( attributes.relationName );
+						relationshipValues.add(
+							isNull( relationshipValue ) ? javacast( "null", "" ) : relationshipValue
+						);
+					} else {
+						relationshipValues.add(
+							entity.keyExists( attributes.relationName )
+							 ? entity[ attributes.relationName ]
+							 : javacast( "null", "" )
+						);
+					}
+				}
+				attributes.results.put( attributes.threadName, relationshipValues );
 			}
 		}
 
@@ -880,18 +893,18 @@ component accessors="true" transientCache="false" {
 				);
 			}
 
-			var relationName        = threadRelations[ threadName ];
-			var eagerLoadedEntities = threadResults.get( threadName );
+			var relationName       = threadRelations[ threadName ];
+			var relationshipValues = threadResults.get( threadName );
 			for ( var i = 1; i <= targetEntities.len(); i++ ) {
 				if ( structKeyExists( targetEntities[ i ], "isQuickEntity" ) ) {
-					var relationshipValue = eagerLoadedEntities[ i ].retrieveRelationship( relationName );
+					var relationshipValue = relationshipValues.get( i - 1 );
 					if ( isNull( relationshipValue ) ) {
 						targetEntities[ i ].assignRelationship( relationName );
 					} else {
 						targetEntities[ i ].assignRelationship( relationName, relationshipValue );
 					}
-				} else if ( eagerLoadedEntities[ i ].keyExists( relationName ) ) {
-					targetEntities[ i ][ relationName ] = eagerLoadedEntities[ i ][ relationName ];
+				} else if ( !isNull( relationshipValues.get( i - 1 ) ) ) {
+					targetEntities[ i ][ relationName ] = relationshipValues.get( i - 1 );
 				}
 			}
 		} );

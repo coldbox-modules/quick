@@ -979,7 +979,7 @@ component accessors="true" transientCache="false" {
 			timeout = 60000
 		);
 
-		threadNames.each( function( threadName ) {
+		for ( var threadName in threadNames ) {
 			if ( cfthread[ threadName ].status == "TERMINATED" ) {
 				var threadError = cfthread[ threadName ].error;
 				throw(
@@ -1009,7 +1009,7 @@ component accessors="true" transientCache="false" {
 					targetEntities[ i ][ relationName ] = eagerLoadedEntities[ i ][ relationName ];
 				}
 			}
-		} );
+		}
 	}
 
 	/**

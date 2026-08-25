@@ -252,18 +252,18 @@ component extends="quick.models.Relationships.BaseRelationship" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		for ( var entity in arguments.entities ) {
+		return arguments.entities.map( function( entity ) {
 			var defaultEntity = newDefaultEntity();
-			if ( structKeyExists( entity, "isQuickEntity" ) ) {
-				entity.assignRelationship(
-					arguments.relation,
+			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.assignRelationship(
+					relation,
 					isNull( defaultEntity ) ? javacast( "null", "" ) : defaultEntity
 				);
 			} else {
-				entity[ arguments.relation ] = isNull( defaultEntity ) ? {} : defaultEntity.getMemento();
+				arguments.entity[ relation ] = isNull( defaultEntity ) ? {} : defaultEntity.getMemento();
 			}
-		}
-		return arguments.entities;
+			return arguments.entity;
+		} );
 	}
 
 	/**

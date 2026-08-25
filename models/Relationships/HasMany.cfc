@@ -41,14 +41,14 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		for ( var entity in arguments.entities ) {
-			if ( structKeyExists( entity, "isQuickEntity" ) ) {
-				entity.assignRelationship( arguments.relation, [] );
+		return arguments.entities.map( function( entity ) {
+			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.assignRelationship( relation, [] );
 			} else {
-				entity[ arguments.relation ] = [];
+				arguments.entity[ relation ] = [];
 			}
-		}
-		return arguments.entities;
+			return arguments.entity;
+		} );
 	}
 
 	/**

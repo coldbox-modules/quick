@@ -203,17 +203,17 @@ component
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		for ( var entity in arguments.entities ) {
+		arguments.entities.each( function( entity ) {
 			var defaultEntity = newDefaultEntity();
-			if ( structKeyExists( entity, "isQuickEntity" ) ) {
-				entity.assignRelationship(
-					arguments.relation,
+			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
+				arguments.entity.assignRelationship(
+					relation,
 					isNull( defaultEntity ) ? javacast( "null", "" ) : defaultEntity
 				);
 			} else {
-				entity[ arguments.relation ] = isNull( defaultEntity ) ? {} : defaultEntity.getMemento();
+				arguments.entity[ relation ] = isNull( defaultEntity ) ? {} : defaultEntity.getMemento();
 			}
-		}
+		} );
 		return arguments.entities;
 	}
 

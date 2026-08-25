@@ -835,7 +835,13 @@ component accessors="true" transientCache="false" {
 		var threadResults   = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
 
 		for ( var relationName in arguments.eagerLoads ) {
-			var threadName = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
+			var threadName     = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
+			var threadEntities = [];
+			for ( var entity in arguments.entities ) {
+				threadEntities.append(
+					structKeyExists( entity, "isQuickEntity" ) ? entity.clone( true ) : duplicate( entity )
+				);
+			}
 			threadNames.append( threadName );
 			threadRelations[ threadName ] = relationName;
 			cfthread(
@@ -844,7 +850,7 @@ component accessors="true" transientCache="false" {
 				threadName      = threadName,
 				relationName    = relationName,
 				eagerLoadConfig = arguments.eagerLoads[ relationName ],
-				entities        = targetEntities,
+				entities        = threadEntities,
 				results         = threadResults
 			) {
 				var loadedEntities = eagerLoadRelation(
@@ -852,17 +858,18 @@ component accessors="true" transientCache="false" {
 					attributes.eagerLoadConfig,
 					attributes.entities
 				);
-				var relationshipValues = createObject( "java", "java.util.ArrayList" ).init();
+				var relationshipValues = [];
 				for ( var entity in loadedEntities ) {
 					if ( structKeyExists( entity, "isQuickEntity" ) ) {
-						// Quick entities are shared with and updated by the worker. Avoid
-						// transferring related CFC instances through Java collections.
-						relationshipValues.add( true );
+						var relationshipValue = entity.retrieveRelationship( attributes.relationName );
+						relationshipValues.append( serializeParallelValue( relationshipValue ) );
 					} else {
-						relationshipValues.add(
-							entity.keyExists( attributes.relationName )
-							 ? entity[ attributes.relationName ]
-							 : javacast( "null", "" )
+						relationshipValues.append(
+							serializeParallelValue(
+								entity.keyExists( attributes.relationName )
+								 ? entity[ attributes.relationName ]
+								 : javacast( "null", "" )
+							)
 						);
 					}
 				}
@@ -895,14 +902,99 @@ component accessors="true" transientCache="false" {
 			var relationName       = threadRelations[ threadName ];
 			var relationshipValues = threadResults.get( threadName );
 			for ( var i = 1; i <= targetEntities.len(); i++ ) {
-				if (
-					!structKeyExists( targetEntities[ i ], "isQuickEntity" ) &&
-					!isNull( relationshipValues.get( i - 1 ) )
-				) {
-					targetEntities[ i ][ relationName ] = relationshipValues.get( i - 1 );
+				var relationshipValue = deserializeParallelValue( relationshipValues[ i ] );
+				if ( structKeyExists( targetEntities[ i ], "isQuickEntity" ) ) {
+					if ( isNull( relationshipValue ) ) {
+						targetEntities[ i ].assignRelationship( relationName );
+					} else {
+						targetEntities[ i ].assignRelationship( relationName, relationshipValue );
+					}
+				} else if ( !isNull( relationshipValue ) ) {
+					targetEntities[ i ][ relationName ] = relationshipValue;
 				}
 			}
 		} );
+	}
+
+	/**
+	 * Converts eager-loaded values to CFC-free state for crossing thread boundaries.
+	 */
+	private struct function serializeParallelValue( any value ) {
+		if ( isNull( arguments.value ) ) {
+			return { "type" : "null" };
+		}
+		if ( isArray( arguments.value ) ) {
+			var items = [];
+			for ( var item in arguments.value ) {
+				items.append( serializeParallelValue( item ) );
+			}
+			return { "type" : "array", "value" : items };
+		}
+		if ( isStruct( arguments.value ) && structKeyExists( arguments.value, "isQuickEntity" ) ) {
+			var relationships = {};
+			for ( var relationshipName in arguments.value.retrieveLoadedRelationshipNames() ) {
+				relationships[ relationshipName ] = serializeParallelValue(
+					arguments.value.retrieveRelationship( relationshipName )
+				);
+			}
+			return {
+				"type"          : "entity",
+				"mappingName"   : arguments.value.mappingName(),
+				"attributes"    : arguments.value.retrieveAttributesData( withNulls = true ),
+				"relationships" : relationships
+			};
+		}
+		if ( isStruct( arguments.value ) ) {
+			var values = {};
+			for ( var key in arguments.value ) {
+				values[ key ] = serializeParallelValue( arguments.value[ key ] );
+			}
+			return { "type" : "struct", "value" : values };
+		}
+		return {
+			"type"  : "value",
+			"value" : arguments.value
+		};
+	}
+
+	/**
+	 * Reconstructs eager-loaded values exported by a worker thread.
+	 */
+	private any function deserializeParallelValue( required struct state ) {
+		switch ( arguments.state.type ) {
+			case "null":
+				return javacast( "null", "" );
+			case "array":
+				var items = [];
+				for ( var item in arguments.state.value ) {
+					items.append( deserializeParallelValue( item ) );
+				}
+				return items;
+			case "entity":
+				var entity = getEntity().newEntity( arguments.state.mappingName ).hydrate( arguments.state.attributes );
+				for ( var relationshipName in arguments.state.relationships ) {
+					var relationshipValue = deserializeParallelValue(
+						arguments.state.relationships[ relationshipName ]
+					);
+					if ( isNull( relationshipValue ) ) {
+						entity.assignRelationship( relationshipName );
+					} else {
+						entity.assignRelationship( relationshipName, relationshipValue );
+					}
+				}
+				return entity;
+			case "struct":
+				var values = {};
+				for ( var key in arguments.state.value ) {
+					var value = deserializeParallelValue( arguments.state.value[ key ] );
+					if ( !isNull( value ) ) {
+						values[ key ] = value;
+					}
+				}
+				return values;
+			default:
+				return arguments.state.value;
+		}
 	}
 
 	/**

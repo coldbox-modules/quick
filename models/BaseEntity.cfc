@@ -2078,6 +2078,15 @@ component accessors="true" {
 	}
 
 	/**
+	 * Returns the names of the currently loaded relationships.
+	 *
+	 * @return The loaded relationship names.
+	 */
+	public array function retrieveLoadedRelationshipNames() {
+		return variables._relationshipsLoaded.keyArray();
+	}
+
+	/**
 	 * Retrieves the result of a loaded relationship. For a new entity, an unloaded
 	 * relationship is initialized through its public getter without executing a
 	 * query. An explicit default value can be supplied instead.

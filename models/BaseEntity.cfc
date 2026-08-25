@@ -1932,15 +1932,19 @@ component accessors="true" {
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
 	private any function resolveRelationship( required string name ) {
-		var relationshipName                       = arguments.name;
-		variables._resolvingCollectionRelationship = false;
-		var relationship                           = ignoreLoadedGuard( function() {
-			return invoke( this, relationshipName );
+		var relationshipName = arguments.name;
+		var resolved         = ignoreLoadedGuard( function() {
+			variables._resolvingCollectionRelationship = false;
+			var resolvedRelationship                   = invoke( this, relationshipName );
+			return {
+				"relationship" : resolvedRelationship,
+				"collection"   : variables._resolvingCollectionRelationship
+			};
 		} );
-		if ( variables._resolvingCollectionRelationship ) {
+		var relationship = resolved.relationship;
+		if ( resolved.collection ) {
 			variables._collectionRelationships[ arguments.name ] = true;
 		}
-		variables._resolvingCollectionRelationship = false;
 		if ( !isObject( relationship ) || !structKeyExists( relationship, "relationshipClass" ) ) {
 			throwRelationshipNotFound( arguments.name );
 		}

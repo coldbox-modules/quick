@@ -104,10 +104,6 @@ component accessors="true" implements="IRelationship" {
 		);
 	}
 
-	public boolean function returnsCollection() {
-		return false;
-	}
-
 	/**
 	 * Sets the relation method name for this relationship.
 	 *

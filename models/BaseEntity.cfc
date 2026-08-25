@@ -159,6 +159,11 @@ component accessors="true" {
 	property name="_relationshipsLoaded" persistent="false";
 
 	/**
+	 * A map of relationship methods that return collections.
+	 */
+	property name="_collectionRelationships" persistent="false";
+
+	/**
 	 * Discriminated chilrent property
 	 **/
 	property name="_discriminations" persistent="false";
@@ -270,6 +275,7 @@ component accessors="true" {
 		param variables._data                     = {};
 		param variables._relationshipsData        = {};
 		param variables._relationshipsLoaded      = {};
+		param variables._collectionRelationships  = {};
 		param variables._with                     = [];
 		variables._withoutRelationshipConstraints = createObject( "java", "java.util.HashSet" ).init();
 		variables._applyingGlobalScopes           = false;
@@ -1903,7 +1909,7 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		var unloadedDefault = relationship.returnsCollection()
+		var unloadedDefault = variables._collectionRelationships.keyExists( arguments.name )
 		 ? []
 		 : relationship.newDefaultEntity();
 		if ( isNull( unloadedDefault ) ) {
@@ -1924,13 +1930,18 @@ component accessors="true" {
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
 	private any function resolveRelationship( required string name ) {
-		var relationship                = javacast( "null", "" );
-		var wasIgnoringLoadedGuard      = variables._ignoreNotLoadedGuard;
-		variables._ignoreNotLoadedGuard = true;
+		var relationshipName                   = arguments.name;
+		var collectionProbe                    = createObject( "java", "java.util.concurrent.atomic.AtomicBoolean" ).init( false );
+		variables._relationshipCollectionProbe = collectionProbe;
 		try {
-			relationship = invoke( this, arguments.name );
+			var relationship = ignoreLoadedGuard( function() {
+				return invoke( this, relationshipName );
+			} );
 		} finally {
-			variables._ignoreNotLoadedGuard = wasIgnoringLoadedGuard;
+			structDelete( variables, "_relationshipCollectionProbe" );
+		}
+		if ( collectionProbe.get() ) {
+			variables._collectionRelationships[ arguments.name ] = true;
 		}
 		if ( !isObject( relationship ) || !structKeyExists( relationship, "relationshipClass" ) ) {
 			throwRelationshipNotFound( arguments.name );
@@ -2198,7 +2209,8 @@ component accessors="true" {
 		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
 		param arguments.localKey = keyNames();
 		arguments.localKey       = arrayWrap( arguments.localKey );
-		var relationship         = variables._wirebox.getInstance(
+		markCollectionRelationship();
+		var relationship = variables._wirebox.getInstance(
 			name          = "HasMany@quick",
 			initArguments = {
 				"related"            : related,
@@ -2286,7 +2298,8 @@ component accessors="true" {
 
 		param arguments.relatedKey = related.keyNames();
 		arguments.relatedKey       = arrayWrap( arguments.relatedKey );
-		var relationship           = variables._wirebox.getInstance(
+		markCollectionRelationship();
+		var relationship = variables._wirebox.getInstance(
 			name          = "BelongsToMany@quick",
 			initArguments = {
 				"related"            : related,
@@ -2597,7 +2610,8 @@ component accessors="true" {
 		arguments.id             = arrayWrap( arguments.id );
 		param arguments.localKey = keyNames();
 		arguments.localKey       = arrayWrap( arguments.localKey );
-		var relationship         = variables._wirebox.getInstance(
+		markCollectionRelationship();
+		var relationship = variables._wirebox.getInstance(
 			name          = "PolymorphicHasMany@quick",
 			initArguments = {
 				"related"            : related,
@@ -2723,6 +2737,7 @@ component accessors="true" {
 		if ( !structKeyExists( related, "isBuilder" ) ) {
 			related = related.newQuery();
 		}
+		markCollectionRelationship();
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#related.getEntity().entityName()#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
 		);
@@ -4095,6 +4110,12 @@ component accessors="true" {
 	 *
 	 * @callback  The callback to run without any loaded entity guarding.
 	 */
+	private void function markCollectionRelationship() {
+		if ( variables.keyExists( "_relationshipCollectionProbe" ) ) {
+			variables._relationshipCollectionProbe.set( true );
+		}
+	}
+
 	public any function ignoreLoadedGuard( required any callback ) {
 		variables._ignoreNotLoadedGuard = true;
 		try {

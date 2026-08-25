@@ -108,8 +108,4 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 		query.addNestedWhereQuery( constraints );
 	}
 
-	public boolean function returnsCollection() {
-		return true;
-	}
-
 }

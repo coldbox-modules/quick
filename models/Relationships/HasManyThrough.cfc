@@ -83,8 +83,4 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 		return arguments.entities;
 	}
 
-	public boolean function returnsCollection() {
-		return true;
-	}
-
 }

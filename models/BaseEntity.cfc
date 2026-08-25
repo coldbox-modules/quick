@@ -1903,10 +1903,22 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		relationship.initRelation( [ this ], arguments.name );
-		return variables._relationshipsData.keyExists( arguments.name )
-		 ? variables._relationshipsData[ arguments.name ]
-		 : javacast( "null", "" );
+		var initializedEntities = relationship.initRelation( [ this ], arguments.name );
+		if ( variables._relationshipsData.keyExists( arguments.name ) ) {
+			return variables._relationshipsData[ arguments.name ];
+		}
+
+		if ( initializedEntities.len() > 0 && initializedEntities[ 1 ].isRelationshipLoaded( arguments.name ) ) {
+			var initializedValue = initializedEntities[ 1 ].retrieveRelationship( arguments.name );
+			if ( isNull( initializedValue ) ) {
+				variables._relationshipsLoaded[ arguments.name ] = true;
+				return javacast( "null", "" );
+			}
+			assignRelationship( arguments.name, initializedValue );
+			return initializedValue;
+		}
+
+		return javacast( "null", "" );
 	}
 
 	/**

@@ -44,17 +44,19 @@ component
 		required any parent,
 		required array foreignKeys,
 		required array localKeys,
-		boolean withConstraints = true
+		boolean withConstraints        = true,
+		boolean collectionRelationship = false
 	) {
 		variables.localKeys   = arguments.localKeys;
 		variables.foreignKeys = arguments.foreignKeys;
 
 		return super.init(
-			related            = arguments.related,
-			relationName       = arguments.relationName,
-			relationMethodName = arguments.relationMethodName,
-			parent             = arguments.parent,
-			withConstraints    = arguments.withConstraints
+			related                = arguments.related,
+			relationName           = arguments.relationName,
+			relationMethodName     = arguments.relationMethodName,
+			parent                 = arguments.parent,
+			withConstraints        = arguments.withConstraints,
+			collectionRelationship = arguments.collectionRelationship
 		);
 	}
 

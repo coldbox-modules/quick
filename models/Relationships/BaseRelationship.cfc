@@ -82,12 +82,13 @@ component accessors="true" implements="IRelationship" {
 		required string relationName,
 		required string relationMethodName,
 		required any parent,
-		boolean withConstraints = true,
+		boolean withConstraints        = true,
+		boolean collectionRelationship = false,
 		QuickBuilder relationshipBuilder
 	) {
 		variables.returnDefaultEntity    = false;
 		variables.defaultAttributes      = {};
-		variables.collectionRelationship = false;
+		variables.collectionRelationship = arguments.collectionRelationship;
 
 		variables.related = arguments.related;
 		if ( !isNull( arguments.relationshipBuilder ) ) {

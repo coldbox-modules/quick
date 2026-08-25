@@ -53,8 +53,9 @@ component
 		required array throughParents,
 		required array foreignKeys,
 		required array localKeys,
-		boolean nested          = false,
-		boolean withConstraints = true
+		boolean nested                 = false,
+		boolean withConstraints        = true,
+		boolean collectionRelationship = false
 	) {
 		variables.throughParents = arguments.throughParents;
 		variables.localKeys      = arguments.localKeys;
@@ -63,12 +64,13 @@ component
 		variables.nested         = arguments.nested;
 
 		var instance = super.init(
-			related             = arguments.related.getEntity(),
-			relationName        = arguments.relationName,
-			relationMethodName  = arguments.relationMethodName,
-			parent              = arguments.parent,
-			withConstraints     = arguments.withConstraints,
-			relationshipBuilder = arguments.related
+			related                = arguments.related.getEntity(),
+			relationName           = arguments.relationName,
+			relationMethodName     = arguments.relationMethodName,
+			parent                 = arguments.parent,
+			withConstraints        = arguments.withConstraints,
+			collectionRelationship = arguments.collectionRelationship,
+			relationshipBuilder    = arguments.related
 		);
 
 		performJoin();

@@ -2195,20 +2195,19 @@ component accessors="true" {
 		param arguments.localKey = keyNames();
 		arguments.localKey       = arrayWrap( arguments.localKey );
 
-		return variables._wirebox
-			.getInstance(
-				name          = "HasMany@quick",
-				initArguments = {
-					"related"            : related,
-					"relationName"       : arguments.relationName,
-					"relationMethodName" : arguments.relationMethodName,
-					"parent"             : this,
-					"foreignKeys"        : arguments.foreignKey,
-					"localKeys"          : arguments.localKey,
-					"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
-				}
-			)
-			.setCollectionRelationship( true );
+		return variables._wirebox.getInstance(
+			name          = "HasMany@quick",
+			initArguments = {
+				"related"                : related,
+				"relationName"           : arguments.relationName,
+				"relationMethodName"     : arguments.relationMethodName,
+				"parent"                 : this,
+				"foreignKeys"            : arguments.foreignKey,
+				"localKeys"              : arguments.localKey,
+				"collectionRelationship" : true,
+				"withConstraints"        : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
+			}
+		);
 	}
 
 	/**
@@ -2285,23 +2284,22 @@ component accessors="true" {
 		param arguments.relatedKey = related.keyNames();
 		arguments.relatedKey       = arrayWrap( arguments.relatedKey );
 
-		return variables._wirebox
-			.getInstance(
-				name          = "BelongsToMany@quick",
-				initArguments = {
-					"related"            : related,
-					"relationName"       : arguments.relationName,
-					"relationMethodName" : arguments.relationMethodName,
-					"parent"             : this,
-					"table"              : arguments.table,
-					"foreignPivotKeys"   : arguments.foreignPivotKey,
-					"relatedPivotKeys"   : arguments.relatedPivotKey,
-					"parentKeys"         : arguments.parentKey,
-					"relatedKeys"        : arguments.relatedKey,
-					"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
-				}
-			)
-			.setCollectionRelationship( true );
+		return variables._wirebox.getInstance(
+			name          = "BelongsToMany@quick",
+			initArguments = {
+				"related"                : related,
+				"relationName"           : arguments.relationName,
+				"relationMethodName"     : arguments.relationMethodName,
+				"parent"                 : this,
+				"table"                  : arguments.table,
+				"foreignPivotKeys"       : arguments.foreignPivotKey,
+				"relatedPivotKeys"       : arguments.relatedPivotKey,
+				"parentKeys"             : arguments.parentKey,
+				"relatedKeys"            : arguments.relatedKey,
+				"collectionRelationship" : true,
+				"withConstraints"        : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
+			}
+		);
 	}
 
 	/**
@@ -2598,21 +2596,20 @@ component accessors="true" {
 		param arguments.localKey = keyNames();
 		arguments.localKey       = arrayWrap( arguments.localKey );
 
-		return variables._wirebox
-			.getInstance(
-				name          = "PolymorphicHasMany@quick",
-				initArguments = {
-					"related"            : related,
-					"relationName"       : arguments.relationName,
-					"relationMethodName" : arguments.relationMethodName,
-					"parent"             : this,
-					"type"               : arguments.type,
-					"ids"                : arguments.id,
-					"localKeys"          : arguments.localKey,
-					"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
-				}
-			)
-			.setCollectionRelationship( true );
+		return variables._wirebox.getInstance(
+			name          = "PolymorphicHasMany@quick",
+			initArguments = {
+				"related"                : related,
+				"relationName"           : arguments.relationName,
+				"relationMethodName"     : arguments.relationMethodName,
+				"parent"                 : this,
+				"type"                   : arguments.type,
+				"ids"                    : arguments.id,
+				"localKeys"              : arguments.localKey,
+				"collectionRelationship" : true,
+				"withConstraints"        : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
+			}
+		);
 	}
 
 	/**
@@ -2768,22 +2765,21 @@ component accessors="true" {
 			throughParents.append( throughEntity );
 		}
 
-		return variables._wirebox
-			.getInstance(
-				name          = "HasManyDeep@quick",
-				initArguments = {
-					"related"            : related,
-					"relationName"       : related.getEntity().entityName(),
-					"relationMethodName" : arguments.relationMethodName,
-					"parent"             : this,
-					"throughParents"     : throughParents,
-					"foreignKeys"        : arguments.foreignKeys,
-					"localKeys"          : arguments.localKeys,
-					"nested"             : arguments.nested,
-					"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
-				}
-			)
-			.setCollectionRelationship( true );
+		return variables._wirebox.getInstance(
+			name          = "HasManyDeep@quick",
+			initArguments = {
+				"related"                : related,
+				"relationName"           : related.getEntity().entityName(),
+				"relationMethodName"     : arguments.relationMethodName,
+				"parent"                 : this,
+				"throughParents"         : throughParents,
+				"foreignKeys"            : arguments.foreignKeys,
+				"localKeys"              : arguments.localKeys,
+				"nested"                 : arguments.nested,
+				"collectionRelationship" : true,
+				"withConstraints"        : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
+			}
+		);
 	}
 
 	private HasManyDeepBuilder function newHasManyDeepBuilder( string relationMethodName ) {

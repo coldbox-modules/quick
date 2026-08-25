@@ -1919,10 +1919,7 @@ component accessors="true" {
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
 	private any function resolveRelationship( required string name ) {
-		var relationshipName = arguments.name;
-		var relationship     = ignoreLoadedGuard( function() {
-			return invoke( this, relationshipName );
-		} );
+		var relationship = invokeRelationshipIgnoringLoadedGuard( arguments.name );
 		if ( !isObject( relationship ) || !structKeyExists( relationship, "relationshipClass" ) ) {
 			throwRelationshipNotFound( arguments.name );
 		}
@@ -2995,14 +2992,10 @@ component accessors="true" {
 		}
 
 		if ( !isRelationshipLoaded( relationshipName ) && !isLoaded() ) {
-			var relationshipArguments = arguments.missingMethodArguments;
-			var unloadedRelationship  = ignoreLoadedGuard( function() {
-				return invoke(
-					this,
-					relationshipName,
-					relationshipArguments
-				);
-			} );
+			var unloadedRelationship = invokeRelationshipIgnoringLoadedGuard(
+				relationshipName,
+				arguments.missingMethodArguments
+			);
 			unloadedRelationship.setRelationMethodName( relationshipName );
 			unloadedRelationship.initRelation( [ this ], relationshipName );
 			return retrieveRelationship( relationshipName );
@@ -3024,6 +3017,25 @@ component accessors="true" {
 		}
 
 		return retrieveRelationship( relationshipName );
+	}
+
+	/**
+	 * Invokes a relationship definition without applying loaded-entity guards.
+	 */
+	private any function invokeRelationshipIgnoringLoadedGuard(
+		required string relationshipName,
+		struct invokeArguments = {}
+	) {
+		variables._ignoreNotLoadedGuard = true;
+		try {
+			return invoke(
+				this,
+				arguments.relationshipName,
+				arguments.invokeArguments
+			);
+		} finally {
+			variables._ignoreNotLoadedGuard = false;
+		}
 	}
 
 	/**

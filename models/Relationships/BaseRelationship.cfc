@@ -127,10 +127,10 @@ component accessors="true" implements="IRelationship" {
 	 * @return    [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		return arguments.entities.map( function( entity ) {
-			arguments.entity.assignRelationship( arguments.relation, javacast( "null", "" ) );
-			return arguments.entity;
-		} );
+		for ( var entity in arguments.entities ) {
+			entity.assignRelationship( arguments.relation, javacast( "null", "" ) );
+		}
+		return arguments.entities;
 	}
 
 	/**

@@ -70,4 +70,8 @@ component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 		return matchMany( argumentCollection = arguments );
 	}
 
+	public boolean function returnsCollection() {
+		return true;
+	}
+
 }

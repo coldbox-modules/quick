@@ -439,4 +439,8 @@ component
 		};
 	}
 
+	public boolean function returnsCollection() {
+		return true;
+	}
+
 }

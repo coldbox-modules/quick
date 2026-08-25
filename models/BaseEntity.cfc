@@ -1903,13 +1903,7 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		var collectionRelationshipClasses = [
-			"HasMany",
-			"BelongsToMany",
-			"PolymorphicHasMany",
-			"HasManyDeep"
-		];
-		var unloadedDefault = collectionRelationshipClasses.contains( relationship.relationshipClass )
+		var unloadedDefault = relationship.returnsCollection()
 		 ? []
 		 : relationship.newDefaultEntity();
 		if ( isNull( unloadedDefault ) ) {
@@ -2212,7 +2206,6 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		relationship.relationshipClass = "HasMany";
 		return relationship;
 	}
 
@@ -2613,7 +2606,6 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		relationship.relationshipClass = "PolymorphicHasMany";
 		return relationship;
 	}
 

@@ -8,6 +8,9 @@ component
 
 	property name="id";
 	property name="username";
-	property name="deletedAt" column="email" insert="false";
+	property
+		name  ="deletedAt"
+		column="email"
+		insert="false";
 
 }

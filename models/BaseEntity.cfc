@@ -3539,15 +3539,14 @@ component accessors="true" {
 			);
 		}
 		guardAgainstNotLoaded( "This instance is not loaded so it cannot be restored." );
-		var column = getSoftDeleteColumn();
-		newQuery()
-			.withoutGlobalScope( "softDeletes" )
-			.where( function( q ) {
-				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
-					q.where( keyName, keyValue );
-				} );
-			} )
-			.updateAll( { "#column#" : "" } );
+		var column       = getSoftDeleteColumn();
+		var restoreQuery = newQuery().withoutGlobalScope( "softDeletes" );
+		var entityKeys   = keyNames();
+		var entityValues = keyValues();
+		for ( var i = 1; i <= entityKeys.len(); i++ ) {
+			restoreQuery.where( entityKeys[ i ], entityValues[ i ] );
+		}
+		restoreQuery.updateAll( { "#column#" : "" } );
 		clearAttribute( column );
 		assignOriginalAttributes( retrieveAttributesData() );
 		return this;

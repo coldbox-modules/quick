@@ -30,8 +30,7 @@ component
 	/**
 	 * Used to check for the type of relationship more quickly than using isInstanceOf.
 	 */
-	this.relationshipClass       = "HasManyDeep";
-	this.relationshipCardinality = "many";
+	this.relationshipClass = "HasManyDeep";
 
 	/**
 	 * Creates a HasManyDeep relationship.

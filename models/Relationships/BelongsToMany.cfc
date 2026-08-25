@@ -90,8 +90,7 @@ component
 	/**
 	 * Used to check for the type of relationship more quickly than using isInstanceOf.
 	 */
-	this.relationshipClass       = "BelongsToMany";
-	this.relationshipCardinality = "many";
+	this.relationshipClass = "BelongsToMany";
 
 	/**
 	 * Creates a BelongsToMany relationship.

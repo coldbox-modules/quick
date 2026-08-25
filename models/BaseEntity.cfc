@@ -1903,7 +1903,16 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		var unloadedDefault = relationship.relationshipCardinality == "many" ? [] : relationship.newDefaultEntity();
+		var collectionRelationships = [
+			"HasMany",
+			"HasManyThrough",
+			"HasManyDeep",
+			"BelongsToMany",
+			"PolymorphicHasMany"
+		];
+		var unloadedDefault = collectionRelationships.contains( relationship.relationshipClass )
+		 ? []
+		 : relationship.newDefaultEntity();
 		if ( isNull( unloadedDefault ) ) {
 			variables._relationshipsLoaded[ arguments.name ] = true;
 			return javacast( "null", "" );

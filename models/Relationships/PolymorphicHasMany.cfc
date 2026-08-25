@@ -20,7 +20,7 @@
  */
 component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors="true" {
 
-	this.relationshipCardinality = "many";
+	this.relationshipClass = "PolymorphicHasMany";
 
 	/**
 	 * Returns the result of the relationship.

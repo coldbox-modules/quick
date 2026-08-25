@@ -56,8 +56,7 @@ component accessors="true" implements="IRelationship" {
 	/**
 	 * Used to check for the type of relationship more quickly than using isInstanceOf.
 	 */
-	this.relationshipClass       = "BaseRelationship";
-	this.relationshipCardinality = "one";
+	this.relationshipClass = "BaseRelationship";
 
 	/**
 	 * Creates a new relationship component to query and retrieve results.

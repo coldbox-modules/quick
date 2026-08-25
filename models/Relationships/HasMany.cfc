@@ -16,7 +16,7 @@
  */
 component extends="quick.models.Relationships.HasOneOrMany" accessors="true" {
 
-	this.relationshipCardinality = "many";
+	this.relationshipClass = "HasMany";
 
 	/**
 	 * Returns the result of the relationship.

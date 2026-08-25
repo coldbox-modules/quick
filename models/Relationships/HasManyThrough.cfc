@@ -17,7 +17,7 @@
  */
 component extends="quick.models.Relationships.HasOneOrManyThrough" {
 
-	this.relationshipCardinality = "many";
+	this.relationshipClass = "HasManyThrough";
 
 	/**
 	 * Returns the result of the relationship.

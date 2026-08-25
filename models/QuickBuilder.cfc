@@ -858,38 +858,37 @@ component accessors="true" transientCache="false" {
 			timeout = 60000
 		);
 
-		for ( var threadIndex = 1; threadIndex <= threadNames.len(); threadIndex++ ) {
-			var completedThreadName = threadNames[ threadIndex ];
-			if ( cfthread[ completedThreadName ].status == "TERMINATED" ) {
-				var threadError = cfthread[ completedThreadName ].error;
+		threadNames.each( function( threadName ) {
+			if ( cfthread[ threadName ].status == "TERMINATED" ) {
+				var threadError = cfthread[ threadName ].error;
 				throw(
 					type         = "QuickParallelEagerLoadingException",
 					message      = threadError.keyExists( "message" ) ? threadError.message : "A parallel eager-loading thread failed.",
 					extendedInfo = serializeJSON( threadError )
 				);
 			}
-			if ( cfthread[ completedThreadName ].status != "COMPLETED" ) {
+			if ( cfthread[ threadName ].status != "COMPLETED" ) {
 				throw(
 					type    = "QuickParallelEagerLoadingTimeout",
 					message = "Parallel eager loading did not complete within 60 seconds."
 				);
 			}
 
-			var completedRelationName = threadRelations[ completedThreadName ];
-			var eagerLoadedEntities   = cfthread[ completedThreadName ].entities;
+			var relationName        = threadRelations[ threadName ];
+			var eagerLoadedEntities = cfthread[ threadName ].entities;
 			for ( var i = 1; i <= targetEntities.len(); i++ ) {
 				if ( structKeyExists( targetEntities[ i ], "isQuickEntity" ) ) {
-					var relationshipValue = eagerLoadedEntities[ i ].retrieveRelationship( completedRelationName );
+					var relationshipValue = eagerLoadedEntities[ i ].retrieveRelationship( relationName );
 					if ( isNull( relationshipValue ) ) {
-						targetEntities[ i ].assignRelationship( completedRelationName );
+						targetEntities[ i ].assignRelationship( relationName );
 					} else {
-						targetEntities[ i ].assignRelationship( completedRelationName, relationshipValue );
+						targetEntities[ i ].assignRelationship( relationName, relationshipValue );
 					}
-				} else if ( eagerLoadedEntities[ i ].keyExists( completedRelationName ) ) {
-					targetEntities[ i ][ completedRelationName ] = eagerLoadedEntities[ i ][ completedRelationName ];
+				} else if ( eagerLoadedEntities[ i ].keyExists( relationName ) ) {
+					targetEntities[ i ][ relationName ] = eagerLoadedEntities[ i ][ relationName ];
 				}
 			}
-		}
+		} );
 	}
 
 	/**

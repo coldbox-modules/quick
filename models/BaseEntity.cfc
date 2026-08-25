@@ -1924,10 +1924,14 @@ component accessors="true" {
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
 	private any function resolveRelationship( required string name ) {
-		var relationshipName = arguments.name;
-		var relationship     = ignoreLoadedGuard( function() {
-			return invoke( this, relationshipName );
-		} );
+		var relationship                = javacast( "null", "" );
+		var wasIgnoringLoadedGuard      = variables._ignoreNotLoadedGuard;
+		variables._ignoreNotLoadedGuard = true;
+		try {
+			relationship = invoke( this, arguments.name );
+		} finally {
+			variables._ignoreNotLoadedGuard = wasIgnoringLoadedGuard;
+		}
 		if ( !isObject( relationship ) || !structKeyExists( relationship, "relationshipClass" ) ) {
 			throwRelationshipNotFound( arguments.name );
 		}

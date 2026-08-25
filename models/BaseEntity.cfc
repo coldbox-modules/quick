@@ -1903,7 +1903,13 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		var unloadedDefault = structKeyExists( relationship, "collectionRelationship" ) && relationship.collectionRelationship
+		var collectionRelationshipClasses = [
+			"HasMany",
+			"BelongsToMany",
+			"PolymorphicHasMany",
+			"HasManyDeep"
+		];
+		var unloadedDefault = collectionRelationshipClasses.contains( relationship.relationshipClass )
 		 ? []
 		 : relationship.newDefaultEntity();
 		if ( isNull( unloadedDefault ) ) {
@@ -2206,7 +2212,7 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		relationship.collectionRelationship = true;
+		relationship.relationshipClass = "HasMany";
 		return relationship;
 	}
 
@@ -2298,7 +2304,6 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		relationship.collectionRelationship = true;
 		return relationship;
 	}
 
@@ -2608,7 +2613,7 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		relationship.collectionRelationship = true;
+		relationship.relationshipClass = "PolymorphicHasMany";
 		return relationship;
 	}
 
@@ -2778,7 +2783,6 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		relationship.collectionRelationship = true;
 		return relationship;
 	}
 

@@ -1902,7 +1902,7 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		initializeUnloadedRelationship( arguments.name );
+		initializeUnloadedRelationship( arguments.name, {} );
 		return retrieveRelationship( arguments.name );
 	}
 
@@ -1914,7 +1914,7 @@ component accessors="true" {
 	 * @throws  RelationshipNotFound
 	 *
 	 */
-	private void function initializeUnloadedRelationship( required string name, any relationshipArguments = {} ) {
+	private void function initializeUnloadedRelationship( required string name, struct relationshipArguments = {} ) {
 		var previousIgnoreLoadedGuard     = variables._ignoreNotLoadedGuard;
 		variables._ignoreNotLoadedGuard   = true;
 		var resolvedRelationshipContainer = {};

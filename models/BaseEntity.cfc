@@ -161,8 +161,7 @@ component accessors="true" {
 	/**
 	 * A map of relationship methods that return collections.
 	 */
-	property name="_collectionRelationships"     persistent="false";
-	property name="_relationshipCollectionProbe" persistent="false";
+	property name="_collectionRelationships" persistent="false";
 
 	/**
 	 * Discriminated chilrent property
@@ -270,16 +269,13 @@ component accessors="true" {
 	private any function assignDefaultProperties() {
 		assignAttributesData( {} );
 		assignOriginalAttributes( {} );
-		variables._globalScopeExclusions         = [];
-		param variables._key                     = "id";
-		param variables._meta                    = {};
-		param variables._data                    = {};
-		param variables._relationshipsData       = {};
-		param variables._relationshipsLoaded     = {};
-		param variables._collectionRelationships = {};
-		variables._relationshipCollectionProbe   = createObject( "java", "java.util.concurrent.atomic.AtomicBoolean" ).init(
-			false
-		);
+		variables._globalScopeExclusions          = [];
+		param variables._key                      = "id";
+		param variables._meta                     = {};
+		param variables._data                     = {};
+		param variables._relationshipsData        = {};
+		param variables._relationshipsLoaded      = {};
+		param variables._collectionRelationships  = {};
 		param variables._with                     = [];
 		variables._withoutRelationshipConstraints = createObject( "java", "java.util.HashSet" ).init();
 		variables._applyingGlobalScopes           = false;
@@ -1935,11 +1931,25 @@ component accessors="true" {
 	 */
 	private any function resolveRelationship( required string name ) {
 		var relationshipName = arguments.name;
-		var collectionProbe  = variables._relationshipCollectionProbe;
-		collectionProbe.set( false );
-		var relationship = ignoreLoadedGuard( function() {
-			return invoke( this, relationshipName );
-		} );
+		var probeKey         = "__quickRelationshipCollectionProbe";
+		var previousProbe    = {};
+		var hadPreviousProbe = request.keyExists( probeKey );
+		if ( hadPreviousProbe ) {
+			previousProbe.value = request[ probeKey ];
+		}
+		var collectionProbe = createObject( "java", "java.util.concurrent.atomic.AtomicBoolean" ).init( false );
+		request[ probeKey ] = collectionProbe;
+		try {
+			var relationship = ignoreLoadedGuard( function() {
+				return invoke( this, relationshipName );
+			} );
+		} finally {
+			if ( hadPreviousProbe ) {
+				request[ probeKey ] = previousProbe.value;
+			} else {
+				structDelete( request, probeKey );
+			}
+		}
 		if ( collectionProbe.get() ) {
 			variables._collectionRelationships[ arguments.name ] = true;
 		}
@@ -4111,8 +4121,9 @@ component accessors="true" {
 	 * @callback  The callback to run without any loaded entity guarding.
 	 */
 	private void function markCollectionRelationship() {
-		if ( variables.keyExists( "_relationshipCollectionProbe" ) ) {
-			variables._relationshipCollectionProbe.set( true );
+		var probeKey = "__quickRelationshipCollectionProbe";
+		if ( request.keyExists( probeKey ) ) {
+			request[ probeKey ].set( true );
 		}
 	}
 

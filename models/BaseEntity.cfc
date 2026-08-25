@@ -1887,14 +1887,14 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity | [quick.models.BaseEntity]
 	 */
 	public any function retrieveRelationship( required string name, any defaultValue ) {
-		if ( !hasRelationship( arguments.name ) ) {
-			throwRelationshipNotFound( arguments.name );
-		}
 		if ( variables._relationshipsData.keyExists( arguments.name ) ) {
 			return variables._relationshipsData[ arguments.name ];
 		}
 		if ( isRelationshipLoaded( arguments.name ) ) {
 			return javacast( "null", "" );
+		}
+		if ( !hasRelationship( arguments.name ) ) {
+			throwRelationshipNotFound( arguments.name );
 		}
 
 		var relationship = resolveRelationship( arguments.name );

@@ -54,6 +54,14 @@ component accessors="true" implements="IRelationship" {
 	property name="parent";
 
 	/**
+	 * Whether this relationship returns a collection.
+	 */
+	property
+		name   ="collectionRelationship"
+		type   ="boolean"
+		default="false";
+
+	/**
 	 * Used to check for the type of relationship more quickly than using isInstanceOf.
 	 */
 	this.relationshipClass = "BaseRelationship";
@@ -77,8 +85,9 @@ component accessors="true" implements="IRelationship" {
 		boolean withConstraints = true,
 		QuickBuilder relationshipBuilder
 	) {
-		variables.returnDefaultEntity = false;
-		variables.defaultAttributes   = {};
+		variables.returnDefaultEntity    = false;
+		variables.defaultAttributes      = {};
+		variables.collectionRelationship = false;
 
 		variables.related = arguments.related;
 		if ( !isNull( arguments.relationshipBuilder ) ) {

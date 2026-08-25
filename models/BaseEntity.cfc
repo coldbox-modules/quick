@@ -1903,14 +1903,12 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		var collectionRelationships = [
-			"HasMany",
-			"HasManyThrough",
-			"HasManyDeep",
-			"BelongsToMany",
-			"PolymorphicHasMany"
-		];
-		var unloadedDefault = collectionRelationships.contains( relationship.relationshipClass )
+		var isCollectionRelationship = isInstanceOf( relationship, "quick.models.Relationships.HasMany" ) ||
+		isInstanceOf( relationship, "quick.models.Relationships.HasManyThrough" ) ||
+		isInstanceOf( relationship, "quick.models.Relationships.HasManyDeep" ) ||
+		isInstanceOf( relationship, "quick.models.Relationships.BelongsToMany" ) ||
+		isInstanceOf( relationship, "quick.models.Relationships.PolymorphicHasMany" );
+		var unloadedDefault = isCollectionRelationship
 		 ? []
 		 : relationship.newDefaultEntity();
 		if ( isNull( unloadedDefault ) ) {

@@ -76,6 +76,48 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( userRowsPostSave ).toHaveLength( 5 );
 			} );
 
+			it( "can touch an entity timestamp", function() {
+				var user              = getInstance( "User" ).findOrFail( 1 );
+				var originalCreated   = user.getCreatedDate();
+				var originalModified  = user.getModifiedDate();
+				var originalFirstName = user.getFirstName();
+				var originalId        = user.getId();
+				var dirtyFirstName    = "This must not be persisted";
+				var dirtyId           = 9999;
+
+				user.setFirstName( dirtyFirstName );
+				user.setId( dirtyId );
+
+				user.touch();
+
+				expect( dateCompare( user.getCreatedDate(), originalCreated ) ).toBe( 0 );
+				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 0 );
+				expect( user.getFirstName() ).toBe( dirtyFirstName );
+				expect( user.getId() ).toBe( dirtyId );
+				expect( user.isDirty( "firstName" ) ).toBeTrue();
+				expect( user.isDirty( "id" ) ).toBeTrue();
+				expect( user.isDirty( "createdDate" ) ).toBeFalse();
+				expect( user.isDirty( "modifiedDate" ) ).toBeFalse();
+				var freshUser = getInstance( "User" ).findOrFail( originalId );
+				expect( dateCompare( freshUser.getCreatedDate(), originalCreated ) ).toBe( 1 );
+				expect( dateCompare( freshUser.getModifiedDate(), originalModified ) ).toBe( 1 );
+				expect( freshUser.getFirstName() ).toBe( originalFirstName );
+			} );
+
+			it( "can override the timestamp fields used by touch", function() {
+				var user             = getInstance( "CustomTimestampUser" ).findOrFail( 1 );
+				var originalCreated  = user.getCreatedDate();
+				var originalModified = user.getModifiedDate();
+
+				user.touch();
+
+				expect( dateCompare( user.getCreatedDate(), originalCreated ) ).toBe( 0 );
+				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 0 );
+				var freshUser = user.fresh();
+				expect( dateCompare( freshUser.getCreatedDate(), originalCreated ) ).toBe( 1 );
+				expect( dateCompare( freshUser.getModifiedDate(), originalModified ) ).toBe( 0 );
+			} );
+
 			it( "does not allow updating of column where update=false in property", function() {
 				var existingUser = getInstance( "User" ).find( 1 );
 				existingUser.setEmail( "test2@test.com" );

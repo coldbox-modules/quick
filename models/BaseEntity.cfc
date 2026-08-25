@@ -440,6 +440,15 @@ component accessors="true" {
 	}
 
 	/**
+	 * Returns the timestamp fields updated by `touch`.
+	 *
+	 * @return  [String]
+	 */
+	public array function timestampFields() {
+		return [ "createdDate", "modifiedDate" ];
+	}
+
+	/**
 	 * Returns the column name for the primary key.
 	 *
 	 * @doc_generic  String
@@ -1412,6 +1421,44 @@ component accessors="true" {
 		);
 		fill( arguments.attributes, arguments.ignoreNonExistentAttributes );
 		return save();
+	}
+
+	/**
+	 * Updates the configured timestamp fields using a new query without changing
+	 * the current entity state.
+	 *
+	 * @options Any options to pass to `queryExecute`. Default: {}.
+	 *
+	 * @return    quick.models.BaseEntity
+	 */
+	public any function touch( struct options = {} ) {
+		guardAgainstNotLoaded( "This instance is not loaded so it cannot be touched." );
+		guardReadOnly();
+		var timestamp           = now();
+		var timestampAttributes = timestampFields().reduce( function( attributes, field ) {
+			arguments.attributes[ arguments.field ] = timestamp;
+			return arguments.attributes;
+		}, {} );
+		guardAgainstReadOnlyAttributes( timestampAttributes );
+
+		var builder = newQuery().where( function( q ) {
+			keyNames().each( function( keyName ) {
+				q.where(
+					arguments.keyName,
+					variables._originalAttributes[ retrieveColumnForAlias( arguments.keyName ) ]
+				);
+			} );
+		} );
+		builder
+			.getQB()
+			.update(
+				timestampAttributes.map( function( field, value ) {
+					return builder.generateQueryParamStruct( field, value );
+				} ),
+				arguments.options
+			);
+
+		return this;
 	}
 
 	/**

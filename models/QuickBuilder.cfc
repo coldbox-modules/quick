@@ -855,10 +855,9 @@ component accessors="true" transientCache="false" {
 				var relationshipValues = createObject( "java", "java.util.ArrayList" ).init();
 				for ( var entity in loadedEntities ) {
 					if ( structKeyExists( entity, "isQuickEntity" ) ) {
-						var relationshipValue = entity.retrieveRelationship( attributes.relationName );
-						relationshipValues.add(
-							isNull( relationshipValue ) ? javacast( "null", "" ) : relationshipValue
-						);
+						// Quick entities are shared with and updated by the worker. Avoid
+						// transferring related CFC instances through Java collections.
+						relationshipValues.add( true );
 					} else {
 						relationshipValues.add(
 							entity.keyExists( attributes.relationName )
@@ -896,14 +895,10 @@ component accessors="true" transientCache="false" {
 			var relationName       = threadRelations[ threadName ];
 			var relationshipValues = threadResults.get( threadName );
 			for ( var i = 1; i <= targetEntities.len(); i++ ) {
-				if ( structKeyExists( targetEntities[ i ], "isQuickEntity" ) ) {
-					var relationshipValue = relationshipValues.get( i - 1 );
-					if ( isNull( relationshipValue ) ) {
-						targetEntities[ i ].assignRelationship( relationName );
-					} else {
-						targetEntities[ i ].assignRelationship( relationName, relationshipValue );
-					}
-				} else if ( !isNull( relationshipValues.get( i - 1 ) ) ) {
+				if (
+					!structKeyExists( targetEntities[ i ], "isQuickEntity" ) &&
+					!isNull( relationshipValues.get( i - 1 ) )
+				) {
 					targetEntities[ i ][ relationName ] = relationshipValues.get( i - 1 );
 				}
 			}

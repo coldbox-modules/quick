@@ -80,13 +80,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var user              = getInstance( "User" ).findOrFail( 1 );
 				var originalModified  = user.getModifiedDate();
 				var originalFirstName = user.getFirstName();
+				var dirtyFirstName    = "This must not be persisted";
 
-				user.setFirstName( "This must not be persisted" );
+				user.setFirstName( dirtyFirstName );
 
 				user.touch();
 
 				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 1 );
-				expect( user.getFirstName() ).toBe( originalFirstName );
+				expect( user.getFirstName() ).toBe( dirtyFirstName );
+				expect( user.isDirty( "firstName" ) ).toBeTrue();
 				expect( user.isDirty( "modifiedDate" ) ).toBeFalse();
 				var freshUser = user.fresh();
 				expect( dateCompare( freshUser.getModifiedDate(), originalModified ) ).toBe( 1 );

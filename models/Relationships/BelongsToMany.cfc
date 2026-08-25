@@ -122,8 +122,7 @@ component
 		required array relatedPivotKeys,
 		required array parentKeys,
 		required array relatedKeys,
-		boolean withConstraints        = true,
-		boolean collectionRelationship = false
+		boolean withConstraints = true
 	) {
 		variables.table                 = arguments.table;
 		variables.parentKeys            = arguments.parentKeys;
@@ -140,12 +139,11 @@ component
 		variables.pivotEntity           = "";
 
 		super.init(
-			related                = arguments.related,
-			relationName           = arguments.relationName,
-			relationMethodName     = arguments.relationMethodName,
-			parent                 = arguments.parent,
-			withConstraints        = arguments.withConstraints,
-			collectionRelationship = arguments.collectionRelationship
+			related            = arguments.related,
+			relationName       = arguments.relationName,
+			relationMethodName = arguments.relationMethodName,
+			parent             = arguments.parent,
+			withConstraints    = arguments.withConstraints
 		);
 
 		variables.relationshipBuilder.addEntityTransformer( function( entity ) {

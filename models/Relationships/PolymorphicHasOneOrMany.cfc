@@ -52,21 +52,19 @@ component
 		required string type,
 		required array ids,
 		required array localKeys,
-		boolean withConstraints        = true,
-		boolean collectionRelationship = false
+		boolean withConstraints = true
 	) {
 		variables.morphType    = arguments.type;
 		variables.morphMapping = arguments.parent.mappingName();
 
 		return super.init(
-			related                = arguments.related,
-			relationName           = arguments.relationName,
-			relationMethodName     = arguments.relationMethodName,
-			parent                 = arguments.parent,
-			foreignKeys            = arguments.ids,
-			localKeys              = arguments.localKeys,
-			withConstraints        = arguments.withConstraints,
-			collectionRelationship = arguments.collectionRelationship
+			related            = arguments.related,
+			relationName       = arguments.relationName,
+			relationMethodName = arguments.relationMethodName,
+			parent             = arguments.parent,
+			foreignKeys        = arguments.ids,
+			localKeys          = arguments.localKeys,
+			withConstraints    = arguments.withConstraints
 		);
 	}
 

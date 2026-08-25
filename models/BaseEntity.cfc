@@ -1526,32 +1526,39 @@ component accessors="true" {
 	 * during persistence.
 	 */
 	private void function refreshAttributesOnSave() {
-		var attributesToRefresh = variables._attributes.filter( function( name, attribute ) {
-			return attribute.refreshOnSave;
-		} );
+		var attributesToRefresh = {};
+		for ( var name in variables._attributes ) {
+			if ( variables._attributes[ name ].refreshOnSave ) {
+				attributesToRefresh[ name ] = variables._attributes[ name ];
+			}
+		}
 
 		if ( attributesToRefresh.isEmpty() ) {
 			return;
 		}
 
-		var refreshedEntity = newQuery()
-			.withoutGlobalScope()
-			.where( function( q ) {
-				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
-					q.where( keyName, keyValue );
-				} );
-			} )
-			.first();
+		var refreshQuery = newQuery().withoutGlobalScope();
+		var entityKeys   = keyNames();
+		var entityValues = keyValues();
+		for ( var i = 1; i <= entityKeys.len(); i++ ) {
+			refreshQuery.where( entityKeys[ i ], entityValues[ i ] );
+		}
+		var refreshedEntity = refreshQuery.first();
 		if ( isNull( refreshedEntity ) ) {
 			return;
 		}
 
 		var refreshedData = refreshedEntity.retrieveAttributesData( withNulls = true );
-		attributesToRefresh.each( function( name, attribute ) {
-			var value                           = refreshedData[ attribute.column ];
-			variables._data[ attribute.column ] = isNull( value ) ? javacast( "null", "" ) : value;
-			variables[ attribute.name ]         = isNull( value ) ? javacast( "null", "" ) : value;
-		} );
+		for ( var name in attributesToRefresh ) {
+			var attribute = attributesToRefresh[ name ];
+			if ( isNull( refreshedData[ attribute.column ] ) ) {
+				variables._data[ attribute.column ] = javacast( "null", "" );
+				variables[ attribute.name ]         = javacast( "null", "" );
+			} else {
+				variables._data[ attribute.column ] = refreshedData[ attribute.column ];
+				variables[ attribute.name ]         = refreshedData[ attribute.column ];
+			}
+		}
 	}
 
 	/**

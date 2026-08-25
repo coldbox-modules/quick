@@ -832,6 +832,7 @@ component accessors="true" transientCache="false" {
 		var threadNames     = [];
 		var threadRelations = {};
 		var targetEntities  = arguments.entities;
+		var threadResults   = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
 
 		for ( var relationName in arguments.eagerLoads ) {
 			var threadName = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
@@ -840,14 +841,19 @@ component accessors="true" transientCache="false" {
 			cfthread(
 				action          = "run",
 				name            = threadName,
+				threadName      = threadName,
 				relationName    = relationName,
 				eagerLoadConfig = arguments.eagerLoads[ relationName ],
-				entities        = targetEntities
+				entities        = targetEntities,
+				results         = threadResults
 			) {
-				thread.entities = eagerLoadRelation(
-					attributes.relationName,
-					attributes.eagerLoadConfig,
-					attributes.entities
+				attributes.results.put(
+					attributes.threadName,
+					eagerLoadRelation(
+						attributes.relationName,
+						attributes.eagerLoadConfig,
+						attributes.entities
+					)
 				);
 			}
 		}
@@ -875,7 +881,7 @@ component accessors="true" transientCache="false" {
 			}
 
 			var relationName        = threadRelations[ threadName ];
-			var eagerLoadedEntities = cfthread[ threadName ].entities;
+			var eagerLoadedEntities = threadResults.get( threadName );
 			for ( var i = 1; i <= targetEntities.len(); i++ ) {
 				if ( structKeyExists( targetEntities[ i ], "isQuickEntity" ) ) {
 					var relationshipValue = eagerLoadedEntities[ i ].retrieveRelationship( relationName );

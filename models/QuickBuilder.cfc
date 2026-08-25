@@ -861,8 +861,13 @@ component accessors="true" transientCache="false" {
 				var relationshipValues = [];
 				for ( var entity in loadedEntities ) {
 					if ( structKeyExists( entity, "isQuickEntity" ) ) {
-						var relationshipValue = entity.retrieveRelationship( attributes.relationName );
-						relationshipValues.append( serializeParallelValue( relationshipValue ) );
+						if ( isNull( entity.retrieveRelationship( attributes.relationName ) ) ) {
+							relationshipValues.append( { "type" : "null" } );
+						} else {
+							relationshipValues.append(
+								serializeParallelValue( entity.retrieveRelationship( attributes.relationName ) )
+							);
+						}
 					} else {
 						relationshipValues.append(
 							serializeParallelValue(

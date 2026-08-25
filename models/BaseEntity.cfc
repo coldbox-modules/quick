@@ -445,7 +445,7 @@ component accessors="true" {
 	 * @return  [String]
 	 */
 	public array function timestampFields() {
-		return [ "modifiedDate" ];
+		return [ "createdDate", "modifiedDate" ];
 	}
 
 	/**

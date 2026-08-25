@@ -87,12 +87,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				user.touch();
 
-				expect( dateCompare( user.getCreatedDate(), originalCreated ) ).toBe( 1 );
-				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 1 );
+				expect( dateCompare( user.getCreatedDate(), originalCreated ) ).toBe( 0 );
+				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 0 );
 				expect( user.getFirstName() ).toBe( dirtyFirstName );
 				expect( user.isDirty( "firstName" ) ).toBeTrue();
+				expect( user.isDirty( "createdDate" ) ).toBeFalse();
 				expect( user.isDirty( "modifiedDate" ) ).toBeFalse();
 				var freshUser = user.fresh();
+				expect( dateCompare( freshUser.getCreatedDate(), originalCreated ) ).toBe( 1 );
 				expect( dateCompare( freshUser.getModifiedDate(), originalModified ) ).toBe( 1 );
 				expect( freshUser.getFirstName() ).toBe( originalFirstName );
 			} );
@@ -104,8 +106,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				user.touch();
 
-				expect( dateCompare( user.getCreatedDate(), originalCreated ) ).toBe( 1 );
+				expect( dateCompare( user.getCreatedDate(), originalCreated ) ).toBe( 0 );
 				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 0 );
+				var freshUser = user.fresh();
+				expect( dateCompare( freshUser.getCreatedDate(), originalCreated ) ).toBe( 1 );
+				expect( dateCompare( freshUser.getModifiedDate(), originalModified ) ).toBe( 0 );
 			} );
 
 			it( "does not allow updating of column where update=false in property", function() {

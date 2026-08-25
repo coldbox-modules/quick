@@ -1876,9 +1876,9 @@ component accessors="true" {
 	}
 
 	/**
-	 * Retrieves the result of a loaded relationship. If the relationship has not
-	 * been loaded, initializes and returns its relationship type default without
-	 * executing a query. An explicit default value can be supplied instead.
+	 * Retrieves the result of a loaded relationship. For a new entity, an unloaded
+	 * relationship is initialized through its public getter without executing a
+	 * query. An explicit default value can be supplied instead.
 	 *
 	 * @name          The relationship name to retrieve.
 	 * @defaultValue  An optional value to assign and return when the relationship
@@ -1902,8 +1902,10 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		initializeUnloadedRelationship( arguments.name, {} );
-		return retrieveRelationship( arguments.name );
+		if ( !isLoaded() ) {
+			return invoke( this, "get#arguments.name#" );
+		}
+		return javacast( "null", "" );
 	}
 
 	/**

@@ -2984,16 +2984,21 @@ component accessors="true" {
 			relationship.relationshipClass != "PolymorphicBelongsTo"
 		) {
 			if ( !isLoaded() ) {
-				var relationshipValue = arguments.missingMethodArguments[ 1 ];
-				var relatedEntity     = relationship.getRelated();
-				var fillRelatedEntity = function( value ) {
-					return isStruct( arguments.value ) && !structKeyExists( arguments.value, "isQuickEntity" )
-					 ? relatedEntity.newEntity().fill( arguments.value )
-					 : arguments.value;
-				};
-				var filledRelationship = isArray( relationshipValue )
-				 ? relationshipValue.map( fillRelatedEntity )
-				 : fillRelatedEntity( relationshipValue );
+				var relationshipValue  = arguments.missingMethodArguments[ 1 ];
+				var relatedEntity      = relationship.getRelated();
+				var filledRelationship = relationshipValue;
+				if ( isArray( relationshipValue ) ) {
+					filledRelationship = [];
+					for ( var value in relationshipValue ) {
+						filledRelationship.append(
+							isStruct( value ) && !structKeyExists( value, "isQuickEntity" )
+							 ? relatedEntity.newEntity().fill( value )
+							 : value
+						);
+					}
+				} else if ( isStruct( relationshipValue ) && !structKeyExists( relationshipValue, "isQuickEntity" ) ) {
+					filledRelationship = relatedEntity.newEntity().fill( relationshipValue );
+				}
 				assignRelationship( relationshipName, filledRelationship );
 				return filledRelationship;
 			}

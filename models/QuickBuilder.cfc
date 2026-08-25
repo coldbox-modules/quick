@@ -839,7 +839,9 @@ component accessors="true" transientCache="false" {
 			var threadEntities = [];
 			for ( var entity in arguments.entities ) {
 				threadEntities.append(
-					structKeyExists( entity, "isQuickEntity" ) ? entity.clone( true ) : duplicate( entity )
+					structKeyExists( entity, "isQuickEntity" )
+					 ? entity.newEntity().hydrate( entity.retrieveAttributesData( withNulls = true ) )
+					 : duplicate( entity )
 				);
 			}
 			threadNames.append( threadName );

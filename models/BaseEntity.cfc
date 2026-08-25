@@ -159,11 +159,6 @@ component accessors="true" {
 	property name="_relationshipsLoaded" persistent="false";
 
 	/**
-	 * A map of relationship methods that return collections.
-	 */
-	property name="_collectionRelationships" persistent="false";
-
-	/**
 	 * Discriminated chilrent property
 	 **/
 	property name="_discriminations" persistent="false";
@@ -275,7 +270,6 @@ component accessors="true" {
 		param variables._data                     = {};
 		param variables._relationshipsData        = {};
 		param variables._relationshipsLoaded      = {};
-		param variables._collectionRelationships  = {};
 		param variables._with                     = [];
 		variables._withoutRelationshipConstraints = createObject( "java", "java.util.HashSet" ).init();
 		variables._applyingGlobalScopes           = false;
@@ -1909,15 +1903,8 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		var unloadedDefault = variables._collectionRelationships.keyExists( arguments.name )
-		 ? []
-		 : relationship.newDefaultEntity();
-		if ( isNull( unloadedDefault ) ) {
-			variables._relationshipsLoaded[ arguments.name ] = true;
-			return javacast( "null", "" );
-		}
-		assignRelationship( arguments.name, unloadedDefault );
-		return unloadedDefault;
+		relationship.initRelation( [ this ], arguments.name );
+		return retrieveRelationship( arguments.name );
 	}
 
 	/**
@@ -1929,33 +1916,27 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.Relationships.BaseRelationship
 	 */
-	private any function resolveRelationship( required string name ) {
-		var relationshipName = arguments.name;
-		var probeKey         = "__quickRelationshipCollectionProbe";
-		var previousProbe    = {};
-		var hadPreviousProbe = request.keyExists( probeKey );
-		if ( hadPreviousProbe ) {
-			previousProbe.value = request[ probeKey ];
-		}
-		var collectionProbe = createObject( "java", "java.util.concurrent.atomic.AtomicBoolean" ).init( false );
-		request[ probeKey ] = collectionProbe;
+	private any function resolveRelationship( required string name, any relationshipArguments = {} ) {
+		var previousIgnoreLoadedGuard     = variables._ignoreNotLoadedGuard;
+		variables._ignoreNotLoadedGuard   = true;
+		var resolvedRelationshipContainer = {};
 		try {
-			var relationship = ignoreLoadedGuard( function() {
-				return invoke( this, relationshipName );
-			} );
+			resolvedRelationshipContainer.value = invoke(
+				this,
+				arguments.name,
+				arguments.relationshipArguments
+			);
 		} finally {
-			if ( hadPreviousProbe ) {
-				request[ probeKey ] = previousProbe.value;
-			} else {
-				structDelete( request, probeKey );
-			}
+			variables._ignoreNotLoadedGuard = previousIgnoreLoadedGuard;
 		}
-		if ( collectionProbe.get() ) {
-			variables._collectionRelationships[ arguments.name ] = true;
-		}
-		if ( !isObject( relationship ) || !structKeyExists( relationship, "relationshipClass" ) ) {
+		if (
+			!resolvedRelationshipContainer.keyExists( "value" ) ||
+			!isObject( resolvedRelationshipContainer.value ) ||
+			!structKeyExists( resolvedRelationshipContainer.value, "relationshipClass" )
+		) {
 			throwRelationshipNotFound( arguments.name );
 		}
+		var relationship = resolvedRelationshipContainer.value;
 		relationship.setRelationMethodName( arguments.name );
 		return relationship;
 	}
@@ -2219,8 +2200,7 @@ component accessors="true" {
 		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
 		param arguments.localKey = keyNames();
 		arguments.localKey       = arrayWrap( arguments.localKey );
-		markCollectionRelationship();
-		var relationship = variables._wirebox.getInstance(
+		return variables._wirebox.getInstance(
 			name          = "HasMany@quick",
 			initArguments = {
 				"related"            : related,
@@ -2232,7 +2212,6 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		return relationship;
 	}
 
 	/**
@@ -2308,8 +2287,7 @@ component accessors="true" {
 
 		param arguments.relatedKey = related.keyNames();
 		arguments.relatedKey       = arrayWrap( arguments.relatedKey );
-		markCollectionRelationship();
-		var relationship = variables._wirebox.getInstance(
+		return variables._wirebox.getInstance(
 			name          = "BelongsToMany@quick",
 			initArguments = {
 				"related"            : related,
@@ -2324,7 +2302,6 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		return relationship;
 	}
 
 	/**
@@ -2620,8 +2597,7 @@ component accessors="true" {
 		arguments.id             = arrayWrap( arguments.id );
 		param arguments.localKey = keyNames();
 		arguments.localKey       = arrayWrap( arguments.localKey );
-		markCollectionRelationship();
-		var relationship = variables._wirebox.getInstance(
+		return variables._wirebox.getInstance(
 			name          = "PolymorphicHasMany@quick",
 			initArguments = {
 				"related"            : related,
@@ -2634,7 +2610,6 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		return relationship;
 	}
 
 	/**
@@ -2747,7 +2722,6 @@ component accessors="true" {
 		if ( !structKeyExists( related, "isBuilder" ) ) {
 			related = related.newQuery();
 		}
-		markCollectionRelationship();
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#related.getEntity().entityName()#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
 		);
@@ -2790,7 +2764,7 @@ component accessors="true" {
 			throughParents.append( throughEntity );
 		}
 
-		var relationship = variables._wirebox.getInstance(
+		return variables._wirebox.getInstance(
 			name          = "HasManyDeep@quick",
 			initArguments = {
 				"related"            : related,
@@ -2804,7 +2778,6 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
-		return relationship;
 	}
 
 	private HasManyDeepBuilder function newHasManyDeepBuilder( string relationMethodName ) {
@@ -3030,14 +3003,7 @@ component accessors="true" {
 
 		if ( !isRelationshipLoaded( relationshipName ) && !isLoaded() ) {
 			var relationshipArguments = arguments.missingMethodArguments;
-			var unloadedRelationship  = ignoreLoadedGuard( function() {
-				return invoke(
-					this,
-					relationshipName,
-					relationshipArguments
-				);
-			} );
-			unloadedRelationship.setRelationMethodName( relationshipName );
+			var unloadedRelationship  = resolveRelationship( relationshipName, relationshipArguments );
 			unloadedRelationship.initRelation( [ this ], relationshipName );
 			return retrieveRelationship( relationshipName );
 		}
@@ -4120,13 +4086,6 @@ component accessors="true" {
 	 *
 	 * @callback  The callback to run without any loaded entity guarding.
 	 */
-	private void function markCollectionRelationship() {
-		var probeKey = "__quickRelationshipCollectionProbe";
-		if ( request.keyExists( probeKey ) ) {
-			request[ probeKey ].set( true );
-		}
-	}
-
 	public any function ignoreLoadedGuard( required any callback ) {
 		variables._ignoreNotLoadedGuard = true;
 		try {

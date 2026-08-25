@@ -1897,26 +1897,24 @@ component accessors="true" {
 			throwRelationshipNotFound( arguments.name );
 		}
 
-		var relationship = resolveRelationship( arguments.name );
 		if ( arguments.keyExists( "defaultValue" ) ) {
 			assignRelationship( arguments.name, arguments.defaultValue );
 			return arguments.defaultValue;
 		}
 
-		relationship.initRelation( [ this ], arguments.name );
+		initializeUnloadedRelationship( arguments.name );
 		return retrieveRelationship( arguments.name );
 	}
 
 	/**
-	 * Resolves and validates a relationship definition by name.
+	 * Resolves and initializes an unloaded relationship by name.
 	 *
 	 * @name  The relationship method name to resolve.
 	 *
 	 * @throws  RelationshipNotFound
 	 *
-	 * @return  quick.models.Relationships.BaseRelationship
 	 */
-	private any function resolveRelationship( required string name, any relationshipArguments = {} ) {
+	private void function initializeUnloadedRelationship( required string name, any relationshipArguments = {} ) {
 		var previousIgnoreLoadedGuard     = variables._ignoreNotLoadedGuard;
 		variables._ignoreNotLoadedGuard   = true;
 		var resolvedRelationshipContainer = {};
@@ -1938,7 +1936,7 @@ component accessors="true" {
 		}
 		var relationship = resolvedRelationshipContainer.value;
 		relationship.setRelationMethodName( arguments.name );
-		return relationship;
+		relationship.initRelation( [ this ], arguments.name );
 	}
 
 	/**
@@ -3003,8 +3001,7 @@ component accessors="true" {
 
 		if ( !isRelationshipLoaded( relationshipName ) && !isLoaded() ) {
 			var relationshipArguments = arguments.missingMethodArguments;
-			var unloadedRelationship  = resolveRelationship( relationshipName, relationshipArguments );
-			unloadedRelationship.initRelation( [ this ], relationshipName );
+			initializeUnloadedRelationship( relationshipName, relationshipArguments );
 			return retrieveRelationship( relationshipName );
 		}
 

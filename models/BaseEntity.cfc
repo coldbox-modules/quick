@@ -1424,8 +1424,8 @@ component accessors="true" {
 	}
 
 	/**
-	 * Saves updated timestamp fields from the entity's clean state, then restores
-	 * any dirty attribute values that existed before the touch.
+	 * Updates the configured timestamp fields using a new query without changing
+	 * the current entity state.
 	 *
 	 * @options Any options to pass to `queryExecute`. Default: {}.
 	 *
@@ -1433,32 +1433,30 @@ component accessors="true" {
 	 */
 	public any function touch( struct options = {} ) {
 		guardAgainstNotLoaded( "This instance is not loaded so it cannot be touched." );
-		var currentAttributes  = retrieveAttributesData();
-		var originalAttributes = duplicate( variables._originalAttributes );
-		var fields             = timestampFields();
-		var timestamp          = now();
+		guardReadOnly();
+		var timestamp           = now();
+		var timestampAttributes = timestampFields().reduce( function( attributes, field ) {
+			arguments.attributes[ arguments.field ] = timestamp;
+			return arguments.attributes;
+		}, {} );
+		guardAgainstReadOnlyAttributes( timestampAttributes );
 
-		assignAttributesData( originalAttributes );
-		fields.each( function( field ) {
-			assignAttribute( arguments.field, timestamp );
+		var builder = newQuery().where( function( q ) {
+			keyNames().each( function( keyName ) {
+				q.where(
+					arguments.keyName,
+					variables._originalAttributes[ retrieveColumnForAlias( arguments.keyName ) ]
+				);
+			} );
 		} );
-
-		try {
-			save( arguments.options );
-			var touchedAttributes = fields.reduce( function( attributes, field ) {
-				arguments.attributes[ arguments.field ] = retrieveAttribute( arguments.field );
-				return arguments.attributes;
-			}, {} );
-		} catch ( any e ) {
-			assignAttributesData( currentAttributes );
-			assignOriginalAttributes( originalAttributes );
-			rethrow;
-		}
-
-		assignAttributesData( currentAttributes );
-		touchedAttributes.each( function( field, value ) {
-			assignAttribute( arguments.field, arguments.value );
-		} );
+		builder
+			.getQB()
+			.update(
+				timestampAttributes.map( function( field, value ) {
+					return builder.generateQueryParamStruct( field, value );
+				} ),
+				arguments.options
+			);
 
 		return this;
 	}

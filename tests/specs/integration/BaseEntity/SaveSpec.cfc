@@ -78,6 +78,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "can touch an entity timestamp", function() {
 				var user              = getInstance( "User" ).findOrFail( 1 );
+				var originalCreated   = user.getCreatedDate();
 				var originalModified  = user.getModifiedDate();
 				var originalFirstName = user.getFirstName();
 				var dirtyFirstName    = "This must not be persisted";
@@ -86,6 +87,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				user.touch();
 
+				expect( dateCompare( user.getCreatedDate(), originalCreated ) ).toBe( 1 );
 				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 1 );
 				expect( user.getFirstName() ).toBe( dirtyFirstName );
 				expect( user.isDirty( "firstName" ) ).toBeTrue();

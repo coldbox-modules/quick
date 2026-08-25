@@ -159,12 +159,6 @@ component accessors="true" {
 	property name="_relationshipsLoaded" persistent="false";
 
 	/**
-	 * A map of relationship methods that return collections.
-	 */
-	property name="_collectionRelationships"         persistent="false";
-	property name="_resolvingCollectionRelationship" persistent="false";
-
-	/**
 	 * Discriminated chilrent property
 	 **/
 	property name="_discriminations" persistent="false";
@@ -270,22 +264,20 @@ component accessors="true" {
 	private any function assignDefaultProperties() {
 		assignAttributesData( {} );
 		assignOriginalAttributes( {} );
-		variables._globalScopeExclusions           = [];
-		param variables._key                       = "id";
-		param variables._meta                      = {};
-		param variables._data                      = {};
-		param variables._relationshipsData         = {};
-		param variables._relationshipsLoaded       = {};
-		param variables._collectionRelationships   = {};
-		variables._resolvingCollectionRelationship = false;
-		param variables._with                      = [];
-		variables._withoutRelationshipConstraints  = createObject( "java", "java.util.HashSet" ).init();
-		variables._applyingGlobalScopes            = false;
-		variables._globalScopesApplied             = false;
-		variables._ignoreNotLoadedGuard            = false;
-		variables._withoutFiringEvents             = false;
-		variables._nullValueArgumentSentinel       = createObject( "java", "java.lang.Object" ).init();
-		param variables._preventLazyLoading        = false;
+		variables._globalScopeExclusions          = [];
+		param variables._key                      = "id";
+		param variables._meta                     = {};
+		param variables._data                     = {};
+		param variables._relationshipsData        = {};
+		param variables._relationshipsLoaded      = {};
+		param variables._with                     = [];
+		variables._withoutRelationshipConstraints = createObject( "java", "java.util.HashSet" ).init();
+		variables._applyingGlobalScopes           = false;
+		variables._globalScopesApplied            = false;
+		variables._ignoreNotLoadedGuard           = false;
+		variables._withoutFiringEvents            = false;
+		variables._nullValueArgumentSentinel      = createObject( "java", "java.lang.Object" ).init();
+		param variables._preventLazyLoading       = false;
 		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
 				throw(
@@ -1911,7 +1903,7 @@ component accessors="true" {
 			return arguments.defaultValue;
 		}
 
-		var unloadedDefault = variables._collectionRelationships.keyExists( arguments.name )
+		var unloadedDefault = structKeyExists( relationship, "collectionRelationship" ) && relationship.collectionRelationship
 		 ? []
 		 : relationship.newDefaultEntity();
 		if ( isNull( unloadedDefault ) ) {
@@ -1933,18 +1925,9 @@ component accessors="true" {
 	 */
 	private any function resolveRelationship( required string name ) {
 		var relationshipName = arguments.name;
-		var resolved         = ignoreLoadedGuard( function() {
-			variables._resolvingCollectionRelationship = false;
-			var resolvedRelationship                   = invoke( this, relationshipName );
-			return {
-				"relationship" : resolvedRelationship,
-				"collection"   : variables._resolvingCollectionRelationship
-			};
+		var relationship     = ignoreLoadedGuard( function() {
+			return invoke( this, relationshipName );
 		} );
-		var relationship = resolved.relationship;
-		if ( resolved.collection ) {
-			variables._collectionRelationships[ arguments.name ] = true;
-		}
 		if ( !isObject( relationship ) || !structKeyExists( relationship, "relationshipClass" ) ) {
 			throwRelationshipNotFound( arguments.name );
 		}
@@ -2208,12 +2191,10 @@ component accessors="true" {
 				arguments.foreignKey.append( entityName() & keyName );
 			}
 		}
-		arguments.foreignKey                       = arrayWrap( arguments.foreignKey );
-		param arguments.localKey                   = keyNames();
-		arguments.localKey                         = arrayWrap( arguments.localKey );
-		variables._resolvingCollectionRelationship = true;
-
-		return variables._wirebox.getInstance(
+		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
+		param arguments.localKey = keyNames();
+		arguments.localKey       = arrayWrap( arguments.localKey );
+		var relationship         = variables._wirebox.getInstance(
 			name          = "HasMany@quick",
 			initArguments = {
 				"related"            : related,
@@ -2225,6 +2206,8 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
+		relationship.collectionRelationship = true;
+		return relationship;
 	}
 
 	/**
@@ -2298,11 +2281,9 @@ component accessors="true" {
 		param arguments.parentKey = keyNames();
 		arguments.parentKey       = arrayWrap( arguments.parentKey );
 
-		param arguments.relatedKey                 = related.keyNames();
-		arguments.relatedKey                       = arrayWrap( arguments.relatedKey );
-		variables._resolvingCollectionRelationship = true;
-
-		return variables._wirebox.getInstance(
+		param arguments.relatedKey = related.keyNames();
+		arguments.relatedKey       = arrayWrap( arguments.relatedKey );
+		var relationship           = variables._wirebox.getInstance(
 			name          = "BelongsToMany@quick",
 			initArguments = {
 				"related"            : related,
@@ -2317,6 +2298,8 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
+		relationship.collectionRelationship = true;
+		return relationship;
 	}
 
 	/**
@@ -2607,14 +2590,12 @@ component accessors="true" {
 
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
-		param arguments.type                       = arguments.name & "_type";
-		param arguments.id                         = arguments.name & "_id";
-		arguments.id                               = arrayWrap( arguments.id );
-		param arguments.localKey                   = keyNames();
-		arguments.localKey                         = arrayWrap( arguments.localKey );
-		variables._resolvingCollectionRelationship = true;
-
-		return variables._wirebox.getInstance(
+		param arguments.type     = arguments.name & "_type";
+		param arguments.id       = arguments.name & "_id";
+		arguments.id             = arrayWrap( arguments.id );
+		param arguments.localKey = keyNames();
+		arguments.localKey       = arrayWrap( arguments.localKey );
+		var relationship         = variables._wirebox.getInstance(
 			name          = "PolymorphicHasMany@quick",
 			initArguments = {
 				"related"            : related,
@@ -2627,6 +2608,8 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
+		relationship.collectionRelationship = true;
+		return relationship;
 	}
 
 	/**
@@ -2739,8 +2722,6 @@ component accessors="true" {
 		if ( !structKeyExists( related, "isBuilder" ) ) {
 			related = related.newQuery();
 		}
-		variables._resolvingCollectionRelationship = true;
-
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#related.getEntity().entityName()#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
 		);
@@ -2783,7 +2764,7 @@ component accessors="true" {
 			throughParents.append( throughEntity );
 		}
 
-		return variables._wirebox.getInstance(
+		var relationship = variables._wirebox.getInstance(
 			name          = "HasManyDeep@quick",
 			initArguments = {
 				"related"            : related,
@@ -2797,6 +2778,8 @@ component accessors="true" {
 				"withConstraints"    : !shouldSkipRelationshipConstraints( arguments.relationMethodName )
 			}
 		);
+		relationship.collectionRelationship = true;
+		return relationship;
 	}
 
 	private HasManyDeepBuilder function newHasManyDeepBuilder( string relationMethodName ) {

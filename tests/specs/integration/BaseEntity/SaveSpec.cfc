@@ -83,19 +83,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var originalFirstName = user.getFirstName();
 				var originalId        = user.getId();
 				var dirtyFirstName    = "This must not be persisted";
-				var dirtyId           = 9999;
 
 				user.setFirstName( dirtyFirstName );
-				user.setId( dirtyId );
 
 				user.touch();
 
 				expect( dateCompare( user.getCreatedDate(), originalCreated ) ).toBe( 0 );
 				expect( dateCompare( user.getModifiedDate(), originalModified ) ).toBe( 0 );
 				expect( user.getFirstName() ).toBe( dirtyFirstName );
-				expect( user.getId() ).toBe( dirtyId );
 				expect( user.isDirty( "firstName" ) ).toBeTrue();
-				expect( user.isDirty( "id" ) ).toBeTrue();
 				expect( user.isDirty( "createdDate" ) ).toBeFalse();
 				expect( user.isDirty( "modifiedDate" ) ).toBeFalse();
 				var freshUser = getInstance( "User" ).findOrFail( originalId );

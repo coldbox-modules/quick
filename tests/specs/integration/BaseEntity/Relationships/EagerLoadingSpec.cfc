@@ -90,7 +90,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( posts[ 1 ].getComments() ).toBeArray();
 				expect( eagerThreads ).toHaveKey( "author" );
 				expect( eagerThreads ).toHaveKey( "comments" );
-				if ( findNoCase( "ColdFusion", server.coldfusion.productName ) ) {
+				if ( server.keyExists( "coldfusion" ) && findNoCase( "ColdFusion", server.coldfusion.productName ) ) {
 					expect( eagerThreads.author ).toBe( callingThread );
 					expect( eagerThreads.comments ).toBe( callingThread );
 				} else {

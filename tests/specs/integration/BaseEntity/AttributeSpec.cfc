@@ -39,6 +39,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( entity.getActivoSN() ).toBeFalse();
 			} );
 
+			it( "rejects duplicate property names", function() {
+				expect( function() {
+					getInstance( "DuplicateUsernamePropertyUser" );
+				} ).toThrow();
+			} );
+
 			it( "can set a value to null using the `setColumnName` magic methods", function() {
 				var user = getInstance( "User" ).find( 1 );
 				expect( user.getUsername() ).toBe( "elpete" );
@@ -214,6 +220,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					},
 					"favoritePost_id" : "1245"
 				} );
+			} );
+
+			it( "uses an explicit column when the property name is also a database column", function() {
+				var user = getInstance( "AliasedUsernameUser" ).findOrFail( 1 );
+
+				expect( user.getUsername() ).toBe( "Eric" );
+				expect( user.retrieveAttributesData() ).toHaveKey( "first_name" );
+				expect( user.retrieveAttributesData() ).notToHaveKey( "username" );
 			} );
 
 			// https://github.com/coldbox-modules/quick/issues/127

@@ -78,6 +78,20 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getPosts()[ 2 ].isLoaded() ).toBeFalse();
 				expect( user.getPosts()[ 2 ].getBody() ).toBe( "Struct child" );
 			} );
+
+			it( "creates new relationship instances when filling the same relationship multiple times", function() {
+				var user = getInstance( "User" );
+
+				user.fill( { "posts" : [ { "body" : "First fill" } ] } );
+				var firstPost = user.getPosts()[ 1 ];
+
+				user.fill( { "posts" : [ { "body" : "Second fill" } ] } );
+				var secondPost = user.getPosts()[ 1 ];
+
+				expect( user.getPosts() ).toHaveLength( 1 );
+				expect( secondPost.getBody() ).toBe( "Second fill" );
+				expect( firstPost.getBody() ).toBe( "First fill" );
+			} );
 		} );
 	}
 

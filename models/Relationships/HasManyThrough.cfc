@@ -37,14 +37,14 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		return arguments.entities.map( function( entity ) {
-			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-				arguments.entity.assignRelationship( relation, [] );
+		for ( var entity in arguments.entities ) {
+			if ( structKeyExists( entity, "isQuickEntity" ) ) {
+				entity.assignRelationship( arguments.relation, [] );
 			} else {
-				arguments.entity[ relation ] = [];
+				entity[ arguments.relation ] = [];
 			}
-			return arguments.entity;
-		} );
+		}
+		return arguments.entities;
 	}
 
 	/**

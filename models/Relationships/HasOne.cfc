@@ -56,18 +56,18 @@ component extends="quick.models.Relationships.HasOneOrMany" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		return arguments.entities.map( function( entity ) {
+		for ( var entity in arguments.entities ) {
 			var defaultEntity = newDefaultEntity();
-			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-				arguments.entity.assignRelationship(
-					relation,
+			if ( structKeyExists( entity, "isQuickEntity" ) ) {
+				entity.assignRelationship(
+					arguments.relation,
 					isNull( defaultEntity ) ? javacast( "null", "" ) : defaultEntity
 				);
 			} else {
-				arguments.entity[ relation ] = isNull( defaultEntity ) ? {} : defaultEntity.getMemento();
+				entity[ arguments.relation ] = isNull( defaultEntity ) ? {} : defaultEntity.getMemento();
 			}
-			return arguments.entity;
-		} );
+		}
+		return arguments.entities;
 	}
 
 	/**

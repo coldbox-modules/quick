@@ -65,11 +65,11 @@ component extends="cfcollection.models.Collection" {
 	 * @return [any]
 	 */
 	public array function getMemento() {
-		return this
-			.map( function( entity ) {
-				return arguments.entity.$renderData();
-			} )
-			.get();
+		var mementos = [];
+		for ( var entity in get() ) {
+			mementos.append( entity.$renderData() );
+		}
+		return mementos;
 	}
 
 	/**

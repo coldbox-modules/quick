@@ -31,6 +31,10 @@ component implements="KeyType" {
 	 * @return   void
 	 */
 	public void function postInsert( required any entity, required struct result ) {
+		// Joined child entities inherit their key from the parent row before this insert.
+		if ( arguments.entity.hasParentEntity() ) {
+			return;
+		}
 		var keyName      = arguments.entity.keyNames()[ 1 ];
 		var generatedKey = arguments.result.result.keyExists( keyName ) ? arguments.result.result[ keyName ] : arguments.result.result.keyExists(
 			"generated_key"

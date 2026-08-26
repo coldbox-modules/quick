@@ -123,11 +123,10 @@ component accessors="true" implements="IRelationship" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function getEager( boolean asQuery = false, boolean withAliases = false ) {
-		return variables.relationshipBuilder
-			.when( arguments.asQuery, function( qb ) {
-				qb.asQuery( withAliases );
-			} )
-			.get();
+		if ( arguments.asQuery ) {
+			variables.relationshipBuilder.asQuery( arguments.withAliases );
+		}
+		return variables.relationshipBuilder.get();
 	}
 
 	/**
@@ -370,24 +369,30 @@ component accessors="true" implements="IRelationship" {
 		required array keys,
 		required any baseEntity
 	) {
-		var seenKeys = createObject( "java", "java.util.LinkedHashSet" ).init();
-		return arguments.entities.reduce( function( acc, entity ) {
+		var seenKeys   = createObject( "java", "java.util.LinkedHashSet" ).init();
+		var entityKeys = [];
+		for ( var entity in arguments.entities ) {
 			var keyValues = [];
-			for ( var key in keys ) {
+			var hasNull   = false;
+			for ( var key in arguments.keys ) {
 				var value = structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( key ) : entity[ key ];
-				if ( entityIsNullValue( baseEntity, key, value ) ) {
-					return acc;
+				if ( entityIsNullValue( arguments.baseEntity, key, value ) ) {
+					hasNull = true;
+					break;
 				}
 				keyValues.append( value );
 			}
 
-			var serializedKey = serializeJSON( keyValues );
-			if ( !seenKeys.contains( serializedKey ) ) {
+			if ( !hasNull ) {
+				var serializedKey = serializeJSON( keyValues );
+				if ( seenKeys.contains( serializedKey ) ) {
+					continue;
+				}
 				seenKeys.add( serializedKey );
-				acc.append( keyValues );
+				entityKeys.append( keyValues );
 			}
-			return acc;
-		}, [] );
+		}
+		return entityKeys;
 	}
 
 	/**
@@ -414,19 +419,61 @@ component accessors="true" implements="IRelationship" {
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
 	public any function addCompareConstraints( any base = variables.relationshipBuilder, any nested ) {
-		return arguments.base
-			.select( variables.relationshipBuilder.raw( 1 ) )
-			.where( function( q ) {
-				arrayZipEach(
-					[
-						getExistenceLocalKeys( base ),
-						getExistenceCompareKeys( base )
-					],
-					function( qualifiedLocalKey, existenceCompareKey ) {
-						q.whereColumn( qualifiedLocalKey, existenceCompareKey );
-					}
-				);
-			} );
+		arguments.base.select( variables.relationshipBuilder.raw( 1 ) );
+		var localKeys   = getExistenceLocalKeys( arguments.base );
+		var compareKeys = getExistenceCompareKeys( arguments.base );
+		var query       = queryBuilderFor( arguments.base );
+		var constraints = query.forNestedWhere();
+		for ( var i = 1; i <= localKeys.len(); i++ ) {
+			constraints.whereColumn( localKeys[ i ], compareKeys[ i ] );
+		}
+		query.addNestedWhereQuery( constraints );
+		return arguments.base;
+	}
+
+	/**
+	 * Creates a detached qb join object that can be configured before attachment.
+	 */
+	private any function queryBuilderFor( required any builder ) {
+		var query = arguments.builder;
+		if ( structKeyExists( query, "retrieveQuery" ) ) {
+			return query.retrieveQuery();
+		}
+		if ( structKeyExists( query, "isQuickBuilder" ) ) {
+			return query.getQB();
+		}
+		if ( !structKeyExists( query, "isBuilder" ) && structKeyExists( query, "getQuickBuilder" ) ) {
+			return query.getQuickBuilder().getQB();
+		}
+		return query;
+	}
+
+	private any function newJoinClause(
+		required any builder,
+		required any table,
+		string type = "inner"
+	) {
+		var query = queryBuilderFor( arguments.builder );
+		return query.newJoin( table = arguments.table, type = arguments.type );
+	}
+
+	/**
+	 * Attaches a prebuilt join without qb cloning it. This matches callback-based
+	 * joins, including their duplicate-detection behavior for shared predicates.
+	 */
+	private void function attachJoinClause( required any builder, required any join ) {
+		var query = queryBuilderFor( arguments.builder );
+
+		if ( query.getPreventDuplicateJoins() ) {
+			for ( var existingJoin in query.getJoins() ) {
+				if ( existingJoin.isEqualTo( arguments.join ) ) {
+					return;
+				}
+			}
+		}
+
+		query.getJoins().append( arguments.join );
+		query.addBindings( arguments.join.getBindings(), "join" );
 	}
 
 	public any function nestCompareConstraints( required any base, required any nested ) {
@@ -567,20 +614,6 @@ component accessors="true" implements="IRelationship" {
 	}
 
 	/**
-	 * Calls the callback with the given value and then returns the given value.
-	 * Nice to avoid temporary variables.
-	 *
-	 * @value     The value to pass to the callback and as the return value.
-	 * @callback  The callback to execute.
-	 *
-	 * @return    any
-	 */
-	private any function tap( required any value, required any callback ) {
-		arguments.callback( arguments.value );
-		return arguments.value;
-	}
-
-	/**
 	 * Ensures the return value is an array, either by returning an array
 	 * or by returning the value wrapped in an array.
 	 *
@@ -610,9 +643,10 @@ component accessors="true" implements="IRelationship" {
 			return arguments.arrays;
 		}
 
-		var lengths = arguments.arrays.map( function( arr ) {
-			return arr.len();
-		} );
+		var lengths = [];
+		for ( var arr in arguments.arrays ) {
+			lengths.append( arr.len() );
+		}
 
 		if ( unique( lengths ).len() > 1 ) {
 			throw(

@@ -194,21 +194,16 @@ component
 		performJoin();
 		addPivotSelects();
 
-		variables.relationshipBuilder.where( function( q1 ) {
-			allKeys.each( function( keys ) {
-				q1.orWhere( function( q2 ) {
-					arrayZipEach(
-						[
-							getQualifiedForeignPivotKeyNames(),
-							keys
-						],
-						function( foreignPivotKeyName, keyValue ) {
-							q2.where( foreignPivotKeyName, keyValue );
-						}
-					);
-				} );
-			} );
-		} );
+		var eagerConstraints   = variables.relationshipBuilder.getQB().forNestedWhere();
+		var qualifiedPivotKeys = getQualifiedForeignPivotKeyNames();
+		for ( var keys in allKeys ) {
+			var keyConstraints = eagerConstraints.forNestedWhere();
+			for ( var i = 1; i <= qualifiedPivotKeys.len(); i++ ) {
+				keyConstraints.where( qualifiedPivotKeys[ i ], keys[ i ] );
+			}
+			eagerConstraints.addNestedWhereQuery( keyConstraints, "or" );
+		}
+		variables.relationshipBuilder.getQB().addNestedWhereQuery( eagerConstraints );
 		return true;
 	}
 
@@ -222,14 +217,14 @@ component
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		return arguments.entities.map( function( entity ) {
-			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-				arguments.entity.assignRelationship( relation, [] );
+		for ( var entity in arguments.entities ) {
+			if ( structKeyExists( entity, "isQuickEntity" ) ) {
+				entity.assignRelationship( arguments.relation, [] );
 			} else {
-				arguments.entity[ relation ] = [];
+				entity[ arguments.relation ] = [];
 			}
-			return arguments.entity;
-		} );
+		}
+		return arguments.entities;
 	}
 
 	/**
@@ -249,23 +244,23 @@ component
 		required string relation
 	) {
 		var dictionary = variables.buildDictionary( arguments.results );
-		arguments.entities.each( function( entity ) {
-			var parentDictionaryKey = variables.parentKeys
-				.map( function( parentKey ) {
-					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( parentKey ) : entity[
-						parentKey
-					];
-				} )
-				.toList();
+		for ( var entity in arguments.entities ) {
+			var parentKeyValues = [];
+			for ( var parentKey in variables.parentKeys ) {
+				parentKeyValues.append(
+					structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( parentKey ) : entity[ parentKey ]
+				);
+			}
+			var parentDictionaryKey = parentKeyValues.toList();
 
 			if ( structKeyExists( dictionary, parentDictionaryKey ) ) {
-				if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-					arguments.entity.assignRelationship( relation, dictionary[ parentDictionaryKey ] );
+				if ( structKeyExists( entity, "isQuickEntity" ) ) {
+					entity.assignRelationship( arguments.relation, dictionary[ parentDictionaryKey ] );
 				} else {
-					arguments.entity[ relation ] = dictionary[ parentDictionaryKey ];
+					entity[ arguments.relation ] = dictionary[ parentDictionaryKey ];
 				}
 			}
-		} );
+		}
 		return arguments.entities;
 	}
 
@@ -278,23 +273,26 @@ component
 	 * @return       {any: quick.models.BaseEntity}
 	 */
 	public struct function buildDictionary( required array results ) {
-		return arguments.results.reduce( function( dict, result ) {
-			var pivot = structKeyExists( arguments.result, "isQuickEntity" )
-			 ? arguments.result.retrieveRelationship( variables.pivotAccessor )
+		var dictionary = {};
+		for ( var result in arguments.results ) {
+			var pivot = structKeyExists( result, "isQuickEntity" )
+			 ? result.retrieveRelationship( variables.pivotAccessor )
 			 : {};
-			var key = variables.foreignPivotKeys
-				.map( function( foreignPivotKey ) {
-					return structKeyExists( result, "isQuickEntity" ) ? pivot.retrieveAttribute( foreignPivotKey ) : result[
+			var keyValues = [];
+			for ( var foreignPivotKey in variables.foreignPivotKeys ) {
+				keyValues.append(
+					structKeyExists( result, "isQuickEntity" ) ? pivot.retrieveAttribute( foreignPivotKey ) : result[
 						variables.pivotColumnAliases[ foreignPivotKey ]
-					];
-				} )
-				.toList();
-			if ( !structKeyExists( arguments.dict, key ) ) {
-				arguments.dict[ key ] = [];
+					]
+				);
 			}
-			arrayAppend( arguments.dict[ key ], arguments.result );
-			return arguments.dict;
-		}, {} );
+			var key = keyValues.toList();
+			if ( !structKeyExists( dictionary, key ) ) {
+				dictionary[ key ] = [];
+			}
+			arrayAppend( dictionary[ key ], result );
+		}
+		return dictionary;
 	}
 
 	/**
@@ -303,17 +301,12 @@ component
 	 * @return  quick.models.Relationships.BelongsToMany
 	 */
 	public BelongsToMany function performJoin( any base = variables.relationshipBuilder ) {
-		arguments.base.join( variables.table, function( j ) {
-			arrayZipEach(
-				[
-					variables.relatedKeys,
-					getQualifiedRelatedPivotKeyNames()
-				],
-				function( relatedKey, pivotKey ) {
-					j.on( variables.related.qualifyColumn( relatedKey ), pivotKey );
-				}
-			);
-		} );
+		var join      = newJoinClause( arguments.base, variables.table );
+		var pivotKeys = getQualifiedRelatedPivotKeyNames();
+		for ( var i = 1; i <= variables.relatedKeys.len(); i++ ) {
+			join.on( variables.related.qualifyColumn( variables.relatedKeys[ i ] ), pivotKeys[ i ] );
+		}
+		attachJoinClause( arguments.base, join );
 		return this;
 	}
 
@@ -323,17 +316,12 @@ component
 	 * @return  quick.models.Relationships.BelongsToMany
 	 */
 	public BelongsToMany function addWhereConstraints() {
-		variables.relationshipBuilder.where( function( q ) {
-			arrayZipEach(
-				[
-					getQualifiedForeignPivotKeyNames(),
-					variables.parentKeys
-				],
-				function( pivotKey, parentKey ) {
-					q.where( pivotKey, variables.parent.retrieveAttribute( parentKey ) );
-				}
-			);
-		} );
+		var pivotKeys   = getQualifiedForeignPivotKeyNames();
+		var constraints = variables.relationshipBuilder.getQB().forNestedWhere();
+		for ( var i = 1; i <= pivotKeys.len(); i++ ) {
+			constraints.where( pivotKeys[ i ], variables.parent.retrieveAttribute( variables.parentKeys[ i ] ) );
+		}
+		variables.relationshipBuilder.getQB().addNestedWhereQuery( constraints );
 		return this;
 	}
 
@@ -345,9 +333,11 @@ component
 	 * @return       [String]
 	 */
 	public array function getQualifiedRelatedPivotKeyNames() {
-		return variables.relatedPivotKeys.map( function( relatedPivotKey ) {
-			return listLast( variables.table, " " ) & "." & relatedPivotKey;
-		} );
+		var qualifiedPivotKeys = [];
+		for ( var relatedPivotKey in variables.relatedPivotKeys ) {
+			qualifiedPivotKeys.append( listLast( variables.table, " " ) & "." & relatedPivotKey );
+		}
+		return qualifiedPivotKeys;
 	}
 
 	/**
@@ -358,9 +348,11 @@ component
 	 * @return       [String]
 	 */
 	public array function getQualifiedForeignPivotKeyNames() {
-		return variables.foreignPivotKeys.map( function( foreignPivotKey ) {
-			return listLast( variables.table, " " ) & "." & foreignPivotKey;
-		} );
+		var qualifiedPivotKeys = [];
+		for ( var foreignPivotKey in variables.foreignPivotKeys ) {
+			qualifiedPivotKeys.append( listLast( variables.table, " " ) & "." & foreignPivotKey );
+		}
+		return qualifiedPivotKeys;
 	}
 
 	/**
@@ -565,19 +557,13 @@ component
 	 * Adds any pivot columns not already present to the related select list.
 	 */
 	private void function addPivotSelects() {
-		var columns = duplicate( variables.foreignPivotKeys );
-		arrayAppend(
-			columns,
-			variables.relatedPivotKeys,
-			true
-		);
-		arrayAppend(
-			columns,
-			variables.pivotColumns,
-			true
-		);
+		addPivotSelectColumns( variables.foreignPivotKeys );
+		addPivotSelectColumns( variables.relatedPivotKeys );
+		addPivotSelectColumns( variables.pivotColumns );
+	}
 
-		for ( var column in columns ) {
+	private void function addPivotSelectColumns( required array columns ) {
+		for ( var column in arguments.columns ) {
 			if ( variables.pivotColumnAliases.keyExists( column ) ) {
 				continue;
 			}
@@ -624,12 +610,9 @@ component
 			}
 		}
 
-		var keyNames = duplicate( variables.foreignPivotKeys );
-		arrayAppend(
-			keyNames,
-			variables.relatedPivotKeys,
-			true
-		);
+		var keyNames = [];
+		keyNames.append( variables.foreignPivotKeys, true );
+		keyNames.append( variables.relatedPivotKeys, true );
 
 		pivot.configurePivot(
 			table      = listFirst( variables.table, " " ),
@@ -697,36 +680,25 @@ component
 	 * @return           The number of updated rows.
 	 */
 	public any function updateExistingPivot( required any id, required struct pivotAttributes ) {
-		var attributes    = buildPivotWriteAttributes( arguments.pivotAttributes, false );
-		var protectedKeys = duplicate( variables.foreignPivotKeys );
-		arrayAppend(
-			protectedKeys,
-			variables.relatedPivotKeys,
-			true
-		);
-		for ( var key in protectedKeys ) {
+		var attributes = buildPivotWriteAttributes( arguments.pivotAttributes, false );
+		for ( var key in variables.foreignPivotKeys ) {
+			attributes.delete( key );
+		}
+		for ( var key in variables.relatedPivotKeys ) {
 			attributes.delete( key );
 		}
 
 		var query = variables.newPivotStatement();
-		arrayZipEach(
-			[
-				variables.foreignPivotKeys,
-				variables.parentKeys
-			],
-			function( foreignPivotKey, parentKey ) {
-				query.where( foreignPivotKey, variables.parent.retrieveAttribute( parentKey ) );
-			}
-		);
-		arrayZipEach(
-			[
-				variables.relatedPivotKeys,
-				parseIds( arguments.id )[ 1 ]
-			],
-			function( pivotKey, value ) {
-				query.where( pivotKey, value );
-			}
-		);
+		for ( var i = 1; i <= variables.foreignPivotKeys.len(); i++ ) {
+			query.where(
+				variables.foreignPivotKeys[ i ],
+				variables.parent.retrieveAttribute( variables.parentKeys[ i ] )
+			);
+		}
+		var relatedIds = parseIds( arguments.id )[ 1 ];
+		for ( var i = 1; i <= variables.relatedPivotKeys.len(); i++ ) {
+			query.where( variables.relatedPivotKeys[ i ], relatedIds[ i ] );
+		}
 
 		return query.update( attributes );
 	}
@@ -740,32 +712,27 @@ component
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function detach( required any id ) {
-		var foreignPivotKeyValues = variables.parentKeys.map( function( parentKey ) {
-			return variables.parent.retrieveAttribute( parentKey );
-		} );
-		variables
-			.newPivotStatement()
-			.where( function( q ) {
-				arrayZipEach(
-					[
-						variables.foreignPivotKeys,
-						foreignPivotKeyValues
-					],
-					function( foreignPivotKey, foreignPivotKeyValue ) {
-						q.where( foreignPivotKey, foreignPivotKeyValue );
-					}
-				);
-			} )
-			.where( function( q1 ) {
-				parseIds( arrayWrap( id ) ).each( function( ids ) {
-					q1.orWhere( function( q2 ) {
-						arrayZipEach( [ variables.relatedPivotKeys, ids ], function( relatedPivotKey, id ) {
-							q2.where( relatedPivotKey, id );
-						} );
-					} );
-				} );
-			} )
-			.delete();
+		var foreignPivotKeyValues = [];
+		for ( var parentKey in variables.parentKeys ) {
+			foreignPivotKeyValues.append( variables.parent.retrieveAttribute( parentKey ) );
+		}
+		var parsedIds         = parseIds( arrayWrap( arguments.id ) );
+		var pivotQuery        = variables.newPivotStatement();
+		var parentConstraints = pivotQuery.getQB().forNestedWhere();
+		for ( var i = 1; i <= variables.foreignPivotKeys.len(); i++ ) {
+			parentConstraints.where( variables.foreignPivotKeys[ i ], foreignPivotKeyValues[ i ] );
+		}
+		pivotQuery.getQB().addNestedWhereQuery( parentConstraints );
+		var relatedConstraints = pivotQuery.getQB().forNestedWhere();
+		for ( var ids in parsedIds ) {
+			var idConstraints = relatedConstraints.forNestedWhere();
+			for ( var i = 1; i <= variables.relatedPivotKeys.len(); i++ ) {
+				idConstraints.where( variables.relatedPivotKeys[ i ], ids[ i ] );
+			}
+			relatedConstraints.addNestedWhereQuery( idConstraints, "or" );
+		}
+		pivotQuery.getQB().addNestedWhereQuery( relatedConstraints );
+		pivotQuery.delete();
 		return variables.parent;
 	}
 
@@ -796,23 +763,17 @@ component
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function sync( required any id, struct pivotAttributes = {} ) {
-		var foreignPivotKeyValues = variables.parentKeys.map( function( parentKey ) {
-			return variables.parent.retrieveAttribute( parentKey );
-		} );
-		variables
-			.newPivotStatement()
-			.where( function( q ) {
-				arrayZipEach(
-					[
-						variables.foreignPivotKeys,
-						foreignPivotKeyValues
-					],
-					function( foreignPivotKey, foreignPivotKeyValue ) {
-						q.where( foreignPivotKey, foreignPivotKeyValue );
-					}
-				);
-			} )
-			.delete();
+		var foreignPivotKeyValues = [];
+		for ( var parentKey in variables.parentKeys ) {
+			foreignPivotKeyValues.append( variables.parent.retrieveAttribute( parentKey ) );
+		}
+		var pivotQuery        = variables.newPivotStatement();
+		var parentConstraints = pivotQuery.getQB().forNestedWhere();
+		for ( var i = 1; i <= variables.foreignPivotKeys.len(); i++ ) {
+			parentConstraints.where( variables.foreignPivotKeys[ i ], foreignPivotKeyValues[ i ] );
+		}
+		pivotQuery.getQB().addNestedWhereQuery( parentConstraints );
+		pivotQuery.delete();
 		return attach( arguments.id, arguments.pivotAttributes );
 	}
 
@@ -835,14 +796,17 @@ component
 	 * @return       [any]
 	 */
 	public array function parseIds( required any value ) {
-		return arrayWrap( arguments.value ).map( function( val ) {
+		var ids = [];
+		for ( var val in arrayWrap( arguments.value ) ) {
 			// If the value is not a simple value, we will assume
 			// it is an entity and return its key value.
-			if ( isObject( arguments.val ) ) {
-				return arguments.val.keyValues();
+			if ( isObject( val ) ) {
+				ids.append( val.keyValues() );
+			} else {
+				ids.append( arrayWrap( val ) );
 			}
-			return arrayWrap( arguments.val );
-		} );
+		}
+		return ids;
 	}
 
 	/**
@@ -855,46 +819,37 @@ component
 	 * @return       [{any: any}]
 	 */
 	public array function parseIdsForInsert( required any value, struct pivotAttributes = {} ) {
-		var foreignPivotKeyValues = variables.parentKeys.map( function( parentKey ) {
-			return variables.parent.retrieveAttribute( parentKey );
-		} );
+		var foreignPivotKeyValues = [];
+		for ( var parentKey in variables.parentKeys ) {
+			foreignPivotKeyValues.append( variables.parent.retrieveAttribute( parentKey ) );
+		}
 		var additionalPivotAttributes = arguments.pivotAttributes;
-		return arrayWrap( arguments.value ).map( function( values ) {
+		var insertRecords             = [];
+		for ( var values in arrayWrap( arguments.value ) ) {
 			// If the value is not a simple value, we will assume
 			// it is an entity and return its key value.
-			if ( isObject( arguments.values ) ) {
-				arguments.values = arguments.values.keyValues();
+			if ( isObject( values ) ) {
+				values = values.keyValues();
 			} else {
-				arguments.values = arrayWrap( arguments.values );
+				values = arrayWrap( values );
 			}
 			var insertRecord = {};
-			arrayZipEach(
-				[
-					variables.foreignPivotKeys,
-					foreignPivotKeyValues,
-					variables.relatedPivotKeys,
-					arguments.values
-				],
-				function(
-					foreignPivotKey,
-					foreignPivotKeyValue,
-					relatedPivotKey,
-					val
-				) {
-					insertRecord[ foreignPivotKey ] = foreignPivotKeyValue;
-					insertRecord[ relatedPivotKey ] = val;
-				}
-			);
+			for ( var i = 1; i <= variables.foreignPivotKeys.len(); i++ ) {
+				insertRecord[ variables.foreignPivotKeys[ i ] ] = foreignPivotKeyValues[ i ];
+				insertRecord[ variables.relatedPivotKeys[ i ] ] = values[ i ];
+			}
 			insertRecord.append( additionalPivotAttributes, false );
-			return insertRecord;
-		} );
+			insertRecords.append( insertRecord );
+		}
+		return insertRecords;
 	}
 
 	/**
 	 * Combines configured and supplied values and maintains pivot timestamps.
 	 */
 	private struct function buildPivotWriteAttributes( struct attributes = {}, boolean inserting = false ) {
-		var values = duplicate( variables.pivotValues );
+		var values = {};
+		values.append( variables.pivotValues, true );
 		values.append( arguments.attributes, true );
 
 		if ( variables.pivotTimestampColumns.len() == 2 ) {
@@ -922,63 +877,53 @@ component
 			return addNestedCompareConstraints( arguments.base, arguments.nested );
 		}
 
-		return arguments.base
+		var query = arguments.base
 			.newQuery()
 			.select( arguments.base.raw( 1 ) )
-			.from( variables.table )
-			.where( function( q ) {
-				arrayZipEach(
-					[
-						getQualifiedForeignKeyNames(),
-						variables.parent.retrieveQualifiedKeyNames()
-					],
-					function( foreignKeyName, keyName ) {
-						q.whereColumn( foreignKeyName, keyName );
-					}
-				);
-			} );
+			.from( variables.table );
+		var foreignKeyNames = getQualifiedForeignKeyNames();
+		var parentKeyNames  = variables.parent.retrieveQualifiedKeyNames();
+		var qb              = queryBuilderFor( query );
+		var constraints     = qb.forNestedWhere();
+		for ( var i = 1; i <= foreignKeyNames.len(); i++ ) {
+			constraints.whereColumn( foreignKeyNames[ i ], parentKeyNames[ i ] );
+		}
+		qb.addNestedWhereQuery( constraints );
+		return query;
 	}
 
 	public any function addNestedCompareConstraints( required any base, required any nested ) {
-		return arguments.base
-			.select( arguments.base.raw( 1 ) )
-			.whereExists( function( q ) {
-				q.selectRaw( 1 ).from( variables.table );
-				arrayZipEach(
-					[
-						getQualifiedRelatedPivotKeyNames(),
-						variables.related.retrieveQualifiedKeyNames()
-					],
-					function( relatedPivotKeyName, keyName ) {
-						q.whereColumn( relatedPivotKeyName, keyName );
-					}
-				);
+		arguments.base.select( arguments.base.raw( 1 ) );
+		var existsQuery = arguments.base
+			.newQuery()
+			.selectRaw( 1 )
+			.from( variables.table );
+		var relatedPivotKeyNames = getQualifiedRelatedPivotKeyNames();
+		var relatedKeyNames      = variables.related.retrieveQualifiedKeyNames();
+		for ( var i = 1; i <= relatedPivotKeyNames.len(); i++ ) {
+			existsQuery.whereColumn( relatedPivotKeyNames[ i ], relatedKeyNames[ i ] );
+		}
 
-				var nestedQuery = isBoolean( nested ) ? q : nested.clone().select( base.raw( 1 ) );
-				arrayZipEach(
-					[
-						getQualifiedForeignKeyNames(),
-						variables.parent.retrieveQualifiedKeyNames()
-					],
-					function( foreignKeyName, keyName ) {
-						nestedQuery.whereColumn( foreignKeyName, keyName );
-					}
-				);
+		var nestedQuery = isBoolean( arguments.nested ) ? existsQuery : arguments.nested
+			.clone()
+			.select( arguments.base.raw( 1 ) );
+		var foreignKeyNames = getQualifiedForeignKeyNames();
+		var parentKeyNames  = variables.parent.retrieveQualifiedKeyNames();
+		for ( var j = 1; j <= foreignKeyNames.len(); j++ ) {
+			nestedQuery.whereColumn( foreignKeyNames[ j ], parentKeyNames[ j ] );
+		}
 
-				if ( isBoolean( nested ) ) {
-					return;
-				}
-
-				if ( structKeyExists( nestedQuery, "retrieveQuery" ) ) {
-					nestedQuery = nestedQuery.retrieveQuery();
-				}
-
-				if ( structKeyExists( nestedQuery, "getQB" ) ) {
-					nestedQuery = nestedQuery.getQB();
-				}
-
-				q.whereExists( nestedQuery );
-			} );
+		if ( !isBoolean( arguments.nested ) ) {
+			if ( structKeyExists( nestedQuery, "retrieveQuery" ) ) {
+				nestedQuery = nestedQuery.retrieveQuery();
+			}
+			if ( structKeyExists( nestedQuery, "getQB" ) ) {
+				nestedQuery = nestedQuery.getQB();
+			}
+			existsQuery.whereExists( nestedQuery );
+		}
+		arguments.base.whereExists( existsQuery );
+		return arguments.base;
 	}
 
 	function nestCompareConstraints( required any base, required any nested ) {
@@ -1017,15 +962,10 @@ component
 			.reselectRaw( 1 )
 			.from( variables.table );
 
-		arrayZipEach(
-			[
-				variables.relatedKeys,
-				getQualifiedRelatedPivotKeyNames()
-			],
-			function( relatedKey, pivotKey ) {
-				base.whereColumn( variables.related.qualifyColumn( relatedKey ), pivotKey );
-			}
-		);
+		var pivotKeys = getQualifiedRelatedPivotKeyNames();
+		for ( var i = 1; i <= variables.relatedKeys.len(); i++ ) {
+			base.whereColumn( variables.related.qualifyColumn( variables.relatedKeys[ i ] ), pivotKeys[ i ] );
+		}
 
 		return variables.related
 			.newQuery()
@@ -1042,15 +982,13 @@ component
 	 */
 	public QuickBuilder function applyThroughExists( required QuickBuilder base ) {
 		// apply compare constraints for pivot table
-		arrayZipEach(
-			[
-				variables.foreignKeys,
-				getQualifiedForeignPivotKeyNames()
-			],
-			function( foreignKey, pivotKey ) {
-				base.whereColumn( variables.parent.qualifyColumn( foreignKey ), pivotKey );
-			}
-		);
+		var foreignPivotKeys = getQualifiedForeignPivotKeyNames();
+		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+			arguments.base.whereColumn(
+				variables.parent.qualifyColumn( variables.foreignKeys[ i ] ),
+				foreignPivotKeys[ i ]
+			);
+		}
 
 		// nest in where exists for pivot table
 		arguments.base = variables.parent
@@ -1060,15 +998,13 @@ component
 			.whereExists( structKeyExists( arguments.base, "isBuilder" ) ? arguments.base : arguments.base.getQB() );
 
 		// apply compare constraints for base table
-		arrayZipEach(
-			[
-				variables.relatedKeys,
-				getQualifiedRelatedPivotKeyNames()
-			],
-			function( relatedKey, pivotKey ) {
-				base.whereColumn( variables.related.qualifyColumn( relatedKey ), pivotKey );
-			}
-		);
+		var relatedPivotKeys = getQualifiedRelatedPivotKeyNames();
+		for ( var j = 1; j <= variables.relatedKeys.len(); j++ ) {
+			arguments.base.whereColumn(
+				variables.related.qualifyColumn( variables.relatedKeys[ j ] ),
+				relatedPivotKeys[ j ]
+			);
+		}
 
 		// nest in where exists for base table
 		return variables.related
@@ -1086,17 +1022,12 @@ component
 	 */
 	public void function applyThroughJoin( required any base ) {
 		performJoin( arguments.base );
-		arguments.base.join( variables.parent.tableName(), function( j ) {
-			arrayZipEach(
-				[
-					variables.parentKeys,
-					getQualifiedForeignPivotKeyNames()
-				],
-				function( parentKey, pivotKey ) {
-					j.on( variables.parent.qualifyColumn( parentKey ), pivotKey );
-				}
-			);
-		} );
+		var join      = newJoinClause( arguments.base, variables.parent.tableName() );
+		var pivotKeys = getQualifiedForeignPivotKeyNames();
+		for ( var i = 1; i <= variables.parentKeys.len(); i++ ) {
+			join.on( variables.parent.qualifyColumn( variables.parentKeys[ i ] ), pivotKeys[ i ] );
+		}
+		attachJoinClause( arguments.base, join );
 	}
 
 	/**
@@ -1109,20 +1040,16 @@ component
 	public void function applyThroughConstraints( required any base ) {
 		variables.parent.withAlias( variables.parent.tableName() & variables.tableSuffix );
 		performJoin( arguments.base );
-		arguments.base.where( function( q ) {
-			arrayZipEach(
-				[
-					getQualifiedForeignPivotKeyNames(),
-					variables.parentKeys
-				],
-				function( localKey, parentKey ) {
-					q.where(
-						variables.related.qualifyColumn( localKey ),
-						variables.parent.retrieveAttribute( parentKey )
-					);
-				}
+		var query       = queryBuilderFor( arguments.base );
+		var localKeys   = getQualifiedForeignPivotKeyNames();
+		var constraints = query.forNestedWhere();
+		for ( var i = 1; i <= localKeys.len(); i++ ) {
+			constraints.where(
+				variables.related.qualifyColumn( localKeys[ i ] ),
+				variables.parent.retrieveAttribute( variables.parentKeys[ i ] )
 			);
-		} );
+		}
+		query.addNestedWhereQuery( constraints );
 	}
 
 	public struct function appendToDeepRelationship(

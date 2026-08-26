@@ -25,14 +25,10 @@ component accessors="true" {
 		function callback
 	) {
 		if ( !isNull( arguments.callback ) ) {
-			variables.through.append( function() {
-				var entity = "";
-				var parts  = entityName.split( "\s(?:[Aa][Ss]\s)?" );
-				var entity = variables.wirebox.getInstance( trim( parts[ 1 ] ) );
-				if ( arrayLen( parts ) > 1 ) {
-					entity.withAlias( trim( parts[ 2 ] ) );
-				}
-				return callback( entity );
+			variables.through.append( {
+				"_quickEntityDescriptor" : true,
+				"entityName"             : arguments.entityName,
+				"callback"               : arguments.callback
 			} );
 		} else {
 			variables.through.append( arguments.entityName );
@@ -80,14 +76,10 @@ component accessors="true" {
 
 		var related = arguments.relationName;
 		if ( !isNull( arguments.callback ) ) {
-			related = function() {
-				var entity = "";
-				var parts  = relationName.split( "\s(?:[Aa][Ss]\s)?" );
-				var entity = variables.wirebox.getInstance( trim( parts[ 1 ] ) );
-				if ( arrayLen( parts ) > 1 ) {
-					entity.withAlias( trim( parts[ 2 ] ) );
-				}
-				return callback( entity );
+			related = {
+				"_quickEntityDescriptor" : true,
+				"entityName"             : arguments.relationName,
+				"callback"               : arguments.callback
 			};
 		}
 

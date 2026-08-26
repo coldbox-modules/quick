@@ -37,14 +37,14 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		return arguments.entities.map( function( entity ) {
-			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-				arguments.entity.assignRelationship( relation, [] );
+		for ( var entity in arguments.entities ) {
+			if ( structKeyExists( entity, "isQuickEntity" ) ) {
+				entity.assignRelationship( arguments.relation, [] );
 			} else {
-				arguments.entity[ relation ] = [];
+				entity[ arguments.relation ] = [];
 			}
-			return arguments.entity;
-		} );
+		}
+		return arguments.entities;
 	}
 
 	/**
@@ -64,15 +64,14 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 		required string relation
 	) {
 		var dictionary = buildDictionary( arguments.results );
-		arguments.entities.each( function( entity ) {
-			var key = variables.closestToParent
-				.getLocalKeys()
-				.map( function( localKey ) {
-					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
-						localKey
-					];
-				} )
-				.toList();
+		for ( var entity in arguments.entities ) {
+			var keyValues = [];
+			for ( var localKey in variables.closestToParent.getLocalKeys() ) {
+				keyValues.append(
+					structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[ localKey ]
+				);
+			}
+			var key = keyValues.toList();
 			if ( structKeyExists( dictionary, key ) ) {
 				if ( structKeyExists( entity, "isQuickEntity" ) ) {
 					entity.assignRelationship( relation, dictionary[ key ] );
@@ -80,7 +79,7 @@ component extends="quick.models.Relationships.HasOneOrManyThrough" {
 					entity[ relation ] = dictionary[ key ];
 				}
 			}
-		} );
+		}
 		return arguments.entities;
 	}
 

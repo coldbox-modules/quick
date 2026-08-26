@@ -12,18 +12,16 @@ component implements="KeyType" {
 	 * @return   void
 	 */
 	public void function preInsert( required any entity, required any builder ) {
-		arguments.entity
-			.keyNames()
-			.each( function( keyName ) {
-				if ( entity.isNullAttribute( keyName ) ) {
-					var uuid      = createUUID();
-					var uuidParts = listToArray( uuid, "-" );
-					if ( uuidParts.len() == 5 ) {
-						uuid = "#uuidParts[ 1 ]#-#uuidParts[ 2 ]#-#uuidParts[ 3 ]#-#uuidParts[ 4 ]##uuidParts[ 5 ]#";
-					}
-					entity.assignAttribute( keyName, uuid );
+		for ( var keyName in arguments.entity.keyNames() ) {
+			if ( arguments.entity.isNullAttribute( keyName ) ) {
+				var uuid      = createUUID();
+				var uuidParts = listToArray( uuid, "-" );
+				if ( uuidParts.len() == 5 ) {
+					uuid = "#uuidParts[ 1 ]#-#uuidParts[ 2 ]#-#uuidParts[ 3 ]#-#uuidParts[ 4 ]##uuidParts[ 5 ]#";
 				}
-			} );
+				arguments.entity.assignAttribute( keyName, uuid );
+			}
+		}
 	}
 
 	/**

@@ -38,9 +38,9 @@ component extends="quick.models.Relationships.HasOneOrMany" {
 		}
 
 		if ( isClosure( variables.defaultAttributes ) || isCustomFunction( variables.defaultAttributes ) ) {
-			return tap( variables.related.newEntity(), function( newEntity ) {
-				variables.defaultAttributes( newEntity, variables.parent );
-			} );
+			var newEntity = variables.related.newEntity();
+			variables.defaultAttributes( newEntity, variables.parent );
+			return newEntity;
 		}
 
 		return variables.related.newEntity().fill( variables.defaultAttributes );
@@ -56,18 +56,18 @@ component extends="quick.models.Relationships.HasOneOrMany" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		return arguments.entities.map( function( entity ) {
+		for ( var entity in arguments.entities ) {
 			var defaultEntity = newDefaultEntity();
-			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-				arguments.entity.assignRelationship(
-					relation,
+			if ( structKeyExists( entity, "isQuickEntity" ) ) {
+				entity.assignRelationship(
+					arguments.relation,
 					isNull( defaultEntity ) ? javacast( "null", "" ) : defaultEntity
 				);
 			} else {
-				arguments.entity[ relation ] = isNull( defaultEntity ) ? {} : defaultEntity.getMemento();
+				entity[ arguments.relation ] = isNull( defaultEntity ) ? {} : defaultEntity.getMemento();
 			}
-			return arguments.entity;
-		} );
+		}
+		return arguments.entities;
 	}
 
 	/**
@@ -97,20 +97,15 @@ component extends="quick.models.Relationships.HasOneOrMany" {
 	 * @return  void
 	 */
 	public void function applyThroughConstraints( required any base ) {
-		arguments.base.where( function( q ) {
-			arrayZipEach(
-				[
-					variables.foreignKeys,
-					variables.localKeys
-				],
-				function( foreignKey, localKey ) {
-					q.where(
-						variables.related.qualifyColumn( foreignKey ),
-						variables.parent.retrieveAttribute( localKey )
-					);
-				}
+		var query       = queryBuilderFor( arguments.base );
+		var constraints = query.forNestedWhere();
+		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+			constraints.where(
+				variables.related.qualifyColumn( variables.foreignKeys[ i ] ),
+				variables.parent.retrieveAttribute( variables.localKeys[ i ] )
 			);
-		} );
+		}
+		query.addNestedWhereQuery( constraints );
 	}
 
 }

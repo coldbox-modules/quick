@@ -122,12 +122,12 @@ component
 	}
 
 	function order( orders ) {
-		arguments.orders = isArray( arguments.orders ) ? arguments.orders : listToArray( arguments.orders, "," );
-		variables.qb.orderBy(
-			arguments.orders.map( function( order ) {
-				return replace( order, " ", "|" );
-			} )
-		);
+		arguments.orders     = isArray( arguments.orders ) ? arguments.orders : listToArray( arguments.orders, "," );
+		var normalizedOrders = [];
+		for ( var order in arguments.orders ) {
+			normalizedOrders.append( replace( order, " ", "|" ) );
+		}
+		variables.qb.orderBy( normalizedOrders );
 		return this;
 	}
 

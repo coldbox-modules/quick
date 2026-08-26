@@ -94,22 +94,28 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 * @return  {string: {any: quick.models.BaseEntity}}
 	 */
 	public struct function buildDictionary( required any baseEntity ) {
-		variables.dictionary = variables.entities.reduce( function( dict, entity ) {
-			var type = retrieveMorphType( arguments.entity, baseEntity );
-			if ( !structKeyExists( arguments.dict, type ) ) {
-				arguments.dict[ type ] = {};
+		variables.dictionary = {};
+		for ( var entity in variables.entities ) {
+			var type = retrieveMorphType( entity, arguments.baseEntity );
+			if ( !structKeyExists( variables.dictionary, type ) ) {
+				variables.dictionary[ type ] = {};
 			}
-			var key = variables.foreignKeys
-				.map( function( foreignKey ) {
-					return entityRetrieveAttribute( entity, foreignKey, baseEntity );
-				} )
-				.toList();
-			if ( !structKeyExists( arguments.dict[ type ], key ) ) {
-				arguments.dict[ type ][ key ] = [];
+			var keyValues = [];
+			for ( var foreignKey in variables.foreignKeys ) {
+				keyValues.append(
+					entityRetrieveAttribute(
+						entity,
+						foreignKey,
+						arguments.baseEntity
+					)
+				);
 			}
-			arrayAppend( arguments.dict[ type ][ key ], arguments.entity );
-			return arguments.dict;
-		}, {} );
+			var key = keyValues.toList();
+			if ( !structKeyExists( variables.dictionary[ type ], key ) ) {
+				variables.dictionary[ type ][ key ] = [];
+			}
+			arrayAppend( variables.dictionary[ type ][ key ], entity );
+		}
 		return variables.dictionary;
 	}
 
@@ -129,19 +135,19 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function getEager( boolean asQuery = false, boolean withAliases = false ) {
-		structKeyArray( variables.dictionary ).each( function( type ) {
-			var instance = createModelByType( arguments.type );
+		for ( var type in variables.dictionary ) {
+			var instance = createModelByType( type );
 			matchToMorphParents(
-				arguments.type,
+				type,
 				instance,
 				getResultsByType(
-					arguments.type,
+					type,
 					instance,
-					asQuery,
-					withAliases
+					arguments.asQuery,
+					arguments.withAliases
 				)
 			);
-		} );
+		}
 
 		return variables.entities;
 	}
@@ -168,20 +174,20 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 			return [];
 		}
 
-		return arguments.instance
-			.when( arguments.asQuery, function( qb ) {
-				qb.asQuery( withAliases );
-			} )
-			.where( function( q1 ) {
-				gatherKeysByType( type ).each( function( keys ) {
-					q1.orWhere( function( q2 ) {
-						arrayZipEach( [ localKeys, keys ], function( localKey, keyValue ) {
-							q2.where( localKey, keyValue );
-						} );
-					} );
-				} );
-			} )
-			.get();
+		var query = arguments.instance;
+		if ( arguments.asQuery ) {
+			query = query.asQuery( arguments.withAliases );
+		}
+		var eagerConstraints = query.getQB().forNestedWhere();
+		for ( var keys in allKeys ) {
+			var keyConstraints = eagerConstraints.forNestedWhere();
+			for ( var i = 1; i <= localKeys.len(); i++ ) {
+				keyConstraints.where( localKeys[ i ], keys[ i ] );
+			}
+			eagerConstraints.addNestedWhereQuery( keyConstraints, "or" );
+		}
+		query.getQB().addNestedWhereQuery( eagerConstraints );
+		return query.get();
 	}
 
 	/**
@@ -193,26 +199,21 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	 * @return       [any]
 	 */
 	public array function gatherKeysByType( required string type ) {
-		return unique(
-			structReduce(
-				variables.dictionary[ arguments.type ],
-				function( acc, key, values ) {
-					var entity = arguments.values[ 1 ];
-					arrayAppend(
-						arguments.acc,
-						variables.foreignKeys
-							.map( function( foreignKey ) {
-								return entityRetrieveAttribute( entity, foreignKey, variables.parent );
-							} )
-							.toList()
-					);
-					return acc;
-				},
-				[]
-			)
-		).map( function( key ) {
-			return key.listToArray();
-		} );
+		var serializedKeys = [];
+		for ( var key in variables.dictionary[ arguments.type ] ) {
+			var entity    = variables.dictionary[ arguments.type ][ key ][ 1 ];
+			var keyValues = [];
+			for ( var foreignKey in variables.foreignKeys ) {
+				keyValues.append( entityRetrieveAttribute( entity, foreignKey, variables.parent ) );
+			}
+			serializedKeys.append( keyValues.toList() );
+		}
+
+		var keys = [];
+		for ( var serializedKey in unique( serializedKeys ) ) {
+			keys.append( serializedKey.listToArray() );
+		}
+		return keys;
 	}
 
 	/**
@@ -240,15 +241,19 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 		required array results
 	) {
 		for ( var result in arguments.results ) {
-			var localDictionaryKey = variables.localKeys.isEmpty() ? entityRetrieveKeyValues(
-				type,
-				result,
-				morphParent
-			).toList() : variables.localKeys
-				.map( function( localKey ) {
-					return result.retrieveAttribute( localKey );
-				} )
-				.toList();
+			var localKeyValues = [];
+			if ( variables.localKeys.isEmpty() ) {
+				localKeyValues = entityRetrieveKeyValues(
+					arguments.type,
+					result,
+					arguments.morphParent
+				);
+			} else {
+				for ( var localKey in variables.localKeys ) {
+					localKeyValues.append( result.retrieveAttribute( localKey ) );
+				}
+			}
+			var localDictionaryKey = localKeyValues.toList();
 
 			if ( variables.dictionary[ arguments.type ].keyExists( localDictionaryKey ) ) {
 				var entities = variables.dictionary[ arguments.type ][ localDictionaryKey ];
@@ -267,18 +272,12 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	public QuickBuilder function initialThroughConstraints() {
 		var base = variables.related.newQuery().reselectRaw( 1 );
 
-		arrayZipEach(
-			[
-				variables.localKeys,
-				variables.foreignKeys
-			],
-			function( localKey, foreignKey ) {
-				base.where(
-					variables.related.qualifyColumn( localKey ),
-					variables.parent.retrieveAttribute( foreignKey )
-				);
-			}
-		);
+		for ( var i = 1; i <= variables.localKeys.len(); i++ ) {
+			base.where(
+				variables.related.qualifyColumn( variables.localKeys[ i ] ),
+				variables.parent.retrieveAttribute( variables.foreignKeys[ i ] )
+			);
+		}
 
 		return base;
 	}
@@ -304,11 +303,17 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 			return arguments.entity.keyValues();
 		}
 
-		return arguments.morphParent
-			.keyNames()
-			.map( function( key ) {
-				return entityRetrieveAttribute( entity, key, morphParent );
-			} );
+		var keyValues = [];
+		for ( var key in arguments.morphParent.keyNames() ) {
+			keyValues.append(
+				entityRetrieveAttribute(
+					arguments.entity,
+					key,
+					arguments.morphParent
+				)
+			);
+		}
+		return keyValues;
 	}
 
 }

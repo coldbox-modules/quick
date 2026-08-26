@@ -40,14 +40,14 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		return arguments.entities.map( function( entity ) {
-			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-				arguments.entity.assignRelationship( relation, [] );
+		for ( var entity in arguments.entities ) {
+			if ( structKeyExists( entity, "isQuickEntity" ) ) {
+				entity.assignRelationship( arguments.relation, [] );
 			} else {
-				arguments.entity[ relation ] = [];
+				entity[ arguments.relation ] = [];
 			}
-			return arguments.entity;
-		} );
+		}
+		return arguments.entities;
 	}
 
 	/**
@@ -71,22 +71,16 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 			.reselectRaw( 1 )
 			.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
 
-		variables.localKeys.each( function( localKey ) {
+		for ( var localKey in variables.localKeys ) {
 			base.where( variables.parent.qualifyColumn( localKey ), variables.parent.retrieveAttribute( localKey ) );
-		} );
+		}
 
-		arrayZipEach(
-			[
-				variables.foreignKeys,
-				variables.localKeys
-			],
-			function( foreignKey, localKey ) {
-				base.whereColumn(
-					variables.related.qualifyColumn( foreignKey ),
-					variables.parent.qualifyColumn( localKey )
-				);
-			}
-		);
+		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+			base.whereColumn(
+				variables.related.qualifyColumn( variables.foreignKeys[ i ] ),
+				variables.parent.qualifyColumn( variables.localKeys[ i ] )
+			);
+		}
 
 		return variables.related
 			.newQuery()
@@ -102,22 +96,16 @@ component extends="quick.models.Relationships.PolymorphicHasOneOrMany" accessors
 	 * @return  void
 	 */
 	public void function applyThroughConstraints( required any base ) {
-		arguments.base
-			.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping )
-			.where( function( q ) {
-				arrayZipEach(
-					[
-						variables.foreignKeys,
-						variables.localKeys
-					],
-					function( foreignKey, localKey ) {
-						q.where(
-							variables.related.qualifyColumn( foreignKey ),
-							variables.parent.retrieveAttribute( localKey )
-						);
-					}
-				);
-			} );
+		arguments.base.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
+		var query       = queryBuilderFor( arguments.base );
+		var constraints = query.forNestedWhere();
+		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+			constraints.where(
+				variables.related.qualifyColumn( variables.foreignKeys[ i ] ),
+				variables.parent.retrieveAttribute( variables.localKeys[ i ] )
+			);
+		}
+		query.addNestedWhereQuery( constraints );
 	}
 
 }

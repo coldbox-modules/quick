@@ -24,11 +24,9 @@ component implements="KeyType" {
 	 * @return   void
 	 */
 	public void function postInsert( required any entity, required struct result ) {
-		arguments.entity
-			.keyColumns()
-			.each( function( keyColumn ) {
-				entity.assignAttribute( keyColumn, result.query[ keyColumn ] );
-			} );
+		for ( var keyColumn in arguments.entity.keyColumns() ) {
+			arguments.entity.assignAttribute( keyColumn, arguments.result.query[ keyColumn ] );
+		}
 	}
 
 }

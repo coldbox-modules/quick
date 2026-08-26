@@ -145,14 +145,14 @@ component
 			] );
 		}
 
-		arguments.builder.join( arguments.throughParent.tableName(), function( j ) {
-			builder.addAliasesFromBuilder( throughParent );
-			j.setWheres( throughParent.getWheres() );
-			j.addBindings( throughParent.getRawBindings().where, "where" );
-			for ( var join in qualifiedJoins ) {
-				j.on( join[ 1 ], "=", join[ 2 ] );
-			}
-		} );
+		var joinClause = newJoinClause( arguments.builder, arguments.throughParent.tableName() );
+		arguments.builder.addAliasesFromBuilder( arguments.throughParent );
+		joinClause.setWheres( arguments.throughParent.getWheres() );
+		joinClause.addBindings( arguments.throughParent.getRawBindings().where, "where" );
+		for ( var join in qualifiedJoins ) {
+			joinClause.on( join[ 1 ], "=", join[ 2 ] );
+		}
+		attachJoinClause( arguments.builder, joinClause );
 	}
 
 	public array function throughParentJoins(
@@ -182,18 +182,15 @@ component
 				);
 
 				// add the joins
-				arrayZipEach(
-					[
-						arrayWrap( arguments.foreignKey[ i ].foreignKeys ),
-						arrayWrap( arguments.localKey[ i ] )
-					],
-					function( foreignKey, localKey ) {
-						joins.append( [
-							throughParent.qualifyColumn( localKey ),
-							predecessor.qualifyColumn( foreignKey )
-						] );
-					}
-				);
+				var polymorphicForeignKeys = arrayWrap( arguments.foreignKey[ i ].foreignKeys );
+				var polymorphicLocalKeys   = arrayWrap( arguments.localKey[ i ] );
+				guardAgainstKeyLengthMismatch( polymorphicForeignKeys, polymorphicLocalKeys );
+				for ( var j = 1; j <= polymorphicForeignKeys.len(); j++ ) {
+					joins.append( [
+						arguments.throughParent.qualifyColumn( polymorphicLocalKeys[ j ] ),
+						arguments.predecessor.qualifyColumn( polymorphicForeignKeys[ j ] )
+					] );
+				}
 			} else {
 				joins.append( [
 					arguments.throughParent.qualifyColumn( arguments.localKey[ i ] ),
@@ -219,19 +216,16 @@ component
 	}
 
 	public any function addCompareConstraints( any base = variables.relationshipBuilder, any nested ) {
-		return arguments.base
-			.select( variables.relationshipBuilder.raw( 1 ) )
-			.where( function( q ) {
-				arrayZipEach(
-					[
-						getExistenceLocalKeys( base ),
-						getExistenceCompareKeys( base )
-					],
-					function( qualifiedLocalKey, existenceCompareKey ) {
-						q.whereColumn( qualifiedLocalKey, existenceCompareKey );
-					}
-				);
-			} );
+		arguments.base.select( variables.relationshipBuilder.raw( 1 ) );
+		var localKeys   = getExistenceLocalKeys( arguments.base );
+		var compareKeys = getExistenceCompareKeys( arguments.base );
+		var query       = queryBuilderFor( arguments.base );
+		var constraints = query.forNestedWhere();
+		for ( var i = 1; i <= localKeys.len(); i++ ) {
+			constraints.whereColumn( localKeys[ i ], compareKeys[ i ] );
+		}
+		query.addNestedWhereQuery( constraints );
+		return arguments.base;
 	}
 
 	public array function getQualifiedForeignKeyNames( any builder = variables.relationshipBuilder ) {
@@ -244,25 +238,25 @@ component
 		var foreignKeys = [];
 		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
 			if ( i > variables.throughParents.len() ) {
-				arrayWrap( variables.foreignKeys[ i ] ).each( function( foreignKey ) {
-					if ( isStruct( foreignKey ) ) {
-						foreignKey.foreignKeys.each( function( fk ) {
-							foreignKeys.append( variables.related.qualifyColumn( fk ) );
-						} );
+				for ( var relatedForeignKey in arrayWrap( variables.foreignKeys[ i ] ) ) {
+					if ( isStruct( relatedForeignKey ) ) {
+						for ( var relatedFk in relatedForeignKey.foreignKeys ) {
+							foreignKeys.append( variables.related.qualifyColumn( relatedFk ) );
+						}
 					} else {
-						foreignKeys.append( variables.related.qualifyColumn( foreignKey ) );
+						foreignKeys.append( variables.related.qualifyColumn( relatedForeignKey ) );
 					}
-				} );
+				}
 			} else {
-				arrayWrap( variables.foreignKeys[ i ] ).each( function( foreignKey ) {
-					if ( isStruct( foreignKey ) ) {
-						foreignKey.foreignKeys.each( function( fk ) {
-							foreignKeys.append( variables.throughParents[ i ].qualifyColumn( fk ) );
-						} );
+				for ( var throughForeignKey in arrayWrap( variables.foreignKeys[ i ] ) ) {
+					if ( isStruct( throughForeignKey ) ) {
+						for ( var throughFk in throughForeignKey.foreignKeys ) {
+							foreignKeys.append( variables.throughParents[ i ].qualifyColumn( throughFk ) );
+						}
 					} else {
-						foreignKeys.append( variables.throughParents[ i ].qualifyColumn( foreignKey ) );
+						foreignKeys.append( variables.throughParents[ i ].qualifyColumn( throughForeignKey ) );
 					}
-				} );
+				}
 			}
 		}
 		return foreignKeys;
@@ -278,25 +272,25 @@ component
 		var qualifiedLocalKeys = [];
 		for ( var i = 1; i <= variables.localKeys.len(); i++ ) {
 			if ( i == 1 ) {
-				arrayWrap( variables.localKeys[ i ] ).each( function( localKey ) {
-					if ( isStruct( localKey ) ) {
-						localKey.localKeys.each( function( lk ) {
-							qualifiedLocalKeys.append( variables.parent.qualifyColumn( lk ) );
-						} );
+				for ( var parentLocalKey in arrayWrap( variables.localKeys[ i ] ) ) {
+					if ( isStruct( parentLocalKey ) ) {
+						for ( var parentLk in parentLocalKey.localKeys ) {
+							qualifiedLocalKeys.append( variables.parent.qualifyColumn( parentLk ) );
+						}
 					} else {
-						qualifiedLocalKeys.append( variables.parent.qualifyColumn( localKey ) );
+						qualifiedLocalKeys.append( variables.parent.qualifyColumn( parentLocalKey ) );
 					}
-				} );
+				}
 			} else {
-				arrayWrap( variables.localKeys[ i ] ).each( function( localKey ) {
-					if ( isStruct( localKey ) ) {
-						localKey.localKeys.each( function( lk ) {
-							qualifiedLocalKeys.append( variables.throughParents[ i - 1 ].qualifyColumn( lk ) );
-						} );
+				for ( var throughLocalKey in arrayWrap( variables.localKeys[ i ] ) ) {
+					if ( isStruct( throughLocalKey ) ) {
+						for ( var throughLk in throughLocalKey.localKeys ) {
+							qualifiedLocalKeys.append( variables.throughParents[ i - 1 ].qualifyColumn( throughLk ) );
+						}
 					} else {
-						qualifiedLocalKeys.append( variables.throughParents[ i - 1 ].qualifyColumn( localKey ) );
+						qualifiedLocalKeys.append( variables.throughParents[ i - 1 ].qualifyColumn( throughLocalKey ) );
 					}
-				} );
+				}
 			}
 		}
 		return qualifiedLocalKeys;
@@ -340,14 +334,14 @@ component
 	 * @return       [quick.models.BaseEntity]
 	 */
 	public array function initRelation( required array entities, required string relation ) {
-		return arguments.entities.map( function( entity ) {
-			if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-				arguments.entity.assignRelationship( relation, [] );
+		for ( var entity in arguments.entities ) {
+			if ( structKeyExists( entity, "isQuickEntity" ) ) {
+				entity.assignRelationship( arguments.relation, [] );
 			} else {
-				arguments.entity[ relation ] = [];
+				entity[ arguments.relation ] = [];
 			}
-			return arguments.entity;
-		} );
+		}
+		return arguments.entities;
 	}
 
 	/**
@@ -367,14 +361,14 @@ component
 		required string relation
 	) {
 		var dictionary = buildDictionary( arguments.results );
-		arguments.entities.each( function( entity ) {
-			var key = arrayWrap( variables.localKeys[ 1 ] )
-				.map( function( localKey ) {
-					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
-						localKey
-					];
-				} )
-				.toList();
+		for ( var entity in arguments.entities ) {
+			var keyValues = [];
+			for ( var localKey in arrayWrap( variables.localKeys[ 1 ] ) ) {
+				keyValues.append(
+					structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[ localKey ]
+				);
+			}
+			var key = keyValues.toList();
 			if ( structKeyExists( dictionary, key ) ) {
 				if ( structKeyExists( entity, "isQuickEntity" ) ) {
 					entity.assignRelationship( relation, dictionary[ key ] );
@@ -382,7 +376,7 @@ component
 					entity[ relation ] = dictionary[ key ];
 				}
 			}
-		} );
+		}
 		return arguments.entities;
 	}
 
@@ -395,16 +389,17 @@ component
 	 * @return       {any: quick.models.BaseEntity}
 	 */
 	public struct function buildDictionary( required array results ) {
-		return arguments.results.reduce( function( dict, result ) {
+		var dictionary = {};
+		for ( var result in arguments.results ) {
 			var key = structKeyExists( result, "isQuickEntity" ) ? result.retrieveAttribute( "__QuickThroughKey__" ) : result[
 				"__QuickThroughKey__"
 			];
-			if ( !structKeyExists( arguments.dict, key ) ) {
-				arguments.dict[ key ] = [];
+			if ( !structKeyExists( dictionary, key ) ) {
+				dictionary[ key ] = [];
 			}
-			arrayAppend( arguments.dict[ key ], arguments.result );
-			return arguments.dict;
-		}, {} );
+			arrayAppend( dictionary[ key ], result );
+		}
+		return dictionary;
 	}
 
 	public struct function appendToDeepRelationship(

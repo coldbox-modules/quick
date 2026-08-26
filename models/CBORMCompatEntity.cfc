@@ -12,14 +12,15 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	 * @return      A struct of attributes for the entity.
 	 */
 	private struct function generateAttributesFromProperties( required array properties ) {
-		return arguments.properties.reduce( function( acc, prop ) {
-			var newProp = paramAttribute( arguments.prop );
+		var attributes = {};
+		for ( var prop in arguments.properties ) {
+			var newProp = paramAttribute( prop );
 			if ( !newProp.persistent || newProp.keyExists( "fieldtype" ) ) {
-				return arguments.acc;
+				continue;
 			}
-			arguments.acc[ newProp.name ] = newProp;
-			return arguments.acc;
-		}, {} );
+			attributes[ newProp.name ] = newProp;
+		}
+		return attributes;
 	}
 
 	function list(
@@ -32,9 +33,9 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		boolean asQuery = true
 	) {
 		var builder = newQuery();
-		structEach( criteria, function( key, value ) {
-			builder.where( retrieveColumnForAlias( key ), value );
-		} );
+		for ( var key in criteria ) {
+			builder.where( retrieveColumnForAlias( key ), criteria[ key ] );
+		}
 		if ( !isNull( sortOrder ) ) {
 			builder.orderBy( sortOrder );
 		}
@@ -88,13 +89,14 @@ component extends="quick.models.BaseEntity" accessors="true" {
 
 	function findAllWhere( criteria = {}, sortOrder ) {
 		var builder = newQuery();
-		structEach( criteria, function( key, value ) {
-			builder.where( retrieveColumnForAlias( key ), value );
-		} );
+		for ( var key in criteria ) {
+			builder.where( retrieveColumnForAlias( key ), criteria[ key ] );
+		}
 		if ( !isNull( sortOrder ) ) {
-			var sorts = listToArray( sortOrder, "," ).map( function( sort ) {
-				return replace( sort, " ", "|", "ALL" );
-			} );
+			var sorts = [];
+			for ( var sort in listToArray( sortOrder, "," ) ) {
+				sorts.append( replace( sort, " ", "|", "ALL" ) );
+			}
 			builder.orderBy( sorts );
 		}
 		return builder.get();
@@ -102,9 +104,9 @@ component extends="quick.models.BaseEntity" accessors="true" {
 
 	function findWhere( criteria = {} ) {
 		var builder = newQuery();
-		structEach( criteria, function( key, value ) {
-			builder.where( retrieveColumnForAlias( key ), value );
-		} );
+		for ( var key in criteria ) {
+			builder.where( retrieveColumnForAlias( key ), criteria[ key ] );
+		}
 		return builder.first();
 	}
 
@@ -119,9 +121,10 @@ component extends="quick.models.BaseEntity" accessors="true" {
 		var builder = newQuery();
 		if ( isNull( id ) ) {
 			if ( !isNull( sortOrder ) ) {
-				var sorts = listToArray( sortOrder, "," ).map( function( sort ) {
-					return replace( sort, " ", "|", "ALL" );
-				} );
+				var sorts = [];
+				for ( var sort in listToArray( sortOrder, "," ) ) {
+					sorts.append( replace( sort, " ", "|", "ALL" ) );
+				}
 				builder.orderBy( sorts );
 			}
 			return builder.get();
@@ -149,9 +152,9 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	}
 
 	function saveAll( entities = [] ) {
-		entities.each( function( entity ) {
+		for ( var entity in arguments.entities ) {
 			entity.save();
-		} );
+		}
 		return this;
 	}
 

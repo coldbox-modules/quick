@@ -98,19 +98,21 @@ component accessors="true" {
 		persistent="false";
 
 	/**
-	 * A map of alias names to attribute options.
+	 * The shared map of declared alias names to normalized attribute options.
 	 */
 	property name="_attributes" persistent="false";
 
 	/**
-	 * The unparsed metadata for the entity. Saved to pass on to created entities and avoid unnecessary processing.
+	 * The shared, cached metadata definition for the entity mapping.
 	 */
 	property name="_meta" persistent="false";
 
 	/**
-	 * A map of attributes to their applicable null values.
+	 * An immutable, structurally shared chain of attributes added at runtime.
+	 * Each node contains one normalized attribute and a reference to the previous
+	 * node. New entities can share the chain without sharing mutable metadata.
 	 */
-	property name="_nullValues" persistent="false";
+	property name="_runtimeAttributeOverlay" persistent="false";
 
 	/**
 	 * A map of attributes to an optional cast type.
@@ -238,15 +240,21 @@ component accessors="true" {
 	/**
 	 * Initializes the entity with default properties and optional metadata.
 	 *
-	 * @meta    An optional struct of metadata.  Used to avoid processing the metadata again.
-	 * @shallow When passed as true, the initial query instantiation and recursion in to child classes will not be performed
+	 * @meta                    An optional struct of metadata. Used to avoid processing the metadata again.
+	 * @shallow                 When passed as true, the initial query instantiation and recursion in to child classes will not be performed
+	 * @runtimeAttributeOverlay An optional immutable chain of attributes added at runtime
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function init( struct meta = {}, boolean shallow = false ) {
+	public any function init(
+		struct meta                    = {},
+		boolean shallow                = false,
+		struct runtimeAttributeOverlay = {}
+	) {
 		variables._loadShallow = arguments.shallow;
 		assignDefaultProperties();
-		variables._meta = arguments.meta;
+		variables._meta                    = arguments.meta;
+		variables._runtimeAttributeOverlay = arguments.runtimeAttributeOverlay;
 		return this;
 	}
 
@@ -278,22 +286,29 @@ component accessors="true" {
 				);
 			};
 		}
-		param variables._nullValues        = {};
-		param variables._casts             = {};
-		param variables._castCache         = {};
-		param variables._casterCache       = {};
-		param variables._loaded            = false;
-		param variables._aliasPrefix       = "";
-		param variables._hasParentEntity   = false;
-		param variables._parentDefinition  = {};
-		param variables._discriminators    = [];
-		param variables._loadChildren      = true;
-		param variables._queryOptions      = {};
-		param variables._dispatchesEvents  = {};
-		param variables._attributes        = {};
-		param variables._columns           = {};
-		param variables._virtualAttributes = [];
-		variables._saving                  = false;
+		param variables._casts                   = {};
+		param variables._castCache               = {};
+		param variables._casterCache             = {};
+		param variables._loaded                  = false;
+		param variables._aliasPrefix             = "";
+		param variables._hasParentEntity         = false;
+		param variables._parentDefinition        = {};
+		param variables._discriminators          = [];
+		param variables._loadChildren            = true;
+		param variables._queryOptions            = {};
+		param variables._dispatchesEvents        = {};
+		param variables._attributes              = {};
+		param variables._columns                 = {};
+		param variables._virtualAttributes       = [];
+		param variables._runtimeAttributeOverlay = {};
+		param variables._functionNames           = [];
+		param variables._nonPersistentProperties = {};
+		param variables._grammar                 = "";
+		param variables._discriminatorColumn     = "";
+		param variables._discriminatorValue      = "";
+		param variables._hasDiscriminatorValue   = false;
+		param variables._singleTableInheritance  = false;
+		variables._saving                        = false;
 		return this;
 	}
 
@@ -413,7 +428,7 @@ component accessors="true" {
 		}
 
 		return ( isParentAttribute( arguments.column ) && arguments.useParentLookup )
-		 ? variables._meta.parentDefinition.meta.table & "." & retrieveColumnForAlias( arguments.column )
+		 ? variables._parentDefinition.table & "." & retrieveColumnForAlias( arguments.column )
 		 : listLast( arguments.tableName, " " ) & "." & retrieveColumnForAlias( arguments.column );
 	}
 
@@ -424,9 +439,11 @@ component accessors="true" {
 	 * @return       [String]
 	 */
 	public array function retrieveQualifiedKeyNames() {
-		return keyNames().map( function( keyName ) {
-			return this.qualifyColumn( keyName );
-		} );
+		var qualifiedKeyNames = [];
+		for ( var keyName in keyNames() ) {
+			qualifiedKeyNames.append( this.qualifyColumn( keyName ) );
+		}
+		return qualifiedKeyNames;
 	}
 
 	/**
@@ -455,9 +472,11 @@ component accessors="true" {
 	 * @return       [String]
 	 */
 	public array function keyColumns() {
-		return keyNames().map( function( keyName ) {
-			return retrieveColumnForAlias( keyName );
-		} );
+		var columns = [];
+		for ( var keyName in keyNames() ) {
+			columns.append( retrieveColumnForAlias( keyName ) );
+		}
+		return columns;
 	}
 
 	/**
@@ -468,9 +487,11 @@ component accessors="true" {
 	 */
 	public array function keyValues() {
 		guardAgainstNotLoaded( "This instance is not loaded so the `keyValues` cannot be retrieved." );
-		return keyNames().map( function( keyName ) {
-			return retrieveAttribute( keyName );
-		} );
+		var values = [];
+		for ( var keyName in keyNames() ) {
+			values.append( retrieveAttribute( keyName ) );
+		}
+		return values;
 	}
 
 	/**
@@ -486,20 +507,22 @@ component accessors="true" {
 		boolean withNulls  = false
 	) {
 		syncVariablesScopeWithData();
-		return variables._data.reduce( function( acc, key, value ) {
+		var attributeData = {};
+		for ( var key in variables._data ) {
 			if ( isVirtualAttribute( key ) ) {
-				return acc;
+				continue;
 			}
-			if ( withoutKey && arrayContainsNoCase( keyNames(), retrieveAliasForColumn( key ) ) ) {
-				return acc;
+			if ( arguments.withoutKey && arrayContainsNoCase( keyNames(), retrieveAliasForColumn( key ) ) ) {
+				continue;
 			}
-			if ( isNull( value ) || ( isNullAttribute( key ) && withNulls ) ) {
-				acc[ aliased ? retrieveAliasForColumn( key ) : retrieveColumnForAlias( key ) ] = javacast( "null", "" );
+			var outputKey = arguments.aliased ? retrieveAliasForColumn( key ) : retrieveColumnForAlias( key );
+			if ( isNull( variables._data[ key ] ) || ( isNullAttribute( key ) && arguments.withNulls ) ) {
+				attributeData[ outputKey ] = javacast( "null", "" );
 			} else {
-				acc[ aliased ? retrieveAliasForColumn( key ) : retrieveColumnForAlias( key ) ] = value;
+				attributeData[ outputKey ] = variables._data[ key ];
 			}
-			return acc;
-		}, {} );
+		}
+		return attributeData;
 	}
 
 	/**
@@ -527,23 +550,35 @@ component accessors="true" {
 		boolean withVirtualAttributes  = false,
 		boolean withExcludedAttributes = false
 	) {
-		return variables._attributes.reduce( function( items, key, value ) {
-			if ( value.exclude && !withExcludedAttributes ) {
-				return items;
+		var items = [];
+		for ( var key in variables._attributes ) {
+			var value = variables._attributes[ key ];
+			if ( value.exclude && !arguments.withExcludedAttributes ) {
+				continue;
 			}
 
-			if ( value.virtual && !withVirtualAttributes ) {
-				return items;
+			if ( value.virtual && !arguments.withVirtualAttributes ) {
+				continue;
 			}
 			items.append(
-				asColumnNames
+				arguments.asColumnNames
 				 ? value.isParentColumn
-				 ? ( getParentDefinition().meta.table & "." & value.column )
+				 ? ( getParentDefinition().table & "." & value.column )
 				 : value.column
 				 : key
 			);
-			return items;
-		}, [] );
+		}
+		for ( var value in retrieveRuntimeAttributeDefinitions() ) {
+			if ( value.exclude && !arguments.withExcludedAttributes ) {
+				continue;
+			}
+
+			if ( value.virtual && !arguments.withVirtualAttributes ) {
+				continue;
+			}
+			items.append( arguments.asColumnNames ? value.column : value.name );
+		}
+		return items;
 	}
 
 	/**
@@ -590,21 +625,17 @@ component accessors="true" {
 		var alias  = retrieveAliasForColumn( arguments.name );
 		var column = retrieveColumnForAlias( arguments.name );
 		if ( arguments.force ) {
-			if ( !variables._attributes.keyExists( alias ) ) {
-				var clearedAttr                              = paramAttribute( { "name" : arguments.name } );
-				variables._attributes[ clearedAttr.name ]    = clearedAttr;
-				variables._columns[ clearedAttr.column ]     = clearedAttr;
-				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
-				variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
-				variables._meta.qualifiedColumnsCacheKey = createUUID();
+			if ( isNull( retrieveAttributeDefinition( alias ) ) ) {
+				registerRuntimeAttribute( paramAttribute( { "name" : arguments.name } ) );
 			}
 		}
 		if ( arguments.setToNull ) {
 			variables._data[ column ] = javacast( "null", "" );
 			variables[ alias ]        = javacast( "null", "" );
 		} else {
-			variables._data[ column ] = variables._nullValues[ alias ];
-			variables[ alias ]        = variables._nullValues[ alias ];
+			var nullValue             = retrieveNullValueForAttribute( alias );
+			variables._data[ column ] = nullValue;
+			variables[ alias ]        = nullValue;
 		}
 		return this;
 	}
@@ -709,7 +740,7 @@ component accessors="true" {
 				} else if ( hasNonPersistentProperty( key ) ) {
 					invoke(
 						this,
-						"set#variables._meta.nonPersistentProperties[ key ].name#",
+						"set#variables._nonPersistentProperties[ key ].name#",
 						{ "1" : javacast( "null", "" ) }
 					);
 				} else if ( !arguments.ignoreNonExistentAttributes ) {
@@ -736,7 +767,7 @@ component accessors="true" {
 			} else if ( hasNonPersistentProperty( key ) ) {
 				invoke(
 					this,
-					"set#variables._meta.nonPersistentProperties[ key ].name#",
+					"set#variables._nonPersistentProperties[ key ].name#",
 					{ "1" : value }
 				);
 			} else if ( !arguments.ignoreNonExistentAttributes ) {
@@ -788,11 +819,11 @@ component accessors="true" {
 	 * @mementos  An array of structs to hydrate into entities.
 	 */
 	public any function hydrateAll( array mementos = [] ) {
-		return newCollection(
-			arguments.mementos.map( function( memento ) {
-				return newEntity().hydrate( memento );
-			} )
-		);
+		var entities = [];
+		for ( var memento in arguments.mementos ) {
+			entities.append( newEntity().hydrate( memento ) );
+		}
+		return newCollection( entities );
 	}
 
 	/**
@@ -804,10 +835,7 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function hasAttribute( required string name ) {
-		return structKeyExists( variables._attributes, retrieveAliasForColumn( arguments.name ) ) || arrayContainsNoCase(
-			keyNames(),
-			name
-		);
+		return !isNull( retrieveAttributeDefinition( arguments.name ) ) || arrayContainsNoCase( keyNames(), name );
 	}
 
 	/**
@@ -819,7 +847,11 @@ component accessors="true" {
 	 * @return  string
 	 */
 	public string function retrieveColumnForAlias( required string alias ) {
-		return variables._attributes.keyExists( arguments.alias ) ? variables._attributes[ arguments.alias ].column : arguments.alias;
+		if ( variables._attributes.keyExists( arguments.alias ) ) {
+			return variables._attributes[ arguments.alias ].column;
+		}
+		var runtimeAttribute = retrieveRuntimeAttributeByAlias( arguments.alias );
+		return isNull( runtimeAttribute ) ? arguments.alias : runtimeAttribute.column;
 	}
 
 	/**
@@ -834,7 +866,119 @@ component accessors="true" {
 		if ( variables._attributes.keyExists( arguments.column ) ) {
 			return variables._attributes[ arguments.column ].name;
 		}
-		return variables._columns.keyExists( arguments.column ) ? variables._columns[ arguments.column ].name : arguments.column;
+		var runtimeAttribute = retrieveRuntimeAttributeByAlias( arguments.column );
+		if ( !isNull( runtimeAttribute ) ) {
+			return runtimeAttribute.name;
+		}
+		if ( variables._columns.keyExists( arguments.column ) ) {
+			return variables._columns[ arguments.column ].name;
+		}
+		runtimeAttribute = retrieveRuntimeAttributeByColumn( arguments.column );
+		return isNull( runtimeAttribute ) ? arguments.column : runtimeAttribute.name;
+	}
+
+	/**
+	 * Returns all declared and runtime attribute definitions.
+	 *
+	 * The declared metadata maps are shared between entity instances, so this
+	 * compatibility getter materializes a combined map only when explicitly
+	 * requested instead of for every entity initialization.
+	 */
+	public struct function get_Attributes() {
+		var attributes = {};
+		for ( var name in variables._attributes ) {
+			attributes[ name ] = copyAttributeDefinition( variables._attributes[ name ] );
+		}
+		for ( var attribute in retrieveRuntimeAttributeDefinitions() ) {
+			attributes[ attribute.name ] = copyAttributeDefinition( attribute );
+		}
+		return attributes;
+	}
+
+	private any function retrieveAttributeDefinition( required string name ) {
+		if ( variables._attributes.keyExists( arguments.name ) ) {
+			return variables._attributes[ arguments.name ];
+		}
+		var runtimeAttribute = retrieveRuntimeAttributeByAlias( arguments.name );
+		if ( !isNull( runtimeAttribute ) ) {
+			return runtimeAttribute;
+		}
+		if ( variables._columns.keyExists( arguments.name ) ) {
+			return variables._columns[ arguments.name ];
+		}
+		return retrieveRuntimeAttributeByColumn( arguments.name );
+	}
+
+	private any function retrieveRuntimeAttributeByAlias( required string alias ) {
+		var overlay = variables._runtimeAttributeOverlay;
+		while ( overlay.keyExists( "attribute" ) ) {
+			if ( compareNoCase( overlay.attribute.name, arguments.alias ) == 0 ) {
+				return overlay.attribute;
+			}
+			overlay = overlay.previous;
+		}
+		return;
+	}
+
+	private any function retrieveRuntimeAttributeByColumn( required string column ) {
+		var overlay = variables._runtimeAttributeOverlay;
+		while ( overlay.keyExists( "attribute" ) ) {
+			if ( compareNoCase( overlay.attribute.column, arguments.column ) == 0 ) {
+				return overlay.attribute;
+			}
+			overlay = overlay.previous;
+		}
+		return;
+	}
+
+	private array function retrieveRuntimeAttributeDefinitions() {
+		var newestFirst = [];
+		var overlay     = variables._runtimeAttributeOverlay;
+		while ( overlay.keyExists( "attribute" ) ) {
+			newestFirst.append( overlay.attribute );
+			overlay = overlay.previous;
+		}
+
+		var attributes = [];
+		for ( var i = newestFirst.len(); i >= 1; i-- ) {
+			attributes.append( newestFirst[ i ] );
+		}
+		return attributes;
+	}
+
+	private void function registerRuntimeAttribute( required struct attribute ) {
+		var qualifiedColumnsCacheKey = runtimeQualifiedColumnsCacheKey();
+		if ( !arguments.attribute.virtual ) {
+			qualifiedColumnsCacheKey = hash(
+				qualifiedColumnsCacheKey & "|" & lCase( arguments.attribute.name ) & ":" & lCase(
+					arguments.attribute.column
+				)
+			);
+		}
+		variables._runtimeAttributeOverlay = {
+			"attribute"                : arguments.attribute,
+			"previous"                 : variables._runtimeAttributeOverlay,
+			"qualifiedColumnsCacheKey" : qualifiedColumnsCacheKey
+		};
+		if (
+			arguments.attribute.virtual && !arrayContainsNoCase(
+				variables._virtualAttributes,
+				arguments.attribute.name
+			)
+		) {
+			variables._virtualAttributes.append( arguments.attribute.name );
+		}
+	}
+
+	private string function runtimeQualifiedColumnsCacheKey() {
+		return variables._runtimeAttributeOverlay.keyExists( "qualifiedColumnsCacheKey" )
+		 ? variables._runtimeAttributeOverlay.qualifiedColumnsCacheKey
+		 : "declared";
+	}
+
+	private any function retrieveNullValueForAttribute( required string name ) {
+		var attribute = retrieveAttributeDefinition( arguments.name );
+		return isNull( attribute ) ? "" : attribute.nullValue;
 	}
 
 	/**
@@ -859,17 +1003,20 @@ component accessors="true" {
 	 * @return      string
 	 */
 	public string function computeAttributesHash( required struct attributes ) {
-		var keys = arguments.attributes.keyArray().filter( hasAttribute );
+		var keys = [];
+		for ( var key in arguments.attributes ) {
+			if ( hasAttribute( key ) ) {
+				keys.append( key );
+			}
+		}
 		arraySort( keys, "textnocase" );
-		return hash(
-			keys.map( function( key ) {
-					var valueIsNotNull = structKeyExists( attributes, arguments.key ) &&
-					!isNull( attributes[ arguments.key ] );
-					var value = valueIsNotNull ? attributes[ arguments.key ] : "";
-					return lCase( arguments.key ) & "=" & value;
-				} )
-				.toList( "&" )
-		);
+		var values = [];
+		for ( var key in keys ) {
+			var valueIsNotNull = structKeyExists( arguments.attributes, key ) && !isNull( arguments.attributes[ key ] );
+			var value          = valueIsNotNull ? arguments.attributes[ key ] : "";
+			values.append( lCase( key ) & "=" & value );
+		}
+		return hash( values.toList( "&" ) );
 	}
 
 	/**
@@ -1013,13 +1160,8 @@ component accessors="true" {
 		boolean cast  = true
 	) {
 		if ( arguments.force ) {
-			if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
-				var attr                                     = paramAttribute( { "name" : arguments.name } );
-				variables._attributes[ attr.name ]           = attr;
-				variables._columns[ attr.column ]            = attr;
-				variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
-				variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
-				variables._meta.qualifiedColumnsCacheKey = createUUID();
+			if ( isNull( retrieveAttributeDefinition( arguments.name ) ) ) {
+				registerRuntimeAttribute( paramAttribute( { "name" : arguments.name } ) );
 			}
 		} else {
 			guardAgainstNonExistentAttribute( arguments.name );
@@ -1056,16 +1198,22 @@ component accessors="true" {
 	 * @return       [string]
 	 */
 	public array function retrieveQualifiedColumns() {
-		var cacheKey = "quick-metadata:#variables._mapping#-qualified-columns:#variables._meta.qualifiedColumnsCacheKey#:#hash( tableName() )#";
-		return duplicate(
-			variables._cache.getOrSet( cacheKey, function() {
-				var attributes = retrieveColumnNames();
-				arraySort( attributes, "textnocase" );
-				return attributes.map( function( column ) {
-					return this.qualifyColumn( column );
-				} );
-			} )
-		);
+		var cacheKey         = "quick-metadata:#variables._mapping#-qualified-columns:#runtimeQualifiedColumnsCacheKey()#:#hash( tableName() )#";
+		var qualifiedColumns = variables._cache.get( cacheKey );
+		if ( isNull( qualifiedColumns ) ) {
+			var attributes = retrieveColumnNames();
+			arraySort( attributes, "textnocase" );
+			qualifiedColumns = [];
+			for ( var column in attributes ) {
+				qualifiedColumns.append( this.qualifyColumn( column ) );
+			}
+			variables._cache.set( cacheKey, qualifiedColumns );
+		}
+		var result = [];
+		for ( var qualifiedColumn in qualifiedColumns ) {
+			result.append( qualifiedColumn );
+		}
+		return result;
 	}
 
 	/*=====================================
@@ -1084,7 +1232,10 @@ component accessors="true" {
 		if ( isNull( arguments.name ) ) {
 			return variables._wirebox.getInstance(
 				name          = mappingName(),
-				initArguments = { meta : structCopy( variables._meta ) }
+				initArguments = {
+					meta                    : variables._meta,
+					runtimeAttributeOverlay : variables._runtimeAttributeOverlay
+				}
 			);
 		}
 		// Custom named instance
@@ -1159,14 +1310,16 @@ component accessors="true" {
 	public any function fresh() {
 		var hasRefreshQuery = variables.keyExists( "_refreshQuery" ) && !isNull( variables._refreshQuery );
 		var freshEntity     = hasRefreshQuery ? variables._refreshQuery.clone().offset( 0 ) : newQuery();
-		var freshData       = freshEntity
-			.from( tableName() )
-			.where( function( q ) {
-				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
-					q.where( this.qualifyColumn( keyName ), keyValue );
-				} );
-			} )
-			.first();
+		freshEntity.from( tableName() );
+		var entityKeyNames   = keyNames();
+		var entityKeyValues  = keyValues();
+		var freshQB          = structKeyExists( freshEntity, "isQuickBuilder" ) ? freshEntity.getQB() : freshEntity;
+		var freshConstraints = freshQB.forNestedWhere();
+		for ( var i = 1; i <= entityKeyNames.len(); i++ ) {
+			freshConstraints.where( this.qualifyColumn( entityKeyNames[ i ] ), entityKeyValues[ i ] );
+		}
+		freshQB.addNestedWhereQuery( freshConstraints );
+		var freshData = freshEntity.first();
 		if ( !isStruct( freshData ) || structKeyExists( freshData, "isQuickEntity" ) ) {
 			return freshData;
 		}
@@ -1186,14 +1339,16 @@ component accessors="true" {
 		var refreshedEntity            = !variables.keyExists( "_refreshQuery" ) || isNull( variables._refreshQuery ) ? newQuery() : variables._refreshQuery
 			.clone()
 			.offset( 0 );
-		var refreshedData = refreshedEntity
-			.from( tableName() )
-			.where( function( q ) {
-				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
-					q.where( this.qualifyColumn( keyName ), keyValue );
-				} );
-			} )
-			.first();
+		refreshedEntity.from( tableName() );
+		var entityKeyNames     = keyNames();
+		var entityKeyValues    = keyValues();
+		var refreshQB          = structKeyExists( refreshedEntity, "isQuickBuilder" ) ? refreshedEntity.getQB() : refreshedEntity;
+		var refreshConstraints = refreshQB.forNestedWhere();
+		for ( var i = 1; i <= entityKeyNames.len(); i++ ) {
+			refreshConstraints.where( this.qualifyColumn( entityKeyNames[ i ] ), entityKeyValues[ i ] );
+		}
+		refreshQB.addNestedWhereQuery( refreshConstraints );
+		var refreshedData = refreshedEntity.first();
 		assignAttributesData(
 			isStruct( refreshedData ) && !structKeyExists( refreshedData, "isQuickEntity" )
 			 ? refreshedData
@@ -1275,23 +1430,26 @@ component accessors="true" {
 					"options"            : arguments.options
 				}
 			);
-			builder
-				.where( function( q ) {
-					arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
-						q.where( keyName, keyValue );
-					} );
-				} )
-				.update(
-					retrieveAttributesData( withoutKey = true )
-						.filter( canUpdateAttribute )
-						.map( function( key, value, attributes ) {
-							return builder.generateQueryParamStruct(
-								key,
-								isNull( value ) ? javacast( "null", "" ) : value
-							);
-						} ),
-					arguments.options
-				);
+			var updateAttributes     = {};
+			var updateAttributesData = retrieveAttributesData( withoutKey = true );
+			for ( var updateKey in updateAttributesData ) {
+				if ( canUpdateAttribute( updateKey ) ) {
+					updateAttributes[ updateKey ] = builder.generateQueryParamStruct(
+						updateKey,
+						isNull( updateAttributesData[ updateKey ] ) ? javacast( "null", "" ) : updateAttributesData[
+							updateKey
+						]
+					);
+				}
+			}
+			var entityKeyNames    = keyNames();
+			var entityKeyValues   = keyValues();
+			var updateConstraints = builder.getQB().forNestedWhere();
+			for ( var i = 1; i <= entityKeyNames.len(); i++ ) {
+				updateConstraints.where( entityKeyNames[ i ], entityKeyValues[ i ] );
+			}
+			builder.getQB().addNestedWhereQuery( updateConstraints );
+			builder.update( updateAttributes, arguments.options );
 			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
 			fireEvent(
@@ -1312,19 +1470,21 @@ component accessors="true" {
 					"options"    : arguments.options
 				}
 			);
-			var attrs = retrieveAttributesData()
-				.filter( canInsertAttribute )
-				.map( function( key, value, attributes ) {
-					return builder.generateQueryParamStruct( key, isNull( value ) ? javacast( "null", "" ) : value );
-				} );
+			var attrs                = {};
+			var insertAttributesData = retrieveAttributesData();
+			for ( var insertKey in insertAttributesData ) {
+				if ( canInsertAttribute( insertKey ) ) {
+					attrs[ insertKey ] = builder.generateQueryParamStruct(
+						insertKey,
+						isNull( insertAttributesData[ insertKey ] ) ? javacast( "null", "" ) : insertAttributesData[
+							insertKey
+						]
+					);
+				}
+			}
 			guardEmptyAttributeData( attrs );
 
-			var result    = builder.insert( attrs, arguments.options );
-			result.result = structCopy( result.result );
-
-			if ( hasParentEntity() ) {
-				result.result[ getParentDefinition().joincolumn ] = variables._data[ getParentDefinition().joinColumn ];
-			}
+			var result = builder.insert( attrs, arguments.options );
 			retrieveKeyType().postInsert( this, result );
 			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
@@ -1377,13 +1537,15 @@ component accessors="true" {
 			"Did you maybe mean to use `deleteAll`?"
 		);
 
-		newQuery()
-			.where( function( q ) {
-				arrayZipEach( [ keyNames(), keyValues() ], function( keyName, keyValue ) {
-					q.where( keyName, keyValue );
-				} );
-			} )
-			.delete();
+		var deleteQuery       = newQuery();
+		var entityKeyNames    = keyNames();
+		var entityKeyValues   = keyValues();
+		var deleteConstraints = deleteQuery.getQB().forNestedWhere();
+		for ( var i = 1; i <= entityKeyNames.len(); i++ ) {
+			deleteConstraints.where( entityKeyNames[ i ], entityKeyValues[ i ] );
+		}
+		deleteQuery.getQB().addNestedWhereQuery( deleteConstraints );
+		deleteQuery.delete();
 
 		if ( hasParentEntity() ) {
 			var parentEntity = variables._wirebox
@@ -1435,28 +1597,26 @@ component accessors="true" {
 		guardAgainstNotLoaded( "This instance is not loaded so it cannot be touched." );
 		guardReadOnly();
 		var timestamp           = now();
-		var timestampAttributes = timestampFields().reduce( function( attributes, field ) {
-			arguments.attributes[ arguments.field ] = timestamp;
-			return arguments.attributes;
-		}, {} );
+		var timestampAttributes = {};
+		for ( var field in timestampFields() ) {
+			timestampAttributes[ field ] = timestamp;
+		}
 		guardAgainstReadOnlyAttributes( timestampAttributes );
 
-		var builder = newQuery().where( function( q ) {
-			keyNames().each( function( keyName ) {
-				q.where(
-					arguments.keyName,
-					variables._originalAttributes[ retrieveColumnForAlias( arguments.keyName ) ]
-				);
-			} );
-		} );
-		builder
-			.getQB()
-			.update(
-				timestampAttributes.map( function( field, value ) {
-					return builder.generateQueryParamStruct( field, value );
-				} ),
-				arguments.options
+		var builder          = newQuery();
+		var touchConstraints = builder.getQB().forNestedWhere();
+		for ( var keyName in keyNames() ) {
+			touchConstraints.where( keyName, variables._originalAttributes[ retrieveColumnForAlias( keyName ) ] );
+		}
+		builder.getQB().addNestedWhereQuery( touchConstraints );
+		var timestampParameters = {};
+		for ( var timestampField in timestampAttributes ) {
+			timestampParameters[ timestampField ] = builder.generateQueryParamStruct(
+				timestampField,
+				timestampAttributes[ timestampField ]
 			);
+		}
+		builder.getQB().update( timestampParameters, arguments.options );
 
 		return this;
 	}
@@ -1504,15 +1664,17 @@ component accessors="true" {
 	) {
 		var ignoreAttributes = arguments.ignoreNonExistentAttributes;
 		var queryOptions     = arguments.options;
-		return newCollection(
-			arguments.attributes.map( function( entityAttributes ) {
-				return create(
+		var entities         = [];
+		for ( var entityAttributes in arguments.attributes ) {
+			entities.append(
+				create(
 					attributes                  = entityAttributes,
 					ignoreNonExistentAttributes = ignoreAttributes,
 					options                     = queryOptions
-				);
-			} )
-		);
+				)
+			);
+		}
+		return newCollection( entities );
 	}
 
 	/*=====================================
@@ -1527,7 +1689,7 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function hasRelationship( required string name ) {
-		for ( var functionName in variables._meta.functionNames ) {
+		for ( var functionName in variables._functionNames ) {
 			if ( compareNoCase( functionName, arguments.name ) == 0 ) {
 				return true;
 			}
@@ -1547,6 +1709,34 @@ component accessors="true" {
 			return arguments.callback();
 		} finally {
 			variables._withoutRelationshipConstraints.remove( lCase( arguments.relationshipName ) );
+		}
+	}
+
+	/**
+	 * Invokes a relationship factory while temporarily bypassing loaded and,
+	 * optionally, automatic relationship constraints.
+	 */
+	private any function invokeRelationshipWithoutGuards(
+		required any entity,
+		required string relationshipName,
+		boolean withoutConstraints = false,
+		struct invokeArguments     = {}
+	) {
+		arguments.entity.set_ignoreNotLoadedGuard( true );
+		if ( arguments.withoutConstraints ) {
+			arguments.entity.get_withoutRelationshipConstraints().add( lCase( arguments.relationshipName ) );
+		}
+		try {
+			return invoke(
+				arguments.entity,
+				arguments.relationshipName,
+				arguments.invokeArguments
+			);
+		} finally {
+			arguments.entity.set_ignoreNotLoadedGuard( false );
+			if ( arguments.withoutConstraints ) {
+				arguments.entity.get_withoutRelationshipConstraints().remove( lCase( arguments.relationshipName ) );
+			}
 		}
 	}
 
@@ -1823,11 +2013,10 @@ component accessors="true" {
 
 		// ACF doesn't let us use param with functions. ¯\_(ツ)_/¯
 		if ( isNull( arguments.foreignKey ) ) {
-			arguments.foreignKey = related
-				.keyNames()
-				.map( function( keyName ) {
-					return related.entityName() & keyName;
-				} );
+			arguments.foreignKey = [];
+			for ( var keyName in related.keyNames() ) {
+				arguments.foreignKey.append( related.entityName() & keyName );
+			}
 		}
 		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
 		param arguments.localKey = related.keyNames();
@@ -1882,9 +2071,10 @@ component accessors="true" {
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
 		if ( isNull( arguments.foreignKey ) ) {
-			arguments.foreignKey = keyNames().map( function( keyName ) {
-				return entityName() & keyName;
-			} );
+			arguments.foreignKey = [];
+			for ( var keyName in keyNames() ) {
+				arguments.foreignKey.append( entityName() & keyName );
+			}
 		}
 		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
 		param arguments.localKey = keyNames();
@@ -1937,9 +2127,10 @@ component accessors="true" {
 		var related = variables._wirebox.getInstance( arguments.relationName );
 
 		if ( isNull( arguments.foreignKey ) ) {
-			arguments.foreignKey = keyNames().map( function( keyName ) {
-				return entityName() & keyName;
-			} );
+			arguments.foreignKey = [];
+			for ( var keyName in keyNames() ) {
+				arguments.foreignKey.append( entityName() & keyName );
+			}
 		}
 		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
 		param arguments.localKey = keyNames();
@@ -2012,18 +2203,18 @@ component accessors="true" {
 		param arguments.table = generateDefaultPivotTableString( related.tableName(), tableName() );
 
 		if ( isNull( arguments.foreignPivotKey ) ) {
-			arguments.foreignPivotKey = keyNames().map( function( keyName ) {
-				return entityName() & keyName;
-			} );
+			arguments.foreignPivotKey = [];
+			for ( var keyName in keyNames() ) {
+				arguments.foreignPivotKey.append( entityName() & keyName );
+			}
 		}
 		arguments.foreignPivotKey = arrayWrap( arguments.foreignPivotKey );
 
 		if ( isNull( arguments.relatedPivotKey ) ) {
-			arguments.relatedPivotKey = related
-				.keyNames()
-				.map( function( keyName ) {
-					return related.entityName() & keyName;
-				} );
+			arguments.relatedPivotKey = [];
+			for ( var keyName in related.keyNames() ) {
+				arguments.relatedPivotKey.append( related.entityName() & keyName );
+			}
 		}
 		arguments.relatedPivotKey = arrayWrap( arguments.relatedPivotKey );
 
@@ -2120,11 +2311,7 @@ component accessors="true" {
 		var predecessor = this;
 		for ( var i = 1; i <= arguments.relationships.len(); i++ ) {
 			var relationName = arguments.relationships[ i ];
-			var relationship = predecessor.ignoreLoadedGuard( function() {
-				return predecessor.withoutRelationshipConstraints( relationName, function() {
-					return invoke( predecessor, relationName );
-				} );
-			} );
+			var relationship = invokeRelationshipWithoutGuards( predecessor, relationName, true );
 
 			// TODO: need a better way to ensure uniqueness
 			param request.loopCount = 1;
@@ -2144,7 +2331,8 @@ component accessors="true" {
 			}
 		}
 
-		return this.ignoreLoadedGuard( function() {
+		variables._ignoreNotLoadedGuard = true;
+		try {
 			return hasManyDeep(
 				relationName       = related,
 				through            = through,
@@ -2153,7 +2341,9 @@ component accessors="true" {
 				relationMethodName = relationMethodName,
 				nested             = nested
 			);
-		} );
+		} finally {
+			variables._ignoreNotLoadedGuard = false;
+		}
 	}
 
 	/**
@@ -2198,20 +2388,19 @@ component accessors="true" {
 		// `this` entity and we don't want to double prefix
 		var aliasPrefix      = variables._aliasPrefix;
 		var previousEntity   = this;
-		var relationshipsMap = arguments.relationships.reduce( function( map, relation, index ) {
-			var mirroredIndex = relationships.len() == 2 ? ( index == 1 ? 2 : 1 ) : ( index + ( relationships.len() - 1 ) ) % (
-				relationships.len() + 1
-			);
+		var relationshipsMap = structNew( "ordered" );
+		for ( var index = 1; index <= arguments.relationships.len(); index++ ) {
+			var relation      = arguments.relationships[ index ];
+			var mirroredIndex = arguments.relationships.len() == 2 ? ( index == 1 ? 2 : 1 ) : (
+				index + ( arguments.relationships.len() - 1 )
+			) % ( arguments.relationships.len() + 1 );
 			mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
 			previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
-			var relationship = previousEntity.ignoreLoadedGuard( function() {
-				return invoke( previousEntity, relation );
-			} );
+			var relationship = invokeRelationshipWithoutGuards( previousEntity, relation );
 			relationship.applyAliasSuffix( "_" & aliasPrefix & mirroredIndex );
-			map[ relation ] = relationship;
-			previousEntity  = relationship.getRelated();
-			return map;
-		}, structNew( "ordered" ) );
+			relationshipsMap[ relation ] = relationship;
+			previousEntity               = relationship.getRelated();
+		}
 
 		return variables._wirebox.getInstance(
 			name          = "HasOneThrough@quick",
@@ -2269,20 +2458,19 @@ component accessors="true" {
 		// `this` entity and we don't want to double prefix
 		var aliasPrefix      = variables._aliasPrefix;
 		var previousEntity   = this;
-		var relationshipsMap = arguments.relationships.reduce( function( map, relation, index ) {
-			var mirroredIndex = relationships.len() == 2 ? ( index == 1 ? 2 : 1 ) : ( index + ( relationships.len() - 1 ) ) % (
-				relationships.len() + 1
-			);
+		var relationshipsMap = structNew( "ordered" );
+		for ( var index = 1; index <= arguments.relationships.len(); index++ ) {
+			var relation      = arguments.relationships[ index ];
+			var mirroredIndex = arguments.relationships.len() == 2 ? ( index == 1 ? 2 : 1 ) : (
+				index + ( arguments.relationships.len() - 1 )
+			) % ( arguments.relationships.len() + 1 );
 			mirroredIndex = mirroredIndex == 0 ? index : mirroredIndex;
 			previousEntity.set_aliasPrefix( aliasPrefix & mirroredIndex & "_" );
-			var relationship = previousEntity.ignoreLoadedGuard( function() {
-				return invoke( previousEntity, relation );
-			} );
+			var relationship = invokeRelationshipWithoutGuards( previousEntity, relation );
 			relationship.applyAliasSuffix( "_" & aliasPrefix & mirroredIndex );
-			map[ relation ] = relationship;
-			previousEntity  = relationship.getRelated();
-			return map;
-		}, structNew( "ordered" ) );
+			relationshipsMap[ relation ] = relationship;
+			previousEntity               = relationship.getRelated();
+		}
 
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
@@ -2447,7 +2635,17 @@ component accessors="true" {
 		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
 
 		var related = "";
-		if ( isClosure( arguments.relationName ) || isCustomFunction( arguments.relationName ) ) {
+		if (
+			isStruct( arguments.relationName ) &&
+			structKeyExists( arguments.relationName, "_quickEntityDescriptor" )
+		) {
+			var parts = arguments.relationName.entityName.split( "\s(?:[Aa][Ss]\s)?" );
+			related   = variables._wirebox.getInstance( trim( parts[ 1 ] ) );
+			if ( arrayLen( parts ) > 1 ) {
+				related.withAlias( trim( parts[ 2 ] ) );
+			}
+			related = arguments.relationName.callback( related );
+		} else if ( isClosure( arguments.relationName ) || isCustomFunction( arguments.relationName ) ) {
 			related = arguments.relationName();
 		} else if ( !isSimpleValue( arguments.relationName ) ) {
 			related = arguments.relationName;
@@ -2467,9 +2665,17 @@ component accessors="true" {
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#related.getEntity().entityName()#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
 		);
 
-		var throughParents = arguments.through.map( function( throughEntityName ) {
+		var throughParents = [];
+		for ( var throughEntityName in arguments.through ) {
 			var throughEntity = "";
-			if ( isClosure( throughEntityName ) || isCustomFunction( throughEntityName ) ) {
+			if ( isStruct( throughEntityName ) && structKeyExists( throughEntityName, "_quickEntityDescriptor" ) ) {
+				var parts     = throughEntityName.entityName.split( "\s(?:[Aa][Ss]\s)?" );
+				throughEntity = variables._wirebox.getInstance( trim( parts[ 1 ] ) );
+				if ( arrayLen( parts ) > 1 ) {
+					throughEntity.withAlias( trim( parts[ 2 ] ) );
+				}
+				throughEntity = throughEntityName.callback( throughEntity );
+			} else if ( isClosure( throughEntityName ) || isCustomFunction( throughEntityName ) ) {
 				throughEntity = throughEntityName();
 			} else if ( !isSimpleValue( throughEntityName ) ) {
 				throughEntity = throughEntityName;
@@ -2494,8 +2700,8 @@ component accessors="true" {
 				throughEntity = throughEntity.newQuery();
 			}
 
-			return throughEntity;
-		} );
+			throughParents.append( throughEntity );
+		}
 
 		return variables._wirebox.getInstance(
 			name          = "HasManyDeep@quick",
@@ -2545,8 +2751,8 @@ component accessors="true" {
 			.addSelect( retrieveQualifiedColumns() )
 			.with( variables._with );
 
-		if ( variables._meta.originalMetadata.keyExists( "grammar" ) ) {
-			newBuilder.setGrammar( variables._wirebox.getInstance( variables._meta.originalMetadata.grammar ) );
+		if ( variables._grammar != "" ) {
+			newBuilder.setGrammar( variables._wirebox.getInstance( variables._grammar ) );
 		}
 
 		newBuilder.applyInheritanceJoins();
@@ -2570,12 +2776,14 @@ component accessors="true" {
 			return false;
 		}
 
-		return keyValues().reduce( function( same, value, i ) {
-			if ( !same ) {
+		var currentKeyValues = keyValues();
+		var otherKeyValues   = arguments.otherEntity.keyValues();
+		for ( var i = 1; i <= currentKeyValues.len(); i++ ) {
+			if ( currentKeyValues[ i ] != otherKeyValues[ i ] ) {
 				return false;
 			}
-			return value == otherEntity.keyValues()[ i ];
-		}, true );
+		}
+		return true;
 	}
 
 	/**
@@ -2769,9 +2977,7 @@ component accessors="true" {
 			return;
 		}
 
-		var relationship = ignoreLoadedGuard( function() {
-			return invoke( this, relationshipName );
-		} );
+		var relationship = invokeRelationshipWithoutGuards( this, relationshipName );
 
 		if (
 			relationship.relationshipClass != "BelongsTo" &&
@@ -2818,7 +3024,7 @@ component accessors="true" {
 	) {
 		if ( !structKeyExists( variables, "scope#arguments.missingMethodName#" ) ) {
 			if (
-				arrayContainsNoCase( variables._meta.functionNames, arguments.missingMethodName ) &&
+				arrayContainsNoCase( variables._functionNames, arguments.missingMethodName ) &&
 				isCustomFunction( variables[ arguments.missingMethodName ] )
 			) {
 				var suggestedScopeName = "scope" & uCase( left( arguments.missingMethodName, 1 ) ) & mid(
@@ -2848,17 +3054,53 @@ component accessors="true" {
 				scopeArgs[ i + 1 ] = arguments.missingMethodArguments[ i ];
 			}
 		}
-		var result = javacast( "null", "" );
-
-		arguments.builder.withScoping( function() {
-			result = invoke(
-				this,
-				"scope#missingMethodName#",
-				scopeArgs
-			);
-		} );
+		var scopeQuery = arguments.builder;
+		if ( structKeyExists( scopeQuery, "isQuickBuilder" ) ) {
+			scopeQuery = scopeQuery.getQB();
+		} else if ( !structKeyExists( scopeQuery, "isBuilder" ) ) {
+			scopeQuery = scopeQuery.getQuickBuilder().getQB();
+		}
+		var originalWhereCount = scopeQuery.getWheres().len();
+		var result             = invoke(
+			this,
+			"scope#arguments.missingMethodName#",
+			scopeArgs
+		);
+		if ( scopeQuery.getWheres().len() > originalWhereCount ) {
+			groupScopeWheres( scopeQuery, originalWhereCount );
+		}
 
 		return isNull( result ) ? arguments.builder : result;
+	}
+
+	private void function groupScopeWheres( required any builder, required numeric originalWhereCount ) {
+		var allWheres = arguments.builder.getWheres();
+		arguments.builder.setWheres( [] );
+		if ( arguments.originalWhereCount > 0 ) {
+			appendScopeWhereSlice(
+				arguments.builder,
+				arraySlice(
+					allWheres,
+					1,
+					arguments.originalWhereCount
+				)
+			);
+		}
+		appendScopeWhereSlice( arguments.builder, arraySlice( allWheres, arguments.originalWhereCount + 1 ) );
+	}
+
+	private void function appendScopeWhereSlice( required any builder, required array whereSlice ) {
+		for ( var whereClause in arguments.whereSlice ) {
+			if ( compareNoCase( whereClause.combinator, "OR" ) == 0 ) {
+				arguments.builder.addNestedWhereQuery(
+					arguments.builder.forNestedWhere().setWheres( arguments.whereSlice )
+				);
+				return;
+			}
+		}
+		var wheres = arguments.builder.getWheres();
+		wheres.append( arguments.whereSlice, true );
+		arguments.builder.setWheres( wheres );
 	}
 
 	/**
@@ -2978,148 +3220,150 @@ component accessors="true" {
 		param variables._table = variables._str.plural( variables._str.snake( listFirst( variables._mapping, "@" ) ) );
 
 		if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
-			variables._meta = duplicate(
-				variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
-					var util                   = variables._wirebox.getUtility();
-					var meta                   = {};
-					meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
-					meta[ "localMetadata" ]    = getMetadata( this );
-					if ( server.keyExists( "boxlang" ) ) {
-						normalizeBoxLangMetadata( meta.originalMetadata );
-						normalizeBoxLangMetadata( meta.localMetadata );
-					}
-					var hasAccessorsMetadata = false;
-					if ( meta.localMetadata.keyExists( "accessors" ) ) {
-						hasAccessorsMetadata = lCase( trim( meta.localMetadata.accessors & "" ) ) == "true";
-					}
-					// BoxLang 1.11 exposes component metadata attributes inside `annotations`.
-					if (
-						!hasAccessorsMetadata &&
-						meta.localMetadata.keyExists( "annotations" ) &&
-						isStruct( meta.localMetadata.annotations ) &&
-						meta.localMetadata.annotations.keyExists( "accessors" )
-					) {
-						hasAccessorsMetadata = lCase( trim( meta.localMetadata.annotations.accessors & "" ) ) == "true";
-					}
-					if ( !hasAccessorsMetadata ) {
-						throw(
-							type    = "QuickAccessorsMissing",
-							message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
-						);
-					}
-					meta[ "fullName" ]                     = meta.originalMetadata.fullname;
-					param meta.originalMetadata.mapping    = listLast( meta.originalMetadata.fullname, "." );
-					meta[ "mapping" ]                      = meta.originalMetadata.mapping;
-					param meta.originalMetadata.entityName = listLast( meta.originalMetadata.name, "." );
-					meta[ "entityName" ]                   = meta.originalMetadata.entityName;
-					param meta.localMetadata.properties    = [];
-					guardDuplicatePropertyNames( meta.localMetadata, meta.mapping );
-					param meta.originalMetadata.table                  = variables._str.plural( variables._str.snake( meta.entityName ) );
-					meta[ "table" ]                                    = meta.originalMetadata.table;
-					param meta.originalMetadata.readonly               = false;
-					meta[ "readonly" ]                                 = meta.originalMetadata.readonly;
-					param meta.originalMetadata.joincolumn             = "";
-					param meta.originalMetadata.discriminatorValue     = "";
-					param meta.originalMetadata.singleTableInheritance = false;
-					param meta.originalMetadata.extends                = "";
-					param meta.originalMetadata.functions              = [];
-					meta[ "hasParentEntity" ]                          = !!len( meta.originalMetadata.joincolumn );
-					if ( meta.hasParentEntity ) {
-						var reference = variables._wirebox.getInstance(
-							name          = meta.localMetadata.extends.fullName,
-							initArguments = { "meta" : {}, "shallow" : true }
-						);
+			variables._meta = variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
+				var util                   = variables._wirebox.getUtility();
+				var meta                   = {};
+				meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
+				meta[ "localMetadata" ]    = getMetadata( this );
+				if ( server.keyExists( "boxlang" ) ) {
+					normalizeBoxLangMetadata( meta.originalMetadata );
+					normalizeBoxLangMetadata( meta.localMetadata );
+				}
+				var hasAccessorsMetadata = false;
+				if ( meta.localMetadata.keyExists( "accessors" ) ) {
+					hasAccessorsMetadata = lCase( trim( meta.localMetadata.accessors & "" ) ) == "true";
+				}
+				// BoxLang 1.11 exposes component metadata attributes inside `annotations`.
+				if (
+					!hasAccessorsMetadata &&
+					meta.localMetadata.keyExists( "annotations" ) &&
+					isStruct( meta.localMetadata.annotations ) &&
+					meta.localMetadata.annotations.keyExists( "accessors" )
+				) {
+					hasAccessorsMetadata = lCase( trim( meta.localMetadata.annotations.accessors & "" ) ) == "true";
+				}
+				if ( !hasAccessorsMetadata ) {
+					throw(
+						type    = "QuickAccessorsMissing",
+						message = 'This instance is missing `accessors="true"` in the component metadata.  This is required for Quick to work properly.  Please add it to your component metadata and reinit your application.'
+					);
+				}
+				meta[ "fullName" ]                     = meta.originalMetadata.fullname;
+				param meta.originalMetadata.mapping    = listLast( meta.originalMetadata.fullname, "." );
+				meta[ "mapping" ]                      = meta.originalMetadata.mapping;
+				param meta.originalMetadata.entityName = listLast( meta.originalMetadata.name, "." );
+				meta[ "entityName" ]                   = meta.originalMetadata.entityName;
+				param meta.localMetadata.properties    = [];
+				guardDuplicatePropertyNames( meta.localMetadata, meta.mapping );
+				param meta.originalMetadata.table                  = variables._str.plural( variables._str.snake( meta.entityName ) );
+				meta[ "table" ]                                    = meta.originalMetadata.table;
+				param meta.originalMetadata.readonly               = false;
+				meta[ "readonly" ]                                 = meta.originalMetadata.readonly;
+				param meta.originalMetadata.joincolumn             = "";
+				param meta.originalMetadata.discriminatorValue     = "";
+				param meta.originalMetadata.singleTableInheritance = false;
+				param meta.originalMetadata.extends                = "";
+				param meta.originalMetadata.functions              = [];
+				meta[ "hasParentEntity" ]                          = !!len( meta.originalMetadata.joincolumn );
+				if ( meta.hasParentEntity ) {
+					var reference = variables._wirebox.getInstance(
+						name          = meta.localMetadata.extends.fullName,
+						initArguments = { "meta" : {}, "shallow" : true }
+					);
 
-						meta[ "parentDefinition" ] = {
-							"meta"       : reference.get_Meta(),
-							"key"        : reference.keyNames()[ 1 ],
-							"joincolumn" : meta.originalMetadata.joincolumn
-						};
+					meta[ "parentDefinition" ] = {
+						"meta"       : reference.get_Meta(),
+						"key"        : reference.keyNames()[ 1 ],
+						"joincolumn" : meta.originalMetadata.joincolumn,
+						"table"      : reference.tableName()
+					};
 
-						if ( len( meta.originalMetadata.discriminatorValue ) ) {
-							try {
-								var parentMeta                                 = reference.get_Meta().originalMetadata;
-								param parentMeta.discriminatorColumn           = "";
-								meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
-								meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.discriminatorColumn;
-							} catch ( any e ) {
-								throw(
-									type    = "QuickChildInstantiationException",
-									message = "Failed to instantiate child entity [#meta.fullName#]. This may be due to a configuration error in the parent/child relationships. The root cause was #e.message#",
-									detail  = e.detail
-								);
+					if ( len( meta.originalMetadata.discriminatorValue ) ) {
+						try {
+							var parentMeta                                 = reference.get_Meta().originalMetadata;
+							meta.parentDefinition[ "discriminatorValue" ]  = meta.originalMetadata.discriminatorValue;
+							meta.parentDefinition[ "discriminatorColumn" ] = parentMeta.keyExists(
+								"discriminatorColumn"
+							)
+							 ? parentMeta.discriminatorColumn
+							 : "";
+						} catch ( any e ) {
+							throw(
+								type    = "QuickChildInstantiationException",
+								message = "Failed to instantiate child entity [#meta.fullName#]. This may be due to a configuration error in the parent/child relationships. The root cause was #e.message#",
+								detail  = e.detail
+							);
+						}
+					}
+				}
+
+				var baseEntityFunctionNames = variables._cache.get( "quick-metadata:BaseEntity" );
+				if ( isNull( baseEntityFunctionNames ) ) {
+					var baseEntityMetadata = server.keyExists( "boxlang" )
+					 ? getClassMetadata( "quick.models.BaseEntity" )
+					 : getComponentMetadata( "quick.models.BaseEntity" );
+					baseEntityFunctionNames = {};
+					for ( var func in baseEntityMetadata.functions ) {
+						baseEntityFunctionNames[ func.name ] = "";
+					}
+					variables._cache.set( "quick-metadata:BaseEntity", baseEntityFunctionNames );
+				}
+				var functionsForRelationshipDetection = [];
+				if (
+					meta.originalMetadata.keyExists( "functions" ) &&
+					isArray( meta.originalMetadata.functions ) &&
+					!meta.originalMetadata.functions.isEmpty()
+				) {
+					functionsForRelationshipDetection = meta.originalMetadata.functions;
+				} else if ( meta.localMetadata.keyExists( "functions" ) && isArray( meta.localMetadata.functions ) ) {
+					functionsForRelationshipDetection = meta.localMetadata.functions;
+				}
+				meta[ "functionNames" ] = generateFunctionNameArray(
+					from    = functionsForRelationshipDetection,
+					without = baseEntityFunctionNames
+				);
+
+				param meta.originalMetadata.properties = [];
+				param meta.localMetadata.properties    = [];
+
+				meta[ "attributes" ] = generateAttributesFromProperties(
+					meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
+				);
+				meta[ "nonPersistentProperties" ] = generateNonPersistentProperties( meta.localMetadata.properties );
+				if ( meta.hasParentEntity ) {
+					meta.nonPersistentProperties.append( meta.parentDefinition.meta.nonPersistentProperties, false );
+				}
+				if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
+					meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
+				}
+				for ( var key in arrayWrap( variables._key ) ) {
+					var keyIsDefined = meta.attributes.keyExists( key );
+					if ( !keyIsDefined ) {
+						for ( var attribute in meta.attributes ) {
+							if ( compareNoCase( meta.attributes[ attribute ].column, key ) == 0 ) {
+								keyIsDefined = true;
+								break;
 							}
 						}
 					}
-
-					var baseEntityFunctionNames = variables._cache.getOrSet( "quick-metadata:BaseEntity", function() {
-						var baseEntityMetadata = server.keyExists( "boxlang" )
-						 ? getClassMetadata( "quick.models.BaseEntity" )
-						 : getComponentMetadata( "quick.models.BaseEntity" );
-						return arrayReduce(
-							baseEntityMetadata.functions,
-							function( acc, func ) {
-								arguments.acc[ arguments.func.name ] = "";
-								return arguments.acc;
-							},
-							{}
-						);
-					} );
-					var functionsForRelationshipDetection = [];
-					if (
-						meta.originalMetadata.keyExists( "functions" ) &&
-						isArray( meta.originalMetadata.functions ) &&
-						!meta.originalMetadata.functions.isEmpty()
-					) {
-						functionsForRelationshipDetection = meta.originalMetadata.functions;
-					} else if ( meta.localMetadata.keyExists( "functions" ) && isArray( meta.localMetadata.functions ) ) {
-						functionsForRelationshipDetection = meta.localMetadata.functions;
+					if ( !keyIsDefined ) {
+						var keyProp                     = paramAttribute( { "name" : key } );
+						meta.attributes[ keyProp.name ] = keyProp;
 					}
-					meta[ "functionNames" ] = generateFunctionNameArray(
-						from    = functionsForRelationshipDetection,
-						without = baseEntityFunctionNames
-					);
-
-					param meta.originalMetadata.properties = [];
-					param meta.localMetadata.properties    = [];
-
-					meta[ "attributes" ] = generateAttributesFromProperties(
-						meta.hasParentEntity ? meta.localMetadata.properties : meta.originalMetadata.properties
-					);
-					meta[ "nonPersistentProperties" ] = generateNonPersistentProperties( meta.localMetadata.properties );
-					if ( meta.hasParentEntity ) {
-						meta.nonPersistentProperties.append( meta.parentDefinition.meta.nonPersistentProperties, false );
-					}
-					if ( structKeyExists( meta.localMetadata, "discriminatorColumn" ) ) {
-						meta.attributes[ meta.localMetaData.discriminatorColumn ] = paramAttribute( { "name" : meta.localMetaData.discriminatorColumn } );
-					}
-					arrayWrap( variables._key ).each( function( key ) {
-						var keyIsDefined = meta.attributes.keyExists( key );
-						if ( !keyIsDefined ) {
-							for ( var attribute in meta.attributes ) {
-								if ( compareNoCase( meta.attributes[ attribute ].column, key ) == 0 ) {
-									keyIsDefined = true;
-									break;
-								}
-							}
-						}
-						if ( !keyIsDefined ) {
-							var keyProp                     = paramAttribute( { "name" : key } );
-							meta.attributes[ keyProp.name ] = keyProp;
-						}
-					} );
-					meta[ "casts" ] = generateCastsFromProperties( meta.originalMetadata.properties );
-					guardKeyHasNoDefaultValue( meta.attributes );
-					return meta;
-				} )
-			);
+				}
+				meta[ "casts" ] = generateCastsFromProperties( meta.originalMetadata.properties );
+				appendParentAttributesToMetadata( meta );
+				meta[ "columns" ]           = generateColumnsFromAttributes( meta.attributes );
+				meta[ "virtualAttributes" ] = generateVirtualAttributeNames( meta.attributes );
+				guardKeyHasNoDefaultValue( meta.attributes );
+				return meta;
+			} );
 		}
 
-		variables._fullName                            = variables._meta.fullName;
-		variables._entityName                          = variables._meta.entityName;
-		variables._table                               = variables._meta.table;
-		variables._hasParentEntity                     = variables._meta.hasParentEntity;
-		param variables._meta.qualifiedColumnsCacheKey = "declared";
+		variables._fullName        = variables._meta.fullName;
+		variables._entityName      = variables._meta.entityName;
+		variables._table           = variables._meta.table;
+		variables._hasParentEntity = variables._meta.hasParentEntity;
 
 		if ( variables._hasParentEntity ) {
 			variables._parentDefinition = variables._meta.parentDefinition;
@@ -3130,8 +3374,40 @@ component accessors="true" {
 		if ( variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists( "datasource" ) ) {
 			variables._queryOptions = { datasource : variables._meta.originalMetadata.datasource };
 		}
-		variables._readonly = variables._meta.readonly;
-		explodeAttributesMetadata( variables._meta.attributes );
+		variables._readonly                = variables._meta.readonly;
+		variables._attributes              = variables._meta.attributes;
+		variables._columns                 = variables._meta.columns;
+		variables._functionNames           = variables._meta.functionNames;
+		variables._nonPersistentProperties = variables._meta.nonPersistentProperties;
+		variables._grammar                 = variables._meta.originalMetadata.keyExists( "grammar" )
+		 ? variables._meta.originalMetadata.grammar
+		 : "";
+		variables._discriminatorColumn = variables._meta.localMetadata.keyExists( "discriminatorColumn" )
+		 ? variables._meta.localMetadata.discriminatorColumn
+		 : "";
+		variables._discriminatorValue = variables._meta.localMetadata.keyExists( "discriminatorValue" )
+		 ? variables._meta.localMetadata.discriminatorValue
+		 : "";
+		variables._hasDiscriminatorValue  = variables._meta.localMetadata.keyExists( "discriminatorValue" );
+		variables._singleTableInheritance = variables._meta.originalMetadata.singleTableInheritance;
+		variables._virtualAttributes      = [];
+		for ( var declaredVirtualAttribute in variables._meta.virtualAttributes ) {
+			variables._virtualAttributes.append( declaredVirtualAttribute );
+		}
+		for ( var runtimeAttribute in retrieveRuntimeAttributeDefinitions() ) {
+			if (
+				runtimeAttribute.virtual &&
+				!arrayContainsNoCase( variables._virtualAttributes, runtimeAttribute.name )
+			) {
+				variables._virtualAttributes.append( runtimeAttribute.name );
+			}
+		}
+		if ( isDiscriminatedChild() ) {
+			assignAttribute(
+				variables._parentDefinition.discriminatorColumn,
+				variables._parentDefinition.discriminatorValue
+			);
+		}
 		if ( server.keyExists( "boxlang" ) ) {
 			for (
 				var attributeName in retrieveAttributeNames(
@@ -3198,12 +3474,13 @@ component accessors="true" {
 	 * @return       [String]
 	 */
 	private array function generateFunctionNameArray( required array from, struct without = {} ) {
-		return arguments.from.reduce( function( acc, func ) {
-			if ( !without.keyExists( func.name ) ) {
-				acc.append( func.name );
+		var functionNames = [];
+		for ( var func in arguments.from ) {
+			if ( !arguments.without.keyExists( func.name ) ) {
+				functionNames.append( func.name );
 			}
-			return acc;
-		}, [] );
+		}
+		return functionNames;
 	}
 
 	/**
@@ -3215,14 +3492,15 @@ component accessors="true" {
 	 * @return      A struct of attributes for the entity.
 	 */
 	private struct function generateAttributesFromProperties( required array properties ) {
-		return arguments.properties.reduce( function( acc, prop ) {
-			var newProp = paramAttribute( arguments.prop );
+		var attributes = {};
+		for ( var prop in arguments.properties ) {
+			var newProp = paramAttribute( prop );
 			if ( !newProp.persistent ) {
-				return arguments.acc;
+				continue;
 			}
-			arguments.acc[ newProp.name ] = newProp;
-			return arguments.acc;
-		}, {} );
+			attributes[ newProp.name ] = newProp;
+		}
+		return attributes;
 	}
 
 	/**
@@ -3234,8 +3512,9 @@ component accessors="true" {
 	 * @return      A struct of non-persistent properties for the entity.
 	 */
 	private struct function generateNonPersistentProperties( required array properties ) {
-		return arguments.properties.reduce( function( acc, prop ) {
-			var newProp     = paramAttribute( arguments.prop );
+		var nonPersistentProperties = {};
+		for ( var prop in arguments.properties ) {
+			var newProp     = paramAttribute( prop );
 			var annotations = newProp.keyExists( "annotations" ) && isStruct( newProp.annotations )
 			 ? newProp.annotations
 			 : {};
@@ -3245,11 +3524,11 @@ component accessors="true" {
 				newProp.keyExists( "inject" ) ||
 				annotations.keyExists( "inject" )
 			) {
-				return arguments.acc;
+				continue;
 			}
-			arguments.acc[ newProp.name ] = newProp;
-			return arguments.acc;
-		}, {} );
+			nonPersistentProperties[ newProp.name ] = newProp;
+		}
+		return nonPersistentProperties;
 	}
 
 	/**
@@ -3258,18 +3537,18 @@ component accessors="true" {
 	 * @name  The property name to check.
 	 */
 	private boolean function hasNonPersistentProperty( required string name ) {
-		return variables._meta.nonPersistentProperties.keyExists( arguments.name );
+		return variables._nonPersistentProperties.keyExists( arguments.name );
 	}
 
 	private void function guardDuplicatePropertyNames( required struct metadata, required string mapping ) {
 		var propertyNames = {};
 		var entityMapping = arguments.mapping;
-		arguments.metadata.properties.each( function( prop ) {
-			if ( propertyNames.keyExists( arguments.prop.name ) ) {
-				throwDuplicateProperty( entityMapping, arguments.prop.name );
+		for ( var prop in arguments.metadata.properties ) {
+			if ( propertyNames.keyExists( prop.name ) ) {
+				throwDuplicateProperty( entityMapping, prop.name );
 			}
-			propertyNames[ arguments.prop.name ] = true;
-		} );
+			propertyNames[ prop.name ] = true;
+		}
 
 		// Some engines collapse duplicate declarations in component metadata. In
 		// that case, inspect the local component source when it is available.
@@ -3288,31 +3567,22 @@ component accessors="true" {
 		source            = reReplace( source, "(?m)//.*$", " ", "all" );
 		var propertyToken = chr( 60 ) & "cfproperty";
 		var declarations  = reMatchNoCase( "(?is)(^|[^a-z0-9_])(property|#propertyToken#)\s[^;>]*", source );
-		declarations.each( function( declaration ) {
-			var nameAssignment = reFindNoCase(
-				"name\s*=\s*",
-				arguments.declaration,
-				1,
-				true
-			);
+		for ( var declaration in declarations ) {
+			var nameAssignment = reFindNoCase( "name\s*=\s*", declaration, 1, true );
 			if ( nameAssignment.pos[ 1 ] == 0 ) {
-				return;
+				continue;
 			}
 			var valueStart = nameAssignment.pos[ 1 ] + nameAssignment.len[ 1 ];
-			var quote      = mid( arguments.declaration, valueStart, 1 );
+			var quote      = mid( declaration, valueStart, 1 );
 			if ( quote != chr( 34 ) && quote != chr( 39 ) ) {
-				return;
+				continue;
 			}
-			var valueEnd = find(
-				quote,
-				arguments.declaration,
-				valueStart + 1
-			);
+			var valueEnd = find( quote, declaration, valueStart + 1 );
 			if ( valueEnd == 0 ) {
-				return;
+				continue;
 			}
 			var propertyName = mid(
-				arguments.declaration,
+				declaration,
 				valueStart + 1,
 				valueEnd - valueStart - 1
 			);
@@ -3320,7 +3590,7 @@ component accessors="true" {
 				throwDuplicateProperty( entityMapping, propertyName );
 			}
 			propertyNames[ propertyName ] = true;
-		} );
+		}
 	}
 
 	private void function throwDuplicateProperty( required string mapping, required string propertyName ) {
@@ -3331,13 +3601,78 @@ component accessors="true" {
 	}
 
 	private struct function generateCastsFromProperties( required array properties ) {
-		return arguments.properties.reduce( function( acc, prop ) {
-			if ( !arguments.prop.keyExists( "casts" ) || arguments.prop.casts == "" ) {
-				return arguments.acc;
+		var casts = {};
+		for ( var prop in arguments.properties ) {
+			if ( !prop.keyExists( "casts" ) || prop.casts == "" ) {
+				continue;
 			}
-			arguments.acc[ arguments.prop.name ] = arguments.prop.casts;
-			return arguments.acc;
-		}, {} );
+			casts[ prop.name ] = prop.casts;
+		}
+		return casts;
+	}
+
+	/**
+	 * Adds inherited attribute definitions to the cached metadata once per
+	 * mapping. Runtime entity instances can then share the completed indexes.
+	 */
+	private void function appendParentAttributesToMetadata( required struct meta ) {
+		if ( !arguments.meta.hasParentEntity ) {
+			return;
+		}
+
+		var parentDefinition = arguments.meta.parentDefinition;
+		var joinAttribute    = paramAttribute( { "name" : parentDefinition.joincolumn } );
+		if ( !arguments.meta.attributes.keyExists( joinAttribute.name ) ) {
+			arguments.meta.attributes[ joinAttribute.name ] = joinAttribute;
+		}
+
+		for ( var alias in parentDefinition.meta.attributes ) {
+			arguments.meta.attributes[ alias ] = markAttributeAsParent( parentDefinition.meta[ "attributes" ][ alias ] );
+		}
+
+		if ( arguments.meta.localMetadata.keyExists( "discriminatorValue" ) ) {
+			var discriminatorAttribute = paramAttribute( {
+				"name"           : parentDefinition.discriminatorColumn,
+				"column"         : parentDefinition.discriminatorColumn,
+				"isParentColumn" : true
+			} );
+			arguments.meta.attributes[ discriminatorAttribute.name ] = discriminatorAttribute;
+		}
+	}
+
+	private struct function copyAttributeDefinition( required struct attribute ) {
+		var attributeCopy = {};
+		for ( var key in arguments.attribute ) {
+			if ( !isNull( arguments.attribute[ key ] ) ) {
+				attributeCopy[ key ] = arguments.attribute[ key ];
+			}
+		}
+		return attributeCopy;
+	}
+
+	private struct function markAttributeAsParent( required struct attribute ) {
+		var parentAttribute            = copyAttributeDefinition( arguments.attribute );
+		parentAttribute.isParentColumn = true;
+		return parentAttribute;
+	}
+
+	private struct function generateColumnsFromAttributes( required struct attributes ) {
+		var columns = {};
+		for ( var alias in arguments.attributes ) {
+			var attribute               = arguments.attributes[ alias ];
+			columns[ attribute.column ] = attribute;
+		}
+		return columns;
+	}
+
+	private array function generateVirtualAttributeNames( required struct attributes ) {
+		var virtualAttributes = [];
+		for ( var alias in arguments.attributes ) {
+			if ( arguments.attributes[ alias ].virtual ) {
+				virtualAttributes.append( alias );
+			}
+		}
+		return virtualAttributes;
 	}
 
 	/**
@@ -3348,17 +3683,13 @@ component accessors="true" {
 	 * @return  quick.models.BaseEntity
 	 */
 	public any function appendVirtualAttribute( required string name, boolean excludeFromMemento = false ) {
-		if ( !variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) ) {
+		if ( isNull( retrieveAttributeDefinition( arguments.name ) ) ) {
 			var attr = paramAttribute( {
 				"name"    : arguments.name,
 				"virtual" : true,
 				"exclude" : arguments.excludeFromMemento
 			} );
-			variables._attributes[ attr.name ]           = attr;
-			variables._columns[ attr.column ]            = attr;
-			variables._meta.attributes[ arguments.name ] = variables._attributes[ arguments.name ];
-			variables._meta.originalMetadata.properties.append( variables._attributes[ arguments.name ] );
-			variables._virtualAttributes.append( arguments.name );
+			registerRuntimeAttribute( attr );
 		}
 		return this;
 	}
@@ -3368,12 +3699,13 @@ component accessors="true" {
 	}
 
 	public boolean function isVirtualAttribute( name ) {
-		return variables._attributes.keyExists( retrieveAliasForColumn( arguments.name ) ) &&
-		variables._attributes[ retrieveAliasForColumn( arguments.name ) ].virtual;
+		var attribute = retrieveAttributeDefinition( arguments.name );
+		return !isNull( attribute ) && attribute.virtual;
 	}
 
 	public boolean function isParentAttribute( required string column ) {
-		return variables._attributes[ retrieveAliasForColumn( arguments.column ) ].isParentColumn;
+		var attribute = retrieveAttributeDefinition( arguments.column );
+		return !isNull( attribute ) && attribute.isParentColumn;
 	}
 
 	/**
@@ -3420,30 +3752,7 @@ component accessors="true" {
 		if ( !isBoolean( attr.fillable ) ) {
 			attr.fillable = lCase( trim( attr.fillable & "" ) ) == "true";
 		}
-		variables._nullValues[ attr.name ] = attr.nullValue;
 		return arguments.attr;
-	}
-
-	/**
-	 * Sets up some other helper structs for Quick to quickly check metadata.
-	 *
-	 * @attributes  The attributes to explode
-	 */
-	private any function explodeAttributesMetadata( required struct attributes ) {
-		for ( var alias in arguments.attributes ) {
-			var attr                           = paramAttribute( arguments.attributes[ alias ] );
-			variables._attributes[ attr.name ] = attr;
-			variables._columns[ attr.column ]  = attr;
-			if ( attr.convertToNull ) {
-				variables._nullValues[ alias ] = attr.nullValue;
-			}
-		}
-
-		if ( hasParentEntity() ) {
-			explodeParentAttributes();
-		}
-
-		return this;
 	}
 
 	/*=================================
@@ -3455,12 +3764,19 @@ component accessors="true" {
 	}
 
 	public boolean function isDiscriminatedChild() {
-		return hasParentEntity() && variables._meta.localMetadata.keyExists( "discriminatorValue" );
+		return hasParentEntity() && variables._hasDiscriminatorValue;
 	}
 
 	public boolean function isDiscriminatedParent() {
-		return variables._meta.localMetadata.keyExists( "discriminatorColumn" )
-		&& variables._discriminators.len() > 0;
+		return variables._discriminatorColumn != "" && variables._discriminators.len() > 0;
+	}
+
+	public string function discriminatorColumn() {
+		return variables._discriminatorColumn;
+	}
+
+	public string function discriminatorValue() {
+		return variables._discriminatorValue;
 	}
 
 	public function getParentDefinition() {
@@ -3468,8 +3784,11 @@ component accessors="true" {
 	}
 
 	public function getDiscriminations() {
-		return variables._cache.getOrSet( "quick-metadata:#variables._mapping#-discriminations", function() {
-			return variables._discriminators.reduce( function( acc, dsl ) {
+		var cacheKey        = "quick-metadata:#variables._mapping#-discriminations";
+		var discriminations = variables._cache.get( cacheKey );
+		if ( isNull( discriminations ) ) {
+			discriminations = {};
+			for ( var dsl in variables._discriminators ) {
 				var childClass = variables._wirebox.getInstance(
 					dsl           = dsl,
 					initArguments = { "meta" : {}, "shallow" : true }
@@ -3485,28 +3804,29 @@ component accessors="true" {
 				) {
 					throw(
 						type    = "QuickParentInstantiationException",
-						message = "Failed to instantiate the parent entity [#variables._meta.fullName#]. The discriminated child class [#childMeta.fullName#] did not contain either a `joinColumn` or `discriminatorValue` attribute"
+						message = "Failed to instantiate the parent entity [#variables._fullName#]. The discriminated child class [#childMeta.fullName#] did not contain either a `joinColumn` or `discriminatorValue` attribute"
 					);
 				}
-				var childAttributes = childClass
-					.get_Attributes()
-					.reduce( function( acc, attr, data ) {
-						if ( !data.isParentColumn && !data.virtual && !data.exclude ) {
-							acc.append( data );
-						}
-						return acc;
-					}, [] );
+				var childAttributes           = [];
+				var childAttributeDefinitions = childClass.get_Attributes();
+				for ( var attr in childAttributeDefinitions ) {
+					var attributeData = childAttributeDefinitions[ attr ];
+					if ( !attributeData.isParentColumn && !attributeData.virtual && !attributeData.exclude ) {
+						childAttributes.append( attributeData );
+					}
+				}
 
 				var localColumns = this.retrieveQualifiedColumns();
-				var childColumns = childClass
-					.retrieveQualifiedColumns()
-					.filter( function( column ) {
-						return !arrayContainsNoCase( localColumns, column );
-					} );
+				var childColumns = [];
+				for ( var column in childClass.retrieveQualifiedColumns() ) {
+					if ( !arrayContainsNoCase( localColumns, column ) ) {
+						childColumns.append( column );
+					}
+				}
 
-				acc[ childMeta.discriminatorValue ] = {
+				discriminations[ childMeta.discriminatorValue ] = {
 					"mapping"    : childMeta.fullName,
-					"table"      : ( childMeta.keyExists( "table" ) ? childMeta.table : variables._meta.table ),
+					"table"      : ( childMeta.keyExists( "table" ) ? childMeta.table : variables._table ),
 					"joincolumn" : (
 						childMeta.keyExists( "joinColumn" ) ? childClass.qualifyColumn(
 							column          = childMeta.joinColumn,
@@ -3516,44 +3836,12 @@ component accessors="true" {
 					"attributes"   : childAttributes,
 					"childColumns" : childColumns
 				};
-				return acc;
-			}, {} );
-		} );
-	}
-
-	/**
-	 * Appends parent attributes as first class attributes
-	 **/
-	private function explodeParentAttributes() {
-		if ( !hasParentEntity() ) return;
-
-		var parentDefinition = getParentDefinition();
-
-		var attr                           = paramAttribute( { "name" : parentDefinition.joincolumn } );
-		variables._attributes[ attr.name ] = variables._attributes[ attr.name ] ?: attr;
-		variables._columns[ attr.column ]  = variables._columns[ attr.column ] ?: attr;
-
-		parentDefinition.meta.attributes
-			.keyArray()
-			.each( function( alias ) {
-				// Note: bracket notation here on `attributes` as ACF 2016 will sometimes show a null for the dot notation key
-				var duplicateAttr                           = structCopy( parentDefinition.meta[ "attributes" ][ alias ] );
-				duplicateAttr.isParentColumn                = true;
-				variables._attributes[ duplicateAttr.name ] = duplicateAttr;
-				variables._columns[ duplicateAttr.column ]  = duplicateAttr;
-			} );
-
-		if ( isDiscriminatedChild() ) {
-			var discriminatorAttr = paramAttribute( {
-				"name"           : parentDefinition.discriminatorColumn,
-				"column"         : parentDefinition.discriminatorColumn,
-				"isParentColumn" : true
-			} );
-			variables._attributes[ discriminatorAttr.name ] = discriminatorAttr;
-			variables._columns[ discriminatorAttr.column ]  = discriminatorAttr;
-			assignAttribute( parentDefinition.discriminatorColumn, parentDefinition.discriminatorValue );
+			}
+			variables._cache.set( cacheKey, discriminations );
 		}
+		return discriminations;
 	}
+
 
 	/*=================================
     =            Read-Only            =
@@ -3632,10 +3920,10 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	private boolean function isReadOnlyAttribute( required string name ) {
-		var alias = retrieveAliasForColumn( arguments.name );
-		return ( variables._attributes.keyExists( alias ) && variables._attributes[ alias ].readOnly ) || (
-			variables._meta.nonPersistentProperties.keyExists( arguments.name ) &&
-			variables._meta.nonPersistentProperties[ arguments.name ].readOnly
+		var attribute = retrieveAttributeDefinition( arguments.name );
+		return ( !isNull( attribute ) && attribute.readOnly ) || (
+			variables._nonPersistentProperties.keyExists( arguments.name ) &&
+			variables._nonPersistentProperties[ arguments.name ].readOnly
 		);
 	}
 
@@ -3831,9 +4119,8 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	public boolean function attributeHasSqlType( required string name ) {
-		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._attributes.keyExists( alias ) &&
-		variables._attributes[ alias ].sqltype != "";
+		var attribute = retrieveAttributeDefinition( arguments.name );
+		return !isNull( attribute ) && attribute.sqltype != "";
 	}
 
 	/**
@@ -3844,8 +4131,7 @@ component accessors="true" {
 	 * @return  String
 	 */
 	public string function retrieveSqlTypeForAttribute( required string name ) {
-		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._attributes[ alias ].sqltype;
+		return retrieveAttributeDefinition( arguments.name ).sqltype;
 	}
 
 	/**
@@ -3890,8 +4176,8 @@ component accessors="true" {
 			return false;
 		}
 
-		return variables._nullValues.keyExists( alias ) &&
-		compare( variables._nullValues[ alias ], arguments.value ) == 0;
+		var attribute = retrieveAttributeDefinition( alias );
+		return !isNull( attribute ) && compare( attribute.nullValue, arguments.value ) == 0;
 	}
 
 	/**
@@ -4034,11 +4320,11 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	private boolean function canUpdateAttribute( required string name ) {
-		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._attributes.keyExists( alias ) &&
-		variables._attributes[ alias ].update &&
-		!variables._attributes[ alias ].readOnly &&
-		!variables._attributes[ alias ].isParentColumn;
+		var attribute = retrieveAttributeDefinition( arguments.name );
+		return !isNull( attribute ) &&
+		attribute.update &&
+		!attribute.readOnly &&
+		!attribute.isParentColumn;
 	}
 
 	/**
@@ -4049,17 +4335,16 @@ component accessors="true" {
 	 * @return  Boolean
 	 */
 	private boolean function canInsertAttribute( required string name ) {
-		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._attributes.keyExists( alias ) &&
-		variables._attributes[ alias ].insert &&
-		!variables._attributes[ alias ].readOnly &&
-		!variables._attributes[ alias ].isParentColumn;
+		var attribute = retrieveAttributeDefinition( arguments.name );
+		return !isNull( attribute ) &&
+		attribute.insert &&
+		!attribute.readOnly &&
+		!attribute.isParentColumn;
 	}
 
 	public boolean function canConvertToNull( required string name ) {
-		var alias = retrieveAliasForColumn( arguments.name );
-		return variables._attributes.keyExists( alias ) &&
-		variables._attributes[ alias ].convertToNull;
+		var attribute = retrieveAttributeDefinition( arguments.name );
+		return !isNull( attribute ) && attribute.convertToNull;
 	}
 
 	/**
@@ -4092,9 +4377,10 @@ component accessors="true" {
 			return arguments.arrays;
 		}
 
-		var lengths = arguments.arrays.map( function( arr ) {
-			return arr.len();
-		} );
+		var lengths = [];
+		for ( var arr in arguments.arrays ) {
+			lengths.append( arr.len() );
+		}
 		if ( unique( lengths ).len() > 1 ) {
 			throw(
 				type    = "ArrayZipLengthMismatch",
@@ -4131,7 +4417,7 @@ component accessors="true" {
 	 * since the data for each sub entity originates from a single table
 	 */
 	public boolean function isSingleTableInheritance() {
-		return variables._meta.originalMetadata.singleTableInheritance;
+		return variables._singleTableInheritance;
 	}
 
 }

@@ -21,9 +21,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "hydrates declared pivot columns on a pivot model", function() {
-				var post  = getInstance( "Post" ).findOrFail( 1245 );
-				var tag   = post.getTagsWithPivot()[ 1 ];
-				var pivot = tag.getPivot();
+				var post         = getInstance( "Post" ).findOrFail( 1245 );
+				var relationship = post.tagsWithPivot();
+				var tag          = relationship.get()[ 1 ];
+				var pivot        = tag.getPivot();
 
 				expect( pivot ).toBeInstanceOf( "quick.models.Relationships.Pivot" );
 				expect( pivot.isLoaded() ).toBeTrue();
@@ -33,6 +34,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( pivot.getActive() ).toBeTrue();
 				expect( pivot.getPivotParent().getPost_pk() ).toBe( post.getPost_pk() );
 				expect( pivot.getPivotRelated().getId() ).toBe( tag.getId() );
+				expect( relationship.getForeignPivotKeys() ).toBe( [ "custom_post_pk" ] );
+				expect( relationship.getRelatedPivotKeys() ).toBe( [ "tag_id" ] );
+				expect( pivot.keyNames() ).toBe( [ "custom_post_pk", "tag_id" ] );
+				expect( pivot.retrieveAttributeNames( withVirtualAttributes = true ) ).toInclude( "custom_post_pk" );
+				expect( pivot.get_Attributes().custom_post_pk.exclude ).toBeFalse();
+				expect( pivot.memento.defaultIncludes ).toInclude( "custom_post_pk" );
 				var memento = pivot.getMemento();
 				expect( memento.custom_post_pk ).toBe( 1245 );
 				expect( memento.tag_id ).toBe( 1 );
@@ -127,17 +134,20 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( attached.getPivot().getContext() ).toBe( "new" );
 				expect( attached.getPivot().getActive() ).toBeTrue();
 
-				post.tagsWithPivot()
-					.updateExistingPivot(
-						3,
-						{
-							"context" : "updated",
-							"active"  : false
-						}
-					);
+				var updateAttributes = {
+					"custom_post_pk" : 321,
+					"tag_id"         : 2,
+					"context"        : "updated",
+					"active"         : false
+				};
+				post.tagsWithPivot().updateExistingPivot( 3, updateAttributes );
 				var updated = post.tagsWithPivot().findOrFail( 3 );
 				expect( updated.getPivot().getContext() ).toBe( "updated" );
 				expect( updated.getPivot().getActive() ).toBeFalse();
+				expect( updated.getPivot().getCustom_post_pk() ).toBe( 1245 );
+				expect( updated.getPivot().getTag_id() ).toBe( 3 );
+				expect( updateAttributes.custom_post_pk ).toBe( 321 );
+				expect( updateAttributes.tag_id ).toBe( 2 );
 			} );
 
 			it( "applies configured pivot values to constraints and writes", function() {
@@ -150,10 +160,31 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( tag.getPivot().getContext() ).toBe( "defaulted" );
 			} );
 
-			it( "maintains configured pivot timestamps", function() {
-				var post = getInstance( "Post" ).findOrFail( 321 );
+			it( "keeps configured and supplied pivot values isolated", function() {
+				var post               = getInstance( "Post" ).findOrFail( 321 );
+				var relationship       = post.defaultActiveTags();
+				var suppliedAttributes = {
+					"context" : "overridden",
+					"active"  : false
+				};
 
-				post.timestampedTags().attach( 1 );
+				relationship.attach( 3, suppliedAttributes );
+
+				expect( relationship.getPivotValues() ).toHaveKey( "active" );
+				expect( relationship.getPivotValues().active ).toBeTrue();
+				expect( suppliedAttributes.context ).toBe( "overridden" );
+				expect( suppliedAttributes.active ).toBeFalse();
+
+				var attached = post.tagsWithPivot().findOrFail( 3 );
+				expect( attached.getPivot().getContext() ).toBe( "overridden" );
+				expect( attached.getPivot().getActive() ).toBeFalse();
+			} );
+
+			it( "maintains configured pivot timestamps", function() {
+				var post            = getInstance( "Post" ).findOrFail( 321 );
+				var pivotAttributes = {};
+
+				post.timestampedTags().attach( 1, pivotAttributes );
 				var pivot = post
 					.timestampedTags()
 					.findOrFail( 1 )
@@ -161,6 +192,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				expect( pivot.getCreated_date() ).notToBeNull();
 				expect( pivot.getModified_date() ).notToBeNull();
+				expect( pivotAttributes ).toBeEmpty();
 			} );
 
 			it( "creates and attaches a related entity", function() {

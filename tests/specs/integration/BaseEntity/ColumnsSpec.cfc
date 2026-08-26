@@ -42,6 +42,20 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( getInstance( "QualifiedColumnsCacheEntity" ).retrieveQualifiedColumns() ).notToInclude(
 					"users.runtime_column"
 				);
+				expect( dynamicEntity.get_Meta().attributes ).notToHaveKey( "runtime_column" );
+			} );
+
+			it( "isolates runtime persistent attributes added to spawned entities", function() {
+				var source = getInstance( "QualifiedColumnsCacheEntity" );
+				source.forceAssignAttribute( "source_column", "source" );
+				var spawned = source.newEntity();
+				spawned.forceAssignAttribute( "spawned_column", "spawned" );
+
+				expect( spawned.retrieveQualifiedColumns() ).toInclude( "users.source_column" );
+				expect( spawned.retrieveQualifiedColumns() ).toInclude( "users.spawned_column" );
+				expect( source.retrieveQualifiedColumns() ).toInclude( "users.source_column" );
+				expect( source.retrieveQualifiedColumns() ).notToInclude( "users.spawned_column" );
+				expect( source.newEntity().retrieveQualifiedColumns() ).notToInclude( "users.spawned_column" );
 			} );
 
 			it( "can access the attributes by their alias", function() {

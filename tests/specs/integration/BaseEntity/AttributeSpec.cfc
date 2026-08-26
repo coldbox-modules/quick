@@ -15,6 +15,19 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( attributesAfterSubselect ).toInclude( "latestPostId" );
 				expect( attributesFromNewEntity ).toInclude( "latestPostId" );
 				expect( attributesFromFresh ).notToInclude( "latestPostId" );
+				expect( virtualAttributeEntity.get_Meta().attributes ).notToHaveKey( "latestPostId" );
+			} );
+
+			it( "isolates virtual attributes added to spawned entities", function() {
+				var source  = getInstance( "User" ).appendVirtualAttribute( "sourceVirtual" );
+				var spawned = source.newEntity().appendVirtualAttribute( "spawnedVirtual" );
+				var sibling = source.newEntity();
+
+				expect( spawned.hasAttribute( "sourceVirtual" ) ).toBeTrue();
+				expect( spawned.hasAttribute( "spawnedVirtual" ) ).toBeTrue();
+				expect( source.hasAttribute( "spawnedVirtual" ) ).toBeFalse();
+				expect( sibling.hasAttribute( "spawnedVirtual" ) ).toBeFalse();
+				expect( getInstance( "User" ).hasAttribute( "spawnedVirtual" ) ).toBeFalse();
 			} );
 
 			it( "can get any attribute using the `getColumnName` magic methods", function() {

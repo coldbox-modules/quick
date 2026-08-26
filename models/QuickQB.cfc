@@ -11,6 +11,20 @@ component
 	property name="quickBuilder";
 
 	/**
+	 * Resolves a relationship without allocating nested guard callbacks.
+	 */
+	private any function resolveRelationship( required any entity, required string relationshipName ) {
+		arguments.entity.set_ignoreNotLoadedGuard( true );
+		arguments.entity.get_withoutRelationshipConstraints().add( lCase( arguments.relationshipName ) );
+		try {
+			return invoke( arguments.entity, arguments.relationshipName );
+		} finally {
+			arguments.entity.set_ignoreNotLoadedGuard( false );
+			arguments.entity.get_withoutRelationshipConstraints().remove( lCase( arguments.relationshipName ) );
+		}
+	}
+
+	/**
 	 * Adds a basic WHERE clause to the query.
 	 * If the column is an attribute on the entity, a query param struct is
 	 * generated using the column's sql type, if set.
@@ -445,11 +459,7 @@ component
 		}
 		var resolvedRelationshipName = arguments.relationshipName;
 
-		var relation = getEntity().ignoreLoadedGuard( function() {
-			return getEntity().withoutRelationshipConstraints( resolvedRelationshipName, function() {
-				return invoke( getEntity(), resolvedRelationshipName );
-			} );
-		} );
+		var relation = resolveRelationship( getEntity(), resolvedRelationshipName );
 
 		if ( relation.relationshipClass != "BelongsTo" ) {
 			throw(
@@ -461,7 +471,7 @@ component
 		var relatedMapping = relation.getRelated().mappingName();
 		var foreignKeys    = relation.getForeignKeys();
 		var localKeys      = relation.getLocalKeys();
-		relatedEntities.each( function( relatedEntity ) {
+		for ( var relatedEntity in relatedEntities ) {
 			if (
 				!isStruct( relatedEntity ) ||
 				!structKeyExists( relatedEntity, "isQuickEntity" ) ||
@@ -472,20 +482,18 @@ component
 					message = "All whereBelongsTo entities must match [#relatedMapping#]."
 				);
 			}
-		} );
+		}
 
-		return where(
-			column = function( q ) {
-				relatedEntities.each( function( relatedEntity ) {
-					q.orWhere( function( q2 ) {
-						for ( var i = 1; i <= foreignKeys.len(); i++ ) {
-							q2.where( foreignKeys[ i ], relatedEntity.retrieveAttribute( localKeys[ i ] ) );
-						}
-					} );
-				} );
-			},
-			combinator = arguments.combinator
-		);
+		var entityConstraints = forNestedWhere();
+		for ( var relatedEntity in relatedEntities ) {
+			var entityConstraint = entityConstraints.forNestedWhere();
+			for ( var i = 1; i <= foreignKeys.len(); i++ ) {
+				entityConstraint.where( foreignKeys[ i ], relatedEntity.retrieveAttribute( localKeys[ i ] ) );
+			}
+			entityConstraints.addNestedWhereQuery( entityConstraint, "or" );
+		}
+		addNestedWhereQuery( entityConstraints, arguments.combinator );
+		return this;
 	}
 
 	/**
@@ -520,39 +528,23 @@ component
 		boolean negate    = false
 	) {
 		if ( listLen( arguments.relationshipName, "." ) > 1 ) {
-			var nestedArguments = { "relationshipName" : listRest( arguments.relationshipName, "." ) };
-			if ( structKeyExists( arguments, "operator" ) ) {
-				nestedArguments.operator = arguments.operator;
-			}
-			if ( structKeyExists( arguments, "count" ) ) {
-				nestedArguments.count = arguments.count;
-			}
-
-			return whereHas(
-				relationshipName = listFirst( arguments.relationshipName, "." ),
-				callback         = function( q ) {
-					q.has( argumentCollection = nestedArguments );
-				},
-				combinator = arguments.combinator,
-				negate     = arguments.negate
-			);
+			return applyNestedHas( argumentCollection = arguments );
 		}
 
-		var relation = getEntity().ignoreLoadedGuard( function() {
-			var relationName = listFirst( relationshipName, "." );
-			return getEntity().withoutRelationshipConstraints( relationName, function() {
-				return invoke( getEntity(), relationName );
-			} );
-		} );
+		var relation = resolveRelationship( getEntity(), listFirst( arguments.relationshipName, "." ) );
 
 		arguments.relationQuery = relation
 			.addCompareConstraints()
 			.clearOrders()
 			.select( relation.raw( 1 ) );
 
-		arguments.relationQuery.when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
-			q.having( q.raw( "COUNT(*)" ), operator, count );
-		} );
+		if ( !isNull( arguments.operator ) && !isNull( arguments.count ) ) {
+			arguments.relationQuery.having(
+				arguments.relationQuery.raw( "COUNT(*)" ),
+				arguments.operator,
+				arguments.count
+			);
+		}
 
 		if ( structKeyExists( arguments.relationQuery, "retrieveQuery" ) ) {
 			arguments.relationQuery = arguments.relationQuery.retrieveQuery();
@@ -568,6 +560,43 @@ component
 			negate     = arguments.negate
 		);
 
+		return this;
+	}
+
+	/**
+	 * Applies the same nested query shape as the public `has` callback adapter,
+	 * but invokes the nested `has` directly on the related query.
+	 */
+	private QuickQB function applyNestedHas(
+		required string relationshipName,
+		any operator,
+		numeric count,
+		string combinator = "and",
+		boolean negate    = false
+	) {
+		var relation        = resolveRelationship( getEntity(), listFirst( arguments.relationshipName, "." ) );
+		var q               = relation.addCompareConstraints( nested = true ).clearOrders();
+		var nestedArguments = { "relationshipName" : listRest( arguments.relationshipName, "." ) };
+		if ( structKeyExists( arguments, "operator" ) ) {
+			nestedArguments.operator = arguments.operator;
+		}
+		if ( structKeyExists( arguments, "count" ) ) {
+			nestedArguments.count = arguments.count;
+		}
+		q.has( argumentCollection = nestedArguments );
+
+		if ( structKeyExists( q, "retrieveQuery" ) ) {
+			q = q.retrieveQuery();
+		}
+		if ( structKeyExists( q, "getQB" ) ) {
+			q = q.getQB();
+		}
+
+		whereExists(
+			query      = q,
+			combinator = arguments.combinator,
+			negate     = arguments.negate
+		);
 		return this;
 	}
 
@@ -649,12 +678,23 @@ component
 		string combinator = "and",
 		boolean negate    = false
 	) {
-		var relation = getEntity().ignoreLoadedGuard( function() {
-			var relationName = listFirst( relationshipName, "." );
-			return getEntity().withoutRelationshipConstraints( relationName, function() {
-				return invoke( getEntity(), relationName );
-			} );
-		} );
+		return applyWhereHas( argumentCollection = arguments );
+	}
+
+	/**
+	 * Internal implementation for relationship existence checks. Unlike the
+	 * public API, this helper can omit the callback for plain nested `has` calls.
+	 */
+	private QuickQB function applyWhereHas(
+		required string relationshipName,
+		any callback,
+		struct directConstraint,
+		any operator,
+		any count,
+		string combinator = "and",
+		boolean negate    = false
+	) {
+		var relation = resolveRelationship( getEntity(), listFirst( arguments.relationshipName, "." ) );
 
 		arguments.relationQuery = relation.addCompareConstraints( nested = true ).clearOrders();
 
@@ -680,13 +720,23 @@ component
 			return this;
 		}
 
-		var q = arguments.relationQuery
-			.when( !isNull( callback ), function( q ) {
-				callback( q );
-			} )
-			.when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
-				q.having( q.raw( "COUNT(*)" ), operator, count );
-			} );
+		var q = arguments.relationQuery;
+		if ( structKeyExists( arguments, "directConstraint" ) ) {
+			invoke(
+				q,
+				arguments.directConstraint.method,
+				arguments.directConstraint.arguments
+			);
+		} else if ( structKeyExists( arguments, "callback" ) && !isNull( arguments.callback ) ) {
+			q.when( true, arguments.callback );
+		}
+		if ( !isNull( arguments.operator ) && !isNull( arguments.count ) ) {
+			q.having(
+				q.raw( "COUNT(*)" ),
+				arguments.operator,
+				arguments.count
+			);
+		}
 
 		if ( structKeyExists( q, "retrieveQuery" ) ) {
 			q = q.retrieveQuery();
@@ -730,9 +780,13 @@ component
 			whereArguments[ "value" ] = arguments.value;
 		}
 
-		return whereHas( arguments.relationshipName, function( q ) {
-			invoke( q, "where", whereArguments );
-		} );
+		return applyWhereHas(
+			relationshipName = arguments.relationshipName,
+			directConstraint = {
+				"method"    : "where",
+				"arguments" : whereArguments
+			}
+		);
 	}
 
 	/**
@@ -774,30 +828,33 @@ component
 		required any relationQuery,
 		required string relationshipName,
 		any callback,
+		struct directConstraint,
 		any operator,
 		numeric count
 	) {
-		var relation = arguments.relationQuery
-			.getEntity()
-			.ignoreLoadedGuard( function() {
-				var relationName = listFirst( relationshipName, "." );
-				return relationQuery
-					.getEntity()
-					.withoutRelationshipConstraints( relationName, function() {
-						return invoke( relationQuery.getEntity(), relationName );
-					} );
-			} );
+		var relation = resolveRelationship(
+			arguments.relationQuery.getEntity(),
+			listFirst( arguments.relationshipName, "." )
+		);
 
 		if ( listLen( arguments.relationshipName, "." ) == 1 ) {
-			var q = relation
-				.addCompareConstraints( nested = arguments.relationQuery )
-				.clearOrders()
-				.when( !isNull( callback ), function( q ) {
-					callback( q );
-				} )
-				.when( !isNull( arguments.operator ) && !isNull( arguments.count ), function( q ) {
-					q.having( q.raw( "COUNT(*)" ), operator, count );
-				} );
+			var q = relation.addCompareConstraints( nested = arguments.relationQuery ).clearOrders();
+			if ( structKeyExists( arguments, "directConstraint" ) ) {
+				invoke(
+					q,
+					arguments.directConstraint.method,
+					arguments.directConstraint.arguments
+				);
+			} else if ( structKeyExists( arguments, "callback" ) && !isNull( arguments.callback ) ) {
+				q.when( true, arguments.callback );
+			}
+			if ( !isNull( arguments.operator ) && !isNull( arguments.count ) ) {
+				q.having(
+					q.raw( "COUNT(*)" ),
+					arguments.operator,
+					arguments.count
+				);
+			}
 
 			if ( structKeyExists( q, "retrieveQuery" ) ) {
 				q = q.retrieveQuery();
@@ -818,15 +875,26 @@ component
 			q = q.getQB();
 		}
 
+		var nestedArguments = {
+			"relationQuery"    : q,
+			"relationshipName" : listRest( arguments.relationshipName, "." )
+		};
+		for (
+			var optionalArgument in [
+				"callback",
+				"directConstraint",
+				"operator",
+				"count"
+			]
+		) {
+			if ( structKeyExists( arguments, optionalArgument ) && !isNull( arguments[ optionalArgument ] ) ) {
+				nestedArguments[ optionalArgument ] = arguments[ optionalArgument ];
+			}
+		}
+
 		var result = relation.nestCompareConstraints(
 			base   = arguments.relationQuery,
-			nested = whereHasNested(
-				relationQuery    = q,
-				relationshipName = listRest( arguments.relationshipName, "." ),
-				callback         = structKeyExists( arguments, "callback" ) ? arguments.callback : javacast( "null", "" ),
-				operator         = structKeyExists( arguments, "operator" ) ? arguments.operator : javacast( "null", "" ),
-				count            = structKeyExists( arguments, "count" ) ? arguments.count : javacast( "null", "" )
-			)
+			nested = whereHasNested( argumentCollection = nestedArguments )
 		);
 
 		return structKeyExists( result, "getQB" ) ? result.getQB() : result;

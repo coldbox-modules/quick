@@ -102,9 +102,9 @@ component
 	 * @return  quick.models.BaseEntity | qb.models.Query.QueryBuilder
 	 */
 	public any function addCompareConstraints( any base = variables.relationshipBuilder, any nested ) {
-		return tap( super.addCompareConstraints( arguments.base ), function( q ) {
-			q.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
-		} );
+		var query = super.addCompareConstraints( arguments.base );
+		query.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
+		return query;
 	}
 
 	/**
@@ -115,18 +115,15 @@ component
 	 * @return  void
 	 */
 	public void function applyThroughJoin( required any base ) {
-		arguments.base.join( variables.parent.tableName(), function( j ) {
-			arrayZipEach(
-				[
-					variables.foreignKeys,
-					variables.localKeys
-				],
-				function( foreignKey, localKey ) {
-					j.on( variables.related.qualifyColumn( foreignKey ), variables.parent.qualifyColumn( localKey ) );
-					j.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
-				}
+		var join = newJoinClause( arguments.base, variables.parent.tableName() );
+		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+			join.on(
+				variables.related.qualifyColumn( variables.foreignKeys[ i ] ),
+				variables.parent.qualifyColumn( variables.localKeys[ i ] )
 			);
-		} );
+		}
+		join.where( variables.related.qualifyColumn( variables.morphType ), variables.morphMapping );
+		attachJoinClause( arguments.base, join );
 	}
 
 	public struct function appendToDeepRelationship(

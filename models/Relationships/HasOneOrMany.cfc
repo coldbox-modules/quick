@@ -64,17 +64,13 @@ component
 	 * @return  quick.models.Relationships.HasOneOrMany
 	 */
 	public HasOneOrMany function addConstraints() {
-		variables.relationshipBuilder.where( function( q ) {
-			arrayZipEach(
-				[
-					getQualifiedForeignKeyNames(),
-					getParentKeys()
-				],
-				function( keyName, parentKey ) {
-					q.where( keyName, parentKey ).whereNotNull( keyName );
-				}
-			);
-		} );
+		var foreignKeyNames = getQualifiedForeignKeyNames();
+		var parentKeys      = getParentKeys();
+		var constraints     = variables.relationshipBuilder.getQB().forNestedWhere();
+		for ( var i = 1; i <= foreignKeyNames.len(); i++ ) {
+			constraints.where( foreignKeyNames[ i ], parentKeys[ i ] ).whereNotNull( foreignKeyNames[ i ] );
+		}
+		variables.relationshipBuilder.getQB().addNestedWhereQuery( constraints );
 		return this;
 	}
 
@@ -95,18 +91,18 @@ component
 			return false;
 		}
 
-		variables.relationshipBuilder.where( function( q ) {
-			allKeys.each( function( keys ) {
-				q.orWhere( function( q2 ) {
-					arrayZipEach( [ variables.foreignKeys, keys ], function( foreignKey, keyValue ) {
-						q2.where(
-							variables.related.qualifyColumn( foreignKey ),
-							variables.relationshipBuilder.generateQueryParamStruct( foreignKey, keyValue )
-						);
-					} );
-				} );
-			} );
-		} );
+		var eagerConstraints = variables.relationshipBuilder.getQB().forNestedWhere();
+		for ( var keys in allKeys ) {
+			var keyConstraints = eagerConstraints.forNestedWhere();
+			for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+				keyConstraints.where(
+					variables.related.qualifyColumn( variables.foreignKeys[ i ] ),
+					variables.relationshipBuilder.generateQueryParamStruct( variables.foreignKeys[ i ], keys[ i ] )
+				);
+			}
+			eagerConstraints.addNestedWhereQuery( keyConstraints, "or" );
+		}
+		variables.relationshipBuilder.getQB().addNestedWhereQuery( eagerConstraints );
 
 		return true;
 	}
@@ -171,22 +167,22 @@ component
 		required string type
 	) {
 		var dictionary = buildDictionary( arguments.results );
-		arguments.entities.each( function( entity ) {
-			var key = variables.localKeys
-				.map( function( localKey ) {
-					return structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[
-						localKey
-					];
-				} )
-				.toList();
+		for ( var entity in arguments.entities ) {
+			var keyValues = [];
+			for ( var localKey in variables.localKeys ) {
+				keyValues.append(
+					structKeyExists( entity, "isQuickEntity" ) ? entity.retrieveAttribute( localKey ) : entity[ localKey ]
+				);
+			}
+			var key = keyValues.toList();
 			if ( structKeyExists( dictionary, key ) ) {
-				if ( structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-					arguments.entity.assignRelationship( relation, getRelationValue( dictionary, key, type ) );
+				if ( structKeyExists( entity, "isQuickEntity" ) ) {
+					entity.assignRelationship( arguments.relation, getRelationValue( dictionary, key, arguments.type ) );
 				} else {
-					arguments.entity[ relation ] = getRelationValue( dictionary, key, type );
+					entity[ arguments.relation ] = getRelationValue( dictionary, key, arguments.type );
 				}
 			}
-		} );
+		}
 		return arguments.entities;
 	}
 
@@ -199,22 +195,25 @@ component
 	 * @return       {any: quick.models.BaseEntity}
 	 */
 	public struct function buildDictionary( required array results ) {
-		return arguments.results.reduce( function( dict, result ) {
-			var key = variables.foreignKeys
-				.map( function( foreignKey ) {
-					return entityRetrieveAttribute(
+		var dictionary = {};
+		for ( var result in arguments.results ) {
+			var keyValues = [];
+			for ( var foreignKey in variables.foreignKeys ) {
+				keyValues.append(
+					entityRetrieveAttribute(
 						result,
 						foreignKey,
 						variables.related
-					);
-				} )
-				.toList();
-			if ( !structKeyExists( arguments.dict, key ) ) {
-				arguments.dict[ key ] = [];
+					)
+				);
 			}
-			arrayAppend( arguments.dict[ key ], arguments.result );
-			return arguments.dict;
-		}, {} );
+			var key = keyValues.toList();
+			if ( !structKeyExists( dictionary, key ) ) {
+				dictionary[ key ] = [];
+			}
+			arrayAppend( dictionary[ key ], result );
+		}
+		return dictionary;
 	}
 
 	/**
@@ -243,9 +242,11 @@ component
 	 * @return   any
 	 */
 	public any function getParentKeys() {
-		return variables.localKeys.map( function( localKey ) {
-			return variables.parent.retrieveAttribute( localKey );
-		} );
+		var parentKeys = [];
+		for ( var localKey in variables.localKeys ) {
+			parentKeys.append( variables.parent.retrieveAttribute( localKey ) );
+		}
+		return parentKeys;
 	}
 
 	/**
@@ -260,18 +261,16 @@ component
 	 * @return        [quick.models.BaseEntity]
 	 */
 	public array function applySetter() {
-		variables.relationshipBuilder.updateAll(
-			attributes = variables.foreignKeys.reduce( function( acc, foreignKey ) {
-				acc[ foreignKey ] = {
-					"value"     : "",
-					"cfsqltype" : "varchar",
-					"null"      : true,
-					"nulls"     : true
-				};
-				return acc;
-			}, {} ),
-			force = true
-		);
+		var nullAttributes = {};
+		for ( var foreignKey in variables.foreignKeys ) {
+			nullAttributes[ foreignKey ] = {
+				"value"     : "",
+				"cfsqltype" : "varchar",
+				"null"      : true,
+				"nulls"     : true
+			};
+		}
+		variables.relationshipBuilder.updateAll( attributes = nullAttributes, force = true );
 		var savedEntities = saveMany( argumentCollection = arguments );
 		variables.parent.assignRelationship( variables.relationMethodName, savedEntities );
 		return savedEntities;
@@ -292,9 +291,10 @@ component
 			variables.relationMethodName
 		) : [];
 
-		var savedEntities = arguments.entities.map( function( entity ) {
-			return save( arguments.entity );
-		} );
+		var savedEntities = [];
+		for ( var entity in arguments.entities ) {
+			savedEntities.append( save( entity ) );
+		}
 		if ( relationshipWasLoaded ) {
 			loadedEntities.append( savedEntities, true );
 			variables.parent.assignRelationship( variables.relationMethodName, loadedEntities );
@@ -338,12 +338,13 @@ component
 		if ( !isObject( arguments.entity ) ) {
 			arguments.entity = arrayWrap( arguments.entity );
 			guardAgainstKeyLengthMismatch( arguments.entity, variables.related.keyNames() );
-			arguments.entity = tap( variables.related.newEntity(), function( e ) {
-				e.set_loaded( true );
-				arrayZipEach( [ variables.related.keyNames(), entity ], function( keyName, value ) {
-					e.forceAssignAttribute( keyName, value );
-				} );
-			} );
+			var keyValues       = arguments.entity;
+			arguments.entity    = variables.related.newEntity();
+			var relatedKeyNames = variables.related.keyNames();
+			arguments.entity.set_loaded( true );
+			for ( var i = 1; i <= relatedKeyNames.len(); i++ ) {
+				arguments.entity.forceAssignAttribute( relatedKeyNames[ i ], keyValues[ i ] );
+			}
 		}
 		setForeignAttributesForCreate( arguments.entity );
 		return arguments.entity.save();
@@ -392,17 +393,11 @@ component
 	 * @return   quick.models.BaseEntity
 	 */
 	public any function setForeignAttributesForCreate( required any entity ) {
-		return tap( arguments.entity, function( e ) {
-			arrayZipEach(
-				[
-					variables.foreignKeys,
-					getParentKeys()
-				],
-				function( foreignKey, parentKey ) {
-					e.forceAssignAttribute( foreignKey, parentKey );
-				}
-			);
-		} );
+		var parentKeys = getParentKeys();
+		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+			arguments.entity.forceAssignAttribute( variables.foreignKeys[ i ], parentKeys[ i ] );
+		}
+		return arguments.entity;
 	}
 
 
@@ -413,9 +408,11 @@ component
 	 * @return       [String]
 	 */
 	public array function getQualifiedLocalKeys( any builder = variables.relationshipBuilder ) {
-		return variables.localKeys.map( function( localKey ) {
-			return variables.parent.qualifyColumn( localKey );
-		} );
+		var qualifiedLocalKeys = [];
+		for ( var localKey in variables.localKeys ) {
+			qualifiedLocalKeys.append( variables.parent.qualifyColumn( localKey ) );
+		}
+		return qualifiedLocalKeys;
 	}
 
 	/**
@@ -425,9 +422,11 @@ component
 	 * @return       [String]
 	 */
 	public array function getQualifiedForeignKeyNames( any builder = variables.relationshipBuilder ) {
-		return variables.foreignKeys.map( function( foreignKey ) {
-			return builder.qualifyColumn( foreignKey );
-		} );
+		var qualifiedForeignKeys = [];
+		for ( var foreignKey in variables.foreignKeys ) {
+			qualifiedForeignKeys.append( arguments.builder.qualifyColumn( foreignKey ) );
+		}
+		return qualifiedForeignKeys;
 	}
 
 	/**
@@ -439,18 +438,12 @@ component
 	 */
 	public QuickBuilder function applyThroughExists( any base = variables.relationshipBuilder ) {
 		// apply compare constraints
-		arrayZipEach(
-			[
-				variables.foreignKeys,
-				variables.localKeys
-			],
-			function( foreignKey, localKey ) {
-				base.whereColumn(
-					variables.related.qualifyColumn( foreignKey ),
-					variables.parent.qualifyColumn( localKey )
-				);
-			}
-		);
+		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+			arguments.base.whereColumn(
+				variables.related.qualifyColumn( variables.foreignKeys[ i ] ),
+				variables.parent.qualifyColumn( variables.localKeys[ i ] )
+			);
+		}
 
 		// nest in exists
 		return variables.related
@@ -467,17 +460,14 @@ component
 	 * @return  void
 	 */
 	public void function applyThroughJoin( required any base ) {
-		arguments.base.join( variables.parent.tableName(), function( j ) {
-			arrayZipEach(
-				[
-					variables.foreignKeys,
-					variables.localKeys
-				],
-				function( foreignKey, localKey ) {
-					j.on( variables.related.qualifyColumn( foreignKey ), variables.parent.qualifyColumn( localKey ) );
-				}
+		var join = newJoinClause( arguments.base, variables.parent.tableName() );
+		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+			join.on(
+				variables.related.qualifyColumn( variables.foreignKeys[ i ] ),
+				variables.parent.qualifyColumn( variables.localKeys[ i ] )
 			);
-		} );
+		}
+		attachJoinClause( arguments.base, join );
 	}
 
 	/**
@@ -486,23 +476,16 @@ component
 	 * @return  void
 	 */
 	public QuickBuilder function initialThroughConstraints() {
-		return variables.related
-			.newQuery()
-			.reselectRaw( 1 )
-			.where( function( q ) {
-				arrayZipEach(
-					[
-						variables.foreignKeys,
-						variables.localKeys
-					],
-					function( foreignKey, localKey ) {
-						q.where(
-							variables.related.qualifyColumn( foreignKey ),
-							variables.parent.retrieveAttribute( localKey )
-						);
-					}
-				);
-			} );
+		var query       = variables.related.newQuery().reselectRaw( 1 );
+		var constraints = query.getQB().forNestedWhere();
+		for ( var i = 1; i <= variables.foreignKeys.len(); i++ ) {
+			constraints.where(
+				variables.related.qualifyColumn( variables.foreignKeys[ i ] ),
+				variables.parent.retrieveAttribute( variables.localKeys[ i ] )
+			);
+		}
+		query.getQB().addNestedWhereQuery( constraints );
+		return query;
 	}
 
 	public struct function appendToDeepRelationship(

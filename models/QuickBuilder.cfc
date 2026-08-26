@@ -142,6 +142,28 @@ component accessors="true" transientCache="false" {
 	}
 
 	/**
+	 * Resolves a relationship without allocating nested guard callbacks.
+	 */
+	private any function resolveRelationship(
+		required any entity,
+		required string relationshipName,
+		boolean withoutConstraints = true
+	) {
+		arguments.entity.set_ignoreNotLoadedGuard( true );
+		if ( arguments.withoutConstraints ) {
+			arguments.entity.get_withoutRelationshipConstraints().add( lCase( arguments.relationshipName ) );
+		}
+		try {
+			return invoke( arguments.entity, arguments.relationshipName );
+		} finally {
+			arguments.entity.set_ignoreNotLoadedGuard( false );
+			if ( arguments.withoutConstraints ) {
+				arguments.entity.get_withoutRelationshipConstraints().remove( lCase( arguments.relationshipName ) );
+			}
+		}
+	}
+
+	/**
 	 * Sets an alias for the current table name.
 	 *
 	 * @alias   The alias to use.
@@ -158,19 +180,21 @@ component accessors="true" transientCache="false" {
 
 	private void function ensureKeyColumnsSelected() {
 		var selectedColumns = variables.qb.getColumns();
-		if (
-			selectedColumns.some( function( column ) {
-				return column.type == "simple" && column.value.find( "*" );
-			} )
-		) {
-			return;
+		for ( var column in selectedColumns ) {
+			if ( column.type == "simple" && column.value.find( "*" ) ) {
+				return;
+			}
 		}
 
 		for ( var keyColumn in getEntity().keyColumns() ) {
 			var qualifiedKey = getEntity().qualifyColumn( keyColumn );
-			var hasKey       = selectedColumns.some( function( column ) {
-				return column.type == "simple" && compareNoCase( column.value, qualifiedKey ) == 0;
-			} );
+			var hasKey       = false;
+			for ( var column in selectedColumns ) {
+				if ( column.type == "simple" && compareNoCase( column.value, qualifiedKey ) == 0 ) {
+					hasKey = true;
+					break;
+				}
+			}
 			if ( !hasKey ) {
 				variables.qb.addSelect( qualifiedKey );
 			}
@@ -212,21 +236,9 @@ component accessors="true" transientCache="false" {
 				var relationshipName = listFirst( column, "." );
 
 				if ( isNull( q ) ) {
-					q = getEntity().ignoreLoadedGuard( function() {
-						return getEntity().withoutRelationshipConstraints( relationshipName, function() {
-							return invoke( getEntity(), relationshipName ).addCompareConstraints();
-						} );
-					} );
+					q = resolveRelationship( getEntity(), relationshipName ).addCompareConstraints();
 				} else {
-					var relationship = q
-						.getEntity()
-						.ignoreLoadedGuard( function() {
-							return q
-								.getEntity()
-								.withoutRelationshipConstraints( relationshipName, function() {
-									return invoke( q.getEntity(), relationshipName );
-								} );
-						} );
+					var relationship = resolveRelationship( q.getEntity(), relationshipName );
 					q.select( q.raw( 1 ) );
 					if ( isStruct( qb ) && structKeyExists( qb, "isQuickBuilder" ) ) {
 						q.getQB();
@@ -314,13 +326,14 @@ component accessors="true" transientCache="false" {
 		var builders = [];
 		for ( var r in arrayWrap( arguments.relation ) ) {
 			var relationName = r;
-			var callback     = function() {
-			};
+			var callback     = "";
+			var hasCallback  = false;
 
 			if ( isStruct( r ) ) {
 				for ( var key in r ) {
 					relationName = key;
 					callback     = r[ key ];
+					hasCallback  = true;
 					break;
 				}
 			}
@@ -335,15 +348,11 @@ component accessors="true" transientCache="false" {
 				subselectName = parts[ 2 ];
 			}
 
-			var countBuilder = getEntity().ignoreLoadedGuard( function() {
-				return getEntity().withoutRelationshipConstraints( relationName, function() {
-					return invoke( getEntity(), relationName )
-						.addCompareConstraints()
-						.when( true, callback )
-						.clearOrders()
-						.reselectRaw( "COUNT(*)" );
-				} );
-			} );
+			var countBuilder = resolveRelationship( getEntity(), relationName ).addCompareConstraints();
+			if ( hasCallback ) {
+				countBuilder.when( true, callback );
+			}
+			countBuilder.clearOrders().reselectRaw( "COUNT(*)" );
 
 			if ( arguments.asBuilder ) {
 				builders.append( countBuilder );
@@ -369,13 +378,14 @@ component accessors="true" transientCache="false" {
 		var builders = [];
 		for ( var r in arrayWrap( arguments.relationMapping ) ) {
 			var relationName = r;
-			var callback     = function() {
-			};
+			var callback     = "";
+			var hasCallback  = false;
 
 			if ( isStruct( relationName ) ) {
 				for ( var key in relationName ) {
 					callback     = relationName[ key ];
 					relationName = key;
+					hasCallback  = true;
 					break;
 				}
 			}
@@ -399,16 +409,12 @@ component accessors="true" transientCache="false" {
 				subselectName = parts[ 2 ];
 			}
 
-			var sumBuilder = getEntity().ignoreLoadedGuard( function() {
-				return getEntity().withoutRelationshipConstraints( relationName, function() {
-					var related = invoke( getEntity(), relationName );
-					return related
-						.addCompareConstraints()
-						.when( true, callback )
-						.clearOrders()
-						.reselectRaw( "COALESCE(SUM(#related.qualifyColumn( attributeName )#), 0)" );
-				} );
-			} );
+			var related    = resolveRelationship( getEntity(), relationName );
+			var sumBuilder = related.addCompareConstraints();
+			if ( hasCallback ) {
+				sumBuilder.when( true, callback );
+			}
+			sumBuilder.clearOrders().reselectRaw( "COALESCE(SUM(#related.qualifyColumn( attributeName )#), 0)" );
 
 			if ( arguments.asBuilder ) {
 				builders.append( sumBuilder );
@@ -438,11 +444,12 @@ component accessors="true" transientCache="false" {
 		if ( variables._asQuery ) {
 			return results;
 		}
-
 		var refreshQuery = variables.qb.clone();
-		return results.map( function( data ) {
-			return loadEntity( data, refreshQuery );
-		} );
+		var entities     = [];
+		for ( var result in results ) {
+			entities.append( variables.loadEntity( result, refreshQuery ) );
+		}
+		return entities;
 	}
 
 	/**
@@ -486,14 +493,14 @@ component accessors="true" transientCache="false" {
 			getEntity().guardReadOnly();
 			getEntity().guardAgainstReadOnlyAttributes( arguments.attributes );
 		}
-		return variables.qb.update(
-			arguments.attributes.map( function( key, value ) {
-				return getEntity().generateQueryParamStruct(
-					column = key,
-					value  = isNull( value ) ? javacast( "null", "" ) : value
-				);
-			} )
-		);
+		var updateAttributes = {};
+		for ( var key in arguments.attributes ) {
+			updateAttributes[ key ] = getEntity().generateQueryParamStruct(
+				column = key,
+				value  = isNull( arguments.attributes[ key ] ) ? javacast( "null", "" ) : arguments.attributes[ key ]
+			);
+		}
+		return variables.qb.update( updateAttributes );
 	}
 
 	/**
@@ -513,26 +520,53 @@ component accessors="true" transientCache="false" {
 		function onFalse,
 		boolean withoutScoping = false
 	) {
-		var defaultCallback = function( q ) {
-			return q;
-		};
-		arguments.onFalse = isNull( arguments.onFalse ) ? defaultCallback : arguments.onFalse;
+		if ( !arguments.condition && isNull( arguments.onFalse ) ) {
+			return this;
+		}
+		var selectedCallback = arguments.condition ? arguments.onTrue : arguments.onFalse;
 
 		if ( arguments.withoutScoping ) {
-			if ( arguments.condition ) {
-				arguments.onTrue( this );
-			} else {
-				arguments.onFalse( this );
-			}
+			selectedCallback( this );
 		} else {
-			var selectedCallback = arguments.condition ? arguments.onTrue : arguments.onFalse;
-			var builder          = this;
-			variables.qb.withScoping( function() {
-				selectedCallback( builder );
-			} );
+			var originalWhereCount = variables.qb.getWheres().len();
+			selectedCallback( this );
+			groupNewWheresForScope( originalWhereCount );
 		}
 
 		return this;
+	}
+
+	/**
+	 * Groups OR predicates added by a callback using qb's nested-query objects.
+	 */
+	private void function groupNewWheresForScope( required numeric originalWhereCount ) {
+		if ( variables.qb.getWheres().len() <= arguments.originalWhereCount ) {
+			return;
+		}
+		var allWheres = variables.qb.getWheres();
+		variables.qb.setWheres( [] );
+		if ( arguments.originalWhereCount > 0 ) {
+			appendScopedWhereSlice(
+				arraySlice(
+					allWheres,
+					1,
+					arguments.originalWhereCount
+				)
+			);
+		}
+		appendScopedWhereSlice( arraySlice( allWheres, arguments.originalWhereCount + 1 ) );
+	}
+
+	private void function appendScopedWhereSlice( required array whereSlice ) {
+		for ( var whereClause in arguments.whereSlice ) {
+			if ( compareNoCase( whereClause.combinator, "OR" ) == 0 ) {
+				variables.qb.addNestedWhereQuery( variables.qb.forNestedWhere().setWheres( arguments.whereSlice ) );
+				return;
+			}
+		}
+		var wheres = variables.qb.getWheres();
+		wheres.append( arguments.whereSlice, true );
+		variables.qb.setWheres( wheres );
 	}
 
 	/**
@@ -549,19 +583,18 @@ component accessors="true" transientCache="false" {
 	public struct function deleteAll( array ids = [] ) {
 		getEntity().guardReadOnly();
 		if ( !arrayIsEmpty( arguments.ids ) ) {
-			variables.qb.where( function( q1 ) {
-				ids.each( function( id ) {
-					var values = arrayWrap( id );
-					getEntity().guardAgainstKeyLengthMismatch( values );
-					q1.orWhere( function( q2 ) {
-						getEntity()
-							.keyNames()
-							.each( function( keyName, i ) {
-								q2.where( keyName, values[ i ] );
-							} );
-					} );
-				} );
-			} );
+			var idConstraints = variables.qb.forNestedWhere();
+			for ( var id in arguments.ids ) {
+				var values = arrayWrap( id );
+				getEntity().guardAgainstKeyLengthMismatch( values );
+				var keyConstraints = idConstraints.forNestedWhere();
+				var keyNames       = getEntity().keyNames();
+				for ( var i = 1; i <= keyNames.len(); i++ ) {
+					keyConstraints.where( keyNames[ i ], values[ i ] );
+				}
+				idConstraints.addNestedWhereQuery( keyConstraints, "or" );
+			}
+			variables.qb.addNestedWhereQuery( idConstraints );
 		}
 		return variables.qb.delete();
 	}
@@ -604,14 +637,25 @@ component accessors="true" transientCache="false" {
 			return this;
 		}
 
-		var exclusions       = arrayWrap( arguments.relationName );
-		variables._eagerLoad = variables._eagerLoad.filter( function( eagerLoad ) {
-			var path = isStruct( arguments.eagerLoad ) ? arguments.eagerLoad.keyArray()[ 1 ] : arguments.eagerLoad;
-			return !exclusions.some( function( exclusion ) {
-				return compareNoCase( path, exclusion ) == 0 ||
-				compareNoCase( left( path, len( exclusion ) + 1 ), exclusion & "." ) == 0;
-			} );
-		} );
+		var exclusions    = arrayWrap( arguments.relationName );
+		var eagerLoadList = [];
+		for ( var eagerLoad in variables._eagerLoad ) {
+			var path       = isStruct( eagerLoad ) ? eagerLoad.keyArray()[ 1 ] : eagerLoad;
+			var isExcluded = false;
+			for ( var exclusion in exclusions ) {
+				if (
+					compareNoCase( path, exclusion ) == 0 ||
+					compareNoCase( left( path, len( exclusion ) + 1 ), exclusion & "." ) == 0
+				) {
+					isExcluded = true;
+					break;
+				}
+			}
+			if ( !isExcluded ) {
+				eagerLoadList.append( eagerLoad );
+			}
+		}
+		variables._eagerLoad = eagerLoadList;
 		return this;
 	}
 
@@ -656,13 +700,14 @@ component accessors="true" transientCache="false" {
 			}
 		}
 
-		structEach( denestEagerLoads( variables._eagerLoad ), function( relationName, nestedEagerLoads ) {
-			entities = eagerLoadRelation(
+		var eagerLoads = denestEagerLoads( variables._eagerLoad );
+		for ( var relationName in eagerLoads ) {
+			arguments.entities = eagerLoadRelation(
 				relationName,
-				nestedEagerLoads,
-				entities
+				eagerLoads[ relationName ],
+				arguments.entities
 			);
-		} );
+		}
 
 		return arguments.entities;
 	}
@@ -677,15 +722,19 @@ component accessors="true" transientCache="false" {
 		var result = {};
 
 		for ( var relationshipPath in arguments.eagerLoads ) {
-			var callback = function() {
-			};
-			var pathString = "";
+			var callbackConfig = { "present" : false };
+			var pathString     = "";
 
 			// Handle struct format: { "path.to.relation": callback }
 			if ( isStruct( relationshipPath ) ) {
 				for ( var key in relationshipPath ) {
-					pathString = key;
-					callback   = relationshipPath[ key ];
+					pathString             = key;
+					callbackConfig.present = isCustomFunction( relationshipPath[ key ] ) || isClosure(
+						relationshipPath[ key ]
+					);
+					if ( callbackConfig.present ) {
+						callbackConfig.value = relationshipPath[ key ];
+					}
 					break;
 				}
 			} else {
@@ -697,27 +746,21 @@ component accessors="true" transientCache="false" {
 
 			// Initialize the entry if it doesn't exist
 			if ( !result.keyExists( firstPart ) ) {
-				result[ firstPart ] = {
-					"callback" : function() {
-					},
-					"nested" : {}
-				};
+				result[ firstPart ] = { "nested" : {} };
 			}
 
 			if ( parts.len() > 1 ) {
 				// Build the nested path with the callback attached to the deepest level
 				var nestedPath = arraySlice( parts, 2 ).toList( "." );
-				var nestedItem = isCustomFunction( callback ) || isClosure( callback )
-				 ? { "#nestedPath#" : callback }
-				 : nestedPath;
+				var nestedItem = callbackConfig.present ? { "#nestedPath#" : callbackConfig.value } : nestedPath;
 
 				var nestedResult                = denestEagerLoads( [ nestedItem ] );
 				// Merge nested results
 				result[ firstPart ][ "nested" ] = mergeNestedEagerLoads( result[ firstPart ][ "nested" ], nestedResult );
 			} else {
 				// This is the target level - apply the callback here
-				if ( isCustomFunction( callback ) || isClosure( callback ) ) {
-					result[ firstPart ][ "callback" ] = callback;
+				if ( callbackConfig.present ) {
+					result[ firstPart ][ "callback" ] = callbackConfig.value;
 				}
 			}
 		}
@@ -757,48 +800,41 @@ component accessors="true" transientCache="false" {
 	public array function renestEagerLoads( required struct additionalEagerLoads ) {
 		// Input format: { "relationName": { "callback": fn, "nested": { ... } } }
 		// Output format: array of strings or structs like { "path.to.relation": callback }
-		return structReduce(
-			arguments.additionalEagerLoads,
-			function( acc, relationName, eagerLoadConfig ) {
-				var callback = function() {
-				};
-				if ( eagerLoadConfig.keyExists( "callback" ) ) {
-					callback = eagerLoadConfig.callback;
-				}
-				var nestedConfig = {};
-				if ( eagerLoadConfig.keyExists( "nested" ) ) {
-					nestedConfig = eagerLoadConfig.nested;
-				}
-				var hasCallback = isCustomFunction( callback ) || isClosure( callback );
+		var eagerLoads = [];
+		for ( var relationName in arguments.additionalEagerLoads ) {
+			var eagerLoadConfig = arguments.additionalEagerLoads[ relationName ];
+			var hasCallback     = eagerLoadConfig.keyExists( "callback" ) && (
+				isCustomFunction( eagerLoadConfig.callback ) || isClosure( eagerLoadConfig.callback )
+			);
+			var nestedConfig = {};
+			if ( eagerLoadConfig.keyExists( "nested" ) ) {
+				nestedConfig = eagerLoadConfig.nested;
+			}
+			// Get the renested items from nested config
+			var nestedItems = renestEagerLoads( nestedConfig );
 
-				// Get the renested items from nested config
-				var nestedItems = renestEagerLoads( nestedConfig );
-
-				if ( nestedItems.len() > 0 ) {
-					// There are nested items - prepend this relationName to each
-					for ( var nestedItem in nestedItems ) {
-						if ( isSimpleValue( nestedItem ) ) {
-							acc.append( relationName & "." & nestedItem );
-						} else {
-							// It's a struct with callback - prepend relationName to the key
-							for ( var key in nestedItem ) {
-								acc.append( { "#relationName#.#key#" : nestedItem[ key ] } );
-								break;
-							}
+			if ( nestedItems.len() > 0 ) {
+				// There are nested items - prepend this relationName to each
+				for ( var nestedItem in nestedItems ) {
+					if ( isSimpleValue( nestedItem ) ) {
+						eagerLoads.append( relationName & "." & nestedItem );
+					} else {
+						// It's a struct with callback - prepend relationName to the key
+						for ( var key in nestedItem ) {
+							eagerLoads.append( { "#relationName#.#key#" : nestedItem[ key ] } );
+							break;
 						}
 					}
-				} else if ( hasCallback ) {
-					// No nested, but has a callback - return as struct
-					acc.append( { "#relationName#" : callback } );
-				} else {
-					// No nested, no callback - just the relation name
-					acc.append( relationName );
 				}
-
-				return acc;
-			},
-			[]
-		);
+			} else if ( hasCallback ) {
+				// No nested, but has a callback - return as struct
+				eagerLoads.append( { "#relationName#" : eagerLoadConfig.callback } );
+			} else {
+				// No nested, no callback - just the relation name
+				eagerLoads.append( relationName );
+			}
+		}
+		return eagerLoads;
 	}
 
 	/**
@@ -818,22 +854,15 @@ component accessors="true" transientCache="false" {
 		required array entities
 	) {
 		// Extract callback and nested config from the eagerLoadConfig
-		var callback = function() {
-		};
-		if ( arguments.eagerLoadConfig.keyExists( "callback" ) ) {
-			callback = arguments.eagerLoadConfig.callback;
-		}
 		var nestedEagerLoads = {};
 		if ( arguments.eagerLoadConfig.keyExists( "nested" ) ) {
 			nestedEagerLoads = arguments.eagerLoadConfig.nested;
 		}
 
-		var relation = getEntity().ignoreLoadedGuard( function() {
-			return getEntity().withoutRelationshipConstraints( relationName, function() {
-				return invoke( getEntity(), relationName );
-			} );
-		} );
-		callback( relation );
+		var relation = resolveRelationship( getEntity(), relationName );
+		if ( arguments.eagerLoadConfig.keyExists( "callback" ) ) {
+			arguments.eagerLoadConfig.callback( relation );
+		}
 		var hasMatches = relation.addEagerConstraints( arguments.entities, getEntity() );
 		relation.with( renestEagerLoads( nestedEagerLoads ) );
 		var matchedEntities = relation.match(
@@ -842,11 +871,11 @@ component accessors="true" transientCache="false" {
 			arguments.relationName
 		);
 		var loadedRelationshipName = arguments.relationName;
-		matchedEntities.each( function( entity ) {
-			if ( isStruct( arguments.entity ) && structKeyExists( arguments.entity, "isQuickEntity" ) ) {
-				arguments.entity.fireRelationshipLoaded( loadedRelationshipName );
+		for ( var entity in matchedEntities ) {
+			if ( isStruct( entity ) && structKeyExists( entity, "isQuickEntity" ) ) {
+				entity.fireRelationshipLoaded( loadedRelationshipName );
 			}
-		} );
+		}
 		return matchedEntities;
 	}
 
@@ -883,21 +912,9 @@ component accessors="true" transientCache="false" {
 		while ( listLen( arguments.relationshipName, "." ) > 0 ) {
 			var thisRelationshipName = listFirst( arguments.relationshipName, "." );
 			if ( isNull( q ) ) {
-				q = getEntity().ignoreLoadedGuard( function() {
-					return getEntity().withoutRelationshipConstraints( thisRelationshipName, function() {
-						return invoke( getEntity(), thisRelationshipName ).addCompareConstraints().clearOrders();
-					} );
-				} );
+				q = resolveRelationship( getEntity(), thisRelationshipName ).addCompareConstraints().clearOrders();
 			} else {
-				var relationship = q
-					.getEntity()
-					.ignoreLoadedGuard( function() {
-						return q
-							.getEntity()
-							.withoutRelationshipConstraints( thisRelationshipName, function() {
-								return invoke( q.getEntity(), thisRelationshipName );
-							} );
-					} );
+				var relationship = resolveRelationship( q.getEntity(), thisRelationshipName );
 
 				var existsQuery = relationship.addCompareConstraints( q.select( q.raw( 1 ) ) ).clearOrders();
 
@@ -1003,28 +1020,24 @@ component accessors="true" transientCache="false" {
 				entity.qualifyColumn( entity.keyNames()[ 1 ] )
 			);
 		} else if ( entity.isDiscriminatedParent() && entity.get_loadChildren() ) {
-			entity
-				.getDiscriminations()
-				.each( function( discriminator, data ) {
-					// only join if this is a polymorphic association
-					if ( !entity.isSingleTableInheritance() ) {
-						variables.qb.join(
-							data.table,
-							getEntity().qualifyColumn( getEntity().keyNames()[ 1 ] ),
-							"=",
-							data.joincolumn,
-							"left outer"
-						);
-					}
-					variables.qb.addSelect(
-						data.childColumns.map( ( column ) => {
-							if ( column == data.joincolumn ) {
-								return "#column# AS #column#"
-							}
-							return column;
-						} )
+			for ( var discriminator in entity.getDiscriminations() ) {
+				var data = entity.getDiscriminations()[ discriminator ];
+				// only join if this is a polymorphic association
+				if ( !entity.isSingleTableInheritance() ) {
+					variables.qb.join(
+						data.table,
+						getEntity().qualifyColumn( getEntity().keyNames()[ 1 ] ),
+						"=",
+						data.joincolumn,
+						"left outer"
 					);
-				} );
+				}
+				var childColumns = [];
+				for ( var column in data.childColumns ) {
+					childColumns.append( column == data.joincolumn ? "#column# AS #column#" : column );
+				}
+				variables.qb.addSelect( childColumns );
+			}
 		}
 	}
 
@@ -1387,11 +1400,11 @@ component accessors="true" transientCache="false" {
 		if ( !isNull( arguments.id ) ) {
 			arguments.id = arrayWrap( arguments.id );
 			getEntity().guardAgainstKeyLengthMismatch( arguments.id );
-			variables.qb.where( function( q ) {
-				for ( var keyColumn in getEntity().keyColumns() ) {
-					q.where( keyColumn, id[ 1 ] );
-				}
-			} );
+			var keyConstraints = variables.qb.forNestedWhere();
+			for ( var keyColumn in getEntity().keyColumns() ) {
+				keyConstraints.where( keyColumn, arguments.id[ 1 ] );
+			}
+			variables.qb.addNestedWhereQuery( keyConstraints );
 		}
 		return variables.qb.exists( arguments.options );
 	}
@@ -1441,16 +1454,33 @@ component accessors="true" transientCache="false" {
 		required callback,
 		struct options = {}
 	) {
+		if ( arguments.max <= 0 ) {
+			throw( type = "InvalidChunkSize", message = "Chunk size must be greater than zero." );
+		}
 		activateGlobalScopes();
-		variables.qb.chunk(
-			arguments.max,
-			function( rows ) {
-				var entities   = variables._asQuery ? arguments.rows : arguments.rows.map( variables.loadEntity );
-				var collection = getEntity().newCollection( handleTransformations( eagerLoadRelations( entities ) ) );
-				return callback( collection );
-			},
-			arguments.options
-		);
+		var rowOffset = 0;
+		while ( true ) {
+			var rows = variables.qb
+				.limit( arguments.max )
+				.offset( rowOffset )
+				.get( options = arguments.options );
+			if ( rows.len() == 0 ) {
+				break;
+			}
+			var entities = rows;
+			if ( !variables._asQuery ) {
+				entities = [];
+				for ( var row in rows ) {
+					entities.append( variables.loadEntity( row ) );
+				}
+			}
+			var collection     = getEntity().newCollection( handleTransformations( eagerLoadRelations( entities ) ) );
+			var shouldContinue = arguments.callback( collection );
+			if ( ( !isNull( shouldContinue ) && !shouldContinue ) || rows.len() < arguments.max ) {
+				break;
+			}
+			rowOffset += arguments.max;
+		}
 		return this;
 	}
 
@@ -1478,7 +1508,11 @@ component accessors="true" transientCache="false" {
 			arguments.options
 		);
 		if ( !variables._asQuery ) {
-			p.results = p.results.map( variables.loadEntity );
+			var entities = [];
+			for ( var result in p.results ) {
+				entities.append( variables.loadEntity( result ) );
+			}
+			p.results = entities;
 		}
 		p.results = handleTransformations( eagerLoadRelations( p.results ) );
 		return p;
@@ -1508,7 +1542,11 @@ component accessors="true" transientCache="false" {
 			arguments.options
 		);
 		if ( !variables._asQuery ) {
-			p.results = p.results.map( variables.loadEntity );
+			var entities = [];
+			for ( var result in p.results ) {
+				entities.append( variables.loadEntity( result ) );
+			}
+			p.results = entities;
 		}
 		p.results = handleTransformations( eagerLoadRelations( p.results ) );
 		return p;
@@ -1571,9 +1609,11 @@ component accessors="true" transientCache="false" {
 	private any function handleTransformations( entity ) {
 		if ( !variables._asQuery ) {
 			if ( isArray( arguments.entity ) ) {
-				arguments.entity = arguments.entity.map( function( item ) {
-					return applyEntityTransformers( arguments.item );
-				} );
+				var transformedEntities = [];
+				for ( var item in arguments.entity ) {
+					transformedEntities.append( applyEntityTransformers( item ) );
+				}
+				arguments.entity = transformedEntities;
 			} else if ( !isNull( arguments.entity ) ) {
 				arguments.entity = applyEntityTransformers( arguments.entity );
 			}
@@ -1587,18 +1627,22 @@ component accessors="true" transientCache="false" {
 			return arguments.entity.getMemento( argumentCollection = variables._asMementoSettings );
 		}
 
-		return arguments.entity.map( function( e ) {
-			return e.getMemento( argumentCollection = variables._asMementoSettings );
-		} );
+		var mementos = [];
+		for ( var entity in arguments.entity ) {
+			mementos.append( entity.getMemento( argumentCollection = variables._asMementoSettings ) );
+		}
+		return mementos;
 	}
 
 	/**
 	 * Applies all configured entity transformers to one hydrated entity.
 	 */
 	private any function applyEntityTransformers( required any entity ) {
-		return variables._entityTransformers.reduce( function( transformed, transformer ) {
-			return arguments.transformer( arguments.transformed );
-		}, arguments.entity );
+		var transformed = arguments.entity;
+		for ( var transformer in variables._entityTransformers ) {
+			transformed = transformer( transformed );
+		}
+		return transformed;
 	}
 
 	/**
@@ -1707,11 +1751,13 @@ component accessors="true" transientCache="false" {
 	 */
 	public any function loadEntity( required struct data, any refreshQuery ) {
 		var loadedData     = arguments.data;
-		var hasVirtualData = getEntity()
-			.get_virtualAttributes()
-			.some( function( attribute ) {
-				return loadedData.keyExists( attribute );
-			} );
+		var hasVirtualData = false;
+		for ( var attribute in getEntity().get_virtualAttributes() ) {
+			if ( loadedData.keyExists( attribute ) ) {
+				hasVirtualData = true;
+				break;
+			}
+		}
 		if ( hasVirtualData && isNull( arguments.refreshQuery ) ) {
 			arguments.refreshQuery = variables.qb.clone();
 		}
@@ -1721,25 +1767,23 @@ component accessors="true" transientCache="false" {
 			&&
 			getEntity().isDiscriminatedParent()
 			&&
-			structKeyExists( arguments.data, listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) )
+			structKeyExists( arguments.data, listLast( getEntity().discriminatorColumn(), "." ) )
 			&&
 			structKeyExists(
 				getEntity().getDiscriminations(),
-				arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]
+				arguments.data[ listLast( getEntity().discriminatorColumn(), "." ) ]
 			)
 		) {
 			var discrimination = getEntity().getDiscriminations()[
-				arguments.data[ listLast( getEntity().get_meta().localMetadata.discriminatorColumn, "." ) ]
+				arguments.data[ listLast( getEntity().discriminatorColumn(), "." ) ]
 			];
 
 			var childClass = variables._wirebox.getInstance( discrimination.mapping );
 
 			// add any virtual attributes present in the parent entity to child entity
-			getEntity()
-				.get_virtualAttributes()
-				.each( function( item ) {
-					childClass.appendVirtualAttribute( item );
-				} );
+			for ( var item in getEntity().get_virtualAttributes() ) {
+				childClass.appendVirtualAttribute( item );
+			}
 
 			// find the correct child columns to use, in the case that multiple child tables contain the same column
 			for ( var column in data ) {
@@ -1801,25 +1845,24 @@ component accessors="true" transientCache="false" {
 		variables._withAliases = arguments.withAliases;
 		if ( variables._withAliases ) {
 			var qualifiedColumns = getEntity().retrieveQualifiedColumns();
-			qb.setColumns(
-				qb.getColumns()
-					.map( function( column ) {
-						if ( column.type == "raw" || column.type == "builder" ) {
-							return column;
-						}
-
-						if ( !qualifiedColumns.contains( column.value ) ) {
-							return column;
-						}
-
-						return {
-							"type"  : "simple",
-							"value" : column.value & " AS " & getEntity().retrieveAliasForColumn(
-								listLast( column.value, "." )
-							)
-						};
-					} )
-			);
+			var columns          = [];
+			for ( var column in qb.getColumns() ) {
+				if (
+					column.type != "raw" &&
+					column.type != "builder" &&
+					qualifiedColumns.contains( column.value )
+				) {
+					columns.append( {
+						"type"  : "simple",
+						"value" : column.value & " AS " & getEntity().retrieveAliasForColumn(
+							listLast( column.value, "." )
+						)
+					} );
+				} else {
+					columns.append( column );
+				}
+			}
+			qb.setColumns( columns );
 		}
 		variables._asMemento = false;
 		return this;
@@ -1874,9 +1917,10 @@ component accessors="true" transientCache="false" {
 			return arguments.arrays;
 		}
 
-		var lengths = arguments.arrays.map( function( arr ) {
-			return arr.len();
-		} );
+		var lengths = [];
+		for ( var arr in arguments.arrays ) {
+			lengths.append( arr.len() );
+		}
 
 		if ( unique( lengths ).len() > 1 ) {
 			throw(

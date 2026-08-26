@@ -12,13 +12,11 @@ component implements="KeyType" {
 	 * @return   void
 	 */
 	public void function preInsert( required any entity, required any builder ) {
-		arguments.entity
-			.keyNames()
-			.each( function( keyName ) {
-				if ( entity.isNullAttribute( keyName ) ) {
-					entity.assignAttribute( keyName, createGUID() );
-				}
-			} );
+		for ( var keyName in arguments.entity.keyNames() ) {
+			if ( arguments.entity.isNullAttribute( keyName ) ) {
+				arguments.entity.assignAttribute( keyName, createGUID() );
+			}
+		}
 	}
 
 	/**

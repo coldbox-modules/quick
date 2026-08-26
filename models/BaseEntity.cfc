@@ -1903,7 +1903,23 @@ component accessors="true" {
 		}
 
 		if ( !isLoaded() ) {
-			onMissingMethod( "get#arguments.name#", {} );
+			var previousIgnoreLoadedGuard     = variables._ignoreNotLoadedGuard;
+			variables._ignoreNotLoadedGuard   = true;
+			var resolvedRelationshipContainer = {};
+			try {
+				resolvedRelationshipContainer.value = invoke( this, arguments.name, {} );
+			} finally {
+				variables._ignoreNotLoadedGuard = previousIgnoreLoadedGuard;
+			}
+			if (
+				!resolvedRelationshipContainer.keyExists( "value" ) ||
+				!isObject( resolvedRelationshipContainer.value ) ||
+				!structKeyExists( resolvedRelationshipContainer.value, "relationshipClass" )
+			) {
+				throwRelationshipNotFound( arguments.name );
+			}
+			resolvedRelationshipContainer.value.setRelationMethodName( arguments.name );
+			resolvedRelationshipContainer.value.initRelation( [ this ], arguments.name );
 			return variables._relationshipsData.keyExists( arguments.name )
 			 ? variables._relationshipsData[ arguments.name ]
 			 : javacast( "null", "" );

@@ -1886,7 +1886,10 @@ component accessors="true" {
 	 *
 	 * @return  quick.models.BaseEntity | [quick.models.BaseEntity]
 	 */
-	public any function retrieveRelationship( required string name, any defaultValue ) {
+	public any function retrieveRelationship(
+		required string name,
+		any defaultValue = variables._nullValueArgumentSentinel
+	) {
 		if ( variables._relationshipsData.keyExists( arguments.name ) ) {
 			return variables._relationshipsData[ arguments.name ];
 		}
@@ -1897,16 +1900,14 @@ component accessors="true" {
 			throwRelationshipNotFound( arguments.name );
 		}
 
-		if ( arguments.keyExists( "defaultValue" ) ) {
+		if ( !variables._nullValueArgumentSentinel.equals( arguments.defaultValue ) ) {
 			assignRelationship( arguments.name, arguments.defaultValue );
 			return arguments.defaultValue;
 		}
 
 		if ( !isLoaded() ) {
-			tryRelationshipGetter( "get#arguments.name#", {} );
-			return variables._relationshipsData.keyExists( arguments.name )
-			 ? variables._relationshipsData[ arguments.name ]
-			 : javacast( "null", "" );
+			initializeUnloadedRelationship( arguments.name, {} );
+			return retrieveRelationship( arguments.name );
 		}
 		return javacast( "null", "" );
 	}

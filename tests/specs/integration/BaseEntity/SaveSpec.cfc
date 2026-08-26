@@ -56,16 +56,147 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( newUser.retrieveAttributesData() ).toHaveKey( "id" );
 			} );
 
-			it( "retrieves database-generated attributes marked to refresh on save", function() {
+			it( "refreshes database-generated attributes after inserts with one fallback read", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
+				structDelete( request, "databaseGeneratedUserPostLoadCount" );
+				structDelete( request, "databaseGeneratedUserPostInsertCreatedDate" );
+
 				var newUser = getInstance( "DatabaseGeneratedUser" )
 					.setUsername( "database-timestamp-user" )
 					.setFirstName( "Database" )
 					.setLastName( "Timestamp" )
-					.save();
+					.save( { "timeout" : 30 } );
 
 				expect( newUser.getCreatedDate() ).notToBe( "" );
 				expect( newUser.getCreatedDate() ).toBeDate();
+				expect( newUser.getType() ).toBe( "LIMITED" );
 				expect( newUser.isDirty( "createdDate" ) ).toBeFalse();
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
+				expect( request.saveSpecPreQBExecute[ 1 ].options.timeout ).toBe( 30 );
+				expect( request.saveSpecPreQBExecute[ 2 ].options.timeout ).toBe( 30 );
+				expect( request.databaseGeneratedUserPostLoadCount ).toBe( 1 );
+				expect( request.databaseGeneratedUserPostInsertCreatedDate ).toBe( newUser.getCreatedDate() );
+			} );
+
+			it( "refreshes database-generated attributes after updates with one fallback read", function() {
+				var existingUser        = getInstance( "DatabaseGeneratedUser" ).findOrFail( 1 );
+				var originalCreatedDate = existingUser.getCreatedDate();
+
+				structDelete( request, "saveSpecPreQBExecute" );
+				structDelete( request, "databaseGeneratedUserPostLoadCount" );
+				structDelete( request, "databaseGeneratedUserPostUpdateCreatedDate" );
+
+				existingUser
+					.setCreatedDate( dateAdd( "d", 1, originalCreatedDate ) )
+					.setType( "POISONED" )
+					.setFirstName( "Updated" )
+					.save();
+
+				expect( dateCompare( existingUser.getCreatedDate(), originalCreatedDate ) ).toBe( 0 );
+				expect( existingUser.getType() ).toBe( "ADMIN" );
+				expect( existingUser.isDirty( "createdDate" ) ).toBeFalse();
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 2 );
+				expect( request.databaseGeneratedUserPostLoadCount ).toBe( 1 );
+				expect( request.databaseGeneratedUserPostUpdateCreatedDate ).toBe( existingUser.getCreatedDate() );
+			} );
+
+			it( "can disable the refresh-on-save fallback read for one save", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
+
+				var newUser = getInstance( "DatabaseGeneratedUser" )
+					.setUsername( "database-timestamp-without-fallback" )
+					.setFirstName( "Database" )
+					.setLastName( "No Fallback" )
+					.save( refreshOnSaveFallback = false );
+
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 1 );
+				expect( newUser.retrieveAttributesData() ).notToHaveKey( "created_date" );
+			} );
+
+			it( "uses the injected global refresh-on-save fallback setting", function() {
+				structDelete( request, "saveSpecPreQBExecute" );
+				var newUser = getInstance( "DatabaseGeneratedUser" );
+				expect( newUser.get_refreshOnSaveFallback() ).toBeTrue();
+
+				newUser
+					.set_refreshOnSaveFallback( false )
+					.setUsername( "database-timestamp-global-without-fallback" )
+					.setFirstName( "Database" )
+					.setLastName( "Global No Fallback" )
+					.save();
+
+				expect( request.saveSpecPreQBExecute ).toHaveLength( 1 );
+				expect( newUser.retrieveAttributesData() ).notToHaveKey( "created_date" );
+			} );
+
+			it( "uses native returning support without replacing existing returning columns", function() {
+				var entity = getInstance( "DatabaseGeneratedUser" );
+				makePublic( entity, "retrieveRefreshOnSaveAttributes" );
+				makePublic( entity, "configureRefreshOnSaveReturning" );
+				makePublic( entity, "grammarSupportsReturning" );
+
+				expect( entity.grammarSupportsReturning( getInstance( "PostgresGrammar@qb" ) ) ).toBeTrue();
+				expect( entity.grammarSupportsReturning( getInstance( "SQLiteGrammar@qb" ) ) ).toBeTrue();
+				expect( entity.grammarSupportsReturning( getInstance( "SqlServerGrammar@qb" ) ) ).toBeTrue();
+				expect( entity.grammarSupportsReturning( getInstance( "MySQLGrammar@qb" ) ) ).toBeFalse();
+
+				var builder = entity.newQuery();
+				builder
+					.getQB()
+					.setGrammar( getInstance( "PostgresGrammar@qb" ) )
+					.returning( "id" );
+				entity.configureRefreshOnSaveReturning(
+					builder           = builder,
+					attributes        = entity.retrieveRefreshOnSaveAttributes(),
+					includeKeyColumns = true
+				);
+
+				var returning       = builder.getQB().getReturning();
+				var returningValues = [];
+				for ( var returningColumn in returning ) {
+					returningValues.append( returningColumn.value );
+				}
+				expect( returningValues ).toHaveLength( 3 );
+				expect( arrayFindNoCase( returningValues, "id" ) ).toBeGT( 0 );
+				expect( arrayFindNoCase( returningValues, "created_date" ) ).toBeGT( 0 );
+				expect( arrayFindNoCase( returningValues, "type" ) ).toBeGT( 0 );
+
+				var returningSql = builder.getQB().insert( values = { "username" : "native-returning" }, toSql = true );
+				expect( returningSql ).toInclude( "RETURNING" );
+				expect( returningSql ).toInclude( '"id"' );
+				expect( returningSql ).toInclude( '"created_date"' );
+				expect( returningSql ).toInclude( '"type"' );
+
+				var updateBuilder = entity.newQuery();
+				updateBuilder
+					.getQB()
+					.setGrammar( getInstance( "PostgresGrammar@qb" ) )
+					.where( "id", 1 );
+				entity.configureRefreshOnSaveReturning(
+					builder    = updateBuilder,
+					attributes = entity.retrieveRefreshOnSaveAttributes()
+				);
+				var updateReturningSql = updateBuilder.update( values = { "first_name" : "Native" }, toSql = true );
+				expect( updateReturningSql ).toInclude( "RETURNING" );
+				expect( updateReturningSql ).toInclude( '"created_date"' );
+				expect( updateReturningSql ).toInclude( '"type"' );
+			} );
+
+			it( "uses a returned key row for auto-incrementing entities", function() {
+				var returnedKeys = queryNew( "id", "integer" );
+				queryAddRow( returnedKeys );
+				querySetCell( returnedKeys, "id", 42 );
+				var entity = getInstance( "DatabaseGeneratedUser" );
+
+				getInstance( "AutoIncrementingKeyType@quick" ).postInsert(
+					entity,
+					{
+						"query"  : returnedKeys,
+						"result" : {}
+					}
+				);
+
+				expect( entity.getId() ).toBe( 42 );
 			} );
 
 			it( "a saved entity is not dirty", function() {

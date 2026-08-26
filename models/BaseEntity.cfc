@@ -197,6 +197,15 @@ component accessors="true" {
 		inject    ="box:setting:lazyLoadingViolationCallback@quick";
 
 	/**
+	 * Whether attributes marked `refreshOnSave` may use a follow-up read when
+	 * the database cannot return their values from the write statement.
+	 */
+	property
+		name      ="_refreshOnSaveFallback"
+		persistent="false"
+		inject    ="box:setting:refreshOnSaveFallback@quick";
+
+	/**
 	 * A boolean flag representing that events should not be fired.
 	 */
 	property name="_withoutFiringEvents" persistent="false";
@@ -278,6 +287,7 @@ component accessors="true" {
 		variables._withoutFiringEvents            = false;
 		variables._nullValueArgumentSentinel      = createObject( "java", "java.lang.Object" ).init();
 		param variables._preventLazyLoading       = false;
+		param variables._refreshOnSaveFallback    = true;
 		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
 				throw(
@@ -1385,11 +1395,13 @@ component accessors="true" {
 	 * If the entity is not loaded, it inserts the data into the database.
 	 * Otherwise it updates the database.
 	 *
-	 * @options Any options to pass to `queryExecute`. Default: {}.
+	 * @options                Any options to pass to `queryExecute`. Default: {}.
+	 * @refreshOnSaveFallback  Whether attributes marked `refreshOnSave` may use a follow-up read when
+	 *                         the database cannot return their values from the write statement.
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function save( struct options = {} ) {
+	public any function save( struct options = {}, boolean refreshOnSaveFallback = variables._refreshOnSaveFallback ) {
 		if ( hasParentEntity() ) {
 			var parentDefinition = getParentDefinition();
 			if ( isLoaded() ) {
@@ -1401,7 +1413,9 @@ component accessors="true" {
 				var parent = variables._wirebox.getInstance( parentDefinition.meta.fullName );
 			}
 
-			parent.fill( retrieveAttributesData(), true ).save( arguments.options );
+			parent
+				.fill( retrieveAttributesData(), true )
+				.save( options = arguments.options, refreshOnSaveFallback = arguments.refreshOnSaveFallback );
 
 			assignAttributesData( {
 				"#parentDefinition.key#"        : parent.keyValues()[ 1 ],
@@ -1418,8 +1432,10 @@ component accessors="true" {
 			}
 		);
 		mergeAttributesFromCastCache();
-		variables._saving = true;
-		var builder       = newQuery();
+		variables._saving           = true;
+		var builder                 = newQuery();
+		var refreshOnSaveAttributes = retrieveRefreshOnSaveAttributes();
+		var result                  = {};
 		if ( variables._loaded ) {
 			fireEvent(
 				"preUpdate",
@@ -1449,8 +1465,14 @@ component accessors="true" {
 				updateConstraints.where( entityKeyNames[ i ], entityKeyValues[ i ] );
 			}
 			builder.getQB().addNestedWhereQuery( updateConstraints );
-			builder.update( updateAttributes, arguments.options );
-			refreshAttributesOnSave();
+			configureRefreshOnSaveReturning( builder, refreshOnSaveAttributes );
+			result = builder.update( updateAttributes, arguments.options );
+			refreshAttributesOnSave(
+				result        = result,
+				attributes    = refreshOnSaveAttributes,
+				allowFallback = arguments.refreshOnSaveFallback,
+				options       = arguments.options
+			);
 			assignOriginalAttributes( retrieveAttributesData() );
 			markLoaded();
 			fireEvent(
@@ -1485,11 +1507,21 @@ component accessors="true" {
 			}
 			guardEmptyAttributeData( attrs );
 
-			var result = builder.insert( attrs, arguments.options );
+			configureRefreshOnSaveReturning(
+				builder           = builder,
+				attributes        = refreshOnSaveAttributes,
+				includeKeyColumns = true
+			);
+			result = builder.insert( attrs, arguments.options );
 			retrieveKeyType().postInsert( this, result );
-			markLoaded();
-			refreshAttributesOnSave();
+			refreshAttributesOnSave(
+				result        = result,
+				attributes    = refreshOnSaveAttributes,
+				allowFallback = arguments.refreshOnSaveFallback,
+				options       = arguments.options
+			);
 			assignOriginalAttributes( retrieveAttributesData() );
+			markLoaded();
 			fireEvent(
 				"postInsert",
 				{
@@ -1522,43 +1554,154 @@ component accessors="true" {
 	}
 
 	/**
-	 * Refreshes attributes whose values are generated or changed by the database
-	 * during persistence.
+	 * Retrieves the attributes whose values should be refreshed after a write.
 	 */
-	private void function refreshAttributesOnSave() {
+	private struct function retrieveRefreshOnSaveAttributes() {
 		var attributesToRefresh = {};
-		for ( var name in variables._attributes ) {
-			if ( variables._attributes[ name ].refreshOnSave ) {
-				attributesToRefresh[ name ] = variables._attributes[ name ];
+		for ( var name in retrieveAttributeNames() ) {
+			var attribute = retrieveAttributeDefinition( name );
+			if ( attribute.refreshOnSave ) {
+				attributesToRefresh[ name ] = attribute;
+			}
+		}
+		return attributesToRefresh;
+	}
+
+	/**
+	 * Adds refresh-on-save columns to native RETURNING or OUTPUT clauses when
+	 * the active grammar supports them. Existing returning columns are retained.
+	 */
+	private boolean function configureRefreshOnSaveReturning(
+		required any builder,
+		required struct attributes,
+		boolean includeKeyColumns = false
+	) {
+		if ( arguments.attributes.isEmpty() || !grammarSupportsReturning( arguments.builder.getQB().getGrammar() ) ) {
+			return false;
+		}
+
+		var returning = [];
+		for ( var existingReturning in arguments.builder.getQB().getReturning() ) {
+			returning.append( existingReturning );
+		}
+
+		var columns = [];
+		if ( arguments.includeKeyColumns ) {
+			columns.append( keyColumns(), true );
+		}
+		for ( var name in arguments.attributes ) {
+			columns.append( arguments.attributes[ name ].column );
+		}
+
+		for ( var column in columns ) {
+			var alreadyReturning = false;
+			for ( var returningColumn in returning ) {
+				if (
+					returningColumn.type == "simple" &&
+					compareNoCase( returningColumn.value, column ) == 0
+				) {
+					alreadyReturning = true;
+					break;
+				}
+			}
+			if ( !alreadyReturning ) {
+				returning.append( { "type" : "simple", "value" : column } );
 			}
 		}
 
-		if ( attributesToRefresh.isEmpty() ) {
+		arguments.builder.getQB().setReturning( returning );
+		return true;
+	}
+
+	/**
+	 * Returns whether the concrete qb grammar supports returned rows on inserts
+	 * and updates.
+	 */
+	private boolean function grammarSupportsReturning( required any grammar ) {
+		var resolvedGrammar = arguments.grammar.getResolvedGrammar();
+		return isInstanceOf( resolvedGrammar, "qb.models.Grammars.PostgresGrammar" ) ||
+		isInstanceOf( resolvedGrammar, "qb.models.Grammars.SQLiteGrammar" ) ||
+		isInstanceOf( resolvedGrammar, "qb.models.Grammars.SqlServerGrammar" );
+	}
+
+	/**
+	 * Refreshes database-generated values from the write result when available,
+	 * falling back to one narrow keyed read when allowed.
+	 */
+	private void function refreshAttributesOnSave(
+		required struct result,
+		required struct attributes,
+		required boolean allowFallback,
+		struct options = {}
+	) {
+		if (
+			arguments.attributes.isEmpty() || populateRefreshAttributesFromWrite(
+				arguments.result,
+				arguments.attributes
+			)
+		) {
+			return;
+		}
+
+		if ( !arguments.allowFallback ) {
 			return;
 		}
 
 		var refreshQuery = newQuery().withoutGlobalScope();
 		var entityKeys   = keyNames();
-		var entityValues = keyValues();
 		for ( var i = 1; i <= entityKeys.len(); i++ ) {
-			refreshQuery.where( entityKeys[ i ], entityValues[ i ] );
-		}
-		var refreshedEntity = refreshQuery.first();
-		if ( isNull( refreshedEntity ) ) {
-			return;
+			refreshQuery.where( entityKeys[ i ], retrieveAttribute( entityKeys[ i ] ) );
 		}
 
-		var refreshedData = refreshedEntity.retrieveAttributesData( withNulls = true );
-		for ( var name in attributesToRefresh ) {
-			var attribute = attributesToRefresh[ name ];
-			if ( isNull( refreshedData[ attribute.column ] ) ) {
-				variables._data[ attribute.column ] = javacast( "null", "" );
-				variables[ attribute.name ]         = javacast( "null", "" );
-			} else {
-				variables._data[ attribute.column ] = refreshedData[ attribute.column ];
-				variables[ attribute.name ]         = refreshedData[ attribute.column ];
-			}
+		var refreshColumns = [];
+		for ( var name in arguments.attributes ) {
+			refreshColumns.append( arguments.attributes[ name ].column );
 		}
+		var refreshedData = refreshQuery
+			.getQB()
+			.select( refreshColumns )
+			.first( arguments.options );
+		if ( refreshedData.isEmpty() ) {
+			return;
+		}
+		populateRefreshAttributes( refreshedData, arguments.attributes );
+	}
+
+	/**
+	 * Populates refresh-on-save attributes from a returned query row.
+	 */
+	private boolean function populateRefreshAttributesFromWrite( required struct result, required struct attributes ) {
+		if (
+			!arguments.result.keyExists( "query" ) ||
+			isNull( arguments.result.query ) ||
+			!isQuery( arguments.result.query ) ||
+			arguments.result.query.recordCount == 0
+		) {
+			return false;
+		}
+
+		var refreshedData = {};
+		for ( var name in arguments.attributes ) {
+			var column = arguments.attributes[ name ].column;
+			if ( !listFindNoCase( arguments.result.query.columnList, column ) ) {
+				return false;
+			}
+			refreshedData[ column ] = isNull( arguments.result.query[ column ][ 1 ] )
+			 ? javacast( "null", "" )
+			 : arguments.result.query[ column ][ 1 ];
+		}
+		populateRefreshAttributes( refreshedData, arguments.attributes );
+		return true;
+	}
+
+	/**
+	 * Populates refreshed values through Quick's normal hydration and cast path.
+	 */
+	private void function populateRefreshAttributes( required struct refreshedData, required struct attributes ) {
+		for ( var name in arguments.attributes ) {
+			structDelete( variables._castCache, name );
+		}
+		populateAttributes( arguments.refreshedData );
 	}
 
 	/**

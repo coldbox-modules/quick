@@ -11,6 +11,26 @@ component
 	property
 		name         ="createdDate"
 		column       ="created_date"
+		update       ="false"
 		refreshOnSave="true";
+	property
+		name         ="type"
+		insert       ="false"
+		update       ="false"
+		refreshOnSave="true"
+		casts        ="UppercaseCast";
+
+	function postLoad( eventData ) {
+		param request.databaseGeneratedUserPostLoadCount = 0;
+		request.databaseGeneratedUserPostLoadCount++;
+	}
+
+	function postInsert( eventData ) {
+		request.databaseGeneratedUserPostInsertCreatedDate = arguments.eventData.entity.getCreatedDate();
+	}
+
+	function postUpdate( eventData ) {
+		request.databaseGeneratedUserPostUpdateCreatedDate = arguments.eventData.entity.getCreatedDate();
+	}
 
 }

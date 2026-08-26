@@ -36,9 +36,18 @@ component implements="KeyType" {
 			return;
 		}
 		var keyName      = arguments.entity.keyNames()[ 1 ];
-		var generatedKey = arguments.result.result.keyExists( keyName ) ? arguments.result.result[ keyName ] : arguments.result.result.keyExists(
-			"generated_key"
-		) ? arguments.result.result[ "generated_key" ] : arguments.result.result[ "generatedKey" ];
+		var keyColumn    = arguments.entity.keyColumns()[ 1 ];
+		var generatedKey = arguments.result.keyExists( "query" ) &&
+		!isNull( arguments.result.query ) &&
+		isQuery( arguments.result.query ) &&
+		arguments.result.query.recordCount > 0 &&
+		listFindNoCase( arguments.result.query.columnList, keyColumn )
+		 ? arguments.result.query[ keyColumn ][ 1 ]
+		 : arguments.result.result.keyExists( keyName )
+		 ? arguments.result.result[ keyName ]
+		 : arguments.result.result.keyExists( "generated_key" )
+		 ? arguments.result.result[ "generated_key" ]
+		 : arguments.result.result[ "generatedKey" ];
 		arguments.entity.assignAttribute( keyName, int( val( generatedKey ) ) );
 	}
 

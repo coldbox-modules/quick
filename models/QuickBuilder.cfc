@@ -1044,11 +1044,17 @@ component accessors="true" transientCache="false" {
 	/**
 	 * Creates a virtual attribute for the given name.
 	 *
-	 * @name    The attribute name to create.
+	 * @name                The attribute name to create.
+	 * @defaultValue        The default value for the virtual attribute.
+	 * @excludeFromMemento  Whether to exclude the virtual attribute from mementos.
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function appendVirtualAttribute( required string name, boolean excludeFromMemento = false ) {
+	public any function appendVirtualAttribute(
+		required string name,
+		any defaultValue,
+		boolean excludeFromMemento = false
+	) {
 		getEntity().appendVirtualAttribute( argumentCollection = arguments );
 		return this;
 	}

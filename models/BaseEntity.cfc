@@ -3401,6 +3401,9 @@ component accessors="true" {
 			) {
 				variables._virtualAttributes.append( runtimeAttribute.name );
 			}
+			if ( runtimeAttribute.virtual && runtimeAttribute.keyExists( "defaultValue" ) ) {
+				forceAssignAttribute( runtimeAttribute.name, runtimeAttribute.defaultValue );
+			}
 		}
 		if ( isDiscriminatedChild() ) {
 			assignAttribute(
@@ -3678,18 +3681,39 @@ component accessors="true" {
 	/**
 	 * Creates a virtual attribute for the given name.
 	 *
-	 * @name    The attribute name to create.
+	 * @name                The attribute name to create.
+	 * @defaultValue        The default value for the virtual attribute.
+	 * @excludeFromMemento  Whether to exclude the virtual attribute from mementos.
 	 *
 	 * @return  quick.models.BaseEntity
 	 */
-	public any function appendVirtualAttribute( required string name, boolean excludeFromMemento = false ) {
+	public any function appendVirtualAttribute(
+		required string name,
+		any defaultValue,
+		boolean excludeFromMemento = false
+	) {
 		if ( isNull( retrieveAttributeDefinition( arguments.name ) ) ) {
-			var attr = paramAttribute( {
+			var attributeDefinition = {
 				"name"    : arguments.name,
 				"virtual" : true,
 				"exclude" : arguments.excludeFromMemento
-			} );
+			};
+			if ( arguments.keyExists( "defaultValue" ) ) {
+				attributeDefinition.defaultValue = arguments.defaultValue;
+			}
+			var attr = paramAttribute( attributeDefinition );
 			registerRuntimeAttribute( attr );
+			if (
+				!arguments.excludeFromMemento &&
+				structKeyExists( this, "memento" ) &&
+				structKeyExists( this.memento, "defaultIncludes" ) &&
+				!arrayContainsNoCase( this.memento.defaultIncludes, arguments.name )
+			) {
+				this.memento.defaultIncludes.append( arguments.name );
+			}
+			if ( arguments.keyExists( "defaultValue" ) ) {
+				forceAssignAttribute( arguments.name, arguments.defaultValue );
+			}
 		}
 		return this;
 	}

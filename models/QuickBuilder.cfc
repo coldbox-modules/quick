@@ -540,9 +540,8 @@ component accessors="true" transientCache="false" {
 			arguments.update = prepareBulkMutationAttributes( arguments.update );
 		}
 
-		var qbArguments = duplicate( arguments );
-		structDelete( qbArguments, "force" );
-		return variables.qb.upsert( argumentCollection = qbArguments );
+		structDelete( arguments, "force" );
+		return variables.qb.upsert( argumentCollection = arguments );
 	}
 
 	/**

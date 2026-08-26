@@ -2983,6 +2983,25 @@ component accessors="true" {
 			relationship.relationshipClass != "BelongsTo" &&
 			relationship.relationshipClass != "PolymorphicBelongsTo"
 		) {
+			if ( !isLoaded() ) {
+				var relationshipValue  = arguments.missingMethodArguments[ 1 ];
+				var relatedEntity      = relationship.getRelated();
+				var filledRelationship = relationshipValue;
+				if ( isArray( relationshipValue ) ) {
+					filledRelationship = [];
+					for ( var value in relationshipValue ) {
+						filledRelationship.append(
+							isStruct( value ) && !structKeyExists( value, "isQuickEntity" )
+							 ? relatedEntity.newEntity().fill( value )
+							 : value
+						);
+					}
+				} else if ( isStruct( relationshipValue ) && !structKeyExists( relationshipValue, "isQuickEntity" ) ) {
+					filledRelationship = relatedEntity.newEntity().fill( relationshipValue );
+				}
+				assignRelationship( relationshipName, filledRelationship );
+				return filledRelationship;
+			}
 			guardAgainstNotLoaded(
 				"This instance is not loaded so it cannot set the [#relationshipName#] relationship.  " &
 				"Save the new entity first before trying to save related entities."

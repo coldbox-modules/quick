@@ -36,6 +36,25 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				).notToBeNull();
 			} );
 
+			it( "creates only the root while retaining filled relationships in memory", function() {
+				var user = getInstance( "User" ).create( {
+					"username"   : "aggregate-user",
+					"first_name" : "Aggregate",
+					"last_name"  : "User",
+					"password"   : hash( "password" ),
+					"posts"      : [
+						{ "body" : "First child" },
+						{ "body" : "Second child" }
+					]
+				} );
+
+				expect( user.isLoaded() ).toBeTrue();
+				expect( user.getPosts() ).toHaveLength( 2 );
+				expect( user.getPosts()[ 1 ].isLoaded() ).toBeFalse();
+				expect( user.getPosts()[ 2 ].isLoaded() ).toBeFalse();
+				expect( user.fresh().getPosts() ).toBeEmpty();
+			} );
+
 			it( "can create a new entity with a json cast", () => {
 				var newTheme = getInstance( "Theme" ).create( {
 					slug    : "theme-new",

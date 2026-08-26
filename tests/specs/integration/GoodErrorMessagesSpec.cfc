@@ -64,18 +64,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				skip = server.keyExists( "boxlang" )
 			);
 
-			it( "throws a helpful error message when trying to set a belongsToMany relationship when the relationship is not loaded", function() {
-				expect( function() {
-					getInstance( "Post" ).create( {
-						"user_id"       : 1,
-						"body"          : "A new post body",
-						"publishedDate" : now(),
-						"tags"          : [ 1, 2 ]
-					} );
-				} ).toThrow(
-					type  = "QuickEntityNotLoaded",
-					regex = "This instance is not loaded so it cannot set the \[tags\] relationship\.  Save the new entity first before trying to save related entities\."
-				);
+			it( "does not persist a filled belongsToMany relationship when creating the parent", function() {
+				var post = getInstance( "Post" ).create( {
+					"user_id"       : 1,
+					"body"          : "A new post body",
+					"publishedDate" : now(),
+					"tags"          : [ 1, 2 ]
+				} );
+
+				expect( post.isLoaded() ).toBeTrue();
+				expect( post.getTags() ).toBe( [ 1, 2 ] );
+				expect( post.fresh().getTags() ).toBeEmpty();
 			} );
 		} );
 	}

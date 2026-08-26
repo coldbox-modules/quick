@@ -721,7 +721,7 @@ component
 		}
 
 		var q = arguments.relationQuery;
-		if ( structKeyExists( arguments, "directConstraint" ) ) {
+		if ( structKeyExists( arguments, "directConstraint" ) && !isNull( arguments.directConstraint ) ) {
 			invoke(
 				q,
 				arguments.directConstraint.method,
@@ -839,7 +839,7 @@ component
 
 		if ( listLen( arguments.relationshipName, "." ) == 1 ) {
 			var q = relation.addCompareConstraints( nested = arguments.relationQuery ).clearOrders();
-			if ( structKeyExists( arguments, "directConstraint" ) ) {
+			if ( structKeyExists( arguments, "directConstraint" ) && !isNull( arguments.directConstraint ) ) {
 				invoke(
 					q,
 					arguments.directConstraint.method,

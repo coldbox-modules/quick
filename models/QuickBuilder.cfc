@@ -1634,8 +1634,8 @@ component accessors="true" transientCache="false" {
 		}
 
 		var mementos = [];
-		for ( var entity in arguments.entity ) {
-			mementos.append( entity.getMemento( argumentCollection = variables._asMementoSettings ) );
+		for ( var resultEntity in arguments.entity ) {
+			mementos.append( resultEntity.getMemento( argumentCollection = variables._asMementoSettings ) );
 		}
 		return mementos;
 	}

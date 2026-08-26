@@ -1903,7 +1903,10 @@ component accessors="true" {
 		}
 
 		if ( !isLoaded() ) {
-			return onMissingMethod( "get#arguments.name#", {} );
+			onMissingMethod( "get#arguments.name#", {} );
+			return variables._relationshipsData.keyExists( arguments.name )
+			 ? variables._relationshipsData[ arguments.name ]
+			 : javacast( "null", "" );
 		}
 		return javacast( "null", "" );
 	}

@@ -12,6 +12,7 @@ component {
 			"defaultQueryOptions"          : {},
 			"preventDuplicateJoins"        : true,
 			"preventLazyLoading"           : false,
+			"refreshOnSaveFallback"        : true,
 			"lazyLoadingViolationCallback" : ( entity, relationName ) => {
 				throw(
 					type    = "QuickLazyLoadingException",

@@ -1465,7 +1465,11 @@ component accessors="true" {
 				updateConstraints.where( entityKeyNames[ i ], entityKeyValues[ i ] );
 			}
 			builder.getQB().addNestedWhereQuery( updateConstraints );
-			configureRefreshOnSaveReturning( builder, refreshOnSaveAttributes );
+			configureRefreshOnSaveReturning(
+				builder    = builder,
+				attributes = refreshOnSaveAttributes,
+				operation  = "update"
+			);
 			result = builder.update( updateAttributes, arguments.options );
 			refreshAttributesOnSave(
 				result        = result,
@@ -1510,6 +1514,7 @@ component accessors="true" {
 			configureRefreshOnSaveReturning(
 				builder           = builder,
 				attributes        = refreshOnSaveAttributes,
+				operation         = "insert",
 				includeKeyColumns = true
 			);
 			result = builder.insert( attrs, arguments.options );
@@ -1574,9 +1579,32 @@ component accessors="true" {
 	private boolean function configureRefreshOnSaveReturning(
 		required any builder,
 		required struct attributes,
+		required string operation,
 		boolean includeKeyColumns = false
 	) {
-		if ( arguments.attributes.isEmpty() || !grammarSupportsReturning( arguments.builder.getQB().getGrammar() ) ) {
+		if ( arguments.attributes.isEmpty() ) {
+			return false;
+		}
+
+		var grammar = arguments.builder
+			.getQB()
+			.getGrammar()
+			.getResolvedGrammar();
+		var supportsReturning = false;
+		switch ( arguments.operation ) {
+			case "insert":
+				supportsReturning = grammar.supportsReturningRowsOnInsert();
+				break;
+			case "update":
+				supportsReturning = grammar.supportsReturningRowsOnUpdate();
+				break;
+			default:
+				throw(
+					type    = "QuickInvalidRefreshOnSaveOperation",
+					message = "Invalid refresh-on-save operation [#arguments.operation#]. Expected [insert] or [update]."
+				);
+		}
+		if ( !supportsReturning ) {
 			return false;
 		}
 
@@ -1611,17 +1639,6 @@ component accessors="true" {
 
 		arguments.builder.getQB().setReturning( returning );
 		return true;
-	}
-
-	/**
-	 * Returns whether the concrete qb grammar supports returned rows on inserts
-	 * and updates.
-	 */
-	private boolean function grammarSupportsReturning( required any grammar ) {
-		var resolvedGrammar = arguments.grammar.getResolvedGrammar();
-		return isInstanceOf( resolvedGrammar, "qb.models.Grammars.PostgresGrammar" ) ||
-		isInstanceOf( resolvedGrammar, "qb.models.Grammars.SQLiteGrammar" ) ||
-		isInstanceOf( resolvedGrammar, "qb.models.Grammars.SqlServerGrammar" );
 	}
 
 	/**

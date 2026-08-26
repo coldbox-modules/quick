@@ -133,12 +133,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var entity = getInstance( "DatabaseGeneratedUser" );
 				makePublic( entity, "retrieveRefreshOnSaveAttributes" );
 				makePublic( entity, "configureRefreshOnSaveReturning" );
-				makePublic( entity, "grammarSupportsReturning" );
 
-				expect( entity.grammarSupportsReturning( getInstance( "PostgresGrammar@qb" ) ) ).toBeTrue();
-				expect( entity.grammarSupportsReturning( getInstance( "SQLiteGrammar@qb" ) ) ).toBeTrue();
-				expect( entity.grammarSupportsReturning( getInstance( "SqlServerGrammar@qb" ) ) ).toBeTrue();
-				expect( entity.grammarSupportsReturning( getInstance( "MySQLGrammar@qb" ) ) ).toBeFalse();
+				expect( getInstance( "PostgresGrammar@qb" ).supportsReturningRowsOnInsert() ).toBeTrue();
+				expect( getInstance( "PostgresGrammar@qb" ).supportsReturningRowsOnUpdate() ).toBeTrue();
+				expect( getInstance( "SQLiteGrammar@qb" ).supportsReturningRowsOnInsert() ).toBeTrue();
+				expect( getInstance( "SQLiteGrammar@qb" ).supportsReturningRowsOnUpdate() ).toBeTrue();
+				expect( getInstance( "SqlServerGrammar@qb" ).supportsReturningRowsOnInsert() ).toBeTrue();
+				expect( getInstance( "SqlServerGrammar@qb" ).supportsReturningRowsOnUpdate() ).toBeTrue();
+				expect( getInstance( "MySQLGrammar@qb" ).supportsReturningRowsOnInsert() ).toBeFalse();
+				expect( getInstance( "MySQLGrammar@qb" ).supportsReturningRowsOnUpdate() ).toBeFalse();
 
 				var builder = entity.newQuery();
 				builder
@@ -148,6 +151,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				entity.configureRefreshOnSaveReturning(
 					builder           = builder,
 					attributes        = entity.retrieveRefreshOnSaveAttributes(),
+					operation         = "insert",
 					includeKeyColumns = true
 				);
 
@@ -174,12 +178,43 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					.where( "id", 1 );
 				entity.configureRefreshOnSaveReturning(
 					builder    = updateBuilder,
-					attributes = entity.retrieveRefreshOnSaveAttributes()
+					attributes = entity.retrieveRefreshOnSaveAttributes(),
+					operation  = "update"
 				);
 				var updateReturningSql = updateBuilder.update( values = { "first_name" : "Native" }, toSql = true );
 				expect( updateReturningSql ).toInclude( "RETURNING" );
 				expect( updateReturningSql ).toInclude( '"created_date"' );
 				expect( updateReturningSql ).toInclude( '"type"' );
+			} );
+
+			it( "checks returning-row support for the current write operation", function() {
+				var entity = getInstance( "DatabaseGeneratedUser" );
+				makePublic( entity, "retrieveRefreshOnSaveAttributes" );
+				makePublic( entity, "configureRefreshOnSaveReturning" );
+				var attributes = entity.retrieveRefreshOnSaveAttributes();
+				var grammar    = new tests.resources.InsertOnlyReturningGrammar();
+
+				var insertBuilder = entity.newQuery();
+				insertBuilder.getQB().setGrammar( grammar );
+				expect(
+					entity.configureRefreshOnSaveReturning(
+						builder    = insertBuilder,
+						attributes = attributes,
+						operation  = "insert"
+					)
+				).toBeTrue();
+				expect( insertBuilder.getQB().getReturning() ).notToBeEmpty();
+
+				var updateBuilder = entity.newQuery();
+				updateBuilder.getQB().setGrammar( grammar );
+				expect(
+					entity.configureRefreshOnSaveReturning(
+						builder    = updateBuilder,
+						attributes = attributes,
+						operation  = "update"
+					)
+				).toBeFalse();
+				expect( updateBuilder.getQB().getReturning() ).toBeEmpty();
 			} );
 
 			it( "uses a returned key row for auto-incrementing entities", function() {

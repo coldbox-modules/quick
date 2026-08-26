@@ -51,6 +51,92 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				expect( sql ).toInclude( "UPDATE `users` SET `username` = ?" );
 			} );
+
+			it( "can upsert records through the entity query API", function() {
+				var result = getInstance( "User" ).upsert(
+					values = [
+						{
+							"id"        : 1,
+							"username"  : "elpete",
+							"firstName" : "Updated",
+							"lastName"  : "Peterson"
+						},
+						{
+							"id"        : 99,
+							"username"  : "new-user",
+							"firstName" : "New",
+							"lastName"  : "User"
+						}
+					],
+					target     = "id",
+					update     = [ "firstName" ],
+					matchNulls = false
+				);
+
+				expect( result ).toBeStruct();
+				expect( arrayFindNoCase( structKeyArray( result ), "query" ) ).toBeGT( 0 );
+				expect( arrayFindNoCase( structKeyArray( result ), "result" ) ).toBeGT( 0 );
+				expect( getInstance( "User" ).findOrFail( 1 ).getFirstName() ).toBe( "Updated" );
+				expect( getInstance( "User" ).findOrFail( 99 ).getFirstName() ).toBe( "New" );
+			} );
+
+			it( "guards read-only entities and attributes when upserting", function() {
+				expect( function() {
+					getInstance( "Referral" ).upsert(
+						values = [ { "id" : 1, "type" : "external" } ],
+						target = "id",
+						update = [ "type" ],
+						toSql  = true
+					);
+				} ).toThrow( "QuickReadOnlyException" );
+
+				expect( function() {
+					getInstance( "Link" ).upsert(
+						values = [
+							{
+								"link_id"     : 1,
+								"url"         : "https://example.com",
+								"createdDate" : now()
+							}
+						],
+						target = "link_id",
+						update = [ "url" ],
+						toSql  = true
+					);
+				} ).toThrow( "QuickReadOnlyException" );
+
+				expect( function() {
+					getInstance( "Link" ).upsert(
+						values = [
+							{
+								"link_id" : 1,
+								"url"     : "https://example.com"
+							}
+						],
+						target = "link_id",
+						update = { "createdDate" : now() },
+						toSql  = true
+					);
+				} ).toThrow( "QuickReadOnlyException" );
+			} );
+
+			it( "can force an upsert of read-only attributes like updateAll", function() {
+				var sql = getInstance( "Link" ).upsert(
+					values = [
+						{
+							"link_id"     : 1,
+							"url"         : "https://example.com",
+							"createdDate" : now()
+						}
+					],
+					target = "link_id",
+					update = { "createdDate" : now() },
+					toSql  = true,
+					force  = true
+				);
+
+				expect( sql ).toInclude( "`created_date`" );
+			} );
 		} );
 	}
 

@@ -1876,17 +1876,86 @@ component accessors="true" {
 	}
 
 	/**
-	 * Retrieves the result of a loaded relationship.
-	 * If there is no data, returns null instead.
+	 * Retrieves the result of a loaded relationship. For a new entity, an unloaded
+	 * relationship is initialized through its public getter without executing a
+	 * query. An explicit default value can be supplied instead.
 	 *
-	 * @name  The relationship name to retrieve.
+	 * @name          The relationship name to retrieve.
+	 * @defaultValue  An optional value to assign and return when the relationship
+	 *                has not been loaded.
 	 *
 	 * @return  quick.models.BaseEntity | [quick.models.BaseEntity]
 	 */
-	public any function retrieveRelationship( required string name ) {
-		return variables._relationshipsData.keyExists( arguments.name ) ? variables._relationshipsData[ arguments.name ] : javacast(
-			"null",
-			""
+	public any function retrieveRelationship(
+		required string name,
+		any defaultValue = variables._nullValueArgumentSentinel
+	) {
+		if ( variables._relationshipsData.keyExists( arguments.name ) ) {
+			return variables._relationshipsData[ arguments.name ];
+		}
+		if ( isRelationshipLoaded( arguments.name ) ) {
+			return javacast( "null", "" );
+		}
+		if ( !hasRelationship( arguments.name ) ) {
+			throwRelationshipNotFound( arguments.name );
+		}
+
+		if ( !variables._nullValueArgumentSentinel.equals( arguments.defaultValue ) ) {
+			assignRelationship( arguments.name, arguments.defaultValue );
+			return arguments.defaultValue;
+		}
+
+		if ( !isLoaded() ) {
+			initializeUnloadedRelationship( arguments.name, {} );
+			return retrieveRelationship( arguments.name );
+		}
+		return javacast( "null", "" );
+	}
+
+	/**
+	 * Resolves and initializes an unloaded relationship by name.
+	 *
+	 * @name  The relationship method name to resolve.
+	 *
+	 * @throws  RelationshipNotFound
+	 *
+	 */
+	private void function initializeUnloadedRelationship( required string name, struct relationshipArguments = {} ) {
+		var previousIgnoreLoadedGuard     = variables._ignoreNotLoadedGuard;
+		variables._ignoreNotLoadedGuard   = true;
+		var resolvedRelationshipContainer = {};
+		try {
+			resolvedRelationshipContainer.value = invoke(
+				this,
+				arguments.name,
+				arguments.relationshipArguments
+			);
+		} finally {
+			variables._ignoreNotLoadedGuard = previousIgnoreLoadedGuard;
+		}
+		if (
+			!resolvedRelationshipContainer.keyExists( "value" ) ||
+			!isObject( resolvedRelationshipContainer.value ) ||
+			!structKeyExists( resolvedRelationshipContainer.value, "relationshipClass" )
+		) {
+			throwRelationshipNotFound( arguments.name );
+		}
+		var relationship = resolvedRelationshipContainer.value;
+		relationship.setRelationMethodName( arguments.name );
+		relationship.initRelation( [ this ], arguments.name );
+	}
+
+	/**
+	 * Throws a consistent exception for an unknown relationship name.
+	 *
+	 * @name  The unknown relationship name.
+	 *
+	 * @throws  RelationshipNotFound
+	 */
+	private void function throwRelationshipNotFound( required string name ) {
+		throw(
+			type    = "RelationshipNotFound",
+			message = "The [#arguments.name#] relationship was not found on the [#entityName()#] entity."
 		);
 	}
 
@@ -2135,7 +2204,6 @@ component accessors="true" {
 		arguments.foreignKey     = arrayWrap( arguments.foreignKey );
 		param arguments.localKey = keyNames();
 		arguments.localKey       = arrayWrap( arguments.localKey );
-
 		return variables._wirebox.getInstance(
 			name          = "HasMany@quick",
 			initArguments = {
@@ -2223,7 +2291,6 @@ component accessors="true" {
 
 		param arguments.relatedKey = related.keyNames();
 		arguments.relatedKey       = arrayWrap( arguments.relatedKey );
-
 		return variables._wirebox.getInstance(
 			name          = "BelongsToMany@quick",
 			initArguments = {
@@ -2534,7 +2601,6 @@ component accessors="true" {
 		arguments.id             = arrayWrap( arguments.id );
 		param arguments.localKey = keyNames();
 		arguments.localKey       = arrayWrap( arguments.localKey );
-
 		return variables._wirebox.getInstance(
 			name          = "PolymorphicHasMany@quick",
 			initArguments = {
@@ -2660,7 +2726,6 @@ component accessors="true" {
 		if ( !structKeyExists( related, "isBuilder" ) ) {
 			related = related.newQuery();
 		}
-
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#related.getEntity().entityName()#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
 		);
@@ -2937,6 +3002,12 @@ component accessors="true" {
 		}
 
 		if ( isRelationshipLoaded( relationshipName ) ) {
+			return retrieveRelationship( relationshipName );
+		}
+
+		if ( !isRelationshipLoaded( relationshipName ) && !isLoaded() ) {
+			var relationshipArguments = arguments.missingMethodArguments;
+			initializeUnloadedRelationship( relationshipName, relationshipArguments );
 			return retrieveRelationship( relationshipName );
 		}
 

@@ -18,6 +18,57 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				variables.queries = [];
 			} );
 
+			it( "returns empty relationship values for new entities", function() {
+				var post = getInstance( "Post" );
+				var user = getInstance( "User" );
+
+				expect( post.getAuthor() ).toBeNull();
+				expect( user.getLatestPost() ).toBeNull();
+				expect( user.getPosts() ).toBeArray().toBeEmpty();
+				expect( post.getTags() ).toBeArray().toBeEmpty();
+				expect( variables.queries ).toBeEmpty();
+			} );
+
+			it( "includes empty relationships in mementos for new entities", function() {
+				var memento = getInstance( "User" ).getMemento( includes = [ "latestPost", "posts" ] );
+
+				expect( memento.latestPost ).toBe( "" );
+				expect( memento.posts ).toBeArray().toBeEmpty();
+				expect( variables.queries ).toBeEmpty();
+			} );
+
+			it( "retrieves and caches the relationship type default without querying", function() {
+				var user = getInstance( "User" );
+				var post = getInstance( "Post" );
+
+				expect( user.retrieveRelationship( "posts" ) ).toBeArray().toBeEmpty();
+				expect( post.retrieveRelationship( "author" ) ).toBeNull();
+				expect( post.retrieveRelationship( "authorWithEmptyDefault" ) ).toBeInstanceOf( "User" );
+				expect( user.isRelationshipLoaded( "posts" ) ).toBeTrue();
+				expect( post.isRelationshipLoaded( "author" ) ).toBeTrue();
+				expect( variables.queries ).toBeEmpty();
+			} );
+
+			it( "accepts a default relationship value", function() {
+				var user       = getInstance( "User" );
+				var seededPost = getInstance( "Post" ).fill( { "body" : "seeded" } );
+
+				var posts = user.retrieveRelationship( "posts", [ seededPost ] );
+
+				expect( posts ).toHaveLength( 1 );
+				expect( posts[ 1 ].getBody() ).toBe( "seeded" );
+				expect( user.isRelationshipLoaded( "posts" ) ).toBeTrue();
+				expect( variables.queries ).toBeEmpty();
+			} );
+
+			it( "throws when retrieving an unknown relationship", function() {
+				var post = getInstance( "Post" );
+
+				expect( function() {
+					post.retrieveRelationship( "missingRelationship" );
+				} ).toThrow( "RelationshipNotFound" );
+			} );
+
 			describe( "Eager Loading Spec", function() {
 				it( "can load a relationship for an entity", function() {
 					var elpete = getInstance( "User" ).where( "username", "elpete" ).firstOrFail();

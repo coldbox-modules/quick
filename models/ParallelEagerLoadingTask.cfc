@@ -20,6 +20,22 @@ component {
 	}
 
 	public void function run() {
+		// ColdBox's BoxLang executor context retains the caller's request scope.
+		// Enter a fresh application request so concurrent workers cannot overwrite
+		// each other's ColdBox RequestContext.
+		if ( server.keyExists( "boxlang" ) ) {
+			runThreadInContext(
+				applicationName = getApplicationMetadata().name,
+				callback        = function() {
+					execute();
+				}
+			);
+			return;
+		}
+		execute();
+	}
+
+	private void function execute() {
 		var requestContextInstalled = false;
 		var workerEntered           = false;
 		try {

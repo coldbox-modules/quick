@@ -147,6 +147,37 @@ component accessors="true" implements="IRelationship" {
 	}
 
 	/**
+	 * Prepares the eager query without executing it.
+	 *
+	 * @internal
+	 */
+	public any function prepareEagerQuery( boolean asQuery = false, boolean withAliases = false ) {
+		if ( arguments.asQuery ) {
+			variables.relationshipBuilder.asQuery( arguments.withAliases );
+		}
+		variables.relationshipBuilder.prepareUnhydratedQuery();
+		return this;
+	}
+
+	/**
+	 * Executes the prepared eager query without hydrating entities.
+	 *
+	 * @internal
+	 */
+	public array function retrieveEagerRows() {
+		return variables.relationshipBuilder.retrieveUnhydratedResults();
+	}
+
+	/**
+	 * Hydrates eager-query rows through the relationship builder's normal path.
+	 *
+	 * @internal
+	 */
+	public array function hydrateEagerRows( required array rows ) {
+		return variables.relationshipBuilder.hydrateUnhydratedResults( arguments.rows );
+	}
+
+	/**
 	 * Gets the first matching record for the relationship.
 	 * Returns null if no record is found.
 	 *

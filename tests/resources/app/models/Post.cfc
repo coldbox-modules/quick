@@ -19,6 +19,10 @@ component
 		return belongsTo( "User", "user_id" );
 	}
 
+	function scopedAuthor() {
+		return belongsTo( "UserWithGlobalScope", "user_id" );
+	}
+
 	function authorWithEmptyDefault() {
 		return belongsTo( "User", "user_id" ).withDefault();
 	}

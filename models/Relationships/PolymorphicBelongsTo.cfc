@@ -153,6 +153,59 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	}
 
 	/**
+	 * Prepares each morph-type query on the calling thread.
+	 *
+	 * @internal
+	 */
+	public any function prepareEagerQuery( boolean asQuery = false, boolean withAliases = false ) {
+		variables.parallelEagerQueries = [];
+		for ( var type in variables.dictionary ) {
+			var morphParent = createModelByType( type );
+			variables.parallelEagerQueries.append( {
+				"morphParent" : morphParent,
+				"query"       : prepareResultsQueryByType(
+					type,
+					morphParent,
+					arguments.asQuery,
+					arguments.withAliases
+				),
+				"type" : type
+			} );
+		}
+		return this;
+	}
+
+	/**
+	 * Executes the prepared morph queries without hydrating their rows.
+	 *
+	 * @internal
+	 */
+	public array function retrieveEagerRows() {
+		var resultSets = [];
+		for ( var eagerQuery in variables.parallelEagerQueries ) {
+			resultSets.append( eagerQuery.query.retrieveUnhydratedResults() );
+		}
+		return resultSets;
+	}
+
+	/**
+	 * Hydrates and matches each morph result set on the calling thread.
+	 *
+	 * @internal
+	 */
+	public array function hydrateEagerRows( required array rows ) {
+		for ( var i = 1; i <= variables.parallelEagerQueries.len(); i++ ) {
+			var eagerQuery = variables.parallelEagerQueries[ i ];
+			matchToMorphParents(
+				eagerQuery.type,
+				eagerQuery.morphParent,
+				eagerQuery.query.hydrateUnhydratedResults( arguments.rows[ i ] )
+			);
+		}
+		return variables.entities;
+	}
+
+	/**
 	 * Executes a query and returns the results for a given polymorphic type.
 	 *
 	 * @type         The polymorphic type to retrieve.
@@ -166,17 +219,29 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 		boolean asQuery     = false,
 		boolean withAliases = false
 	) {
-		var localKeys = variables.localKeys.isEmpty() ? arguments.instance.keyNames() : variables.localKeys;
-
 		var allKeys = gatherKeysByType( type );
-
 		if ( allKeys.isEmpty() ) {
 			return [];
 		}
+		return prepareResultsQueryByType(
+			arguments.type,
+			arguments.instance,
+			arguments.asQuery,
+			arguments.withAliases
+		).get();
+	}
 
-		var query = arguments.instance;
+	private any function prepareResultsQueryByType(
+		required string type,
+		required any instance,
+		boolean asQuery     = false,
+		boolean withAliases = false
+	) {
+		var localKeys = variables.localKeys.isEmpty() ? arguments.instance.keyNames() : variables.localKeys;
+		var allKeys   = gatherKeysByType( arguments.type );
+		var query     = arguments.instance.newQuery();
 		if ( arguments.asQuery ) {
-			query = query.asQuery( arguments.withAliases );
+			query.asQuery( arguments.withAliases );
 		}
 		var eagerConstraints = query.getQB().forNestedWhere();
 		for ( var keys in allKeys ) {
@@ -187,7 +252,8 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 			eagerConstraints.addNestedWhereQuery( keyConstraints, "or" );
 		}
 		query.getQB().addNestedWhereQuery( eagerConstraints );
-		return query.get();
+		query.prepareUnhydratedQuery();
+		return query;
 	}
 
 	/**

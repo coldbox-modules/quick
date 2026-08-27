@@ -894,7 +894,7 @@ component accessors="true" transientCache="false" {
 					variables._parallelEagerLoadingContext.suppressLifecycleEvents();
 					try {
 						var workerEntities = [];
-						for ( var entityState in attributes.entityStates ) {
+						for ( var entityState in entityStates ) {
 							workerEntities.append(
 								entityState.isQuickEntity
 								 ? hydrateParallelEntityState( entityState )
@@ -902,31 +902,27 @@ component accessors="true" transientCache="false" {
 							);
 						}
 						var loadedEntities = eagerLoadRelation(
-							attributes.relationName,
-							attributes.eagerLoadConfig,
+							relationName,
+							eagerLoadConfig,
 							workerEntities
 						);
 						var relationshipValues = [];
 						for ( var loadedEntity in loadedEntities ) {
 							if ( structKeyExists( loadedEntity, "isQuickEntity" ) ) {
-								if ( isNull( loadedEntity.retrieveRelationship( attributes.relationName ) ) ) {
+								if ( isNull( loadedEntity.retrieveRelationship( relationName ) ) ) {
 									relationshipValues.append( { "type" : "null" } );
 								} else {
 									relationshipValues.append(
-										serializeParallelValue(
-											loadedEntity.retrieveRelationship( attributes.relationName )
-										)
+										serializeParallelValue( loadedEntity.retrieveRelationship( relationName ) )
 									);
 								}
-							} else if ( loadedEntity.keyExists( attributes.relationName ) ) {
-								relationshipValues.append(
-									serializeParallelValue( loadedEntity[ attributes.relationName ] )
-								);
+							} else if ( loadedEntity.keyExists( relationName ) ) {
+								relationshipValues.append( serializeParallelValue( loadedEntity[ relationName ] ) );
 							} else {
 								relationshipValues.append( { "type" : "null" } );
 							}
 						}
-						attributes.results.put( attributes.threadName, relationshipValues );
+						results.put( threadName, relationshipValues );
 					} finally {
 						variables._parallelEagerLoadingContext.restoreLifecycleEvents();
 					}

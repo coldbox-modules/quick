@@ -16,6 +16,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		describe( "Eager Loading Spec", function() {
 			beforeEach( function() {
 				variables.queries = [];
+				structDelete( request, "parallelLifecyclePostLoads" );
 			} );
 
 			it( "can eager load a belongs to relationship", function() {
@@ -97,6 +98,138 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( eagerThreads.author ).notToBe( callingThread );
 					expect( eagerThreads.comments ).notToBe( callingThread );
 					expect( eagerThreads.author ).notToBe( eagerThreads.comments );
+				}
+			} );
+
+			it( "keeps a single eager load on the calling thread", function() {
+				var callingThread = createObject( "java", "java.lang.Thread" ).currentThread().getName();
+				var eagerThread   = "";
+				getInstance( "Post" )
+					.with(
+						{
+							"author" : function( relationship ) {
+								eagerThread = createObject( "java", "java.lang.Thread" ).currentThread().getName();
+							}
+						},
+						true
+					)
+					.get();
+
+				expect( eagerThread ).toBe( callingThread );
+			} );
+
+			it( "delivers lifecycle events once on the returned parallel entities", function() {
+				var users = getInstance( "ParallelLifecycleUser" )
+					.where( "id", 1 )
+					.with( [ "posts", "comments" ], true )
+					.get();
+
+				expect( users ).toHaveLength( 1 );
+				expect( request.parallelLifecyclePostLoads ).toHaveLength( 1 );
+				expect( request.parallelLifecyclePostLoads[ 1 ].isSameAs( users[ 1 ] ) ).toBeTrue();
+				for ( var post in users[ 1 ].getPosts() ) {
+					expect( post.retrieveRelationship( "loadedByUser" ).isSameAs( users[ 1 ] ) ).toBeTrue();
+				}
+			} );
+
+			it( "preserves nested eager loads in parallel relationship graphs", function() {
+				var post = getInstance( "Post" )
+					.where( "post_pk", 1245 )
+					.with( [ "author.country", "comments.author" ], true )
+					.firstOrFail();
+
+				expect( post.getAuthor().isRelationshipLoaded( "country" ) ).toBeTrue();
+				for ( var comment in post.getComments() ) {
+					expect( comment.isRelationshipLoaded( "author" ) ).toBeTrue();
+				}
+			} );
+
+			it( "preserves pivot relationships in parallel relationship graphs", function() {
+				var post = getInstance( "Post" )
+					.where( "post_pk", 1245 )
+					.with( [ "tagsAsSubscriptions", "comments" ], true )
+					.firstOrFail();
+
+				for ( var tag in post.getTagsAsSubscriptions() ) {
+					expect( tag.isRelationshipLoaded( "subscription" ) ).toBeTrue();
+					expect( tag.getSubscription() ).toBeInstanceOf( "quick.models.Relationships.Pivot" );
+				}
+			} );
+
+			it( "supports parallel eager loading for query results", function() {
+				var posts = getInstance( "Post" )
+					.with( [ "author", "comments" ], true )
+					.asQuery()
+					.get();
+
+				expect( posts[ 1 ] ).toBeStruct();
+				expect( posts[ 1 ].author ).toBeStruct();
+				expect( posts[ 1 ].comments ).toBeArray();
+				expect( posts[ 3 ].author ).toBeStruct().toBeEmpty();
+			} );
+
+			it( "limits the number of concurrent eager-loading workers", function() {
+				if ( supportsParallelEagerLoadingForTest() ) {
+					var activeWorkers = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
+					var maxWorkers    = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
+					var trackWorker   = function( relationship ) {
+						var active = activeWorkers.incrementAndGet();
+						while ( active > maxWorkers.get() && !maxWorkers.compareAndSet( maxWorkers.get(), active ) ) {
+						}
+						sleep( 25 );
+						activeWorkers.decrementAndGet();
+					};
+					var builder = getInstance( "Post" ).with(
+						[
+							{ "author" : trackWorker },
+							{ "comments" : trackWorker }
+						],
+						true
+					);
+					builder.set_parallelEagerLoadingMaxThreads( 1 ).get();
+
+					expect( maxWorkers.get() ).toBe( 1 );
+				}
+			} );
+
+			it( "propagates parallel eager-loading worker failures", function() {
+				if ( supportsParallelEagerLoadingForTest() ) {
+					expect( function() {
+						getInstance( "Post" )
+							.with(
+								[
+									{
+										"author" : function( relationship ) {
+											throw( type = "ExpectedParallelFailure", message = "worker failed" );
+										}
+									},
+									"comments"
+								],
+								true
+							)
+							.get();
+					} ).toThrow( type = "QuickParallelEagerLoadingException", regex = "worker failed" );
+				}
+			} );
+
+			it( "times out and cancels unfinished parallel eager-loading workers", function() {
+				if ( supportsParallelEagerLoadingForTest() ) {
+					var builder = getInstance( "Post" ).with(
+						[
+							{
+								"author" : function( relationship ) {
+									sleep( 100 );
+								}
+							},
+							"comments"
+						],
+						true
+					);
+					builder.set_parallelEagerLoadingTimeout( 1 );
+
+					expect( function() {
+						builder.get();
+					} ).toThrow( type = "QuickParallelEagerLoadingTimeout", regex = "1 milliseconds" );
 				}
 			} );
 
@@ -906,6 +1039,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			.map( function( binding ) {
 				return lCase( binding.keyExists( "cfsqltype" ) ? binding[ "cfsqltype" ] : binding[ "sqltype" ] );
 			} );
+	}
+
+	private boolean function supportsParallelEagerLoadingForTest() {
+		return !server.keyExists( "coldfusion" ) || !findNoCase( "ColdFusion", server.coldfusion.productName );
 	}
 
 }

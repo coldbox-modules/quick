@@ -84,7 +84,7 @@ component accessors="true" transientCache="false" {
 		inject ="box:setting:parallelEagerLoadingTimeout@quick";
 
 	/**
-	 * Application-wide admission control for parallel eager-loading queries.
+	 * Application-wide coordinator for parallel eager-loading queries.
 	 */
 	property name="_parallelEagerLoadingCoordinator" inject="quick.models.ParallelEagerLoadingCoordinator";
 
@@ -906,14 +906,13 @@ component accessors="true" transientCache="false" {
 	}
 
 	/**
-	 * Eager loads independent top-level relationships on separate threads.
+	 * Eager loads independent top-level relationships on Quick's fixed executor.
 	 */
 	private void function eagerLoadRelationsInParallel( required struct eagerLoads, required array entities ) {
 		var relationNames  = arguments.eagerLoads.keyArray();
 		var maxWorkers     = max( 1, int( variables._parallelEagerLoadingMaxThreads ) );
 		var timeout        = max( 1, int( variables._parallelEagerLoadingTimeout ) );
 		var targetEntities = arguments.entities;
-		var threadResults  = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
 		var plans          = [];
 
 		// Relationship resolution, user callbacks, and constraint construction may
@@ -929,91 +928,112 @@ component accessors="true" transientCache="false" {
 		}
 
 		for ( var batchStart = 1; batchStart <= plans.len(); batchStart += maxWorkers ) {
-			var batchThreadNames = [];
-			var batchThreadPlans = {};
-			var batchEnd         = min( plans.len(), batchStart + maxWorkers - 1 );
+			var completionQueue = createObject( "java", "java.util.concurrent.LinkedBlockingQueue" ).init();
+			var batchTasks      = [];
+			var batchEnd        = min( plans.len(), batchStart + maxWorkers - 1 );
 			for ( var planIndex = batchStart; planIndex <= batchEnd; planIndex++ ) {
-				var plan       = plans[ planIndex ];
-				var threadName = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
-				batchThreadNames.append( threadName );
-				batchThreadPlans[ threadName ] = plan;
-				cfthread(
-					action        = "run",
-					name          = threadName,
-					threadName    = threadName,
-					plan          = plan,
-					results       = threadResults,
-					workerTimeout = timeout
-				) {
-					var acquiredPermit = false;
-					variables._parallelEagerLoadingCoordinator.enterWorker( threadName );
-					try {
-						if ( plan.hasMatches ) {
-							acquiredPermit = variables._parallelEagerLoadingCoordinator.acquire( workerTimeout );
-							if ( !acquiredPermit ) {
-								throw(
-									type    = "QuickParallelEagerLoadingTimeout",
-									message = "Parallel eager loading could not acquire a worker within #workerTimeout# milliseconds."
-								);
-							}
-							results.put( threadName, plan.relation.retrieveEagerRows() );
-						} else {
-							results.put( threadName, [] );
-						}
-					} finally {
-						if ( acquiredPermit ) {
-							variables._parallelEagerLoadingCoordinator.release();
-						}
-						variables._parallelEagerLoadingCoordinator.leaveWorker();
-					}
+				var plan     = plans[ planIndex ];
+				var taskName = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
+				if ( !plan.hasMatches ) {
+					finalizeParallelEagerLoad( plan, [], targetEntities );
+					continue;
 				}
-			}
-
-			cfthread(
-				action  = "join",
-				name    = batchThreadNames.toList(),
-				timeout = timeout
-			);
-
-			var failedThread = "";
-			var timedOut     = false;
-			for ( var batchThreadName in batchThreadNames ) {
-				if ( cfthread[ batchThreadName ].status == "TERMINATED" && failedThread == "" ) {
-					failedThread = batchThreadName;
-				}
-				if (
-					cfthread[ batchThreadName ].status != "COMPLETED" && cfthread[ batchThreadName ].status != "TERMINATED"
-				) {
-					timedOut = true;
-				}
-			}
-			if ( failedThread != "" || timedOut ) {
-				terminateAndJoinParallelEagerLoadingThreads( batchThreadNames, timeout );
-			}
-			if ( failedThread != "" ) {
-				var threadError = cfthread[ failedThread ].error;
-				var errorType   = threadError.keyExists( "type" ) && threadError.type == "QuickParallelEagerLoadingTimeout"
-				 ? "QuickParallelEagerLoadingTimeout"
-				 : "QuickParallelEagerLoadingException";
-				throw(
-					type         = errorType,
-					message      = threadError.keyExists( "message" ) ? threadError.message : "A parallel eager-loading thread failed.",
-					extendedInfo = serializeJSON( threadError )
+				var task = new quick.models.ParallelEagerLoadingTask(
+					plan,
+					taskName,
+					variables._parallelEagerLoadingCoordinator,
+					variables._parallelEagerLoadingCoordinator.createWorkerRequestContext(),
+					completionQueue
 				);
-			}
-			if ( timedOut ) {
-				throw(
-					type    = "QuickParallelEagerLoadingTimeout",
-					message = "Parallel eager loading did not complete within #timeout# milliseconds."
-				);
+				try {
+					var future = variables._parallelEagerLoadingCoordinator.submit( task );
+				} catch ( any e ) {
+					cancelParallelEagerLoadingTasks( batchTasks );
+					throw(
+						type    = "QuickParallelEagerLoadingException",
+						message = e.keyExists( "message" )
+						 ? e.message
+						 : "A parallel eager-loading task could not be submitted."
+					);
+				}
+				batchTasks.append( {
+					"name"   : taskName,
+					"plan"   : plan,
+					"future" : future
+				} );
 			}
 
-			for ( var completedThreadName in batchThreadNames ) {
+			var batchResults = awaitParallelEagerLoadingTasks( batchTasks, completionQueue, timeout );
+			for ( var completedTask in batchTasks ) {
 				finalizeParallelEagerLoad(
-					batchThreadPlans[ completedThreadName ],
-					threadResults.get( completedThreadName ),
+					completedTask.plan,
+					batchResults[ completedTask.name ],
 					targetEntities
 				);
+			}
+		}
+	}
+
+	private struct function awaitParallelEagerLoadingTasks(
+		required array tasks,
+		required any completionQueue,
+		required numeric timeout
+	) {
+		var results  = {};
+		var timeUnit = createObject( "java", "java.util.concurrent.TimeUnit" );
+		var system   = createObject( "java", "java.lang.System" );
+		var deadline = system.nanoTime() + ( arguments.timeout * 1000000 );
+
+		for ( var completedCount = 1; completedCount <= arguments.tasks.len(); completedCount++ ) {
+			var remainingNanos = deadline - system.nanoTime();
+			if ( remainingNanos <= 0 ) {
+				cancelParallelEagerLoadingTasks( arguments.tasks );
+				throw(
+					type    = "QuickParallelEagerLoadingTimeout",
+					message = "Parallel eager loading did not complete within #arguments.timeout# milliseconds."
+				);
+			}
+
+			try {
+				var completion = arguments.completionQueue.poll(
+					javacast( "long", ceiling( remainingNanos / 1000000 ) ),
+					timeUnit.MILLISECONDS
+				);
+			} catch ( "java.lang.InterruptedException" e ) {
+				createObject( "java", "java.lang.Thread" ).currentThread().interrupt();
+				cancelParallelEagerLoadingTasks( arguments.tasks );
+				throw(
+					type    = "QuickParallelEagerLoadingCancellationException",
+					message = "Parallel eager loading was interrupted while waiting for its workers."
+				);
+			}
+
+			if ( isNull( completion ) ) {
+				cancelParallelEagerLoadingTasks( arguments.tasks );
+				throw(
+					type    = "QuickParallelEagerLoadingTimeout",
+					message = "Parallel eager loading did not complete within #arguments.timeout# milliseconds."
+				);
+			}
+			if ( !completion.success ) {
+				cancelParallelEagerLoadingTasks( arguments.tasks );
+				throw(
+					type    = "QuickParallelEagerLoadingException",
+					message = completion.error.keyExists( "message" )
+					 ? completion.error.message
+					 : "A parallel eager-loading worker failed."
+				);
+			}
+			results[ completion.name ] = completion.rows;
+		}
+
+		return results;
+	}
+
+	private void function cancelParallelEagerLoadingTasks( required array tasks ) {
+		for ( var task in arguments.tasks ) {
+			if ( !task.future.isDone() ) {
+				task.future.cancel( true );
 			}
 		}
 	}
@@ -1035,12 +1055,26 @@ component accessors="true" transientCache="false" {
 		relation.initRelation( arguments.entities, arguments.relationName );
 		if ( hasMatches ) {
 			relation.prepareEagerQuery( variables._asQuery, variables._withAliases );
+			applyDefaultDatasourceToParallelEagerLoad( relation );
 		}
 		return {
 			"hasMatches"   : hasMatches,
 			"relation"     : relation,
 			"relationName" : arguments.relationName
 		};
+	}
+
+	private void function applyDefaultDatasourceToParallelEagerLoad( required any relation ) {
+		var queryBuilder   = arguments.relation.getRelationshipBuilder().getQb();
+		var defaultOptions = queryBuilder.getDefaultOptions();
+		if ( defaultOptions.keyExists( "datasource" ) ) {
+			return;
+		}
+
+		var applicationMetadata = getApplicationMetadata();
+		if ( applicationMetadata.keyExists( "datasource" ) && !isNull( applicationMetadata.datasource ) ) {
+			queryBuilder.mergeDefaultOptions( { "datasource" : applicationMetadata.datasource } );
+		}
 	}
 
 	private void function finalizeParallelEagerLoad(
@@ -1061,35 +1095,8 @@ component accessors="true" transientCache="false" {
 		}
 	}
 
-	private void function terminateAndJoinParallelEagerLoadingThreads(
-		required array threadNames,
-		required numeric timeout
-	) {
-		for ( var threadName in arguments.threadNames ) {
-			if ( cfthread[ threadName ].status != "COMPLETED" && cfthread[ threadName ].status != "TERMINATED" ) {
-				cfthread( action = "terminate", name = threadName );
-			}
-		}
-		cfthread(
-			action  = "join",
-			name    = arguments.threadNames.toList(),
-			timeout = arguments.timeout
-		);
-		for ( var joinedThreadName in arguments.threadNames ) {
-			if (
-				cfthread[ joinedThreadName ].status != "COMPLETED"
-				&& cfthread[ joinedThreadName ].status != "TERMINATED"
-			) {
-				throw(
-					type    = "QuickParallelEagerLoadingCancellationException",
-					message = "Parallel eager-loading worker [#joinedThreadName#] remained active after cancellation."
-				);
-			}
-		}
-	}
-
 	/**
-	 * Adobe ColdFusion loses CFC private-method resolution inside cfthread.
+	 * Adobe ColdFusion does not yet support parallel eager-loading execution.
 	 */
 	private boolean function supportsParallelEagerLoading() {
 		return !server.keyExists( "coldfusion" ) || !findNoCase( "ColdFusion", server.coldfusion.productName );

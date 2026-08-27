@@ -117,6 +117,9 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( callbackThreads.author ).toBe( callingThread );
 					expect( callbackThreads.comments ).toBe( callingThread );
 					expect( variables.workerQueryThreads.size() ).toBe( supportsParallelEagerLoadingForTest() ? 2 : 0 );
+					expect( variables.workerRequestContexts.size() ).toBe(
+						supportsParallelEagerLoadingForTest() ? 2 : 0
+					);
 				},
 				"no-transaction"
 			);
@@ -289,7 +292,6 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				function() {
 					if ( supportsParallelEagerLoadingForTest() ) {
 						var coordinator               = getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
-						var availablePermitsBeforeRun = coordinator.availablePermits();
 						variables.parallelWorkerDelay = 100;
 						var builder                   = getInstance( "Post" ).with( [ "author", "comments" ], true );
 						builder.set_parallelEagerLoadingTimeout( 1 );
@@ -297,7 +299,11 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						expect( function() {
 							builder.get();
 						} ).toThrow( type = "QuickParallelEagerLoadingTimeout", regex = "1 milliseconds" );
-						expect( coordinator.availablePermits() ).toBe( availablePermitsBeforeRun );
+
+						variables.parallelWorkerDelay = 0;
+						var posts                     = getInstance( "Post" ).with( [ "author", "comments" ], true ).get();
+						expect( posts ).notToBeEmpty();
+						expect( coordinator.getExecutor().getMaximumPoolSize() ).toBeGT( 0 );
 					}
 				},
 				"no-transaction"
@@ -436,29 +442,22 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			);
 
 			it(
-				"uses the application-wide worker limit across builders",
+				"uses an application-wide fixed worker pool",
 				function() {
 					if ( !supportsParallelEagerLoadingForTest() ) {
 						return;
 					}
-					var coordinator      = getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
-					var acquired         = 0;
-					var availablePermits = coordinator.availablePermits();
-					for ( var i = 1; i <= availablePermits; i++ ) {
-						if ( coordinator.acquire( 1 ) ) {
-							acquired++;
-						}
-					}
+					var firstCoordinator  = getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
+					var secondCoordinator = getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
+					var executor          = firstCoordinator.getExecutor();
+					var submissionsBefore = executor.getTaskSubmissionCount();
 
-					var builder = getInstance( "Post" ).with( [ "author", "comments" ], true );
-					builder.set_parallelEagerLoadingTimeout( 5 );
-					expect( function() {
-						builder.get();
-					} ).toThrow( type = "QuickParallelEagerLoadingTimeout", regex = "5 milliseconds" );
-					for ( var permit = 1; permit <= acquired; permit++ ) {
-						coordinator.release();
-					}
-					expect( coordinator.availablePermits() ).toBe( availablePermits );
+					expect( firstCoordinator ).toBe( secondCoordinator );
+					expect( executor.getMaximumPoolSize() ).toBe( 4 );
+					getInstance( "Post" ).with( [ "author", "comments" ], true ).get();
+					getInstance( "Post" ).with( [ "author", "comments" ], true ).get();
+					expect( executor.getTaskSubmissionCount() ).toBe( submissionsBefore + 4 );
+					expect( executor.getLargestPoolSize() ).toBeLTE( executor.getMaximumPoolSize() );
 				},
 				"no-transaction"
 			);
@@ -1335,6 +1334,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		if ( coordinator.isWorker() ) {
 			var threadName = coordinator.getWorkerName();
 			variables.workerQueryThreads.put( threadName, true );
+			variables.workerRequestContexts.put(
+				createObject( "java", "java.lang.System" ).identityHashCode( arguments.event ),
+				true
+			);
 			var activeWorkers = variables.activeWorkers.incrementAndGet();
 			while (
 				activeWorkers > variables.maxActiveWorkers.get()
@@ -1368,6 +1371,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		request.quickSkipDatabaseTransactions = specHasLabel( arguments.currentSpec, "no-transaction" );
 		variables.queries                     = [];
 		variables.workerQueryThreads          = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
+		variables.workerRequestContexts       = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
 		variables.activeWorkers               = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
 		variables.maxActiveWorkers            = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
 		variables.parallelWorkerDelay         = 0;

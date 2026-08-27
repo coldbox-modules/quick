@@ -161,18 +161,33 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 		variables.parallelEagerQueries = [];
 		for ( var type in variables.dictionary ) {
 			var morphParent = createModelByType( type );
+			var query       = prepareResultsQueryByType(
+				type,
+				morphParent,
+				arguments.asQuery,
+				arguments.withAliases
+			);
+			applyDefaultDatasourceToParallelQuery( query );
 			variables.parallelEagerQueries.append( {
 				"morphParent" : morphParent,
-				"query"       : prepareResultsQueryByType(
-					type,
-					morphParent,
-					arguments.asQuery,
-					arguments.withAliases
-				),
-				"type" : type
+				"query"       : query,
+				"type"        : type
 			} );
 		}
 		return this;
+	}
+
+	private void function applyDefaultDatasourceToParallelQuery( required any query ) {
+		var queryBuilder   = arguments.query.getQB();
+		var defaultOptions = queryBuilder.getDefaultOptions();
+		if ( defaultOptions.keyExists( "datasource" ) ) {
+			return;
+		}
+
+		var applicationMetadata = getApplicationMetadata();
+		if ( applicationMetadata.keyExists( "datasource" ) && !isNull( applicationMetadata.datasource ) ) {
+			queryBuilder.mergeDefaultOptions( { "datasource" : applicationMetadata.datasource } );
+		}
 	}
 
 	/**

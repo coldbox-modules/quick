@@ -1,24 +1,38 @@
 /**
- * Provides application-wide admission control for parallel eager-loading work.
+ * Coordinates parallel eager-loading work on Quick's application-wide executor.
  */
 component singleton {
 
-	property
-		name   ="maxWorkers"
-		default="4"
-		inject ="box:setting:parallelEagerLoadingMaxThreads@quick";
+	property name="executor"       inject="executor:quick-parallel-eager-loading";
+	property name="controller"     inject="coldbox";
+	property name="requestService" inject="coldbox:requestService";
 
 	function init() {
-		param variables.maxWorkers = 4;
+		variables.currentWorker = createObject( "java", "java.lang.ThreadLocal" ).init();
 		return this;
 	}
 
-	function onDIComplete() {
-		variables.semaphore = createObject( "java", "java.util.concurrent.Semaphore" ).init(
-			javacast( "int", max( 1, int( variables.maxWorkers ) ) ),
-			javacast( "boolean", true )
+	public any function submit( required any task ) {
+		return variables.executor.submit( arguments.task, "run" );
+	}
+
+	public any function getExecutor() {
+		return variables.executor;
+	}
+
+	public any function createWorkerRequestContext() {
+		var sourceContext = variables.requestService.getContext();
+		var workerContext = createObject( "component", "coldbox.system.web.context.RequestContext" ).init(
+			properties = variables.controller.getConfigSettings(),
+			controller = variables.controller
 		);
-		variables.currentWorker = createObject( "java", "java.lang.ThreadLocal" ).init();
+		workerContext.collectionAppend( structCopy( sourceContext.getCollection() ), true );
+		workerContext.collectionAppend(
+			structCopy( sourceContext.getPrivateCollection() ),
+			true,
+			true
+		);
+		return workerContext;
 	}
 
 	public void function enterWorker( required string name ) {
@@ -36,21 +50,6 @@ component singleton {
 	public string function getWorkerName() {
 		var workerName = variables.currentWorker.get();
 		return isNull( workerName ) ? "" : workerName;
-	}
-
-	public boolean function acquire( required numeric timeout ) {
-		return variables.semaphore.tryAcquire(
-			javacast( "long", arguments.timeout ),
-			createObject( "java", "java.util.concurrent.TimeUnit" ).MILLISECONDS
-		);
-	}
-
-	public void function release() {
-		variables.semaphore.release();
-	}
-
-	public numeric function availablePermits() {
-		return variables.semaphore.availablePermits();
 	}
 
 }

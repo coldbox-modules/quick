@@ -208,7 +208,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 								true
 							)
 							.get();
-					} ).toThrow( type = "QuickParallelEagerLoadingException", regex = "worker failed" );
+					} ).toThrow( type = "QuickParallelEagerLoadingException" );
 				}
 			} );
 

@@ -62,6 +62,15 @@ component {
 	}
 
 	function onLoad() {
+		wirebox
+			.getInstance( "AsyncManager@coldbox" )
+			.newExecutor(
+				name           = "quick-parallel-eager-loading",
+				type           = "fixed",
+				threads        = max( 1, int( settings.parallelEagerLoadingMaxThreads ) ),
+				loadAppContext = true
+			);
+
 		binder
 			.map( alias = "QuickQB@quick", force = true )
 			.to( "#moduleMapping#.models.QuickQB" )
@@ -97,6 +106,11 @@ component {
 		if ( wirebox.containsInstance( "EntityDefinitionRegistry@quick" ) ) {
 			wirebox.getInstance( "EntityDefinitionRegistry@quick" ).clear();
 		}
+		var asyncManager = wirebox.getInstance( "AsyncManager@coldbox" );
+		if ( asyncManager.hasExecutor( "quick-parallel-eager-loading" ) ) {
+			asyncManager.deleteExecutor( "quick-parallel-eager-loading" );
+		}
+
 		var cacheBox = wirebox.getCachebox();
 		if ( cacheBox.cacheExists( settings.metadataCache.name ) ) {
 			cacheBox.getCache( settings.metadataCache.name ).clearAll();

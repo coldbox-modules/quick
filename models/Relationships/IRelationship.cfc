@@ -18,6 +18,27 @@ interface displayname="IRelationship" {
 	public array function getEager( boolean asQuery, boolean withAliases );
 
 	/**
+	 * Prepares an eager query for execution without running it.
+	 *
+	 * @internal
+	 */
+	public any function prepareEagerQuery( boolean asQuery, boolean withAliases );
+
+	/**
+	 * Executes a prepared eager query without hydrating entities.
+	 *
+	 * @internal
+	 */
+	public array function retrieveEagerRows();
+
+	/**
+	 * Hydrates rows returned by a prepared eager query.
+	 *
+	 * @internal
+	 */
+	public array function hydrateEagerRows( required array rows );
+
+	/**
 	 * Adds constraints for eager loading
 	 *
 	 * @doc_generic  quick.models.BaseEntity

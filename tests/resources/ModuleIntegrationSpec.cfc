@@ -27,6 +27,10 @@ component extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
 	 * @aroundEach
 	 */
 	function useDatabaseTransactions( spec ) {
+		if ( request.keyExists( "quickSkipDatabaseTransactions" ) && request.quickSkipDatabaseTransactions ) {
+			arguments.spec.body();
+			return;
+		}
 		transaction action="begin" {
 			try {
 				arguments.spec.body();

@@ -1335,7 +1335,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			var threadName = coordinator.getWorkerName();
 			variables.workerQueryThreads.put( threadName, true );
 			variables.workerRequestContexts.put(
-				createObject( "java", "java.lang.System" ).identityHashCode( arguments.event ),
+				arguments.event.getPrivateValue( "__quickParallelWorkerContextId" ),
 				true
 			);
 			var activeWorkers = variables.activeWorkers.incrementAndGet();

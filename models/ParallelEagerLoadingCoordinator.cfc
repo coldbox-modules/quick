@@ -20,7 +20,7 @@ component singleton {
 		return variables.executor;
 	}
 
-	public any function createWorkerRequestContext() {
+	public any function createWorkerRequestContext( required string workerName ) {
 		var sourceContext = variables.requestService.getContext();
 		var workerContext = createObject( "component", "coldbox.system.web.context.RequestContext" ).init(
 			properties = variables.controller.getConfigSettings(),
@@ -32,6 +32,7 @@ component singleton {
 			true,
 			true
 		);
+		workerContext.setPrivateValue( "__quickParallelWorkerContextId", arguments.workerName );
 		return workerContext;
 	}
 

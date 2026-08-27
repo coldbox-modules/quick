@@ -988,8 +988,8 @@ component accessors="true" transientCache="false" {
 	private any function hydrateParallelEntityState( required struct state ) {
 		return getEntity()
 			.newEntity( arguments.state.mappingName )
-			.assignAttributesData( arguments.state.attributes )
-			.assignOriginalAttributes( arguments.state.attributes )
+			.assignAttributesData( arguments.state[ "attributes" ] )
+			.assignOriginalAttributes( arguments.state[ "attributes" ] )
 			.set_loaded( true );
 	}
 
@@ -1058,11 +1058,11 @@ component accessors="true" transientCache="false" {
 			case "entity":
 				var entity = getEntity().newEntity( arguments.state.mappingName );
 				try {
-					entity.hydrate( arguments.state.attributes );
+					entity.hydrate( arguments.state[ "attributes" ] );
 				} catch ( MissingHydrationKey missingKey ) {
 					entity
-						.assignAttributesData( arguments.state.attributes )
-						.assignOriginalAttributes( arguments.state.attributes )
+						.assignAttributesData( arguments.state[ "attributes" ] )
+						.assignOriginalAttributes( arguments.state[ "attributes" ] )
 						.set_loaded( true );
 				}
 				for ( var relationshipName in arguments.state.relationships ) {

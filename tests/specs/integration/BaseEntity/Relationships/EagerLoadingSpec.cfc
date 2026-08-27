@@ -72,379 +72,395 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( keys ).toHaveLength( 2 );
 			} );
 
-			it(
-				"can eager load top-level relationships in parallel",
-				function() {
-					var callingThread   = createObject( "java", "java.lang.Thread" ).currentThread().getName();
-					var callbackThreads = {};
-					var posts           = getInstance( "Post" )
+			describe( "parallel eager loading execution", function() {
+				it(
+					"can eager load top-level relationships in parallel",
+					function() {
+						var callingThread   = createObject( "java", "java.lang.Thread" ).currentThread().getName();
+						var callbackThreads = {};
+						var posts           = getInstance( "Post" )
+							.with(
+								[
+									{
+										"author" : function( relationship ) {
+											callbackThreads.author = createObject( "java", "java.lang.Thread" )
+												.currentThread()
+												.getName();
+										}
+									},
+									{
+										"comments" : function( relationship ) {
+											callbackThreads.comments = createObject( "java", "java.lang.Thread" )
+												.currentThread()
+												.getName();
+										}
+									}
+								],
+								true
+							)
+							.get();
+
+						expect( posts[ 1 ].getAuthor() ).toBeInstanceOf( "app.models.User" );
+						expect( posts[ 1 ].getComments() ).toBeArray();
+						expect( callbackThreads.author ).toBe( callingThread );
+						expect( callbackThreads.comments ).toBe( callingThread );
+						expect( variables.workerQueryThreads.size() ).toBe(
+							supportsParallelEagerLoadingForTest() ? 2 : 0
+						);
+					},
+					"no-transaction"
+				);
+
+				it( "keeps a single eager load on the calling thread", function() {
+					var callingThread = createObject( "java", "java.lang.Thread" ).currentThread().getName();
+					var eagerThread   = "";
+					getInstance( "Post" )
 						.with(
-							[
-								{
-									"author" : function( relationship ) {
-										callbackThreads.author = createObject( "java", "java.lang.Thread" )
-											.currentThread()
-											.getName();
-									}
-								},
-								{
-									"comments" : function( relationship ) {
-										callbackThreads.comments = createObject( "java", "java.lang.Thread" )
-											.currentThread()
-											.getName();
-									}
+							{
+								"author" : function( relationship ) {
+									eagerThread = createObject( "java", "java.lang.Thread" ).currentThread().getName();
 								}
-							],
+							},
 							true
 						)
 						.get();
 
-					expect( posts[ 1 ].getAuthor() ).toBeInstanceOf( "app.models.User" );
-					expect( posts[ 1 ].getComments() ).toBeArray();
-					expect( callbackThreads.author ).toBe( callingThread );
-					expect( callbackThreads.comments ).toBe( callingThread );
-					expect( variables.workerQueryThreads.size() ).toBe( supportsParallelEagerLoadingForTest() ? 2 : 0 );
-				},
-				"no-transaction"
-			);
+					expect( eagerThread ).toBe( callingThread );
+				} );
 
-			it( "keeps a single eager load on the calling thread", function() {
-				var callingThread = createObject( "java", "java.lang.Thread" ).currentThread().getName();
-				var eagerThread   = "";
-				getInstance( "Post" )
-					.with(
-						{
-							"author" : function( relationship ) {
-								eagerThread = createObject( "java", "java.lang.Thread" ).currentThread().getName();
-							}
-						},
-						true
-					)
-					.get();
+				it(
+					"delivers lifecycle events once on the returned parallel entities",
+					function() {
+						var users = getInstance( "ParallelLifecycleUser" )
+							.where( "id", 1 )
+							.with( [ "posts", "comments" ], true )
+							.get();
 
-				expect( eagerThread ).toBe( callingThread );
+						expect( users ).toHaveLength( 1 );
+						expect( request.parallelLifecyclePostLoads ).toHaveLength( 1 );
+						expect( request.parallelLifecyclePostLoads[ 1 ].isSameAs( users[ 1 ] ) ).toBeTrue();
+						for ( var post in users[ 1 ].getPosts() ) {
+							expect( post.retrieveRelationship( "loadedByUser" ).isSameAs( users[ 1 ] ) ).toBeTrue();
+						}
+					},
+					"no-transaction"
+				);
 			} );
 
-			it(
-				"delivers lifecycle events once on the returned parallel entities",
-				function() {
-					var users = getInstance( "ParallelLifecycleUser" )
-						.where( "id", 1 )
-						.with( [ "posts", "comments" ], true )
-						.get();
+			describe( "parallel eager loading relationship state", function() {
+				it(
+					"preserves nested eager loads in parallel relationship graphs",
+					function() {
+						var post = getInstance( "Post" )
+							.where( "post_pk", 1245 )
+							.with( [ "author.country", "comments.author" ], true )
+							.firstOrFail();
 
-					expect( users ).toHaveLength( 1 );
-					expect( request.parallelLifecyclePostLoads ).toHaveLength( 1 );
-					expect( request.parallelLifecyclePostLoads[ 1 ].isSameAs( users[ 1 ] ) ).toBeTrue();
-					for ( var post in users[ 1 ].getPosts() ) {
-						expect( post.retrieveRelationship( "loadedByUser" ).isSameAs( users[ 1 ] ) ).toBeTrue();
-					}
-				},
-				"no-transaction"
-			);
+						expect( post.getAuthor().isRelationshipLoaded( "country" ) ).toBeTrue();
+						for ( var comment in post.getComments() ) {
+							expect( comment.isRelationshipLoaded( "author" ) ).toBeTrue();
+						}
+					},
+					"no-transaction"
+				);
 
-			it(
-				"preserves nested eager loads in parallel relationship graphs",
-				function() {
-					var post = getInstance( "Post" )
-						.where( "post_pk", 1245 )
-						.with( [ "author.country", "comments.author" ], true )
-						.firstOrFail();
+				it(
+					"preserves pivot relationships in parallel relationship graphs",
+					function() {
+						var post = getInstance( "Post" )
+							.where( "post_pk", 1245 )
+							.with( [ "tagsAsSubscriptions", "comments" ], true )
+							.firstOrFail();
 
-					expect( post.getAuthor().isRelationshipLoaded( "country" ) ).toBeTrue();
-					for ( var comment in post.getComments() ) {
-						expect( comment.isRelationshipLoaded( "author" ) ).toBeTrue();
-					}
-				},
-				"no-transaction"
-			);
+						for ( var tag in post.getTagsAsSubscriptions() ) {
+							expect( tag.isRelationshipLoaded( "subscription" ) ).toBeTrue();
+							var pivot = tag.getSubscription();
+							expect( pivot ).toBeInstanceOf( "quick.models.Relationships.Pivot" );
+							expect( pivot.getContext() ).notToBeEmpty();
+							expect( pivot.getPivotParent() ).toBeInstanceOf( "app.models.Post" );
+							expect( pivot.getPivotRelated().isSameAs( tag ) ).toBeTrue();
+						}
+					},
+					"no-transaction"
+				);
 
-			it(
-				"preserves pivot relationships in parallel relationship graphs",
-				function() {
-					var post = getInstance( "Post" )
-						.where( "post_pk", 1245 )
-						.with( [ "tagsAsSubscriptions", "comments" ], true )
-						.firstOrFail();
+				it(
+					"supports polymorphic belongs-to relationships in parallel",
+					function() {
+						var comments = getInstance( "Comment" )
+							.where( "designation", "public" )
+							.with( [ "commentable", "author" ], true )
+							.get();
 
-					for ( var tag in post.getTagsAsSubscriptions() ) {
-						expect( tag.isRelationshipLoaded( "subscription" ) ).toBeTrue();
-						var pivot = tag.getSubscription();
-						expect( pivot ).toBeInstanceOf( "quick.models.Relationships.Pivot" );
-						expect( pivot.getContext() ).notToBeEmpty();
-						expect( pivot.getPivotParent() ).toBeInstanceOf( "app.models.Post" );
-						expect( pivot.getPivotRelated().isSameAs( tag ) ).toBeTrue();
-					}
-				},
-				"no-transaction"
-			);
+						expect( comments ).toHaveLength( 3 );
+						expect( comments[ 1 ].getCommentable() ).toBeInstanceOf( "app.models.Post" );
+						expect( comments[ 3 ].getCommentable() ).toBeInstanceOf( "app.models.Video" );
+						expect( comments[ 1 ].getAuthor() ).toBeInstanceOf( "app.models.User" );
+						expect( variables.workerQueryThreads.size() ).toBe(
+							supportsParallelEagerLoadingForTest() ? 2 : 0
+						);
+					},
+					"no-transaction"
+				);
 
-			it(
-				"supports polymorphic belongs-to relationships in parallel",
-				function() {
-					var comments = getInstance( "Comment" )
-						.where( "designation", "public" )
-						.with( [ "commentable", "author" ], true )
-						.get();
+				it(
+					"applies relationship global scopes on the calling thread",
+					function() {
+						var callingThread                 = createObject( "java", "java.lang.Thread" ).currentThread().getName();
+						request.trackParallelScopeThreads = true;
+						request.parallelScopeThreads      = [];
 
-					expect( comments ).toHaveLength( 3 );
-					expect( comments[ 1 ].getCommentable() ).toBeInstanceOf( "app.models.Post" );
-					expect( comments[ 3 ].getCommentable() ).toBeInstanceOf( "app.models.Video" );
-					expect( comments[ 1 ].getAuthor() ).toBeInstanceOf( "app.models.User" );
-					expect( variables.workerQueryThreads.size() ).toBe( supportsParallelEagerLoadingForTest() ? 2 : 0 );
-				},
-				"no-transaction"
-			);
+						getInstance( "Post" ).with( [ "scopedAuthor", "comments" ], true ).get();
 
-			it(
-				"applies relationship global scopes on the calling thread",
-				function() {
-					var callingThread                 = createObject( "java", "java.lang.Thread" ).currentThread().getName();
-					request.trackParallelScopeThreads = true;
-					request.parallelScopeThreads      = [];
+						expect( request.parallelScopeThreads ).notToBeEmpty();
+						for ( var scopeThread in request.parallelScopeThreads ) {
+							expect( scopeThread ).toBe( callingThread );
+						}
+					},
+					"no-transaction"
+				);
+			} );
 
-					getInstance( "Post" ).with( [ "scopedAuthor", "comments" ], true ).get();
+			describe( "parallel eager loading query execution", function() {
+				it(
+					"supports parallel eager loading for query results",
+					function() {
+						var posts = getInstance( "Post" )
+							.with( [ "author", "comments" ], true )
+							.asQuery()
+							.get();
 
-					expect( request.parallelScopeThreads ).notToBeEmpty();
-					for ( var scopeThread in request.parallelScopeThreads ) {
-						expect( scopeThread ).toBe( callingThread );
-					}
-				},
-				"no-transaction"
-			);
+						expect( posts[ 1 ] ).toBeStruct();
+						expect( posts[ 1 ].author ).toBeStruct();
+						expect( posts[ 1 ].comments ).toBeArray();
+						expect( posts[ 3 ].author ).toBeStruct().toBeEmpty();
+						expect( posts[ 1 ].author ).toHaveKey( "streetTwo" );
+					},
+					"no-transaction"
+				);
 
-			it(
-				"supports parallel eager loading for query results",
-				function() {
-					var posts = getInstance( "Post" )
-						.with( [ "author", "comments" ], true )
-						.asQuery()
-						.get();
+				it(
+					"limits the number of concurrent eager-loading workers",
+					function() {
+						if ( supportsParallelEagerLoadingForTest() ) {
+							variables.parallelWorkerDelay = 25;
+							var builder                   = getInstance( "Post" ).with( [ "author", "comments" ], true );
+							builder.set_parallelEagerLoadingMaxThreads( 1 ).get();
 
-					expect( posts[ 1 ] ).toBeStruct();
-					expect( posts[ 1 ].author ).toBeStruct();
-					expect( posts[ 1 ].comments ).toBeArray();
-					expect( posts[ 3 ].author ).toBeStruct().toBeEmpty();
-					expect( posts[ 1 ].author ).toHaveKey( "streetTwo" );
-				},
-				"no-transaction"
-			);
+							expect( variables.maxActiveWorkers.get() ).toBe( 1 );
+						}
+					},
+					"no-transaction"
+				);
 
-			it(
-				"limits the number of concurrent eager-loading workers",
-				function() {
-					if ( supportsParallelEagerLoadingForTest() ) {
-						variables.parallelWorkerDelay = 25;
-						var builder                   = getInstance( "Post" ).with( [ "author", "comments" ], true );
-						builder.set_parallelEagerLoadingMaxThreads( 1 ).get();
+				it(
+					"propagates parallel eager-loading worker failures",
+					function() {
+						if ( supportsParallelEagerLoadingForTest() ) {
+							variables.failParallelWorker = true;
+							expect( function() {
+								getInstance( "Post" ).with( [ "author", "comments" ], true ).get();
+							} ).toThrow( type = "QuickParallelEagerLoadingException" );
+						}
+					},
+					"no-transaction"
+				);
 
-						expect( variables.maxActiveWorkers.get() ).toBe( 1 );
-					}
-				},
-				"no-transaction"
-			);
+				it(
+					"times out and cancels unfinished parallel eager-loading workers",
+					function() {
+						if ( supportsParallelEagerLoadingForTest() ) {
+							var coordinator               = getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
+							var availablePermitsBeforeRun = coordinator.availablePermits();
+							variables.parallelWorkerDelay = 100;
+							var builder                   = getInstance( "Post" ).with( [ "author", "comments" ], true );
+							builder.set_parallelEagerLoadingTimeout( 1 );
 
-			it(
-				"propagates parallel eager-loading worker failures",
-				function() {
-					if ( supportsParallelEagerLoadingForTest() ) {
-						variables.failParallelWorker = true;
-						expect( function() {
-							getInstance( "Post" ).with( [ "author", "comments" ], true ).get();
-						} ).toThrow( type = "QuickParallelEagerLoadingException" );
-					}
-				},
-				"no-transaction"
-			);
+							expect( function() {
+								builder.get();
+							} ).toThrow( type = "QuickParallelEagerLoadingTimeout", regex = "1 milliseconds" );
+							expect( variables.activeWorkers.get() ).toBe( 0 );
+							expect( coordinator.availablePermits() ).toBe( availablePermitsBeforeRun );
+						}
+					},
+					"no-transaction"
+				);
+			} );
 
-			it(
-				"times out and cancels unfinished parallel eager-loading workers",
-				function() {
-					if ( supportsParallelEagerLoadingForTest() ) {
-						var coordinator               = getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
-						var availablePermitsBeforeRun = coordinator.availablePermits();
-						variables.parallelWorkerDelay = 100;
-						var builder                   = getInstance( "Post" ).with( [ "author", "comments" ], true );
-						builder.set_parallelEagerLoadingTimeout( 1 );
+			describe( "parallel eager loading hydration state", function() {
+				it(
+					"hydrates virtual attributes on the calling thread",
+					function() {
+						var post = getInstance( "Post" )
+							.where( "post_pk", 1245 )
+							.with(
+								[
+									{
+										"comments" : function( relationship ) {
+											relationship.addUpperBody();
+										}
+									},
+									"author"
+								],
+								true
+							)
+							.firstOrFail();
 
-						expect( function() {
-							builder.get();
-						} ).toThrow( type = "QuickParallelEagerLoadingTimeout", regex = "1 milliseconds" );
-						expect( variables.activeWorkers.get() ).toBe( 0 );
-						expect( coordinator.availablePermits() ).toBe( availablePermitsBeforeRun );
-					}
-				},
-				"no-transaction"
-			);
+						for ( var comment in post.getComments() ) {
+							expect( comment.hasAttribute( "upperBody" ) ).toBeTrue();
+							expect( comment.retrieveAttribute( "upperBody" ) ).toBe( uCase( comment.getBody() ) );
+						}
+					},
+					"no-transaction"
+				);
 
-			it(
-				"hydrates virtual attributes on the calling thread",
-				function() {
-					var post = getInstance( "Post" )
-						.where( "post_pk", 1245 )
-						.with(
-							[
-								{
-									"comments" : function( relationship ) {
-										relationship.addUpperBody();
-									}
-								},
-								"author"
-							],
-							true
-						)
-						.firstOrFail();
+				it(
+					"preserves unloaded default relationship entities",
+					function() {
+						var post = getInstance( "Post" )
+							.whereNull( "user_id" )
+							.with( [ "authorWithEmptyDefault", "comments" ], true )
+							.firstOrFail();
 
-					for ( var comment in post.getComments() ) {
-						expect( comment.hasAttribute( "upperBody" ) ).toBeTrue();
-						expect( comment.retrieveAttribute( "upperBody" ) ).toBe( uCase( comment.getBody() ) );
-					}
-				},
-				"no-transaction"
-			);
+						expect( post.getAuthorWithEmptyDefault() ).toBeInstanceOf( "app.models.User" );
+						expect( post.getAuthorWithEmptyDefault().isLoaded() ).toBeFalse();
+					},
+					"no-transaction"
+				);
 
-			it(
-				"preserves unloaded default relationship entities",
-				function() {
-					var post = getInstance( "Post" )
-						.whereNull( "user_id" )
-						.with( [ "authorWithEmptyDefault", "comments" ], true )
-						.firstOrFail();
+				it(
+					"preserves parallel eager loading when cloning a builder",
+					function() {
+						getInstance( "Post" )
+							.with( [ "author", "comments" ], true )
+							.clone()
+							.get();
 
-					expect( post.getAuthorWithEmptyDefault() ).toBeInstanceOf( "app.models.User" );
-					expect( post.getAuthorWithEmptyDefault().isLoaded() ).toBeFalse();
-				},
-				"no-transaction"
-			);
+						expect( variables.workerQueryThreads.size() ).toBe(
+							supportsParallelEagerLoadingForTest() ? 2 : 0
+						);
+					},
+					"no-transaction"
+				);
 
-			it(
-				"preserves parallel eager loading when cloning a builder",
-				function() {
-					getInstance( "Post" )
-						.with( [ "author", "comments" ], true )
-						.clone()
-						.get();
+				it(
+					"clears the parallel flag with eager loads",
+					function() {
+						getInstance( "Post" )
+							.with( [ "author", "comments" ], true )
+							.clearEagerLoads()
+							.with( [ "author", "comments" ] )
+							.get();
 
-					expect( variables.workerQueryThreads.size() ).toBe( supportsParallelEagerLoadingForTest() ? 2 : 0 );
-				},
-				"no-transaction"
-			);
+						expect( variables.workerQueryThreads ).toBeEmpty();
+					},
+					"no-transaction"
+				);
 
-			it(
-				"clears the parallel flag with eager loads",
-				function() {
-					getInstance( "Post" )
-						.with( [ "author", "comments" ], true )
-						.clearEagerLoads()
-						.with( [ "author", "comments" ] )
-						.get();
+				it(
+					"clears the parallel flag when without removes every eager load",
+					function() {
+						getInstance( "Post" )
+							.with( [ "author", "comments" ], true )
+							.without( [ "author", "comments" ] )
+							.with( [ "author", "comments" ] )
+							.get();
 
-					expect( variables.workerQueryThreads ).toBeEmpty();
-				},
-				"no-transaction"
-			);
+						expect( variables.workerQueryThreads ).toBeEmpty();
+					},
+					"no-transaction"
+				);
+			} );
 
-			it(
-				"clears the parallel flag when without removes every eager load",
-				function() {
-					getInstance( "Post" )
-						.with( [ "author", "comments" ], true )
-						.without( [ "author", "comments" ] )
-						.with( [ "author", "comments" ] )
-						.get();
+			describe( "parallel eager loading lifecycle and transactions", function() {
+				it(
+					"does not duplicate instance-ready events during parallel hydration",
+					function() {
+						variables.trackInstanceReady = true;
+						getInstance( "Post" ).with( [ "author", "comments" ] ).get();
+						var serialInstanceCount = variables.instanceReadyCount.get();
 
-					expect( variables.workerQueryThreads ).toBeEmpty();
-				},
-				"no-transaction"
-			);
+						variables.instanceReadyCount.set( 0 );
+						getInstance( "Post" ).with( [ "author", "comments" ], true ).get();
 
-			it(
-				"does not duplicate instance-ready events during parallel hydration",
-				function() {
-					variables.trackInstanceReady = true;
-					getInstance( "Post" ).with( [ "author", "comments" ] ).get();
-					var serialInstanceCount = variables.instanceReadyCount.get();
+						expect( variables.instanceReadyCount.get() ).toBe( serialInstanceCount );
+					},
+					"no-transaction"
+				);
 
-					variables.instanceReadyCount.set( 0 );
-					getInstance( "Post" ).with( [ "author", "comments" ], true ).get();
+				it(
+					"does not suppress lifecycle events for queries inside eager callbacks",
+					function() {
+						getInstance( "Post" )
+							.with(
+								[
+									{
+										"author" : function( relationship ) {
+											getInstance( "ParallelLifecycleUser" ).where( "id", 1 ).get();
+										}
+									},
+									"comments"
+								],
+								true
+							)
+							.get();
 
-					expect( variables.instanceReadyCount.get() ).toBe( serialInstanceCount );
-				},
-				"no-transaction"
-			);
+						expect( request.parallelLifecyclePostLoads ).toHaveLength( 1 );
+					},
+					"no-transaction"
+				);
 
-			it(
-				"does not suppress lifecycle events for queries inside eager callbacks",
-				function() {
-					getInstance( "Post" )
-						.with(
-							[
-								{
-									"author" : function( relationship ) {
-										getInstance( "ParallelLifecycleUser" ).where( "id", 1 ).get();
-									}
-								},
-								"comments"
-							],
-							true
-						)
-						.get();
+				it(
+					"uses the application-wide worker limit across builders",
+					function() {
+						if ( !supportsParallelEagerLoadingForTest() ) {
+							return;
+						}
+						var coordinator = getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
+						var acquired    = 0;
+						try {
+							var availablePermits = coordinator.availablePermits();
+							for ( var i = 1; i <= availablePermits; i++ ) {
+								if ( coordinator.acquire( 1 ) ) {
+									acquired++;
+								}
+							}
 
-					expect( request.parallelLifecyclePostLoads ).toHaveLength( 1 );
-				},
-				"no-transaction"
-			);
-
-			it(
-				"uses the application-wide worker limit across builders",
-				function() {
-					if ( !supportsParallelEagerLoadingForTest() ) {
-						return;
-					}
-					var coordinator = getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
-					var acquired    = 0;
-					try {
-						var availablePermits = coordinator.availablePermits();
-						for ( var i = 1; i <= availablePermits; i++ ) {
-							if ( coordinator.acquire( 1 ) ) {
-								acquired++;
+							var builder = getInstance( "Post" ).with( [ "author", "comments" ], true );
+							builder.set_parallelEagerLoadingTimeout( 5 );
+							expect( function() {
+								builder.get();
+							} ).toThrow( type = "QuickParallelEagerLoadingTimeout", regex = "5 milliseconds" );
+						} finally {
+							for ( var permit = 1; permit <= acquired; permit++ ) {
+								coordinator.release();
 							}
 						}
+					},
+					"no-transaction"
+				);
 
-						var builder = getInstance( "Post" ).with( [ "author", "comments" ], true );
-						builder.set_parallelEagerLoadingTimeout( 5 );
-						expect( function() {
-							builder.get();
-						} ).toThrow( type = "QuickParallelEagerLoadingTimeout", regex = "5 milliseconds" );
-					} finally {
-						for ( var permit = 1; permit <= acquired; permit++ ) {
-							coordinator.release();
-						}
-					}
-				},
-				"no-transaction"
-			);
+				it( "falls back to serial eager loading inside a database transaction", function() {
+					var user = getInstance( "User" ).create( {
+						"username"   : "parallel-transaction-user",
+						"first_name" : "Parallel",
+						"last_name"  : "Transaction",
+						"password"   : hash( "password" )
+					} );
+					getInstance( "Post" ).create( {
+						"user_id" : user.getId(),
+						"body"    : "uncommitted parallel eager load"
+					} );
 
-			it( "falls back to serial eager loading inside a database transaction", function() {
-				var user = getInstance( "User" ).create( {
-					"username"   : "parallel-transaction-user",
-					"first_name" : "Parallel",
-					"last_name"  : "Transaction",
-					"password"   : hash( "password" )
+					var loadedUser = getInstance( "User" )
+						.where( "id", user.getId() )
+						.with( [ "posts", "roles" ], true )
+						.firstOrFail();
+
+					expect( loadedUser.getPosts() ).toHaveLength( 1 );
+					expect( loadedUser.getPosts()[ 1 ].getBody() ).toBe( "uncommitted parallel eager load" );
+					expect( variables.workerQueryThreads ).toBeEmpty();
 				} );
-				getInstance( "Post" ).create( {
-					"user_id" : user.getId(),
-					"body"    : "uncommitted parallel eager load"
-				} );
-
-				var loadedUser = getInstance( "User" )
-					.where( "id", user.getId() )
-					.with( [ "posts", "roles" ], true )
-					.firstOrFail();
-
-				expect( loadedUser.getPosts() ).toHaveLength( 1 );
-				expect( loadedUser.getPosts()[ 1 ].getBody() ).toBe( "uncommitted parallel eager load" );
-				expect( variables.workerQueryThreads ).toBeEmpty();
 			} );
 
 			it( "can eager load a belongs to relationship using a composite key", function() {

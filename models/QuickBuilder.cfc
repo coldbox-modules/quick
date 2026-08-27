@@ -1064,7 +1064,7 @@ component accessors="true" transientCache="false" {
 					plan,
 					taskName,
 					variables._parallelEagerLoadingCoordinator,
-					variables._parallelEagerLoadingCoordinator.createWorkerRequestContext(),
+					variables._parallelEagerLoadingCoordinator.createWorkerRequestContext( taskName ),
 					completionQueue
 				);
 				try {

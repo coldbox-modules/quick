@@ -63,6 +63,27 @@ component accessors="true" transientCache="false" {
 	property name="_lazyLoadingViolationCallback" inject="box:setting:lazyLoadingViolationCallback@quick";
 
 	/**
+	 * The maximum number of eager-loading workers that may run at once.
+	 */
+	property
+		name   ="_parallelEagerLoadingMaxThreads"
+		default="4"
+		inject ="box:setting:parallelEagerLoadingMaxThreads@quick";
+
+	/**
+	 * The number of milliseconds to wait for a batch of eager-loading workers.
+	 */
+	property
+		name   ="_parallelEagerLoadingTimeout"
+		default="60000"
+		inject ="box:setting:parallelEagerLoadingTimeout@quick";
+
+	/**
+	 * Thread-local lifecycle state shared by every QuickBuilder instance.
+	 */
+	property name="_parallelEagerLoadingContext" inject="quick.models.ParallelEagerLoadingContext";
+
+	/**
 	 * A map of aliases to entities to use when qualifying aliased columns.
 	 */
 	property name="aliasMap";
@@ -93,15 +114,17 @@ component accessors="true" transientCache="false" {
 	this.isQuickBuilder = true;
 
 	function init() {
-		variables._eagerLoad                = [];
-		variables._parallelEagerLoading     = false;
-		variables._globalScopesApplied      = false;
-		variables._globalScopeExcludeAll    = false;
-		variables._asMemento                = false;
-		variables._asQuery                  = false;
-		variables._withAliases              = false;
-		variables._entityTransformers       = [];
-		param variables._preventLazyLoading = false;
+		variables._eagerLoad                            = [];
+		variables._parallelEagerLoading                 = false;
+		variables._globalScopesApplied                  = false;
+		variables._globalScopeExcludeAll                = false;
+		variables._asMemento                            = false;
+		variables._asQuery                              = false;
+		variables._withAliases                          = false;
+		variables._entityTransformers                   = [];
+		param variables._parallelEagerLoadingMaxThreads = 4;
+		param variables._parallelEagerLoadingTimeout    = 60000;
+		param variables._preventLazyLoading             = false;
 		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
 				throw(
@@ -829,113 +852,157 @@ component accessors="true" transientCache="false" {
 	 * Eager loads independent top-level relationships on separate threads.
 	 */
 	private void function eagerLoadRelationsInParallel( required struct eagerLoads, required array entities ) {
-		var threadNames     = [];
-		var threadRelations = {};
-		var targetEntities  = arguments.entities;
-		var threadResults   = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
-
-		for ( var relationName in arguments.eagerLoads ) {
-			var threadName   = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
-			var entityStates = [];
-			for ( var entity in arguments.entities ) {
-				entityStates.append(
-					structKeyExists( entity, "isQuickEntity" )
-					 ? {
-						"isQuickEntity" : true,
-						"mappingName"   : entity.mappingName(),
-						"attributes"    : entity.retrieveAttributesData( withNulls = true )
-					}
-					 : {
-						"isQuickEntity" : false,
-						"value"         : duplicate( entity )
-					}
-				);
-			}
-			threadNames.append( threadName );
-			threadRelations[ threadName ] = relationName;
-			cfthread(
-				action          = "run",
-				name            = threadName,
-				threadName      = threadName,
-				relationName    = relationName,
-				eagerLoadConfig = arguments.eagerLoads[ relationName ],
-				entityStates    = entityStates,
-				results         = threadResults
-			) {
-				var workerEntities = [];
-				for ( var entityState in attributes.entityStates ) {
-					workerEntities.append(
-						entityState.isQuickEntity
-						 ? getEntity().newEntity( entityState.mappingName ).hydrate( entityState.attributes )
-						 : entityState.value
-					);
+		var relationNames  = arguments.eagerLoads.keyArray();
+		var maxWorkers     = max( 1, int( variables._parallelEagerLoadingMaxThreads ) );
+		var timeout        = max( 1, int( variables._parallelEagerLoadingTimeout ) );
+		var targetEntities = arguments.entities;
+		var threadResults  = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
+		var entityStates   = [];
+		for ( var entity in arguments.entities ) {
+			entityStates.append(
+				structKeyExists( entity, "isQuickEntity" )
+				 ? {
+					"isQuickEntity" : true,
+					"mappingName"   : entity.mappingName(),
+					"attributes"    : entity.retrieveAttributesData( withNulls = true )
 				}
-				var loadedEntities = eagerLoadRelation(
-					attributes.relationName,
-					attributes.eagerLoadConfig,
-					workerEntities
-				);
-				var relationshipValues = [];
-				for ( var entity in loadedEntities ) {
-					if ( structKeyExists( entity, "isQuickEntity" ) ) {
-						if ( isNull( entity.retrieveRelationship( attributes.relationName ) ) ) {
-							relationshipValues.append( { "type" : "null" } );
-						} else {
-							relationshipValues.append(
-								serializeParallelValue( entity.retrieveRelationship( attributes.relationName ) )
-							);
-						}
-					} else {
-						relationshipValues.append(
-							serializeParallelValue(
-								entity.keyExists( attributes.relationName )
-								 ? entity[ attributes.relationName ]
-								 : javacast( "null", "" )
-							)
-						);
-					}
+				 : {
+					"isQuickEntity" : false,
+					"value"         : duplicate( entity )
 				}
-				attributes.results.put( attributes.threadName, relationshipValues );
-			}
+			);
 		}
 
-		cfthread(
-			action  = "join",
-			name    = threadNames.toList(),
-			timeout = 60000
-		);
+		for ( var batchStart = 1; batchStart <= relationNames.len(); batchStart += maxWorkers ) {
+			var batchThreadNames     = [];
+			var batchThreadRelations = {};
+			var batchEnd             = min( relationNames.len(), batchStart + maxWorkers - 1 );
+			for ( var relationIndex = batchStart; relationIndex <= batchEnd; relationIndex++ ) {
+				var relationName = relationNames[ relationIndex ];
+				var threadName   = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
+				batchThreadNames.append( threadName );
+				batchThreadRelations[ threadName ] = relationName;
+				cfthread(
+					action          = "run",
+					name            = threadName,
+					threadName      = threadName,
+					relationName    = relationName,
+					eagerLoadConfig = arguments.eagerLoads[ relationName ],
+					entityStates    = entityStates,
+					results         = threadResults
+				) {
+					variables._parallelEagerLoadingContext.suppressLifecycleEvents();
+					try {
+						var workerEntities = [];
+						for ( var entityState in attributes.entityStates ) {
+							workerEntities.append(
+								entityState.isQuickEntity
+								 ? hydrateParallelEntityState( entityState )
+								 : entityState.value
+							);
+						}
+						var loadedEntities = eagerLoadRelation(
+							attributes.relationName,
+							attributes.eagerLoadConfig,
+							workerEntities
+						);
+						var relationshipValues = [];
+						for ( var loadedEntity in loadedEntities ) {
+							if ( structKeyExists( loadedEntity, "isQuickEntity" ) ) {
+								if ( isNull( loadedEntity.retrieveRelationship( attributes.relationName ) ) ) {
+									relationshipValues.append( { "type" : "null" } );
+								} else {
+									relationshipValues.append(
+										serializeParallelValue(
+											loadedEntity.retrieveRelationship( attributes.relationName )
+										)
+									);
+								}
+							} else if ( loadedEntity.keyExists( attributes.relationName ) ) {
+								relationshipValues.append(
+									serializeParallelValue( loadedEntity[ attributes.relationName ] )
+								);
+							} else {
+								relationshipValues.append( { "type" : "null" } );
+							}
+						}
+						attributes.results.put( attributes.threadName, relationshipValues );
+					} finally {
+						variables._parallelEagerLoadingContext.restoreLifecycleEvents();
+					}
+				}
+			}
 
-		threadNames.each( function( threadName ) {
-			if ( cfthread[ threadName ].status == "TERMINATED" ) {
-				var threadError = cfthread[ threadName ].error;
+			cfthread(
+				action  = "join",
+				name    = batchThreadNames.toList(),
+				timeout = timeout
+			);
+
+			var failedThread = "";
+			var timedOut     = false;
+			for ( var batchThreadName in batchThreadNames ) {
+				if ( cfthread[ batchThreadName ].status == "TERMINATED" && failedThread == "" ) {
+					failedThread = batchThreadName;
+				}
+				if (
+					cfthread[ batchThreadName ].status != "COMPLETED" && cfthread[ batchThreadName ].status != "TERMINATED"
+				) {
+					timedOut = true;
+				}
+			}
+			if ( failedThread != "" || timedOut ) {
+				terminateParallelEagerLoadingThreads( batchThreadNames );
+			}
+			if ( failedThread != "" ) {
+				var threadError = cfthread[ failedThread ].error;
 				throw(
 					type         = "QuickParallelEagerLoadingException",
 					message      = threadError.keyExists( "message" ) ? threadError.message : "A parallel eager-loading thread failed.",
 					extendedInfo = serializeJSON( threadError )
 				);
 			}
-			if ( cfthread[ threadName ].status != "COMPLETED" ) {
+			if ( timedOut ) {
 				throw(
 					type    = "QuickParallelEagerLoadingTimeout",
-					message = "Parallel eager loading did not complete within 60 seconds."
+					message = "Parallel eager loading did not complete within #timeout# milliseconds."
 				);
 			}
 
-			var relationName       = threadRelations[ threadName ];
-			var relationshipValues = threadResults.get( threadName );
-			for ( var i = 1; i <= targetEntities.len(); i++ ) {
-				var relationshipValue = deserializeParallelValue( relationshipValues[ i ] );
-				if ( structKeyExists( targetEntities[ i ], "isQuickEntity" ) ) {
-					if ( isNull( relationshipValue ) ) {
-						targetEntities[ i ].assignRelationship( relationName );
-					} else {
-						targetEntities[ i ].assignRelationship( relationName, relationshipValue );
+			for ( var completedThreadName in batchThreadNames ) {
+				var completedRelationName = batchThreadRelations[ completedThreadName ];
+				var relationshipValues    = threadResults.get( completedThreadName );
+				for ( var i = 1; i <= targetEntities.len(); i++ ) {
+					var completedRelationshipValue = deserializeParallelValue( relationshipValues[ i ] );
+					if ( structKeyExists( targetEntities[ i ], "isQuickEntity" ) ) {
+						if ( isNull( completedRelationshipValue ) ) {
+							targetEntities[ i ].assignRelationship( completedRelationName );
+						} else {
+							targetEntities[ i ].assignRelationship( completedRelationName, completedRelationshipValue );
+						}
+						targetEntities[ i ].fireRelationshipLoaded( completedRelationName );
+					} else if ( !isNull( completedRelationshipValue ) ) {
+						targetEntities[ i ][ completedRelationName ] = completedRelationshipValue;
 					}
-				} else if ( !isNull( relationshipValue ) ) {
-					targetEntities[ i ][ relationName ] = relationshipValue;
 				}
 			}
-		} );
+		}
+	}
+
+	private any function hydrateParallelEntityState( required struct state ) {
+		return getEntity()
+			.newEntity( arguments.state.mappingName )
+			.assignAttributesData( arguments.state.attributes )
+			.assignOriginalAttributes( arguments.state.attributes )
+			.set_loaded( true );
+	}
+
+	private void function terminateParallelEagerLoadingThreads( required array threadNames ) {
+		for ( var threadName in arguments.threadNames ) {
+			if ( cfthread[ threadName ].status != "COMPLETED" && cfthread[ threadName ].status != "TERMINATED" ) {
+				cfthread( action = "terminate", name = threadName );
+			}
+		}
 	}
 
 	/**
@@ -954,7 +1021,7 @@ component accessors="true" transientCache="false" {
 		}
 		if ( isStruct( arguments.value ) && structKeyExists( arguments.value, "isQuickEntity" ) ) {
 			var relationships = {};
-			for ( var relationshipName in arguments.value.retrieveLoadedRelationshipNames() ) {
+			for ( var relationshipName in arguments.value.get_relationshipsLoaded().keyArray() ) {
 				relationships[ relationshipName ] = serializeParallelValue(
 					arguments.value.retrieveRelationship( relationshipName )
 				);
@@ -993,7 +1060,15 @@ component accessors="true" transientCache="false" {
 				}
 				return items;
 			case "entity":
-				var entity = getEntity().newEntity( arguments.state.mappingName ).hydrate( arguments.state.attributes );
+				var entity = getEntity().newEntity( arguments.state.mappingName );
+				try {
+					entity.hydrate( arguments.state.attributes );
+				} catch ( MissingHydrationKey missingKey ) {
+					entity
+						.assignAttributesData( arguments.state.attributes )
+						.assignOriginalAttributes( arguments.state.attributes )
+						.set_loaded( true );
+				}
 				for ( var relationshipName in arguments.state.relationships ) {
 					var relationshipValue = deserializeParallelValue(
 						arguments.state.relationships[ relationshipName ]
@@ -1003,6 +1078,7 @@ component accessors="true" transientCache="false" {
 					} else {
 						entity.assignRelationship( relationshipName, relationshipValue );
 					}
+					entity.fireRelationshipLoaded( relationshipName );
 				}
 				return entity;
 			case "struct":
@@ -1162,7 +1238,7 @@ component accessors="true" transientCache="false" {
 	 * @doc_generic   quick.models.BaseEntity | struct
 	 * @return        [quick.models.BaseEntity] | [struct]
 	 */
-	public array function eagerLoadRelation(
+	private array function eagerLoadRelation(
 		required string relationName,
 		required struct eagerLoadConfig,
 		required array entities
@@ -1186,7 +1262,11 @@ component accessors="true" transientCache="false" {
 		);
 		var loadedRelationshipName = arguments.relationName;
 		for ( var entity in matchedEntities ) {
-			if ( isStruct( entity ) && structKeyExists( entity, "isQuickEntity" ) ) {
+			if (
+				!variables._parallelEagerLoadingContext.areLifecycleEventsSuppressed()
+				&& isStruct( entity )
+				&& structKeyExists( entity, "isQuickEntity" )
+			) {
 				entity.fireRelationshipLoaded( loadedRelationshipName );
 			}
 		}
@@ -2122,8 +2202,8 @@ component accessors="true" transientCache="false" {
 				.assignAttributesData( arguments.data )
 				.assignOriginalAttributes( arguments.data )
 				.set_preventLazyLoading( variables._preventLazyLoading )
-				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
-				.markLoaded();
+				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback );
+			markLoadedEntity( childEntity );
 			if ( hasVirtualData ) {
 				childEntity.set_refreshQuery( arguments.refreshQuery );
 			}
@@ -2134,12 +2214,20 @@ component accessors="true" transientCache="false" {
 				.assignAttributesData( arguments.data )
 				.assignOriginalAttributes( arguments.data )
 				.set_preventLazyLoading( variables._preventLazyLoading )
-				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
-				.markLoaded();
+				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback );
+			markLoadedEntity( entity );
 			if ( hasVirtualData ) {
 				entity.set_refreshQuery( arguments.refreshQuery );
 			}
 			return entity;
+		}
+	}
+
+	private void function markLoadedEntity( required any entity ) {
+		if ( variables._parallelEagerLoadingContext.areLifecycleEventsSuppressed() ) {
+			arguments.entity.set_loaded( true );
+		} else {
+			arguments.entity.markLoaded();
 		}
 	}
 

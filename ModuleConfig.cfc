@@ -8,12 +8,14 @@ component {
 
 	function configure() {
 		settings = {
-			"defaultGrammar"               : "AutoDiscover@qb",
-			"defaultQueryOptions"          : {},
-			"preventDuplicateJoins"        : true,
-			"preventLazyLoading"           : false,
-			"refreshOnSaveFallback"        : true,
-			"lazyLoadingViolationCallback" : ( entity, relationName ) => {
+			"defaultGrammar"                 : "AutoDiscover@qb",
+			"defaultQueryOptions"            : {},
+			"parallelEagerLoadingMaxThreads" : 4,
+			"parallelEagerLoadingTimeout"    : 60000,
+			"preventDuplicateJoins"          : true,
+			"preventLazyLoading"             : false,
+			"refreshOnSaveFallback"          : true,
+			"lazyLoadingViolationCallback"   : ( entity, relationName ) => {
 				throw(
 					type    = "QuickLazyLoadingException",
 					message = "Attempted to lazy load the [#arguments.relationName#] relationship on the entity [#arguments.entity.mappingName()#] but lazy loading is disabled. This is usually caused by the N+1 problem and is a sign that you are missing an eager load."

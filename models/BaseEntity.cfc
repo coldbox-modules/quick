@@ -949,11 +949,11 @@ component accessors="true" {
 			overlay = overlay.previous;
 		}
 
-		var attributes = [];
+		var runtimeAttributes = [];
 		for ( var i = newestFirst.len(); i >= 1; i-- ) {
-			attributes.append( newestFirst[ i ] );
+			runtimeAttributes.append( newestFirst[ i ] );
 		}
-		return attributes;
+		return runtimeAttributes;
 	}
 
 	private void function registerRuntimeAttribute( required struct attribute ) {

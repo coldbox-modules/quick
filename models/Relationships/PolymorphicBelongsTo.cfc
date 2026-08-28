@@ -153,6 +153,95 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	}
 
 	/**
+	 * Prepares each morph-type query on the calling thread.
+	 *
+	 * @internal
+	 */
+	public any function prepareEagerQuery( boolean asQuery = false, boolean withAliases = false ) {
+		variables.parallelEagerQueries = [];
+		for ( var type in variables.dictionary ) {
+			var morphParent = createModelByType( type );
+			var query       = prepareResultsQueryByType(
+				type,
+				morphParent,
+				arguments.asQuery,
+				arguments.withAliases
+			);
+			applyDefaultDatasourceToParallelQuery( query );
+			variables.parallelEagerQueries.append( {
+				"morphParent" : morphParent,
+				"query"       : query,
+				"type"        : type
+			} );
+		}
+		return this;
+	}
+
+	private void function applyDefaultDatasourceToParallelQuery( required any query ) {
+		var queryBuilder   = arguments.query.getQB();
+		var defaultOptions = queryBuilder.getDefaultOptions();
+		if ( defaultOptions.keyExists( "datasource" ) ) {
+			return;
+		}
+
+		var applicationMetadata = getApplicationMetadata();
+		if ( applicationMetadata.keyExists( "datasource" ) && !isNull( applicationMetadata.datasource ) ) {
+			queryBuilder.mergeDefaultOptions( { "datasource" : applicationMetadata.datasource } );
+		}
+	}
+
+	/**
+	 * Executes the prepared morph queries without hydrating their rows.
+	 *
+	 * @internal
+	 */
+	public array function retrieveEagerRows() {
+		var resultSets = [];
+		for ( var eagerQuery in variables.parallelEagerQueries ) {
+			resultSets.append( eagerQuery.query.retrieveUnhydratedResults() );
+		}
+		return resultSets;
+	}
+
+	/**
+	 * Hydrates each morph result set without mutating the original parents.
+	 *
+	 * @internal
+	 */
+	public array function hydrateEagerRows( required array rows ) {
+		var hydratedResults = [];
+		for ( var i = 1; i <= variables.parallelEagerQueries.len(); i++ ) {
+			var eagerQuery = variables.parallelEagerQueries[ i ];
+			hydratedResults.append( {
+				"morphParent" : eagerQuery.morphParent,
+				"results"     : eagerQuery.query.hydrateUnhydratedResults( arguments.rows[ i ] ),
+				"type"        : eagerQuery.type
+			} );
+		}
+		return hydratedResults;
+	}
+
+	/**
+	 * Matches worker-hydrated morph results to the original parents on the caller.
+	 *
+	 * @internal
+	 */
+	public array function matchEagerResults(
+		required array entities,
+		required any results,
+		required string relationName
+	) {
+		for ( var morphResults in arguments.results ) {
+			matchToMorphParents(
+				morphResults.type,
+				morphResults.morphParent,
+				morphResults.results
+			);
+		}
+		return arguments.entities;
+	}
+
+	/**
 	 * Executes a query and returns the results for a given polymorphic type.
 	 *
 	 * @type         The polymorphic type to retrieve.
@@ -166,17 +255,29 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 		boolean asQuery     = false,
 		boolean withAliases = false
 	) {
-		var localKeys = variables.localKeys.isEmpty() ? arguments.instance.keyNames() : variables.localKeys;
-
 		var allKeys = gatherKeysByType( type );
-
 		if ( allKeys.isEmpty() ) {
 			return [];
 		}
+		return prepareResultsQueryByType(
+			arguments.type,
+			arguments.instance,
+			arguments.asQuery,
+			arguments.withAliases
+		).get();
+	}
 
-		var query = arguments.instance;
+	private any function prepareResultsQueryByType(
+		required string type,
+		required any instance,
+		boolean asQuery     = false,
+		boolean withAliases = false
+	) {
+		var localKeys = variables.localKeys.isEmpty() ? arguments.instance.keyNames() : variables.localKeys;
+		var allKeys   = gatherKeysByType( arguments.type );
+		var query     = arguments.instance.newQuery();
 		if ( arguments.asQuery ) {
-			query = query.asQuery( arguments.withAliases );
+			query.asQuery( arguments.withAliases );
 		}
 		var eagerConstraints = query.getQB().forNestedWhere();
 		for ( var keys in allKeys ) {
@@ -187,7 +288,8 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 			eagerConstraints.addNestedWhereQuery( keyConstraints, "or" );
 		}
 		query.getQB().addNestedWhereQuery( eagerConstraints );
-		return query.get();
+		query.prepareUnhydratedQuery();
+		return query;
 	}
 
 	/**

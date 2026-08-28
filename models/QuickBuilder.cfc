@@ -39,6 +39,11 @@ component accessors="true" transientCache="false" {
 	property name="_eagerLoad";
 
 	/**
+	 * Whether top-level eager loads should execute concurrently.
+	 */
+	property name="_parallelEagerLoading" default="false";
+
+	/**
 	 * A flag marking if this builder should return as a qb result or as a collection of entities.
 	 */
 	property name="_asQuery";
@@ -61,6 +66,27 @@ component accessors="true" transientCache="false" {
 	 * It is passed the entity and relation name that caused the violation.
 	 */
 	property name="_lazyLoadingViolationCallback" inject="box:setting:lazyLoadingViolationCallback@quick";
+
+	/**
+	 * The maximum number of eager-loading workers that may run at once.
+	 */
+	property
+		name   ="_parallelEagerLoadingMaxThreads"
+		default="4"
+		inject ="box:setting:parallelEagerLoadingMaxThreads@quick";
+
+	/**
+	 * The number of milliseconds to wait for a batch of eager-loading workers.
+	 */
+	property
+		name   ="_parallelEagerLoadingTimeout"
+		default="60000"
+		inject ="box:setting:parallelEagerLoadingTimeout@quick";
+
+	/**
+	 * Application-wide coordinator for parallel eager-loading queries.
+	 */
+	property name="_parallelEagerLoadingCoordinator" inject="quick.models.ParallelEagerLoadingCoordinator";
 
 	/**
 	 * A map of aliases to entities to use when qualifying aliased columns.
@@ -93,14 +119,17 @@ component accessors="true" transientCache="false" {
 	this.isQuickBuilder = true;
 
 	function init() {
-		variables._eagerLoad                = [];
-		variables._globalScopesApplied      = false;
-		variables._globalScopeExcludeAll    = false;
-		variables._asMemento                = false;
-		variables._asQuery                  = false;
-		variables._withAliases              = false;
-		variables._entityTransformers       = [];
-		param variables._preventLazyLoading = false;
+		variables._eagerLoad                            = [];
+		variables._parallelEagerLoading                 = false;
+		variables._globalScopesApplied                  = false;
+		variables._globalScopeExcludeAll                = false;
+		variables._asMemento                            = false;
+		variables._asQuery                              = false;
+		variables._withAliases                          = false;
+		variables._entityTransformers                   = [];
+		param variables._parallelEagerLoadingMaxThreads = 4;
+		param variables._parallelEagerLoadingTimeout    = 60000;
+		param variables._preventLazyLoading             = false;
 		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
 				throw(
@@ -437,19 +466,63 @@ component accessors="true" transientCache="false" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	private array function getEntities( any columns, struct options = {} ) {
+		return hydrateEagerRows( retrieveUnhydratedResults( argumentCollection = arguments ) );
+	}
+
+	/**
+	 * Executes the configured query without hydrating entities.
+	 *
+	 * This internal seam lets parallel eager-loading workers perform database
+	 * I/O while hydration and lifecycle events remain on the calling thread.
+	 *
+	 * @internal
+	 */
+	public QuickBuilder function prepareUnhydratedQuery() {
+		activateGlobalScopes();
 		if ( !variables._asQuery ) {
 			ensureKeyColumnsSelected();
 		}
-		var results = variables.qb.get( argumentCollection = arguments );
+		return this;
+	}
+
+	/**
+	 * Executes a query prepared by `prepareUnhydratedQuery`.
+	 *
+	 * @internal
+	 */
+	public array function retrieveUnhydratedResults( any columns, struct options = {} ) {
+		prepareUnhydratedQuery();
+		return variables.qb.get( argumentCollection = arguments );
+	}
+
+	/**
+	 * Hydrates rows from `retrieveUnhydratedResults` without applying this
+	 * builder's eager loads or final transformations.
+	 *
+	 * @internal
+	 */
+	public array function hydrateEagerRows( required array results ) {
 		if ( variables._asQuery ) {
-			return results;
+			return arguments.results;
 		}
 		var refreshQuery = variables.qb.clone();
 		var entities     = [];
-		for ( var result in results ) {
+		for ( var result in arguments.results ) {
 			entities.append( variables.loadEntity( result, refreshQuery ) );
 		}
 		return entities;
+	}
+
+	/**
+	 * Applies normal Quick hydration, nested eager loads, transformations, and
+	 * collection construction to rows executed on a worker thread.
+	 *
+	 * @internal
+	 */
+	public any function hydrateUnhydratedResults( required array results ) {
+		return getEntity().newCollection(
+			handleTransformations( eagerLoadRelations( hydrateEagerRows( arguments.results ) ) )
+		);
 	}
 
 	/**
@@ -472,7 +545,6 @@ component accessors="true" transientCache="false" {
 	 * @return   any
 	 */
 	public any function get( any columns, struct options = {} ) {
-		activateGlobalScopes();
 		return getEntity().newCollection(
 			handleTransformations( eagerLoadRelations( getEntities( argumentCollection = arguments ) ) )
 		);
@@ -713,9 +785,11 @@ component accessors="true" transientCache="false" {
 	 * @relationName  A single relation name or array of relation
 	 *                names to eager load.
 	 *
+	 * @parallel      If true, eager loads top-level relationships concurrently.
+	 *
 	 * @return        QuickBuilder
 	 */
-	public any function with( required any relationName ) {
+	public any function with( required any relationName, boolean parallel = false ) {
 		if ( isSimpleValue( arguments.relationName ) && arguments.relationName == "" ) {
 			return this;
 		}
@@ -725,6 +799,7 @@ component accessors="true" transientCache="false" {
 			arrayWrap( arguments.relationName ),
 			true
 		);
+		variables._parallelEagerLoading = variables._parallelEagerLoading || arguments.parallel;
 
 		return this;
 	}
@@ -761,6 +836,9 @@ component accessors="true" transientCache="false" {
 			}
 		}
 		variables._eagerLoad = eagerLoadList;
+		if ( variables._eagerLoad.isEmpty() ) {
+			variables._parallelEagerLoading = false;
+		}
 		return this;
 	}
 
@@ -770,7 +848,8 @@ component accessors="true" transientCache="false" {
 	 * @return QuickBuilder
 	 */
 	public any function clearEagerLoads() {
-		variables._eagerLoad = [];
+		variables._eagerLoad            = [];
+		variables._parallelEagerLoading = false;
 		return this;
 	}
 
@@ -806,15 +885,237 @@ component accessors="true" transientCache="false" {
 		}
 
 		var eagerLoads = denestEagerLoads( variables._eagerLoad );
-		for ( var relationName in eagerLoads ) {
-			arguments.entities = eagerLoadRelation(
-				relationName,
-				eagerLoads[ relationName ],
-				arguments.entities
-			);
+		if (
+			variables._parallelEagerLoading
+			&& eagerLoads.count() > 1
+			&& supportsParallelEagerLoading()
+			&& !isInsideDatabaseTransaction()
+		) {
+			eagerLoadRelationsInParallel( eagerLoads, arguments.entities );
+		} else {
+			for ( var relationName in eagerLoads ) {
+				arguments.entities = eagerLoadRelation(
+					relationName,
+					eagerLoads[ relationName ],
+					arguments.entities
+				);
+			}
 		}
 
 		return arguments.entities;
+	}
+
+	/**
+	 * Eager loads independent top-level relationships on Quick's fixed executor.
+	 */
+	private void function eagerLoadRelationsInParallel( required struct eagerLoads, required array entities ) {
+		var relationNames = arguments.eagerLoads.keyArray();
+		var maxWorkers    = min(
+			max( 1, int( variables._parallelEagerLoadingMaxThreads ) ),
+			variables._parallelEagerLoadingCoordinator.getMaximumThreads()
+		);
+		var timeout        = max( 1, int( variables._parallelEagerLoadingTimeout ) );
+		var targetEntities = arguments.entities;
+		var plans          = [];
+
+		// Relationship resolution, user callbacks, and constraint construction may
+		// touch request state and entity prototypes. Keep all of it on the caller.
+		for ( var relationName in relationNames ) {
+			plans.append(
+				prepareParallelEagerLoad(
+					relationName,
+					arguments.eagerLoads[ relationName ],
+					targetEntities
+				)
+			);
+		}
+
+		for ( var batchStart = 1; batchStart <= plans.len(); batchStart += maxWorkers ) {
+			var completionQueue = createObject( "java", "java.util.concurrent.LinkedBlockingQueue" ).init();
+			var batchTasks      = [];
+			var batchEnd        = min( plans.len(), batchStart + maxWorkers - 1 );
+			for ( var planIndex = batchStart; planIndex <= batchEnd; planIndex++ ) {
+				var plan     = plans[ planIndex ];
+				var taskName = "quick_eager_#replace( createUUID(), "-", "", "all" )#";
+				if ( !plan.hasMatches ) {
+					finalizeParallelEagerLoad( plan, [], targetEntities );
+					continue;
+				}
+				var task = new quick.models.ParallelEagerLoadingTask(
+					plan,
+					taskName,
+					variables._parallelEagerLoadingCoordinator,
+					variables._parallelEagerLoadingCoordinator.createWorkerRequestContext( taskName ),
+					variables._parallelEagerLoadingCoordinator.getWorkerApplicationSettings(),
+					completionQueue
+				);
+				try {
+					var future = variables._parallelEagerLoadingCoordinator.submit( task );
+				} catch ( any e ) {
+					cancelParallelEagerLoadingTasks( batchTasks );
+					throw(
+						type    = "QuickParallelEagerLoadingException",
+						message = e.keyExists( "message" )
+						 ? e.message
+						 : "A parallel eager-loading task could not be submitted."
+					);
+				}
+				batchTasks.append( {
+					"name"   : taskName,
+					"plan"   : plan,
+					"future" : future
+				} );
+			}
+
+			var batchResults = awaitParallelEagerLoadingTasks( batchTasks, completionQueue, timeout );
+			for ( var completedTask in batchTasks ) {
+				finalizeParallelEagerLoad(
+					completedTask.plan,
+					batchResults[ completedTask.name ],
+					targetEntities
+				);
+			}
+		}
+	}
+
+	private struct function awaitParallelEagerLoadingTasks(
+		required array tasks,
+		required any completionQueue,
+		required numeric timeout
+	) {
+		var results  = {};
+		var timeUnit = createObject( "java", "java.util.concurrent.TimeUnit" );
+		var system   = createObject( "java", "java.lang.System" );
+		var deadline = system.nanoTime() + ( arguments.timeout * 1000000 );
+
+		for ( var completedCount = 1; completedCount <= arguments.tasks.len(); completedCount++ ) {
+			var remainingNanos = deadline - system.nanoTime();
+			if ( remainingNanos <= 0 ) {
+				cancelParallelEagerLoadingTasks( arguments.tasks );
+				throw(
+					type    = "QuickParallelEagerLoadingTimeout",
+					message = "Parallel eager loading did not complete within #arguments.timeout# milliseconds."
+				);
+			}
+
+			try {
+				var completion = arguments.completionQueue.poll(
+					javacast( "long", ceiling( remainingNanos / 1000000 ) ),
+					timeUnit.MILLISECONDS
+				);
+			} catch ( "java.lang.InterruptedException" e ) {
+				createObject( "java", "java.lang.Thread" ).currentThread().interrupt();
+				cancelParallelEagerLoadingTasks( arguments.tasks );
+				throw(
+					type    = "QuickParallelEagerLoadingCancellationException",
+					message = "Parallel eager loading was interrupted while waiting for its workers."
+				);
+			}
+
+			if ( isNull( completion ) ) {
+				cancelParallelEagerLoadingTasks( arguments.tasks );
+				throw(
+					type    = "QuickParallelEagerLoadingTimeout",
+					message = "Parallel eager loading did not complete within #arguments.timeout# milliseconds."
+				);
+			}
+			if ( !completion.success ) {
+				cancelParallelEagerLoadingTasks( arguments.tasks );
+				throw(
+					type    = "QuickParallelEagerLoadingException",
+					message = completion.error.keyExists( "message" )
+					 ? completion.error.message
+					 : "A parallel eager-loading worker failed."
+				);
+			}
+			results[ completion.name ] = completion.results;
+		}
+
+		return results;
+	}
+
+	private void function cancelParallelEagerLoadingTasks( required array tasks ) {
+		for ( var task in arguments.tasks ) {
+			if ( !task.future.isDone() ) {
+				task.future.cancel( true );
+			}
+		}
+	}
+
+	private struct function prepareParallelEagerLoad(
+		required string relationName,
+		required struct eagerLoadConfig,
+		required array entities
+	) {
+		var nestedEagerLoads = arguments.eagerLoadConfig.keyExists( "nested" )
+		 ? arguments.eagerLoadConfig.nested
+		 : {};
+		var relation = resolveRelationship( getEntity(), arguments.relationName );
+		if ( arguments.eagerLoadConfig.keyExists( "callback" ) ) {
+			arguments.eagerLoadConfig.callback( relation );
+		}
+		var hasMatches = relation.addEagerConstraints( arguments.entities, getEntity() );
+		relation.with( renestEagerLoads( nestedEagerLoads ) );
+		relation.initRelation( arguments.entities, arguments.relationName );
+		if ( hasMatches ) {
+			relation.prepareEagerQuery( variables._asQuery, variables._withAliases );
+			applyDefaultDatasourceToParallelEagerLoad( relation );
+		}
+		return {
+			"hasMatches"   : hasMatches,
+			"relation"     : relation,
+			"relationName" : arguments.relationName
+		};
+	}
+
+	private void function applyDefaultDatasourceToParallelEagerLoad( required any relation ) {
+		var queryBuilder   = arguments.relation.getRelationshipBuilder().getQb();
+		var defaultOptions = queryBuilder.getDefaultOptions();
+		if ( defaultOptions.keyExists( "datasource" ) ) {
+			return;
+		}
+
+		var applicationMetadata = getApplicationMetadata();
+		if ( applicationMetadata.keyExists( "datasource" ) && !isNull( applicationMetadata.datasource ) ) {
+			queryBuilder.mergeDefaultOptions( { "datasource" : applicationMetadata.datasource } );
+		}
+	}
+
+	private void function finalizeParallelEagerLoad(
+		required struct plan,
+		required any results,
+		required array entities
+	) {
+		var matchedEntities = arguments.plan.relation.matchEagerResults(
+			arguments.entities,
+			arguments.plan.hasMatches ? arguments.results : [],
+			arguments.plan.relationName
+		);
+		for ( var entity in matchedEntities ) {
+			if ( isStruct( entity ) && structKeyExists( entity, "isQuickEntity" ) ) {
+				entity.fireRelationshipLoaded( arguments.plan.relationName );
+			}
+		}
+	}
+
+	/**
+	 * Adobe ColdFusion does not yet support parallel eager-loading execution.
+	 */
+	private boolean function supportsParallelEagerLoading() {
+		return !server.keyExists( "coldfusion" ) || !findNoCase( "ColdFusion", server.coldfusion.productName );
+	}
+
+	/**
+	 * Worker threads cannot share a caller's transaction-bound connection.
+	 */
+	private boolean function isInsideDatabaseTransaction() {
+		if ( getFunctionList().keyExists( "isInTransaction" ) ) {
+			return isInTransaction();
+		}
+		if ( server.keyExists( "lucee" ) ) {
+			return !getPageContext().getDataSourceManager().isAutoCommit();
+		}
+		return true;
 	}
 
 	private struct function denestEagerLoads( required array eagerLoads ) {
@@ -1913,8 +2214,8 @@ component accessors="true" transientCache="false" {
 				.assignAttributesData( arguments.data )
 				.assignOriginalAttributes( arguments.data )
 				.set_preventLazyLoading( variables._preventLazyLoading )
-				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
-				.markLoaded();
+				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback );
+			markLoadedEntity( childEntity );
 			if ( hasVirtualData ) {
 				childEntity.set_refreshQuery( arguments.refreshQuery );
 			}
@@ -1925,13 +2226,17 @@ component accessors="true" transientCache="false" {
 				.assignAttributesData( arguments.data )
 				.assignOriginalAttributes( arguments.data )
 				.set_preventLazyLoading( variables._preventLazyLoading )
-				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback )
-				.markLoaded();
+				.set_lazyLoadingViolationCallback( variables._lazyLoadingViolationCallback );
+			markLoadedEntity( entity );
 			if ( hasVirtualData ) {
 				entity.set_refreshQuery( arguments.refreshQuery );
 			}
 			return entity;
 		}
+	}
+
+	private void function markLoadedEntity( required any entity ) {
+		arguments.entity.markLoaded();
 	}
 
 	/**
@@ -1987,6 +2292,7 @@ component accessors="true" transientCache="false" {
 		newBuilder.set_globalScopeExcludeAll( this.get_globalScopeExcludeAll() );
 		newBuilder.set_globalScopeExclusions( this.get_globalScopeExclusions() );
 		newBuilder.set_eagerLoad( this.get_eagerLoad() );
+		newBuilder.set_parallelEagerLoading( this.get_parallelEagerLoading() );
 		newBuilder.set_asQuery( this.get_asQuery() );
 		newBuilder.set_withAliases( this.get_withAliases() );
 		newBuilder.set_preventLazyLoading( this.get_preventLazyLoading() );

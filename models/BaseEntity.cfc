@@ -1189,6 +1189,11 @@ component accessors="true" {
 			arguments.value = castValueForSetter( arguments.name, arguments.value.keyValues()[ 1 ] );
 		}
 
+		guardAgainstLoadedKeyMutation(
+			arguments.name,
+			isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
+		);
+
 		variables._data[ retrieveColumnForAlias( arguments.name ) ] = arguments.cast ? castValueForSetter(
 			arguments.name,
 			isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
@@ -1199,6 +1204,28 @@ component accessors="true" {
 		) : ( isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value );
 
 		return this;
+	}
+
+	private void function guardAgainstLoadedKeyMutation( required string name, any value ) {
+		if ( !isLoaded() || !arrayContainsNoCase( keyNames(), retrieveAliasForColumn( arguments.name ) ) ) {
+			return;
+		}
+
+		var keyColumn      = retrieveColumnForAlias( arguments.name );
+		var originalIsNull = !variables._originalAttributes.keyExists( keyColumn ) || isNull(
+			variables._originalAttributes[ keyColumn ]
+		);
+		var replacementIsNull = isNull( arguments.value );
+		if (
+			originalIsNull != replacementIsNull ||
+			( !originalIsNull && variables._originalAttributes[ keyColumn ] != arguments.value )
+		) {
+			throw(
+				type    = "QuickPrimaryKeyMutationException",
+				message = "A loaded [#entityName()#] entity cannot change its primary key [#retrieveAliasForColumn( arguments.name )#].",
+				detail  = "Create a new entity when a different primary key is required."
+			);
+		}
 	}
 
 	/**

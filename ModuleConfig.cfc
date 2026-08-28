@@ -10,6 +10,7 @@ component {
 		settings = {
 			"defaultGrammar"                 : "AutoDiscover@qb",
 			"defaultQueryOptions"            : {},
+			"parallelEagerLoadingExecutor"   : "",
 			"parallelEagerLoadingMaxThreads" : 4,
 			"parallelEagerLoadingTimeout"    : 60000,
 			"preventDuplicateJoins"          : true,
@@ -56,14 +57,35 @@ component {
 	}
 
 	function onLoad() {
-		wirebox
-			.getInstance( "AsyncManager@coldbox" )
-			.newExecutor(
-				name           = "quick-parallel-eager-loading",
-				type           = "fixed",
-				threads        = max( 1, int( settings.parallelEagerLoadingMaxThreads ) ),
-				loadAppContext = true
+		var asyncManager                        = wirebox.getInstance( "AsyncManager@coldbox" );
+		variables.ownsParallelEagerLoadExecutor = false;
+		if ( trim( settings.parallelEagerLoadingExecutor ) == "" ) {
+			settings.parallelEagerLoadingExecutor = "quick-parallel-eager-loading";
+			if ( !asyncManager.hasExecutor( settings.parallelEagerLoadingExecutor ) ) {
+				asyncManager.newExecutor(
+					name           = "quick-parallel-eager-loading",
+					type           = "fixed",
+					threads        = max( 1, int( settings.parallelEagerLoadingMaxThreads ) ),
+					loadAppContext = true
+				);
+				variables.ownsParallelEagerLoadExecutor = true;
+			}
+		} else if ( !asyncManager.hasExecutor( settings.parallelEagerLoadingExecutor ) ) {
+			throw(
+				type    = "QuickParallelEagerLoadingExecutorNotFound",
+				message = "The configured parallel eager-loading executor [#settings.parallelEagerLoadingExecutor#] is not registered with ColdBox's AsyncManager."
 			);
+		}
+
+		var parallelExecutorMaxThreads = asyncManager
+			.getExecutor( settings.parallelEagerLoadingExecutor )
+			.getMaximumPoolSize();
+		if ( parallelExecutorMaxThreads <= 0 || parallelExecutorMaxThreads >= 2147483647 ) {
+			throw(
+				type    = "QuickParallelEagerLoadingExecutorNotBounded",
+				message = "The configured parallel eager-loading executor [#settings.parallelEagerLoadingExecutor#] must have a bounded maximum pool size."
+			);
+		}
 
 		binder
 			.map( alias = "QuickQB@quick", force = true )
@@ -98,8 +120,11 @@ component {
 
 	function onUnload() {
 		var asyncManager = wirebox.getInstance( "AsyncManager@coldbox" );
-		if ( asyncManager.hasExecutor( "quick-parallel-eager-loading" ) ) {
-			asyncManager.deleteExecutor( "quick-parallel-eager-loading" );
+		if (
+			variables.ownsParallelEagerLoadExecutor
+			&& asyncManager.hasExecutor( settings.parallelEagerLoadingExecutor )
+		) {
+			asyncManager.deleteExecutor( settings.parallelEagerLoadingExecutor );
 		}
 
 		var cacheBox = wirebox.getCachebox();

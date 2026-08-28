@@ -909,8 +909,11 @@ component accessors="true" transientCache="false" {
 	 * Eager loads independent top-level relationships on Quick's fixed executor.
 	 */
 	private void function eagerLoadRelationsInParallel( required struct eagerLoads, required array entities ) {
-		var relationNames  = arguments.eagerLoads.keyArray();
-		var maxWorkers     = max( 1, int( variables._parallelEagerLoadingMaxThreads ) );
+		var relationNames = arguments.eagerLoads.keyArray();
+		var maxWorkers    = min(
+			max( 1, int( variables._parallelEagerLoadingMaxThreads ) ),
+			variables._parallelEagerLoadingCoordinator.getMaximumThreads()
+		);
 		var timeout        = max( 1, int( variables._parallelEagerLoadingTimeout ) );
 		var targetEntities = arguments.entities;
 		var plans          = [];
@@ -943,6 +946,7 @@ component accessors="true" transientCache="false" {
 					taskName,
 					variables._parallelEagerLoadingCoordinator,
 					variables._parallelEagerLoadingCoordinator.createWorkerRequestContext( taskName ),
+					variables._parallelEagerLoadingCoordinator.getWorkerApplicationSettings(),
 					completionQueue
 				);
 				try {
@@ -1024,7 +1028,7 @@ component accessors="true" transientCache="false" {
 					 : "A parallel eager-loading worker failed."
 				);
 			}
-			results[ completion.name ] = completion.rows;
+			results[ completion.name ] = completion.results;
 		}
 
 		return results;
@@ -1079,13 +1083,12 @@ component accessors="true" transientCache="false" {
 
 	private void function finalizeParallelEagerLoad(
 		required struct plan,
-		required array rows,
+		required any results,
 		required array entities
 	) {
-		var results         = arguments.plan.hasMatches ? arguments.plan.relation.hydrateEagerRows( arguments.rows ) : [];
-		var matchedEntities = arguments.plan.relation.match(
+		var matchedEntities = arguments.plan.relation.matchEagerResults(
 			arguments.entities,
-			results,
+			arguments.plan.hasMatches ? arguments.results : [],
 			arguments.plan.relationName
 		);
 		for ( var entity in matchedEntities ) {

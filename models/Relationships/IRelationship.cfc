@@ -32,11 +32,23 @@ interface displayname="IRelationship" {
 	public array function retrieveEagerRows();
 
 	/**
-	 * Hydrates rows returned by a prepared eager query.
+	 * Hydrates rows returned by a prepared eager query, including nested eager
+	 * loads and transformations local to this relationship branch.
 	 *
 	 * @internal
 	 */
 	public array function hydrateEagerRows( required array rows );
+
+	/**
+	 * Matches a hydrated eager-loading branch to its original parent entities.
+	 *
+	 * @internal
+	 */
+	public array function matchEagerResults(
+		required array entities,
+		required any results,
+		required string relationName
+	);
 
 	/**
 	 * Adds constraints for eager loading

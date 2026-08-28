@@ -178,6 +178,23 @@ component accessors="true" implements="IRelationship" {
 	}
 
 	/**
+	 * Matches worker-hydrated results to the original parents on the caller.
+	 *
+	 * @internal
+	 */
+	public array function matchEagerResults(
+		required array entities,
+		required any results,
+		required string relationName
+	) {
+		return this.match(
+			arguments.entities,
+			arguments.results,
+			arguments.relationName
+		);
+	}
+
+	/**
 	 * Gets the first matching record for the relationship.
 	 * Returns null if no record is found.
 	 *

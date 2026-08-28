@@ -1,6 +1,6 @@
 /**
- * Retrieves the database rows for one prepared eager-loading relationship.
- * Relationship preparation and entity hydration remain on the calling thread.
+ * Retrieves and hydrates one prepared top-level eager-loading branch.
+ * Relationship preparation and parent matching remain on the calling thread.
  */
 component {
 
@@ -9,13 +9,15 @@ component {
 		required string name,
 		required any coordinator,
 		required any requestContext,
+		required struct applicationSettings,
 		required any completionQueue
 	) {
-		variables.plan            = arguments.plan;
-		variables.name            = arguments.name;
-		variables.coordinator     = arguments.coordinator;
-		variables.requestContext  = arguments.requestContext;
-		variables.completionQueue = arguments.completionQueue;
+		variables.plan                = arguments.plan;
+		variables.name                = arguments.name;
+		variables.coordinator         = arguments.coordinator;
+		variables.requestContext      = arguments.requestContext;
+		variables.applicationSettings = arguments.applicationSettings;
+		variables.completionQueue     = arguments.completionQueue;
 		return this;
 	}
 
@@ -27,6 +29,14 @@ component {
 			runThreadInContext(
 				applicationName = getApplicationMetadata().name,
 				callback        = function() {
+					if ( variables.applicationSettings.keyExists( "datasource" ) ) {
+						application
+							action    ="update"
+							mappings  =variables.applicationSettings.mappings
+							datasource=variables.applicationSettings.datasource;
+					} else {
+						application action="update" mappings=variables.applicationSettings.mappings;
+					}
 					execute();
 				}
 			);
@@ -43,10 +53,11 @@ component {
 			requestContextInstalled   = true;
 			variables.coordinator.enterWorker( variables.name );
 			workerEntered = true;
+			var rows      = variables.plan.relation.retrieveEagerRows();
 			variables.completionQueue.offer( {
 				"name"    : variables.name,
-				"success" : true,
-				"rows"    : variables.plan.relation.retrieveEagerRows()
+				"results" : variables.plan.relation.hydrateEagerRows( rows ),
+				"success" : true
 			} );
 		} catch ( any e ) {
 			variables.completionQueue.offer( {

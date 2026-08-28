@@ -3,8 +3,9 @@
  */
 component singleton {
 
-	property name="executor"       inject="executor:quick-parallel-eager-loading";
+	property name="asyncManager"   inject="AsyncManager@coldbox";
 	property name="controller"     inject="coldbox";
+	property name="executorName"   inject="box:setting:parallelEagerLoadingExecutor@quick";
 	property name="requestService" inject="coldbox:requestService";
 
 	function init() {
@@ -13,11 +14,27 @@ component singleton {
 	}
 
 	public any function submit( required any task ) {
-		return variables.executor.submit( arguments.task, "run" );
+		return getExecutor().submit( arguments.task, "run" );
 	}
 
 	public any function getExecutor() {
-		return variables.executor;
+		return variables.asyncManager.getExecutor( variables.executorName );
+	}
+
+	public numeric function getMaximumThreads() {
+		return max( 1, getExecutor().getMaximumPoolSize() );
+	}
+
+	public struct function getWorkerApplicationSettings() {
+		if ( server.keyExists( "boxlang" ) ) {
+			var applicationSettings = getApplicationSettings();
+			var workerSettings      = { "mappings" : structCopy( applicationSettings.mappings ) };
+			if ( applicationSettings.keyExists( "datasource" ) && !isNull( applicationSettings.datasource ) ) {
+				workerSettings.datasource = applicationSettings.datasource;
+			}
+			return workerSettings;
+		}
+		return {};
 	}
 
 	public any function createWorkerRequestContext( required string workerName ) {

@@ -29,20 +29,28 @@ component {
 			runThreadInContext(
 				applicationName = getApplicationMetadata().name,
 				callback        = function() {
-					if ( variables.applicationSettings.keyExists( "datasource" ) ) {
-						application
-							action    ="update"
-							mappings  =variables.applicationSettings.mappings
-							datasource=variables.applicationSettings.datasource;
-					} else {
-						application action="update" mappings=variables.applicationSettings.mappings;
-					}
+					applyWorkerApplicationSettings();
 					execute();
 				}
 			);
 			return;
 		}
+		applyWorkerApplicationSettings();
 		execute();
+	}
+
+	private void function applyWorkerApplicationSettings() {
+		if ( variables.applicationSettings.isEmpty() ) {
+			return;
+		}
+		if ( variables.applicationSettings.keyExists( "datasource" ) ) {
+			application
+				action    ="update"
+				mappings  =variables.applicationSettings.mappings
+				datasource=variables.applicationSettings.datasource;
+		} else {
+			application action="update" mappings=variables.applicationSettings.mappings;
+		}
 	}
 
 	private void function execute() {

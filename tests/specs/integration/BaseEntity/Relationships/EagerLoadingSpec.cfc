@@ -158,6 +158,31 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				},
 				"no-transaction"
 			);
+
+			it(
+				"hydrates relationship branches on workers and matches parents on the caller",
+				function() {
+					if ( !supportsParallelEagerLoadingForTest() ) {
+						return;
+					}
+
+					var callingThread                = createObject( "java", "java.lang.Thread" ).currentThread().getName();
+					variables.trackParallelHydration = true;
+
+					var users = getInstance( "ParallelLifecycleUser" )
+						.where( "id", 1 )
+						.with( [ "posts", "comments" ], true )
+						.get();
+
+					expect( users ).toHaveLength( 1 );
+					expect( users[ 1 ].getPosts() ).notToBeEmpty( "the fixture user should have posts" );
+					expect( variables.parallelHydrationThreads ).notToBeEmpty( "postLoad should execute on a worker" );
+					expect( variables.parallelHydrationThreads.containsKey( callingThread ) ).toBeFalse();
+					expect( variables.parallelRelationshipLoadedThreads.size() ).toBe( 1 );
+					expect( variables.parallelRelationshipLoadedThreads.containsKey( callingThread ) ).toBeTrue();
+				},
+				"no-transaction"
+			);
 		} );
 	}
 
@@ -177,6 +202,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( post.getAuthor().isRelationshipLoaded( "country" ) ).toBeTrue();
 					for ( var comment in post.getComments() ) {
 						expect( comment.isRelationshipLoaded( "author" ) ).toBeTrue();
+					}
+					if ( supportsParallelEagerLoadingForTest() ) {
+						expect( variables.workerQueryCount.get() ).toBeGT(
+							2,
+							"nested eager-load queries should execute inside their top-level workers"
+						);
 					}
 				},
 				"no-transaction"
@@ -317,7 +348,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				setupEagerLoadingTestState( arguments.currentSpec );
 			} );
 			it(
-				"hydrates virtual attributes on the calling thread",
+				"hydrates virtual attributes in parallel branches",
 				function() {
 					var post = getInstance( "Post" )
 						.where( "post_pk", 1245 )
@@ -442,7 +473,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			);
 
 			it(
-				"uses an application-wide fixed worker pool",
+				"uses the configured application-wide fixed worker pool",
 				function() {
 					if ( !supportsParallelEagerLoadingForTest() ) {
 						return;
@@ -453,7 +484,9 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					var submissionsBefore = executor.getTaskSubmissionCount();
 
 					expect( firstCoordinator ).toBe( secondCoordinator );
-					expect( executor.getMaximumPoolSize() ).toBe( 4 );
+					expect( executor.getName() ).toBe( "quick-test-parallel-eager-loading" );
+					expect( executor.getMaximumPoolSize() ).toBe( 3 );
+					expect( firstCoordinator.getMaximumThreads() ).toBe( 3 );
 					getInstance( "Post" ).with( [ "author", "comments" ], true ).get();
 					getInstance( "Post" ).with( [ "author", "comments" ], true ).get();
 					expect( executor.getTaskSubmissionCount() ).toBe( submissionsBefore + 4 );
@@ -1334,6 +1367,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		if ( coordinator.isWorker() ) {
 			var threadName = coordinator.getWorkerName();
 			variables.workerQueryThreads.put( threadName, true );
+			variables.workerQueryCount.incrementAndGet();
 			variables.workerRequestContexts.put(
 				arguments.event.getPrivateValue( "__quickParallelWorkerContextId" ),
 				true
@@ -1367,17 +1401,55 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		}
 	}
 
+	function quickRelationshipLoaded(
+		event,
+		interceptData,
+		buffer,
+		rc,
+		prc
+	) {
+		if (
+			variables.trackParallelHydration
+			&& [ "posts", "comments" ].contains( arguments.interceptData.relationshipName )
+		) {
+			variables.parallelRelationshipLoadedThreads.put(
+				createObject( "java", "java.lang.Thread" ).currentThread().getName(),
+				true
+			);
+		}
+	}
+
+	function quickPostLoad(
+		event,
+		interceptData,
+		buffer,
+		rc,
+		prc
+	) {
+		var coordinator = getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
+		if ( variables.trackParallelHydration && coordinator.isWorker() ) {
+			variables.parallelHydrationThreads.put(
+				createObject( "java", "java.lang.Thread" ).currentThread().getName(),
+				true
+			);
+		}
+	}
+
 	private void function setupEagerLoadingTestState( required string currentSpec ) {
-		request.quickSkipDatabaseTransactions = specHasLabel( arguments.currentSpec, "no-transaction" );
-		variables.queries                     = [];
-		variables.workerQueryThreads          = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
-		variables.workerRequestContexts       = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
-		variables.activeWorkers               = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
-		variables.maxActiveWorkers            = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
-		variables.parallelWorkerDelay         = 0;
-		variables.failParallelWorker          = false;
-		variables.trackInstanceReady          = false;
-		variables.instanceReadyCount          = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
+		request.quickSkipDatabaseTransactions       = specHasLabel( arguments.currentSpec, "no-transaction" );
+		variables.queries                           = [];
+		variables.workerQueryThreads                = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
+		variables.workerQueryCount                  = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
+		variables.workerRequestContexts             = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
+		variables.activeWorkers                     = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
+		variables.maxActiveWorkers                  = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
+		variables.parallelWorkerDelay               = 0;
+		variables.failParallelWorker                = false;
+		variables.trackInstanceReady                = false;
+		variables.instanceReadyCount                = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init();
+		variables.trackParallelHydration            = false;
+		variables.parallelHydrationThreads          = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
+		variables.parallelRelationshipLoadedThreads = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
 		structDelete( request, "parallelLifecyclePostLoads" );
 		structDelete( request, "trackParallelScopeThreads" );
 		structDelete( request, "parallelScopeThreads" );

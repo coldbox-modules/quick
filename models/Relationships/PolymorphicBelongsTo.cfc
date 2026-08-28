@@ -204,20 +204,41 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 	}
 
 	/**
-	 * Hydrates and matches each morph result set on the calling thread.
+	 * Hydrates each morph result set without mutating the original parents.
 	 *
 	 * @internal
 	 */
 	public array function hydrateEagerRows( required array rows ) {
+		var hydratedResults = [];
 		for ( var i = 1; i <= variables.parallelEagerQueries.len(); i++ ) {
 			var eagerQuery = variables.parallelEagerQueries[ i ];
+			hydratedResults.append( {
+				"morphParent" : eagerQuery.morphParent,
+				"results"     : eagerQuery.query.hydrateUnhydratedResults( arguments.rows[ i ] ),
+				"type"        : eagerQuery.type
+			} );
+		}
+		return hydratedResults;
+	}
+
+	/**
+	 * Matches worker-hydrated morph results to the original parents on the caller.
+	 *
+	 * @internal
+	 */
+	public array function matchEagerResults(
+		required array entities,
+		required any results,
+		required string relationName
+	) {
+		for ( var morphResults in arguments.results ) {
 			matchToMorphParents(
-				eagerQuery.type,
-				eagerQuery.morphParent,
-				eagerQuery.query.hydrateUnhydratedResults( arguments.rows[ i ] )
+				morphResults.type,
+				morphResults.morphParent,
+				morphResults.results
 			);
 		}
-		return variables.entities;
+		return arguments.entities;
 	}
 
 	/**

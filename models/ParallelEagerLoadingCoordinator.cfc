@@ -26,7 +26,7 @@ component singleton {
 	}
 
 	public struct function getWorkerApplicationSettings() {
-		if ( server.keyExists( "boxlang" ) ) {
+		if ( server.keyExists( "boxlang" ) || server.keyExists( "lucee" ) ) {
 			var applicationSettings = getApplicationSettings();
 			var workerSettings      = { "mappings" : structCopy( applicationSettings.mappings ) };
 			if ( applicationSettings.keyExists( "datasource" ) && !isNull( applicationSettings.datasource ) ) {

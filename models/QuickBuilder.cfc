@@ -2147,15 +2147,6 @@ component accessors="true" transientCache="false" {
 			.from( getEntity().tableName() );
 	}
 
-	/**
-	 * Creates a QuickQB through WireBox with explicit constructor arguments.
-	 *
-	 * @internal
-	 */
-	public any function newQuickQBInstance( required struct initArguments ) {
-		return variables._wirebox.getInstance( name = "QuickQB@quick", initArguments = arguments.initArguments );
-	}
-
 	public any function retrieveQuery() {
 		return variables.qb;
 	}

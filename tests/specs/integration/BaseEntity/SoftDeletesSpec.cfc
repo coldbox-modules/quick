@@ -34,6 +34,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				trashedUser.forceDelete();
 				expect( getInstance( "SoftDeleteUser" ).withTrashed().find( 1 ) ).toBeNull();
 			} );
+
+			it( "can force delete multiple entities by id", function() {
+				getInstance( "SoftDeleteUser" ).forceDeleteAll( [ 1, 2 ] );
+
+				expect( getInstance( "SoftDeleteUser" ).withTrashed().find( 1 ) ).toBeNull();
+				expect( getInstance( "SoftDeleteUser" ).withTrashed().find( 2 ) ).toBeNull();
+				expect( getInstance( "SoftDeleteUser" ).findOrFail( 3 ).getUsername() ).toBe( "janedoe" );
+			} );
 		} );
 	}
 

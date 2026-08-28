@@ -675,6 +675,28 @@ component accessors="true" transientCache="false" {
 	}
 
 	/**
+	 * Adds grouped primary-key constraints for bulk delete operations.
+	 */
+	private void function addIdConstraints( required array ids ) {
+		if ( arrayIsEmpty( arguments.ids ) ) {
+			return;
+		}
+
+		var idConstraints = variables.qb.forNestedWhere();
+		var keyNames      = getEntity().keyNames();
+		for ( var id in arguments.ids ) {
+			var values = arrayWrap( id );
+			getEntity().guardAgainstKeyLengthMismatch( values );
+			var keyConstraints = idConstraints.forNestedWhere();
+			for ( var i = 1; i <= keyNames.len(); i++ ) {
+				keyConstraints.where( keyNames[ i ], values[ i ] );
+			}
+			idConstraints.addNestedWhereQuery( keyConstraints, "or" );
+		}
+		variables.qb.addNestedWhereQuery( idConstraints );
+	}
+
+	/**
 	 * Deletes matching entities according to the configured query.
 	 *
 	 * @ids     An optional array of ids to add to the previously configured
@@ -687,20 +709,7 @@ component accessors="true" transientCache="false" {
 	 */
 	public struct function deleteAll( array ids = [] ) {
 		getEntity().guardReadOnly();
-		if ( !arrayIsEmpty( arguments.ids ) ) {
-			var idConstraints = variables.qb.forNestedWhere();
-			for ( var id in arguments.ids ) {
-				var values = arrayWrap( id );
-				getEntity().guardAgainstKeyLengthMismatch( values );
-				var keyConstraints = idConstraints.forNestedWhere();
-				var keyNames       = getEntity().keyNames();
-				for ( var i = 1; i <= keyNames.len(); i++ ) {
-					keyConstraints.where( keyNames[ i ], values[ i ] );
-				}
-				idConstraints.addNestedWhereQuery( keyConstraints, "or" );
-			}
-			variables.qb.addNestedWhereQuery( idConstraints );
-		}
+		addIdConstraints( arguments.ids );
 		if ( getEntity().usesSoftDeletes() ) {
 			activateGlobalScopes();
 			return updateAll( { "#getEntity().retrieveSoftDeleteColumn()#" : now() } );
@@ -727,21 +736,7 @@ component accessors="true" transientCache="false" {
 	 */
 	public struct function forceDeleteAll( array ids = [] ) {
 		getEntity().guardReadOnly();
-		if ( !arrayIsEmpty( arguments.ids ) ) {
-			variables.qb.where( function( q1 ) {
-				ids.each( function( id ) {
-					var values = arrayWrap( id );
-					getEntity().guardAgainstKeyLengthMismatch( values );
-					q1.orWhere( function( q2 ) {
-						getEntity()
-							.keyNames()
-							.each( function( keyName, i ) {
-								q2.where( keyName, values[ i ] );
-							} );
-					} );
-				} );
-			} );
-		}
+		addIdConstraints( arguments.ids );
 		return variables.qb.delete();
 	}
 

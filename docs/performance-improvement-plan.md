@@ -426,3 +426,37 @@ while allocation was effectively unchanged (-0.08%), confirming that the
 removed clone is a fixed per-result-set cost. The existing `loadEntity()`
 virtual-data guard remains responsible for cloning when refresh state is
 actually required.
+
+### 2026-08-28: direct dirty comparison — abandoned
+
+A prototype compared `_data` directly with `_originalAttributes` after syncing
+generated accessors. It caused 10 Lucee suite failures involving partially
+selected, null, excluded, saved, and refreshed state. The hash path's exact key
+presence semantics are part of current behavior, so the prototype was reverted
+without a commit. A future attempt needs a canonical metadata-ordered state
+model plus explicit cross-engine null/missing-value tests before timing.
+
+### 2026-08-28: no-op transformation copy — abandoned
+
+Skipping the result-array copy when no entity transformers were configured did
+not clear the gate. Across five warmed 1,000-row runs, hydrated time changed
+from 265.502 to 268.957 us/row (+1.30%) and allocation fell only 0.16%. The
+candidate was reverted without a commit.
+
+### 2026-08-28: lazy relationship-constraint container — abandoned
+
+Deferring the per-entity `HashSet` was measured across five warmed wide and
+narrow construction runs. Wide construction regressed 2.57% with 0.05% more
+allocation; narrow construction improved only 0.50% with allocation unchanged.
+The extra branches did not recover measurable memory, so the candidate was
+reverted without a commit.
+
+### 2026-08-28: lazy deep runtime-attribute index — accepted
+
+A new benchmark resolves the oldest attribute in a ten-node runtime overlay.
+Across five warmed runs, median lookup time fell from 4.709 to 2.202 us
+(-53.23%) and allocation fell from 4,112 to 2,064 bytes (-49.80%). The declared
+attribute-read control changed by +1.13% with allocation unchanged. The index
+is per entity, appears only after traversal reaches six nodes, and is invalidated
+when another runtime attribute is registered. The full Lucee suite passed with
+617 passes, 0 failures, 0 errors, and 3 skips.

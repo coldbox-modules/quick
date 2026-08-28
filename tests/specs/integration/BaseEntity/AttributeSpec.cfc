@@ -30,6 +30,20 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( getInstance( "User" ).hasAttribute( "spawnedVirtual" ) ).toBeFalse();
 			} );
 
+			it( "indexes deep runtime attributes and invalidates the index when extended", function() {
+				var user = getInstance( "User" );
+				for ( var i = 1; i <= 10; i++ ) {
+					user.appendVirtualAttribute( "runtimeAttribute#i#" );
+				}
+
+				expect( user.hasAttribute( "runtimeAttribute1" ) ).toBeTrue();
+				expect( user.retrieveAliasForColumn( "runtimeAttribute1" ) ).toBe( "runtimeAttribute1" );
+
+				user.appendVirtualAttribute( "runtimeAttribute11" );
+				expect( user.hasAttribute( "runtimeAttribute11" ) ).toBeTrue();
+				expect( user.hasAttribute( "runtimeAttribute1" ) ).toBeTrue();
+			} );
+
 			it( "can provide a default for a virtual attribute", function() {
 				var user    = getInstance( "User" ).appendVirtualAttribute( "hasPosts", false );
 				var newUser = user.newEntity();

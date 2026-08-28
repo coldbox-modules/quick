@@ -70,6 +70,11 @@ component {
 		);
 		appendSelected(
 			benchmarks,
+			"attribute.runtime_overlay_deep_lookup",
+			() => benchmarkDeepRuntimeOverlayLookup()
+		);
+		appendSelected(
+			benchmarks,
 			"entity.attributes_snapshot",
 			() => benchmarkAttributesSnapshot()
 		);
@@ -270,6 +275,22 @@ component {
 			iterations  = variables.config.iterations * 100,
 			callback    = function( iterationIndex ) {
 				return entity.assignAttribute( "username", "quick-performance-#iterationIndex#" );
+			}
+		);
+	}
+
+	private struct function benchmarkDeepRuntimeOverlayLookup() {
+		var entity = variables.userPrototype.newEntity();
+		for ( var overlayIndex = 1; overlayIndex <= 10; overlayIndex++ ) {
+			entity.appendVirtualAttribute( "performanceOverlay#overlayIndex#" );
+		}
+		return variables.harness.measure(
+			name        = "attribute.runtime_overlay_deep_lookup",
+			category    = "attribute",
+			description = "Resolve the oldest attribute in a ten-node runtime overlay chain.",
+			iterations  = variables.config.iterations * 100,
+			callback    = function( iterationIndex ) {
+				return entity.hasAttribute( "performanceOverlay1" );
 			}
 		);
 	}

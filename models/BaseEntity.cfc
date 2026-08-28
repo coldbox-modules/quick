@@ -938,10 +938,21 @@ component accessors="true" {
 	}
 
 	private any function retrieveRuntimeAttributeByAlias( required string alias ) {
+		if ( variables.keyExists( "_runtimeAttributeIndex" ) ) {
+			return variables._runtimeAttributeIndex.aliases.keyExists( arguments.alias )
+			 ? variables._runtimeAttributeIndex.aliases[ arguments.alias ]
+			 : javacast( "null", "" );
+		}
 		var overlay = variables._runtimeAttributeOverlay;
+		var depth   = 0;
 		while ( overlay.keyExists( "attribute" ) ) {
 			if ( compareNoCase( overlay.attribute.name, arguments.alias ) == 0 ) {
 				return overlay.attribute;
+			}
+			depth++;
+			if ( depth == 6 ) {
+				materializeRuntimeAttributeIndex();
+				return retrieveRuntimeAttributeByAlias( arguments.alias );
 			}
 			overlay = overlay.previous;
 		}
@@ -949,14 +960,44 @@ component accessors="true" {
 	}
 
 	private any function retrieveRuntimeAttributeByColumn( required string column ) {
+		if ( variables.keyExists( "_runtimeAttributeIndex" ) ) {
+			return variables._runtimeAttributeIndex.columns.keyExists( arguments.column )
+			 ? variables._runtimeAttributeIndex.columns[ arguments.column ]
+			 : javacast( "null", "" );
+		}
 		var overlay = variables._runtimeAttributeOverlay;
+		var depth   = 0;
 		while ( overlay.keyExists( "attribute" ) ) {
 			if ( compareNoCase( overlay.attribute.column, arguments.column ) == 0 ) {
 				return overlay.attribute;
 			}
+			depth++;
+			if ( depth == 6 ) {
+				materializeRuntimeAttributeIndex();
+				return retrieveRuntimeAttributeByColumn( arguments.column );
+			}
 			overlay = overlay.previous;
 		}
 		return;
+	}
+
+	private void function materializeRuntimeAttributeIndex() {
+		var aliases = {};
+		var columns = {};
+		var overlay = variables._runtimeAttributeOverlay;
+		while ( overlay.keyExists( "attribute" ) ) {
+			if ( !aliases.keyExists( overlay.attribute.name ) ) {
+				aliases[ overlay.attribute.name ] = overlay.attribute;
+			}
+			if ( !columns.keyExists( overlay.attribute.column ) ) {
+				columns[ overlay.attribute.column ] = overlay.attribute;
+			}
+			overlay = overlay.previous;
+		}
+		variables._runtimeAttributeIndex = {
+			"aliases" : aliases,
+			"columns" : columns
+		};
 	}
 
 	private array function retrieveRuntimeAttributeDefinitions() {
@@ -975,6 +1016,7 @@ component accessors="true" {
 	}
 
 	private void function registerRuntimeAttribute( required struct attribute ) {
+		structDelete( variables, "_runtimeAttributeIndex" );
 		var qualifiedColumnsCacheKey = runtimeQualifiedColumnsCacheKey();
 		if ( !arguments.attribute.virtual ) {
 			qualifiedColumnsCacheKey = hash(

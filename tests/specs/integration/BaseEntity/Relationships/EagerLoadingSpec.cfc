@@ -1410,7 +1410,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 	) {
 		if (
 			variables.trackParallelHydration
-			&& [ "posts", "comments" ].contains( arguments.interceptData.relationshipName )
+			&& arrayContainsNoCase( [ "posts", "comments" ], arguments.interceptData.relationshipName )
 		) {
 			variables.parallelRelationshipLoadedThreads.put(
 				createObject( "java", "java.lang.Thread" ).currentThread().getName(),

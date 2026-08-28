@@ -1111,19 +1111,19 @@ component
 	 * @return qb.models.Query.QueryBuilder
 	 */
 	public QueryBuilder function newQuery() {
-		var newBuilder = new quick.models.QuickQB(
-			grammar                        = getGrammar(),
-			utils                          = getUtils(),
-			returnFormat                   = getReturnFormat(),
-			returnFormatterRegistry        = getReturnFormatterRegistry(),
-			paginationCollector            = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
-			columnFormatter                = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
-			parentQuery                    = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery().clone(),
-			defaultOptions                 = getDefaultOptions(),
-			validateDuplicateSelectColumns = getValidateDuplicateSelectColumns(),
-			validateQueryExecuteReturnType = getValidateQueryExecuteReturnType(),
-			collectQueryLog                = getCollectQueryLog()
-		);
+		var newBuilder = getQuickBuilder().newQuickQBInstance( {
+			"grammar"                        : getGrammar(),
+			"utils"                          : getUtils(),
+			"returnFormat"                   : getReturnFormat(),
+			"returnFormatterRegistry"        : getReturnFormatterRegistry(),
+			"paginationCollector"            : isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
+			"columnFormatter"                : isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
+			"parentQuery"                    : isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery().clone(),
+			"defaultOptions"                 : getDefaultOptions(),
+			"validateDuplicateSelectColumns" : getValidateDuplicateSelectColumns(),
+			"validateQueryExecuteReturnType" : getValidateQueryExecuteReturnType(),
+			"collectQueryLog"                : getCollectQueryLog()
+		} );
 		newBuilder.setQuickBuilder( getQuickBuilder() );
 		newBuilder.setEntity( getEntity() );
 		newBuilder.setTableName( getTableName() );

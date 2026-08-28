@@ -36,6 +36,7 @@ component {
 				"quickInstanceReady",
 				"quickPreLoad",
 				"quickPostLoad",
+				"quickPostReplicate",
 				"quickPreSave",
 				"quickPostSave",
 				"quickPreInsert",

@@ -416,3 +416,13 @@ using 10 warmups, 15 samples, 50 iterations, and the median of run medians.
 The full Lucee suite passed with 616 passes, 0 failures, 0 errors, and 3 skips.
 The implementation was retained because it clears both the wall-time and
 allocation gates while preserving entity-key assignment behavior.
+
+### 2026-08-28: lazy refresh-query clone — accepted
+
+Five warmed runs measured database hydration with one row and 1,000 rows. The
+one-row median fell from 2.700 ms to 1.937 ms (-28.26%) and allocation fell from
+1,186,120 to 947,168 bytes (-20.15%). At 1,000 rows, per-row time fell 5.03%
+while allocation was effectively unchanged (-0.08%), confirming that the
+removed clone is a fixed per-result-set cost. The existing `loadEntity()`
+virtual-data guard remains responsible for cloning when refresh state is
+actually required.

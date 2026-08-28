@@ -444,10 +444,9 @@ component accessors="true" transientCache="false" {
 		if ( variables._asQuery ) {
 			return results;
 		}
-		var refreshQuery = variables.qb.clone();
-		var entities     = [];
+		var entities = [];
 		for ( var result in results ) {
-			entities.append( variables.loadEntity( result, refreshQuery ) );
+			entities.append( variables.loadEntity( result ) );
 		}
 		return entities;
 	}

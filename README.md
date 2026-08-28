@@ -122,6 +122,54 @@ component extends="quick.models.BaseEntity" {
 
 Query caching stores database results, not live Quick entities or loaded relationships. Cache lifetime and invalidation are managed by the CFML engine, so use short lifetimes for data that Quick or another process may update. For application-specific invalidation or distributed caching, cache entity mementos in CacheBox at the service layer and rehydrate them through Quick's public APIs.
 
+### Testing with model factories
+
+Quick includes Laravel-inspired model factories under `quick.resources.testing`. Define application factories outside of your production model code:
+
+```javascript
+// tests/resources/factories/UserFactory.cfc
+component extends="quick.resources.testing.Factory" {
+
+    struct function definition() {
+        return {
+            username  : "factory-#lCase( createUUID() )#",
+            firstName : "Factory",
+            lastName  : "User"
+        };
+    }
+
+    any function administrator() {
+        return state( { type : "admin" } );
+    }
+
+}
+```
+
+Create a manager in your test base class and expose a short `factory()` helper:
+
+```javascript
+variables.factoryManager = new quick.resources.testing.FactoryManager(
+    wirebox     = getWireBox(),
+    factoryPath = "tests.resources.factories"
+);
+
+any function factory( required string name ) {
+    return variables.factoryManager.factory( arguments.name );
+}
+```
+
+Factories support default definitions, explicit and named states, counts, sequences, attribute closures, and `afterMaking` and `afterCreating` callbacks. `make()` returns unsaved Quick entities, while `create()` persists through the entity's normal `save()` lifecycle:
+
+```javascript
+var admin = factory( "User" ).administrator().create();
+var users = factory( "User" ).count( 3 ).create();
+var unsavedUser = factory( "User" ).make( { firstName : "Override" } );
+```
+
+Factories do not manage database transactions. Integration tests should start a transaction around each test and roll it back in `finally`, ensuring both passing and failing tests leave the database unchanged.
+
+All factory implementation classes are isolated beneath `resources/testing`; production deployment tooling may exclude that directory. Quick does not load or register these classes during normal module startup.
+
 ### Tests and Contributing
 
 To run the tests, first clone this repo and run a `box install`.

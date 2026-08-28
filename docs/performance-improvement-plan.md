@@ -542,3 +542,9 @@ the performance gate, failed functional behavior, lacked a safe invalidation or
 laziness boundary, or require an explicit architecture/API change. “Abandoned”
 here means no production code from the experiment remains; the architectural
 items can be reconsidered once their stated prerequisites exist.
+
+Final committed-head verification:
+
+- Lucee 6.2.8.20: 617 passed, 0 failed, 0 errors, 3 skipped.
+- BoxLang 1.17.0+58 CFML compatibility mode: 618 passed, 0 failed, 0 errors, 2 skipped.
+- BoxLang 1.17.0+58 native mode: 618 passed, 0 failed, 0 errors, 2 skipped.

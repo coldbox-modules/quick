@@ -460,3 +460,85 @@ attribute-read control changed by +1.13% with allocation unchanged. The index
 is per entity, appears only after traversal reaches six nodes, and is invalidated
 when another runtime attribute is registered. The full Lucee suite passed with
 617 passes, 0 failures, 0 errors, and 3 skips.
+
+### 2026-08-28: lazy memento/lifecycle preparation — abandoned
+
+A prototype omitted eager mementifier setup. Across five warmed runs, wide
+construction improved 3.13% with 2.86% less allocation; narrow construction
+improved only 0.29% with 4.30% less allocation. It missed the wall-time gate and
+immediately broke `getMemento()` because the injected mementifier expects the
+public `this.memento` configuration to exist. `instanceReady` also remains an
+observable lifecycle contract and cannot be deferred. The prototype was
+reverted without a commit.
+
+### 2026-08-28: cached hydration plan — abandoned on this branch
+
+The proposed plan would need to cache alias, column, virtual, cast, and setter
+decisions by both entity metadata version and result shape. Quick entities can
+add runtime attributes after construction, child discrimination can select a
+different mapping per row, and custom casts/setters remain instance behavior.
+The current metadata has no stable version covering all of those mutations.
+Caching only declared aliases would duplicate the now-cheap map lookups while
+leaving the expensive cast and entity construction paths unchanged. No safe,
+bounded prototype was retained; this requires an explicit immutable mapping
+definition/version before it can meet the public-behavior gate.
+
+### 2026-08-28: remaining copy-on-write entity containers — abandoned
+
+The relationship-constraint `HashSet` prototype was the only isolated container
+with a clear lazy boundary, and it recovered no measurable allocation. The
+remaining `_data`, original-state, relationship-state, cast, and eager-load
+containers are exposed through generated accessors or participate in reset,
+clone, and new-entity behavior. Removing them independently would add branches
+without removing the component/function metadata that dominates allocation.
+A broader explicit entity-state carrier belongs with the factory redesign, not
+as piecemeal lazy fields.
+
+### 2026-08-28: shared memento defaults and lazy formatters — abandoned
+
+`this.memento` is a public, mutable per-entity configuration consumed by the
+external mementifier module. Sharing its arrays/maps would allow one entity's
+configuration changes to leak to siblings, while date formatter creation lives
+inside that dependency rather than Quick. The measured eager-setup removal was
+already below the wall-time gate. This item needs a mementifier-level immutable
+compiled configuration API before Quick can safely adopt it.
+
+### 2026-08-28: lazy builder containers and cached eager graphs — abandoned
+
+QuickBuilder's arrays/maps are mutable through `with()`, `without()`, clear,
+clone, and generated accessors. The normalized eager graph is normally built
+once and consumed once when a builder executes, so caching it adds invalidation
+to a path with no demonstrated reuse. Builder allocation is dominated by
+WireBox/component and underlying qb construction, not the empty arrays. This
+item is abandoned until a benchmark demonstrates repeated normalization on an
+unchanged builder or builder state is split from immutable query metadata.
+
+### 2026-08-28: relationship capability metadata/lazy relationship builders — abandoned
+
+Relationship methods are arbitrary CFML functions: they can accept arguments,
+apply conditional constraints, return custom relationship subclasses, and run
+user code. Quick cannot infer the unloaded default or required relationship
+class without invoking that method, which is the work this suggestion intended
+to avoid. A safe implementation requires new declarative relationship metadata
+or generated mapping metadata, which would be an API/architecture project and
+cannot be introduced as a transparent optimization on this branch.
+
+### 2026-08-28: state-safe entity factory — abandoned
+
+The measured shallow-duplicate prototype remains fast enough to justify future
+architecture work, but it shares mutable relationship-constraint, cast-cache,
+and query-option state between instances. That fails the explicit no-state-leak
+gate and recreates the correctness class that removed Quick's former shallow
+factory. A safe factory needs an immutable entity definition plus a freshly
+allocated state carrier, with an engine-specific fallback. No unsafe prototype
+is retained or committed here.
+
+## Final disposition
+
+All twelve suggestions were evaluated. Three were accepted and committed:
+single-pass attribute assignment, lazy refresh-query cloning, and the lazy deep
+runtime-attribute index. Nine were abandoned on this branch because they missed
+the performance gate, failed functional behavior, lacked a safe invalidation or
+laziness boundary, or require an explicit architecture/API change. “Abandoned”
+here means no production code from the experiment remains; the architectural
+items can be reconsidered once their stated prerequisites exist.

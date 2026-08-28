@@ -20,9 +20,10 @@
     "shortDescription":"A ColdBox ORM Engine",
     "description":"A ColdBox ORM Engine",
     "scripts":{
-        "format":"cfformat run dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,resources/testing/**/*.cfc,tests/resources/factories/**/*.cfc,tests/specs/**/*.cfc --overwrite",
-        "format:check":"cfformat check dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,resources/testing/**/*.cfc,tests/resources/factories/**/*.cfc,tests/specs/**/*.cfc --verbose",
-        "format:watch":"cfformat watch dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,resources/testing/**/*.cfc,tests/resources/factories/**/*.cfc,tests/specs/**/*.cfc",
+        "format":"cfformat run dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,resources/testing/**/*.cfc,tests/performance/**/*.cfc,tests/performance/*.cfm,tests/resources/factories/**/*.cfc,tests/specs/**/*.cfc --overwrite",
+        "format:check":"cfformat check dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,resources/testing/**/*.cfc,tests/performance/**/*.cfc,tests/performance/*.cfm,tests/resources/factories/**/*.cfc,tests/specs/**/*.cfc --verbose",
+        "format:watch":"cfformat watch dsl/**/*.cfc,extras/**/*.cfc,models/**/*.cfc,resources/testing/**/*.cfc,tests/performance/**/*.cfc,tests/performance/*.cfm,tests/resources/factories/**/*.cfc,tests/specs/**/*.cfc",
+        "performance":"task run taskFile=tests/performance/Run.cfc",
         "generateAPIDocs":"rm .tmp --recurse --force && docbox generate mapping=quick excludes=test|/modules|ModuleConfig|QuickCollection strategy-outputDir=.tmp/apidocs strategy-projectTitle=Quick",
         "install:2021":"cfpm install document,feed,mysql,zip",
         "bx-modules:install":"install bx-compat-cfml@be,bx-esapi,bx-mysql"

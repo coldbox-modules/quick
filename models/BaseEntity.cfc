@@ -1203,8 +1203,9 @@ component accessors="true" {
 				"isQuickEntity"
 			)
 		) {
-			guardAgainstKeyLengthMismatch( arguments.value.keyValues(), 1 );
-			arguments.value = castValueForSetter( arguments.name, arguments.value.keyValues()[ 1 ] );
+			var entityKeyValues = arguments.value.keyValues();
+			guardAgainstKeyLengthMismatch( entityKeyValues, 1 );
+			arguments.value = entityKeyValues[ 1 ];
 		}
 
 		guardAgainstLoadedKeyMutation(
@@ -1212,14 +1213,16 @@ component accessors="true" {
 			isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
 		);
 
-		variables._data[ retrieveColumnForAlias( arguments.name ) ] = arguments.cast ? castValueForSetter(
-			arguments.name,
-			isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
-		) : ( isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value );
-		variables[ retrieveAliasForColumn( arguments.name ) ] = arguments.cast ? castValueForSetter(
-			arguments.name,
-			isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
-		) : ( isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value );
+		var column = retrieveColumnForAlias( arguments.name );
+		var alias  = retrieveAliasForColumn( arguments.name );
+		if ( isNull( arguments.value ) ) {
+			variables._data[ column ] = javacast( "null", "" );
+			variables[ alias ]        = javacast( "null", "" );
+		} else {
+			var storedValue           = arguments.cast ? castValueForSetter( arguments.name, arguments.value ) : arguments.value;
+			variables._data[ column ] = storedValue;
+			variables[ alias ]        = storedValue;
+		}
 
 		return this;
 	}

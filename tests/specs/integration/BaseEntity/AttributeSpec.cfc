@@ -60,6 +60,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getUsername() ).toBe( "new_username" );
 			} );
 
+			it( "can assign a Quick entity key as an attribute value", function() {
+				var country = getInstance( "Country" ).findOrFail( "02B84D66-0AA0-F7FB-1F71AFC954843861" );
+				var user    = getInstance( "User" ).assignAttribute( "countryId", country );
+
+				expect( user.retrieveAttribute( "countryId" ) ).toBe( country.getId() );
+			} );
+
 			it( "prioritizes attribute aliases over conflicting column names in magic accessors", function() {
 				var entity = getInstance( "ColumnAliasCollision" );
 				entity.setActivoSN( false );

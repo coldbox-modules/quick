@@ -102,7 +102,7 @@ component accessors="true" {
 	 */
 	property
 		name      ="_softDeleteColumn"
-		default   ="deletedAt"
+		default   ="deletedDate"
 		persistent="false";
 
 	/**
@@ -335,7 +335,7 @@ component accessors="true" {
 		param variables._hasDiscriminatorValue   = false;
 		param variables._singleTableInheritance  = false;
 		param variables._softDeletes             = false;
-		param variables._softDeleteColumn        = "deletedAt";
+		param variables._softDeleteColumn        = "deletedDate";
 		variables._saving                        = false;
 		return this;
 	}
@@ -1810,16 +1810,16 @@ component accessors="true" {
 		);
 
 		if ( usesSoftDeletes() ) {
-			var column       = getSoftDeleteColumn();
-			var deletedAt    = now();
+			var column       = retrieveSoftDeleteColumn();
+			var deletedDate  = now();
 			var deleteQuery  = newQuery().withoutGlobalScope( "softDeletes" );
 			var entityKeys   = keyNames();
 			var entityValues = keyValues();
 			for ( var i = 1; i <= entityKeys.len(); i++ ) {
 				deleteQuery.where( entityKeys[ i ], entityValues[ i ] );
 			}
-			deleteQuery.updateAll( { "#column#" : deletedAt } );
-			assignAttribute( column, deletedAt );
+			deleteQuery.updateAll( { "#column#" : deletedDate } );
+			assignAttribute( column, deletedDate );
 			assignOriginalAttributes( retrieveAttributesData() );
 			fireEvent( "postDelete", { entity : this } );
 			return this;
@@ -3517,15 +3517,15 @@ component accessors="true" {
 	/**
 	 * Returns the entity attribute that stores the soft-delete timestamp.
 	 */
-	public string function getSoftDeleteColumn() {
+	public string function retrieveSoftDeleteColumn() {
 		return variables._softDeleteColumn;
 	}
 
 	/**
 	 * Returns whether this entity has been soft deleted.
 	 */
-	public boolean function trashed() {
-		return usesSoftDeletes() && !isNullAttribute( getSoftDeleteColumn() );
+	public boolean function isTrashed() {
+		return usesSoftDeletes() && !isNullAttribute( retrieveSoftDeleteColumn() );
 	}
 
 	/**
@@ -3539,17 +3539,8 @@ component accessors="true" {
 			);
 		}
 		guardAgainstNotLoaded( "This instance is not loaded so it cannot be restored." );
-		var column       = getSoftDeleteColumn();
-		var restoreQuery = newQuery().withoutGlobalScope( "softDeletes" );
-		var entityKeys   = keyNames();
-		var entityValues = keyValues();
-		for ( var i = 1; i <= entityKeys.len(); i++ ) {
-			restoreQuery.where( entityKeys[ i ], entityValues[ i ] );
-		}
-		restoreQuery.updateAll( { "#column#" : "" } );
-		clearAttribute( column );
-		assignOriginalAttributes( retrieveAttributesData() );
-		return this;
+		var column = retrieveSoftDeleteColumn();
+		return update( { "#column#" : "" } );
 	}
 
 
@@ -3693,13 +3684,13 @@ component accessors="true" {
 				meta[ "entityName" ]                   = meta.originalMetadata.entityName;
 				param meta.localMetadata.properties    = [];
 				guardDuplicatePropertyNames( meta.localMetadata, meta.mapping );
-				param meta.originalMetadata.table                  = variables._str.plural( variables._str.snake( meta.entityName ) );
-				meta[ "table" ]                                    = meta.originalMetadata.table;
-				param meta.originalMetadata.readonly               = false;
-				meta[ "readonly" ]                                 = meta.originalMetadata.readonly;
-				param meta.originalMetadata.softDeletes            = false;
-				param meta.originalMetadata.softDeleteColumn       = "deletedAt";
-				meta[ "softDeletes" ] = isBoolean( meta.originalMetadata.softDeletes )
+				param meta.originalMetadata.table            = variables._str.plural( variables._str.snake( meta.entityName ) );
+				meta[ "table" ]                              = meta.originalMetadata.table;
+				param meta.originalMetadata.readonly         = false;
+				meta[ "readonly" ]                           = meta.originalMetadata.readonly;
+				param meta.originalMetadata.softDeletes      = false;
+				param meta.originalMetadata.softDeleteColumn = "deletedDate";
+				meta[ "softDeletes" ]                        = isBoolean( meta.originalMetadata.softDeletes )
 				 ? meta.originalMetadata.softDeletes
 				 : lCase( trim( meta.originalMetadata.softDeletes & "" ) ) == "true";
 				meta[ "softDeleteColumn" ]                         = meta.originalMetadata.softDeleteColumn;

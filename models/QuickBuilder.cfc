@@ -703,7 +703,7 @@ component accessors="true" transientCache="false" {
 		}
 		if ( getEntity().usesSoftDeletes() ) {
 			activateGlobalScopes();
-			return updateAll( { "#getEntity().getSoftDeleteColumn()#" : now() } );
+			return updateAll( { "#getEntity().retrieveSoftDeleteColumn()#" : now() } );
 		}
 		return variables.qb.delete();
 	}
@@ -719,7 +719,7 @@ component accessors="true" transientCache="false" {
 			);
 		}
 		withoutGlobalScope( "softDeletes" );
-		return updateAll( { "#getEntity().getSoftDeleteColumn()#" : "" } );
+		return updateAll( { "#getEntity().retrieveSoftDeleteColumn()#" : "" } );
 	}
 
 	/**
@@ -1811,7 +1811,7 @@ component accessors="true" transientCache="false" {
 					getEntity().usesSoftDeletes() &&
 					!variables._globalScopeExclusions.contains( "softdeletes" )
 				) {
-					variables.qb.whereNull( getEntity().getSoftDeleteColumn() );
+					variables.qb.whereNull( getEntity().retrieveSoftDeleteColumn() );
 				}
 				getEntity().applyGlobalScopes( this );
 			}
@@ -1834,7 +1834,7 @@ component accessors="true" transientCache="false" {
 	 */
 	public any function onlyTrashed() {
 		withoutGlobalScope( "softDeletes" );
-		variables.qb.whereNotNull( getEntity().getSoftDeleteColumn() );
+		variables.qb.whereNotNull( getEntity().retrieveSoftDeleteColumn() );
 		return this;
 	}
 

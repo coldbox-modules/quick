@@ -3,14 +3,17 @@ component
 	accessors       ="true"
 	table           ="users"
 	softDeletes     ="true"
-	softDeleteColumn="deletedAt"
 {
 
 	property name="id";
 	property name="username";
 	property
-		name  ="deletedAt"
+		name  ="deletedDate"
 		column="email"
 		insert="false";
+
+	function postUpdate() {
+		request.softDeleteUserPostUpdateCalled = true;
+	}
 
 }

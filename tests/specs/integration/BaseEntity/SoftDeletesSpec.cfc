@@ -4,21 +4,24 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 		describe( "Soft Deletes", function() {
 			it( "can soft delete, query, restore, and force delete entities", function() {
 				var user = getInstance( "SoftDeleteUser" ).findOrFail( 1 );
+				expect( user.retrieveSoftDeleteColumn() ).toBe( "deletedDate" );
 
 				user.delete();
 
 				expect( user.isLoaded() ).toBeTrue();
-				expect( user.trashed() ).toBeTrue();
+				expect( user.isTrashed() ).toBeTrue();
 				expect( getInstance( "SoftDeleteUser" ).find( 1 ) ).toBeNull();
 				expect( getInstance( "SoftDeleteUser" ).all() ).toHaveLength( 4 );
 				expect( getInstance( "SoftDeleteUser" ).withTrashed().all() ).toHaveLength( 5 );
 				expect( getInstance( "SoftDeleteUser" ).onlyTrashed().count() ).toBe( 1 );
 
 				var trashedUser = getInstance( "SoftDeleteUser" ).withTrashed().findOrFail( 1 );
-				expect( trashedUser.trashed() ).toBeTrue();
+				expect( trashedUser.isTrashed() ).toBeTrue();
+				structDelete( request, "softDeleteUserPostUpdateCalled" );
 				trashedUser.restore();
 
-				expect( trashedUser.trashed() ).toBeFalse();
+				expect( trashedUser.isTrashed() ).toBeFalse();
+				expect( request ).toHaveKey( "softDeleteUserPostUpdateCalled" );
 				expect( getInstance( "SoftDeleteUser" ).findOrFail( 1 ).getUsername() ).toBe( "elpete" );
 
 				getInstance( "SoftDeleteUser" ).where( "id", 2 ).deleteAll();

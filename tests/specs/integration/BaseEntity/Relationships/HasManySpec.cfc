@@ -173,6 +173,16 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( newPost.fresh().getLifecycleEventVar() ).toBeNull();
 			} );
 
+			it( "deletes related entities using the actual foreign key value", function() {
+				var user = getInstance( "User" ).findOrFail( 1 );
+				expect( user.posts().count() ).toBe( 2 );
+
+				user.posts().deleteAll();
+
+				expect( getInstance( "Post" ).where( "user_id", 1 ).count() ).toBe( 0 );
+				expect( getInstance( "Post" ).where( "user_id", 4 ).count() ).toBeGT( 0 );
+			} );
+
 			it( "can first off of the relationship", function() {
 				var user = getInstance( "User" ).find( 1 );
 				var post = user.posts().first();

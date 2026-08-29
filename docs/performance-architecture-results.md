@@ -147,6 +147,40 @@ factory still cannot prove isolation and no unsafe factory code is retained.
 aliases without allocating entities. No DTO/record result type was added.
 Applying casts to `asQuery()` remains intentionally deferred because custom
 casts can require an entity instance and need a separate public contract.
+
+## Final cross-engine measurements
+
+The final committed production head was measured with five complete warmed
+runs per engine, 10 warmup iterations, 11 samples, 30 iterations per sample,
+and 1,000 database rows. Values below are median-of-run-medians in microseconds
+per logical operation (database values are per row). All fifteen runs completed
+with zero benchmark errors.
+
+| Scenario | Lucee 6.2.2 | ACF 2021.0.22 | BoxLang 1.16.0 |
+| --- | ---: | ---: | ---: |
+| Entity construction | 298.73 us | 473.48 us | 440.24 us |
+| Full entity hydration | 416.56 us | 600.56 us | 543.37 us |
+| Existing-entity row binding | 44.39 us | 107.36 us | 106.60 us |
+| Batch-100 hydration, per entity | 335.44 us | 594.11 us | 553.19 us |
+| Registry definition lookup | 1.01 us | 2.93 us | 1.70 us |
+| Cached qualified columns | 7.68 us | 10.90 us | 14.84 us |
+| Builder construction | 714.60 us | 1,505.78 us | 1,532.91 us |
+| `hasMany` construction | 2,322.54 us | 3,989.17 us | 3,844.40 us |
+| Database raw row | 3.38 us | 4.20 us | 6.09 us |
+| Database hydrated row | 282.05 us | 486.42 us | 390.80 us |
+
+Final thread-allocation medians were 33.35 KiB for Lucee row binding and
+254.26 KiB for BoxLang row binding. Full hydration allocated 367.73 KiB on
+Lucee and 853.59 KiB on BoxLang. Adobe ColdFusion did not expose the JVM thread
+allocation counter. Retained-heap reduction is not claimed: raw metadata remains
+part of the public compatibility shape. Memory improvements in this pass are
+allocation reductions and bounded derived-cache cardinality.
+
+Final functional verification:
+
+- Lucee 6.2.2.91: 621 passed, 0 failed, 0 errors, 3 skipped.
+- Adobe ColdFusion 2021.0.22: 620 passed, 0 failed, 0 errors, 4 skipped.
+- BoxLang 1.16.0+57: 622 passed, 0 failed, 0 errors, 2 skipped.
 - Concurrent access compiles a definition once.
 - Derived churn remains bounded without evicting its owning definition.
 - Clearing CacheBox does not force definition recompilation.

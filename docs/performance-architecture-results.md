@@ -41,6 +41,20 @@ Functional gate:
 - Lucee 6: 621 passed, 0 failed, 0 errors.
 - Adobe ColdFusion 2021: 620 passed, 0 failed, 0 errors.
 - BoxLang: 622 passed, 0 failed, 0 errors.
+
+### Bounded row-shape hydration plans
+
+Status: abandoned.
+
+A prototype cached ordered `[source, alias, column]` operations by mapping and
+row shape. It improved existing-entity binding by 14.0-26.7%, but a fresh
+entity had to resolve the registry through WireBox before using the plan.
+BoxLang full hydration regressed 10.3% for one entity and 10.1% for a batch of
+100, with about 2% more allocation. The prototype was reverted.
+
+Revisit this only after entities receive a cheap definition-owned plan reference
+without adding constructor arguments. Passing registry state through every
+`init()` was already rejected in Phase 1 for larger cross-engine regressions.
 - Concurrent access compiles a definition once.
 - Derived churn remains bounded without evicting its owning definition.
 - Clearing CacheBox does not force definition recompilation.

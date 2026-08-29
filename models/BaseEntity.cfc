@@ -558,7 +558,12 @@ component accessors="true" {
 	 */
 	private void function syncVariablesScopeWithData() {
 		for ( var key in retrieveAttributeNames( withVirtualColumns = false ) ) {
-			if ( variables.keyExists( key ) && !isReadOnlyAttribute( key ) ) {
+			var column = retrieveColumnForAlias( key );
+			if (
+				variables.keyExists( key ) &&
+				!isReadOnlyAttribute( key ) &&
+				( variables._data.keyExists( column ) || !isNullValue( key, variables[ key ] ) )
+			) {
 				assignAttribute( key, variables[ key ] );
 			}
 		}

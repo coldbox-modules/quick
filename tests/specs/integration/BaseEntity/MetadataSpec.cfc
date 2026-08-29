@@ -114,6 +114,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					},
 					skip = !server.keyExists( "boxlang" )
 				);
+
+				it(
+					title = "does not persist uninitialized BoxLang accessor values",
+					body  = function() {
+						var user = getInstance( "User" );
+						expect( user.retrieveAttributesData() ).notToHaveKey( "created_date" );
+					},
+					skip = !server.keyExists( "boxlang" )
+				);
 			} );
 		} );
 	}

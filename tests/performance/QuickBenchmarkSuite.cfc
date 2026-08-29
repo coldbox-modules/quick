@@ -33,81 +33,81 @@ component {
 		var memory     = [];
 		var errors     = [];
 
-		appendSelected(
-			benchmarks,
-			"entity.instantiate",
-			() => benchmarkEntityInstantiation()
-		);
-		appendSelected(
-			benchmarks,
-			"entity.instantiate_narrow",
-			() => benchmarkNarrowEntityInstantiation()
-		);
-		appendSelected(
-			benchmarks,
-			"entity.instantiate_narrow_shallow_internal",
-			() => benchmarkInternalShallowEntityInstantiation()
-		);
-		appendSelected(
-			benchmarks,
-			"entity.hydrate",
-			() => benchmarkEntityHydration()
-		);
-		appendSelected(
-			benchmarks,
-			"entity.hydrate_batch_100",
-			() => benchmarkBatchHydration()
-		);
-		appendSelected(
-			benchmarks,
-			"attribute.read",
-			() => benchmarkAttributeRead()
-		);
-		appendSelected(
-			benchmarks,
-			"attribute.assign",
-			() => benchmarkAttributeAssignment()
-		);
-		appendSelected(
-			benchmarks,
-			"attribute.runtime_overlay_deep_lookup",
-			() => benchmarkDeepRuntimeOverlayLookup()
-		);
-		appendSelected(
-			benchmarks,
-			"entity.attributes_snapshot",
-			() => benchmarkAttributesSnapshot()
-		);
-		appendSelected(
-			benchmarks,
-			"entity.is_dirty_clean",
-			() => benchmarkDirtyCheck()
-		);
-		appendSelected(
-			benchmarks,
-			"entity.memento",
-			() => benchmarkMementoSerialization()
-		);
-		appendSelected(
-			benchmarks,
-			"builder.instantiate",
-			() => benchmarkBuilderCreation()
-		);
-		appendSelected(
-			benchmarks,
-			"builder.clone",
-			() => benchmarkBuilderClone()
-		);
-		appendSelected(
-			benchmarks,
-			"builder.compose_sql",
-			() => benchmarkBuilderComposition()
-		);
-		appendSelected(
-			benchmarks,
-			"relationship.construct_has_many",
-			() => benchmarkRelationshipConstruction()
-		);
+		if ( isSelected( "entity.instantiate" ) ) {
+			benchmarks.append( benchmarkEntityInstantiation() );
+		}
+		if ( isSelected( "entity.instantiate_narrow" ) ) {
+			benchmarks.append( benchmarkNarrowEntityInstantiation() );
+		}
+		if ( isSelected( "entity.instantiate_narrow_shallow_internal" ) ) {
+			benchmarks.append( benchmarkInternalShallowEntityInstantiation() );
+		}
+		if ( isSelected( "entity.hydrate" ) ) {
+			benchmarks.append( benchmarkEntityHydration() );
+		}
+		if ( isSelected( "entity.bind_row_existing" ) ) {
+			benchmarks.append( benchmarkExistingEntityRowBinding() );
+		}
+		if ( isSelected( "entity.post_load_event" ) ) {
+			benchmarks.append( benchmarkPostLoadEvent() );
+		}
+		if ( isSelected( "entity.hydrate_batch_10" ) ) {
+			benchmarks.append( benchmarkBatchHydration( 10 ) );
+		}
+		if ( isSelected( "entity.hydrate_batch_100" ) ) {
+			benchmarks.append( benchmarkBatchHydration( 100 ) );
+		}
+		if ( isSelected( "entity.hydrate_batch_1000" ) ) {
+			benchmarks.append( benchmarkBatchHydration( 1000 ) );
+		}
+		if ( isSelected( "attribute.read" ) ) {
+			benchmarks.append( benchmarkAttributeRead() );
+		}
+		if ( isSelected( "attribute.assign" ) ) {
+			benchmarks.append( benchmarkAttributeAssignment() );
+		}
+		if ( isSelected( "attribute.runtime_overlay_deep_lookup" ) ) {
+			benchmarks.append( benchmarkDeepRuntimeOverlayLookup() );
+		}
+		if ( isSelected( "metadata.cache_lookup" ) ) {
+			benchmarks.append( benchmarkMetadataCacheLookup() );
+		}
+		if ( isSelected( "metadata.definition_access" ) ) {
+			benchmarks.append( benchmarkMetadataDefinitionAccess() );
+		}
+		if ( isSelected( "metadata.qualified_columns_cached" ) ) {
+			benchmarks.append( benchmarkCachedQualifiedColumns() );
+		}
+		if ( isSelected( "entity.attributes_snapshot" ) ) {
+			benchmarks.append( benchmarkAttributesSnapshot() );
+		}
+		if ( isSelected( "entity.is_dirty_clean" ) ) {
+			benchmarks.append( benchmarkDirtyCheck() );
+		}
+		if ( isSelected( "entity.memento" ) ) {
+			benchmarks.append( benchmarkMementoSerialization() );
+		}
+		if ( isSelected( "builder.instantiate" ) ) {
+			benchmarks.append( benchmarkBuilderCreation() );
+		}
+		if ( isSelected( "builder.clone" ) ) {
+			benchmarks.append( benchmarkBuilderClone() );
+		}
+		if ( isSelected( "builder.compose_sql" ) ) {
+			benchmarks.append( benchmarkBuilderComposition() );
+		}
+		if ( isSelected( "relationship.construct_has_many" ) ) {
+			benchmarks.append( benchmarkRelationshipConstruction() );
+		}
+		if ( isSelected( "metadata.cold_compile" ) ) {
+			benchmarks.append( benchmarkColdMetadataCompilation() );
+		}
+		if ( isSelected( "metadata.selective_cold_compile" ) ) {
+			benchmarks.append( benchmarkSelectiveColdMetadataCompilation() );
+		}
+		if ( isSelected( "metadata.cache_mutation_control" ) ) {
+			benchmarks.append( benchmarkMetadataCacheMutationControl() );
+		}
 
 		if (
 			variables.config.includeDatabase &&
@@ -126,59 +126,66 @@ component {
 		}
 
 		if ( variables.config.includeRetained ) {
-			appendSelected(
-				memory,
-				"memory.entity_unloaded",
-				() => measureRetainedEntities()
-			);
-			appendSelected(
-				memory,
-				"memory.entity_hydrated",
-				() => measureRetainedHydratedEntities()
-			);
-			appendSelected(
-				memory,
-				"memory.entity_narrow",
-				() => measureRetainedNarrowEntities()
-			);
-			appendSelected(
-				memory,
-				"memory.entity_narrow_shallow_internal",
-				() => measureRetainedInternalShallowNarrowEntities()
-			);
-			appendSelected(
-				memory,
-				"memory.builder",
-				() => measureRetainedBuilders()
-			);
+			if ( isSelected( "memory.entity_unloaded" ) ) {
+				memory.append( measureRetainedEntities() );
+			}
+			if ( isSelected( "memory.entity_hydrated" ) ) {
+				memory.append( measureRetainedHydratedEntities() );
+			}
+			if ( isSelected( "memory.entity_narrow" ) ) {
+				memory.append( measureRetainedNarrowEntities() );
+			}
+			if ( isSelected( "memory.entity_narrow_shallow_internal" ) ) {
+				memory.append( measureRetainedInternalShallowNarrowEntities() );
+			}
+			if ( isSelected( "memory.builder" ) ) {
+				memory.append( measureRetainedBuilders() );
+			}
 		}
 
 		return {
-			"schemaVersion" : 1,
-			"generatedAt"   : dateTimeFormat( dateConvert( "local2Utc", now() ), "yyyy-mm-dd'T'HH:nn:ss'Z'" ),
-			"durationMs"    : getTickCount() - startedAt,
-			"environment"   : environmentMetadata(),
-			"configuration" : variables.config,
-			"capabilities"  : variables.harness.capabilities(),
-			"benchmarks"    : benchmarks,
-			"memory"        : memory,
-			"comparisons"   : buildComparisons( benchmarks ),
-			"errors"        : errors
+			"schemaVersion"       : 1,
+			"generatedAt"         : dateTimeFormat( dateConvert( "local2Utc", now() ), "yyyy-mm-dd'T'HH:nn:ss'Z'" ),
+			"durationMs"          : getTickCount() - startedAt,
+			"environment"         : environmentMetadata(),
+			"configuration"       : variables.config,
+			"capabilities"        : variables.harness.capabilities(),
+			"benchmarks"          : benchmarks,
+			"memory"              : memory,
+			"comparisons"         : buildComparisons( benchmarks ),
+			"metadataDiagnostics" : buildMetadataDiagnostics(),
+			"errors"              : errors
 		};
 	}
 
-	private void function appendSelected(
-		required array target,
-		required string name,
-		required any benchmarkFactory
-	) {
-		if ( isSelected( arguments.name ) ) {
-			arguments.target.append( arguments.benchmarkFactory() );
+	private struct function buildMetadataDiagnostics() {
+		var meta        = variables.userPrototype.get_meta();
+		var diagnostics = {
+			"topLevelKeys"               : structCount( meta ),
+			"attributes"                 : structCount( meta.attributes ),
+			"columns"                    : structCount( meta.columns ),
+			"casts"                      : structCount( meta.casts ),
+			"functionNames"              : arrayLen( meta.functionNames ),
+			"virtualAttributes"          : arrayLen( meta.virtualAttributes ),
+			"originalMetadataKeys"       : structCount( meta.originalMetadata ),
+			"originalMetadataProperties" : arrayLen( meta.originalMetadata.properties ),
+			"originalMetadataFunctions"  : arrayLen( meta.originalMetadata.functions ),
+			"localMetadataKeys"          : structCount( meta.localMetadata ),
+			"localMetadataProperties"    : arrayLen( meta.localMetadata.properties ),
+			"localMetadataFunctions"     : meta.localMetadata.keyExists( "functions" )
+			 ? arrayLen( meta.localMetadata.functions )
+			 : 0,
+			"serializedCharacters" : -1
+		};
+		try {
+			diagnostics.serializedCharacters = len( serializeJSON( meta ) );
+		} catch ( any ignored ) {
 		}
+		return diagnostics;
 	}
 
 	private boolean function isSelected( required string name ) {
-		return variables.config.only.isEmpty() || variables.config.only.findNoCase( arguments.name ) > 0;
+		return arrayLen( variables.config.only ) == 0 || arrayFindNoCase( variables.config.only, arguments.name ) > 0;
 	}
 
 	private struct function benchmarkEntityInstantiation() {
@@ -236,17 +243,43 @@ component {
 		);
 	}
 
-	private struct function benchmarkBatchHydration() {
+	private struct function benchmarkExistingEntityRowBinding() {
+		var entity = variables.userPrototype.newEntity();
+		return variables.harness.measure(
+			name        = "entity.bind_row_existing",
+			category    = "hydration",
+			description = "Bind one wide row and record original state on an already-constructed entity without lifecycle events.",
+			iterations  = variables.config.iterations * 10,
+			callback    = function( iterationIndex ) {
+				return entity.assignAttributesData( variables.userRow ).assignOriginalAttributes( variables.userRow );
+			}
+		);
+	}
+
+	private struct function benchmarkPostLoadEvent() {
+		var entity = variables.userPrototype.newEntity().assignAttributesData( variables.userRow );
+		return variables.harness.measure(
+			name        = "entity.post_load_event",
+			category    = "hydration",
+			description = "Mark an existing entity loaded and fire its postLoad lifecycle event and interception point.",
+			iterations  = variables.config.iterations * 25,
+			callback    = function( iterationIndex ) {
+				return entity.markLoaded();
+			}
+		);
+	}
+
+	private struct function benchmarkBatchHydration( required numeric count ) {
 		var rows = [];
-		for ( var rowIndex = 1; rowIndex <= 100; rowIndex++ ) {
+		for ( var rowIndex = 1; rowIndex <= arguments.count; rowIndex++ ) {
 			rows.append( variables.userRow );
 		}
 		return variables.harness.measure(
-			name                   = "entity.hydrate_batch_100",
+			name                   = "entity.hydrate_batch_#arguments.count#",
 			category               = "entity",
-			description            = "Hydrate 100 wide User entities through hydrateAll().",
-			operationsPerIteration = 100,
-			iterations             = max( 1, ceiling( variables.config.iterations / 5 ) ),
+			description            = "Hydrate #arguments.count# wide User entities through hydrateAll().",
+			operationsPerIteration = arguments.count,
+			iterations             = max( 1, ceiling( variables.config.iterations / max( 1, arguments.count / 20 ) ) ),
 			callback               = function( iterationIndex ) {
 				return variables.userPrototype.hydrateAll( rows );
 			}
@@ -291,6 +324,97 @@ component {
 			iterations  = variables.config.iterations * 100,
 			callback    = function( iterationIndex ) {
 				return entity.hasAttribute( "performanceOverlay1" );
+			}
+		);
+	}
+
+	private struct function benchmarkMetadataCacheLookup() {
+		var metadataCache = variables.userPrototype.get_cache();
+		var cacheKey      = "quick-metadata:#variables.userPrototype.mappingName()#";
+		return variables.harness.measure(
+			name        = "metadata.cache_lookup",
+			category    = "metadata",
+			description = "Read one warmed entity definition from the configured Quick CacheBox provider.",
+			iterations  = variables.config.iterations * 100,
+			callback    = function( iterationIndex ) {
+				return metadataCache.get( cacheKey );
+			}
+		);
+	}
+
+	private struct function benchmarkMetadataDefinitionAccess() {
+		return variables.harness.measure(
+			name        = "metadata.definition_access",
+			category    = "metadata",
+			description = "Read the shared entity metadata definition already bound to a warmed prototype.",
+			iterations  = variables.config.iterations * 100,
+			callback    = function( iterationIndex ) {
+				return variables.userPrototype.get_meta();
+			}
+		);
+	}
+
+	private struct function benchmarkCachedQualifiedColumns() {
+		variables.userPrototype.retrieveQualifiedColumns();
+		return variables.harness.measure(
+			name        = "metadata.qualified_columns_cached",
+			category    = "metadata",
+			description = "Read cached qualified columns and materialize the defensive result array.",
+			iterations  = variables.config.iterations * 25,
+			callback    = function( iterationIndex ) {
+				return variables.userPrototype.retrieveQualifiedColumns();
+			}
+		);
+	}
+
+	private struct function benchmarkColdMetadataCompilation() {
+		var metadataCache = variables.userPrototype.get_cache();
+		return variables.harness.measure(
+			name             = "metadata.cold_compile",
+			category         = "metadata",
+			description      = "Measure the full cold metadata path: clear Quick's cache and construct User through WireBox.",
+			warmupIterations = 1,
+			samples          = min( 7, variables.config.samples ),
+			iterations       = 1,
+			callback         = function( iterationIndex ) {
+				metadataCache.clearAll();
+				return variables.wirebox.getInstance( "User" );
+			}
+		);
+	}
+
+	private struct function benchmarkSelectiveColdMetadataCompilation() {
+		var metadataCache = variables.userPrototype.get_cache();
+		var cacheKey      = "quick-metadata:#variables.userPrototype.mappingName()#";
+		return variables.harness.measure(
+			name             = "metadata.selective_cold_compile",
+			category         = "metadata",
+			description      = "Evict only User metadata, then reconstruct User through WireBox while shared metadata remains warm.",
+			warmupIterations = 1,
+			samples          = min( 7, variables.config.samples ),
+			iterations       = 1,
+			callback         = function( iterationIndex ) {
+				metadataCache.clear( cacheKey );
+				return variables.wirebox.getInstance( "User" );
+			}
+		);
+	}
+
+	private struct function benchmarkMetadataCacheMutationControl() {
+		var metadataCache = variables.userPrototype.get_cache();
+		var cacheKey      = "quick-performance:metadata-mutation-control";
+		metadataCache.set( cacheKey, true );
+		return variables.harness.measure(
+			name             = "metadata.cache_mutation_control",
+			category         = "metadata",
+			description      = "Clear and restore one trivial CacheBox entry to quantify mutation overhead in selective-cold measurements.",
+			warmupIterations = 1,
+			samples          = min( 7, variables.config.samples ),
+			iterations       = 1,
+			callback         = function( iterationIndex ) {
+				metadataCache.clear( cacheKey );
+				metadataCache.set( cacheKey, true );
+				return true;
 			}
 		);
 	}

@@ -8,8 +8,12 @@ post-GC retained-heap probes.
 The suite currently covers warmed entity creation, the internal shallow
 construction boundary, single and batch hydration, attribute reads and writes,
 attribute snapshots, clean dirty checks, memento serialization, builder
-creation and cloning, SQL composition, relationship construction, and
-raw-versus-hydrated database fetches.
+creation and cloning, SQL composition, relationship construction,
+raw-versus-hydrated database fetches, warmed metadata access, cached qualified
+columns, selective and full-cold metadata compilation, and cache-mutation
+controls. Hydration decomposition separately measures row binding and post-load
+events, while batch scenarios cover 10, 100, and 1,000 entities. Each result
+also records a portable metadata-shape diagnostic for the representative entity.
 
 ## Run a benchmark
 

@@ -55,6 +55,20 @@ BoxLang full hydration regressed 10.3% for one entity and 10.1% for a batch of
 Revisit this only after entities receive a cheap definition-owned plan reference
 without adding constructor arguments. Passing registry state through every
 `init()` was already rejected in Phase 1 for larger cross-engine regressions.
+
+### Immutable query seed
+
+Status: abandoned.
+
+A safe first slice let `BaseEntity.newQuery()` consume the shared qualified
+column array directly while preserving the public defensive-copy behavior.
+Builder construction changed between +1.0% and -3.2%, with less than 1% lower
+allocation. Relationship construction regressed 5.5% on BoxLang, so the slice
+did not meet the gate and was reverted.
+
+The remaining seed inputs belong largely to qb's mutable `QueryBuilder` state.
+Sharing them from Quick without a qb-supported immutable seed/snapshot boundary
+would risk clone and query-state isolation for little demonstrated gain.
 - Concurrent access compiles a definition once.
 - Derived churn remains bounded without evicting its owning definition.
 - Clearing CacheBox does not force definition recompilation.

@@ -29,11 +29,13 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "compiles one definition under concurrent access", function() {
 				var compilationCount = createObject( "java", "java.util.concurrent.atomic.AtomicInteger" ).init( 0 );
+				var definitionTokens = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
 				var threadNames      = [];
 				var sharedKey        = "quickDefinitionRegistry#replace( createUUID(), "-", "", "all" )#";
 				server[ sharedKey ]  = {
 					"registry"         : variables.registry,
-					"compilationCount" : compilationCount
+					"compilationCount" : compilationCount,
+					"definitionTokens" : definitionTokens
 				};
 				try {
 					for ( var index = 1; index <= 16; index++ ) {
@@ -42,7 +44,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 						cfthread(
 							action    = "run",
 							name      = threadName,
-							sharedKey = sharedKey
+							sharedKey = sharedKey,
+							resultKey = threadName
 						) {
 							var shared     = server[ attributes.sharedKey ];
 							var definition = shared.registry.getOrCreateDefinition( "ConcurrentUser", () => {
@@ -50,7 +53,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 								sleep( 25 );
 								return { "token" : createUUID() };
 							} );
-							thread.definitionToken = definition.token;
+							shared.definitionTokens.put( attributes.resultKey, definition.token );
 						}
 					}
 					cfthread(
@@ -62,9 +65,10 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					var tokens = {};
 					for ( var threadName in threadNames ) {
 						expect( cfthread[ threadName ].status ).toBe( "COMPLETED" );
-						tokens[ cfthread[ threadName ].definitionToken ] = true;
+						tokens[ definitionTokens.get( threadName ) ] = true;
 					}
 					expect( compilationCount.get() ).toBe( 1 );
+					expect( definitionTokens.size() ).toBe( threadNames.len() );
 					expect( structCount( tokens ) ).toBe( 1 );
 				} finally {
 					server.delete( sharedKey );

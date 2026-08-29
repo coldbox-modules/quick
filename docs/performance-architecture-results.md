@@ -44,3 +44,45 @@ Functional gate:
 - Concurrent access compiles a definition once.
 - Derived churn remains bounded without evicting its owning definition.
 - Clearing CacheBox does not force definition recompilation.
+
+## Phase 2: metadata representation and hydration
+
+### Compact metadata definition
+
+Status: abandoned for this compatibility line.
+
+Quick's public `get_Meta()` contract exposes the raw inherited and local engine
+metadata graphs. The same value is included in the public `preLoad` lifecycle
+event. Discarding those graphs would either change observable behavior or force
+reflection and compatibility reconstruction during ordinary queries, trading
+retained memory for unpredictable hot-path latency. A portable compact
+definition should therefore be introduced with an explicit public metadata
+contract in a future major version, not hidden behind the current accessor.
+
+### Single-pass row binding
+
+Status: accepted.
+
+Row binding previously resolved every source key through `hasAttribute()`,
+then repeated alias and column resolution while casting and assigning it. The
+accepted path resolves the attribute definition once and reuses its canonical
+name and column.
+
+Median of five warmed runs:
+
+| Runtime | Existing-entity bind wall | Existing-entity bind allocation | Single hydrate wall | Batch 10 wall | Batch 100 wall | Batch 1,000 wall |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Lucee 6 | -52.4% | -51.9% | -19.7% | -24.6% | -0.5% | -20.6% |
+| Adobe ColdFusion 2021 | -39.1% | unavailable | +4.0% | -8.3% | -2.1% | -20.9% |
+| BoxLang | -43.6% | -40.6% | -32.5% | -32.7% | -19.9% | -11.8% |
+
+Lucee hydration allocation fell 9.0% at every measured batch size. BoxLang
+hydration allocation fell 16.9%. Adobe's one-entity wall result is within the
+5% regression gate and changes to an improvement as soon as the path handles a
+batch; its 1,000-row result improves 20.9%.
+
+Functional gate:
+
+- Lucee 6: 621 passed, 0 failed, 0 errors.
+- Adobe ColdFusion 2021: 620 passed, 0 failed, 0 errors.
+- BoxLang: 622 passed, 0 failed, 0 errors.

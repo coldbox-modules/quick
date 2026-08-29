@@ -705,17 +705,18 @@ component accessors="true" {
 	 */
 	public any function populateAttributes( struct attributes = {} ) {
 		for ( var key in arguments.attributes ) {
-			if ( !hasAttribute( key ) ) {
+			var attribute = retrieveAttributeDefinition( key );
+			if ( isNull( attribute ) ) {
 				continue;
 			}
 			var value = castValueForGetter(
-				key,
+				attribute.name,
 				!arguments.attributes.keyExists( key ) || isNull( arguments.attributes[ key ] )
 				 ? javacast( "null", "" )
 				 : arguments.attributes[ key ]
 			);
-			variables._data[ retrieveColumnForAlias( key ) ] = isNull( value ) ? javacast( "null", "" ) : value;
-			variables[ retrieveAliasForColumn( key ) ]       = isNull( value ) ? javacast( "null", "" ) : value;
+			variables._data[ attribute.column ] = isNull( value ) ? javacast( "null", "" ) : value;
+			variables[ attribute.name ]         = isNull( value ) ? javacast( "null", "" ) : value;
 		}
 	}
 

@@ -69,6 +69,84 @@ did not meet the gate and was reverted.
 The remaining seed inputs belong largely to qb's mutable `QueryBuilder` state.
 Sharing them from Quick without a qb-supported immutable seed/snapshot boundary
 would risk clone and query-state isolation for little demonstrated gain.
+
+## Phase 3: state and declarative extensions
+
+### Explicit `EntityState` carrier
+
+Status: abandoned for this compatibility line.
+
+The current mutable fields are observable through generated accessors and are
+used across reset, clone, replication, save, relationship, cast, and query
+flows. Wrapping the same maps in another struct would add indirection without
+removing component allocation. The earlier isolated lazy-container prototype
+confirmed this: wide construction regressed 2.6% and allocation was unchanged.
+A useful carrier must land together with a compact definition and a prepared
+factory in a major internal rewrite; the compact-definition prerequisite was
+not met in this pass.
+
+### Declarative relationship definitions
+
+Status: abandoned as a transparent optimization.
+
+Existing relationship methods are arbitrary user CFML: they accept arguments,
+run conditional code, return custom subclasses, and mutate constraints. Quick
+cannot replace that invocation with a descriptor without introducing a new
+opt-in public DSL and maintaining the method path as fallback. That can be a
+separate feature proposal, but it is not a behavior-preserving performance
+change for this branch.
+
+### Indexed dirty tracking
+
+Status: abandoned.
+
+The earlier direct-state prototype failed ten functional tests covering
+partial selections, nulls, excluded attributes, saves, and refreshes. Current
+hash comparison preserves missing-key state that a simple changed-name set
+does not. The accepted single-pass assignment work already improves clean dirty
+checks; a replacement still requires a canonical write model across generated
+and custom setters before it can be timed safely.
+
+### Compiled memento projections
+
+Status: abandoned pending a mementifier API.
+
+Mementifier owns its mutable public configuration and date formatters. Removing
+eager setup improved wide construction only 3.1% and narrow construction 0.3%,
+then broke `getMemento()`. Sharing the mutable configuration would leak changes
+between entities. Quick should revisit this only if mementifier exposes an
+immutable compiled projection/configuration boundary.
+
+## Phase 4: startup and construction ceiling
+
+### Precompiled entity manifests
+
+Status: abandoned until a portable definition contract exists.
+
+A manifest can safely contain only the normalized definition. The current
+public metadata contract also exposes engine-specific inherited/local
+reflection graphs, and Phase 2 could not remove them. Emitting those graphs
+would make a manifest engine-specific and stale across engine or source
+changes; omitting them would change `get_Meta()` and lifecycle payloads. A
+manifest tool therefore has no safe value until the compact-definition/public
+metadata boundary is versioned.
+
+### State-safe prepared entity factory
+
+Status: abandoned.
+
+The earlier shallow-prototype measurement demonstrated the performance ceiling
+but also shared relationship-constraint, cast-cache, and query-option state
+between entities. The new registry fixes definition lifetime, not mutable
+component ownership. Because the explicit state carrier was not accepted, the
+factory still cannot prove isolation and no unsafe factory code is retained.
+
+## Lightweight result boundary
+
+`asQuery()` remains Quick's lightweight fallback and continues applying column
+aliases without allocating entities. No DTO/record result type was added.
+Applying casts to `asQuery()` remains intentionally deferred because custom
+casts can require an entity instance and need a separate public contract.
 - Concurrent access compiles a definition once.
 - Derived churn remains bounded without evicting its owning definition.
 - Clearing CacheBox does not force definition recompilation.

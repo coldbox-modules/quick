@@ -562,7 +562,7 @@ component accessors="true" {
 			if (
 				variables.keyExists( key ) &&
 				!isReadOnlyAttribute( key ) &&
-				( variables._data.keyExists( column ) || !isNullValue( key, variables[ key ] ) )
+				( variables._data.keyExists( column ) || !isNull( variables[ key ] ) )
 			) {
 				assignAttribute( key, variables[ key ] );
 			}

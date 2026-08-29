@@ -72,6 +72,9 @@ component {
 		if ( isSelected( "metadata.cache_lookup" ) ) {
 			benchmarks.append( benchmarkMetadataCacheLookup() );
 		}
+		if ( isSelected( "metadata.registry_lookup" ) ) {
+			benchmarks.append( benchmarkMetadataRegistryLookup() );
+		}
 		if ( isSelected( "metadata.definition_access" ) ) {
 			benchmarks.append( benchmarkMetadataDefinitionAccess() );
 		}
@@ -330,14 +333,28 @@ component {
 
 	private struct function benchmarkMetadataCacheLookup() {
 		var metadataCache = variables.userPrototype.get_cache();
-		var cacheKey      = "quick-metadata:#variables.userPrototype.mappingName()#";
+		var cacheKey      = "quick-performance:cache-lookup-control";
+		metadataCache.set( cacheKey, variables.userPrototype.get_meta() );
 		return variables.harness.measure(
 			name        = "metadata.cache_lookup",
 			category    = "metadata",
-			description = "Read one warmed entity definition from the configured Quick CacheBox provider.",
+			description = "Read one warmed definition-shaped value from the configured Quick CacheBox provider as a control.",
 			iterations  = variables.config.iterations * 100,
 			callback    = function( iterationIndex ) {
 				return metadataCache.get( cacheKey );
+			}
+		);
+	}
+
+	private struct function benchmarkMetadataRegistryLookup() {
+		var registry = variables.userPrototype.getDefinitionRegistry();
+		return variables.harness.measure(
+			name        = "metadata.registry_lookup",
+			category    = "metadata",
+			description = "Read one warmed entity definition from Quick's process-local registry.",
+			iterations  = variables.config.iterations * 100,
+			callback    = function( iterationIndex ) {
+				return registry.getDefinition( variables.userPrototype.mappingName() );
 			}
 		);
 	}
@@ -369,6 +386,7 @@ component {
 
 	private struct function benchmarkColdMetadataCompilation() {
 		var metadataCache = variables.userPrototype.get_cache();
+		var registry      = variables.userPrototype.getDefinitionRegistry();
 		return variables.harness.measure(
 			name             = "metadata.cold_compile",
 			category         = "metadata",
@@ -378,14 +396,14 @@ component {
 			iterations       = 1,
 			callback         = function( iterationIndex ) {
 				metadataCache.clearAll();
+				registry.clear();
 				return variables.wirebox.getInstance( "User" );
 			}
 		);
 	}
 
 	private struct function benchmarkSelectiveColdMetadataCompilation() {
-		var metadataCache = variables.userPrototype.get_cache();
-		var cacheKey      = "quick-metadata:#variables.userPrototype.mappingName()#";
+		var registry = variables.userPrototype.getDefinitionRegistry();
 		return variables.harness.measure(
 			name             = "metadata.selective_cold_compile",
 			category         = "metadata",
@@ -394,7 +412,7 @@ component {
 			samples          = min( 7, variables.config.samples ),
 			iterations       = 1,
 			callback         = function( iterationIndex ) {
-				metadataCache.clear( cacheKey );
+				registry.clearDefinition( variables.userPrototype.mappingName() );
 				return variables.wirebox.getInstance( "User" );
 			}
 		);

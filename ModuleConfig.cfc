@@ -50,6 +50,10 @@ component {
 		};
 
 		binder.map( "quick.models.BaseEntity" ).to( "#moduleMapping#.models.BaseEntity" );
+		binder
+			.map( "EntityDefinitionRegistry@quick" )
+			.to( "#moduleMapping#.models.EntityDefinitionRegistry" )
+			.asSingleton();
 
 		binder.getInjector().registerDSL( "quickService", "#moduleMapping#.dsl.QuickServiceDSL" );
 	}
@@ -87,6 +91,9 @@ component {
 	}
 
 	function onUnload() {
+		if ( wirebox.containsInstance( "EntityDefinitionRegistry@quick" ) ) {
+			wirebox.getInstance( "EntityDefinitionRegistry@quick" ).clear();
+		}
 		var cacheBox = wirebox.getCachebox();
 		if ( cacheBox.cacheExists( settings.metadataCache.name ) ) {
 			cacheBox.getCache( settings.metadataCache.name ).clearAll();

@@ -1298,22 +1298,45 @@ component accessors="true" {
 	 * @return       [string]
 	 */
 	public array function retrieveQualifiedColumns() {
-		var cacheKey         = "quick-metadata:#variables._mapping#-qualified-columns:#runtimeQualifiedColumnsCacheKey()#:#hash( tableName() )#";
-		var qualifiedColumns = variables._cache.get( cacheKey );
+		var registry         = getDefinitionRegistry();
+		var qualifiedVariant = "#runtimeQualifiedColumnsCacheKey()#:#hash( tableName() )#";
+		var qualifiedColumns = registry.getDerived(
+			variables._mapping,
+			"qualifiedColumns",
+			qualifiedVariant
+		);
 		if ( isNull( qualifiedColumns ) ) {
-			var attributes = retrieveColumnNames();
-			arraySort( attributes, "textnocase" );
-			qualifiedColumns = [];
-			for ( var column in attributes ) {
-				qualifiedColumns.append( this.qualifyColumn( column ) );
-			}
-			variables._cache.set( cacheKey, qualifiedColumns );
+			qualifiedColumns = registry.getOrCreateDerived(
+				mapping = variables._mapping,
+				group   = "qualifiedColumns",
+				variant = qualifiedVariant,
+				limit   = 16,
+				factory = function() {
+					var attributes = retrieveColumnNames();
+					arraySort( attributes, "textnocase" );
+					var columns = [];
+					for ( var column in attributes ) {
+						columns.append( this.qualifyColumn( column ) );
+					}
+					return columns;
+				}
+			);
 		}
 		var result = [];
 		for ( var qualifiedColumn in qualifiedColumns ) {
 			result.append( qualifiedColumn );
 		}
 		return result;
+	}
+
+	/**
+	 * Returns the process-local entity definition registry.
+	 */
+	public any function getDefinitionRegistry() {
+		if ( !variables.keyExists( "_definitionRegistry" ) || isNull( variables._definitionRegistry ) ) {
+			variables._definitionRegistry = variables._wirebox.getInstance( "EntityDefinitionRegistry@quick" );
+		}
+		return variables._definitionRegistry;
 	}
 
 	/*=====================================
@@ -3694,7 +3717,7 @@ component accessors="true" {
 		param variables._table = variables._str.plural( variables._str.snake( listFirst( variables._mapping, "@" ) ) );
 
 		if ( !isStruct( variables._meta ) || structIsEmpty( variables._meta ) ) {
-			variables._meta = variables._cache.getOrSet( "quick-metadata:#variables._mapping#", function() {
+			variables._meta = getDefinitionRegistry().getOrCreateDefinition( variables._mapping, function() {
 				var util                   = variables._wirebox.getUtility();
 				var meta                   = {};
 				meta[ "originalMetadata" ] = util.getInheritedMetadata( this );
@@ -3777,17 +3800,22 @@ component accessors="true" {
 					}
 				}
 
-				var baseEntityFunctionNames = variables._cache.get( "quick-metadata:BaseEntity" );
-				if ( isNull( baseEntityFunctionNames ) ) {
-					var baseEntityMetadata = server.keyExists( "boxlang" )
-					 ? getClassMetadata( "quick.models.BaseEntity" )
-					 : getComponentMetadata( "quick.models.BaseEntity" );
-					baseEntityFunctionNames = {};
-					for ( var func in baseEntityMetadata.functions ) {
-						baseEntityFunctionNames[ func.name ] = "";
+				var baseEntityFunctionNames = getDefinitionRegistry().getOrCreateDerived(
+					mapping = "__quick__",
+					group   = "metadata",
+					variant = "BaseEntityFunctionNames",
+					limit   = 1,
+					factory = function() {
+						var baseEntityMetadata = server.keyExists( "boxlang" )
+						 ? getClassMetadata( "quick.models.BaseEntity" )
+						 : getComponentMetadata( "quick.models.BaseEntity" );
+						var functionNames = {};
+						for ( var func in baseEntityMetadata.functions ) {
+							functionNames[ func.name ] = "";
+						}
+						return functionNames;
 					}
-					variables._cache.set( "quick-metadata:BaseEntity", baseEntityFunctionNames );
-				}
+				);
 				var functionsForRelationshipDetection = [];
 				if (
 					meta.originalMetadata.keyExists( "functions" ) &&
@@ -4300,62 +4328,74 @@ component accessors="true" {
 	}
 
 	public function getDiscriminations() {
-		var cacheKey        = "quick-metadata:#variables._mapping#-discriminations";
-		var discriminations = variables._cache.get( cacheKey );
-		if ( isNull( discriminations ) ) {
-			discriminations = {};
-			for ( var dsl in variables._discriminators ) {
-				var childClass = variables._wirebox.getInstance(
-					dsl           = dsl,
-					initArguments = { "meta" : {}, "shallow" : true }
-				);
-				var childMeta = childClass.get_Meta().localMetaData;
-				// Ensure if polymorphic association that a join column and discriminator value are passed.
-				// Can be ignored for singleTableInheritance since there's no join
-				if (
-					!isSingleTableInheritance() && (
-						!structKeyExists( childMeta, "joincolumn" ) ||
-						!structKeyExists( childMeta, "discriminatorValue" )
-					)
-				) {
-					throw(
-						type    = "QuickParentInstantiationException",
-						message = "Failed to instantiate the parent entity [#variables._fullName#]. The discriminated child class [#childMeta.fullName#] did not contain either a `joinColumn` or `discriminatorValue` attribute"
-					);
-				}
-				var childAttributes           = [];
-				var childAttributeDefinitions = childClass.get_Attributes();
-				for ( var attr in childAttributeDefinitions ) {
-					var attributeData = childAttributeDefinitions[ attr ];
-					if ( !attributeData.isParentColumn && !attributeData.virtual && !attributeData.exclude ) {
-						childAttributes.append( attributeData );
-					}
-				}
-
-				var localColumns = this.retrieveQualifiedColumns();
-				var childColumns = [];
-				for ( var column in childClass.retrieveQualifiedColumns() ) {
-					if ( !arrayContainsNoCase( localColumns, column ) ) {
-						childColumns.append( column );
-					}
-				}
-
-				discriminations[ childMeta.discriminatorValue ] = {
-					"mapping"    : childMeta.fullName,
-					"table"      : ( childMeta.keyExists( "table" ) ? childMeta.table : variables._table ),
-					"joincolumn" : (
-						childMeta.keyExists( "joinColumn" ) ? childClass.qualifyColumn(
-							column          = childMeta.joinColumn,
-							useParentLookup = false
-						) : ""
-					),
-					"attributes"   : childAttributes,
-					"childColumns" : childColumns
-				};
-			}
-			variables._cache.set( cacheKey, discriminations );
+		var registry        = getDefinitionRegistry();
+		var discriminations = registry.getDerived(
+			variables._mapping,
+			"discriminations",
+			"declared"
+		);
+		if ( !isNull( discriminations ) ) {
+			return discriminations;
 		}
-		return discriminations;
+		return registry.getOrCreateDerived(
+			mapping = variables._mapping,
+			group   = "discriminations",
+			variant = "declared",
+			limit   = 1,
+			factory = function() {
+				var discriminations = {};
+				for ( var dsl in variables._discriminators ) {
+					var childClass = variables._wirebox.getInstance(
+						dsl           = dsl,
+						initArguments = { "meta" : {}, "shallow" : true }
+					);
+					var childMeta = childClass.get_Meta().localMetaData;
+					// Ensure if polymorphic association that a join column and discriminator value are passed.
+					// Can be ignored for singleTableInheritance since there's no join
+					if (
+						!isSingleTableInheritance() && (
+							!structKeyExists( childMeta, "joincolumn" ) ||
+							!structKeyExists( childMeta, "discriminatorValue" )
+						)
+					) {
+						throw(
+							type    = "QuickParentInstantiationException",
+							message = "Failed to instantiate the parent entity [#variables._fullName#]. The discriminated child class [#childMeta.fullName#] did not contain either a `joinColumn` or `discriminatorValue` attribute"
+						);
+					}
+					var childAttributes           = [];
+					var childAttributeDefinitions = childClass.get_Attributes();
+					for ( var attr in childAttributeDefinitions ) {
+						var attributeData = childAttributeDefinitions[ attr ];
+						if ( !attributeData.isParentColumn && !attributeData.virtual && !attributeData.exclude ) {
+							childAttributes.append( attributeData );
+						}
+					}
+
+					var localColumns = this.retrieveQualifiedColumns();
+					var childColumns = [];
+					for ( var column in childClass.retrieveQualifiedColumns() ) {
+						if ( !arrayContainsNoCase( localColumns, column ) ) {
+							childColumns.append( column );
+						}
+					}
+
+					discriminations[ childMeta.discriminatorValue ] = {
+						"mapping"    : childMeta.fullName,
+						"table"      : ( childMeta.keyExists( "table" ) ? childMeta.table : variables._table ),
+						"joincolumn" : (
+							childMeta.keyExists( "joinColumn" ) ? childClass.qualifyColumn(
+								column          = childMeta.joinColumn,
+								useParentLookup = false
+							) : ""
+						),
+						"attributes"   : childAttributes,
+						"childColumns" : childColumns
+					};
+				}
+				return discriminations;
+			}
+		);
 	}
 
 

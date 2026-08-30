@@ -1,5 +1,17 @@
 component extends="tests.resources.ModuleIntegrationSpec" {
 
+	function beforeAll() {
+		super.beforeAll();
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "AutomaticTimestampsSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "AutomaticTimestampsSpec" );
+		super.afterAll();
+	}
+
 	function run() {
 		describe( "Automatic Timestamps", function() {
 			it( "uses the module setting as the per-entity default", function() {
@@ -44,6 +56,34 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				user.update( { "firstName" : "Updated" } );
 
 				expect( dateCompare( user.getModifiedDate(), previousModifiedDate ) ).toBe( 1 );
+			} );
+
+			it( "sets conventional timestamps before insert and update events", function() {
+				structDelete( variables, "preInsertTimestamps" );
+				structDelete( variables, "preUpdateTimestamps" );
+
+				var user = getInstance( "AutomaticTimestampUser" ).create( {
+					"username"  : "automatic-timestamp-events",
+					"firstName" : "Automatic",
+					"lastName"  : "Events",
+					"password"  : "secret"
+				} );
+
+				expect( variables ).toHaveKey( "preInsertTimestamps" );
+				expect( variables.preInsertTimestamps.createdDate ).toBeDate();
+				expect( variables.preInsertTimestamps.modifiedDate ).toBeDate();
+
+				queryExecute(
+					"UPDATE users SET modified_date = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY) WHERE id = :id",
+					{ "id" : user.getId() }
+				);
+				user                     = getInstance( "AutomaticTimestampUser" ).findOrFail( user.getId() );
+				var previousModifiedDate = user.getModifiedDate();
+				user.update( { "firstName" : "Updated" } );
+
+				expect( variables ).toHaveKey( "preUpdateTimestamps" );
+				expect( variables.preUpdateTimestamps.modifiedDate ).toBeDate();
+				expect( dateCompare( variables.preUpdateTimestamps.modifiedDate, previousModifiedDate ) ).toBe( 1 );
 			} );
 
 			it( "preserves explicitly assigned timestamps", function() {
@@ -114,6 +154,36 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( dateCompare( user.getModifiedDate(), previousModifiedDate ) ).toBe( 1 );
 			} );
 		} );
+	}
+
+	function quickPreInsert(
+		event,
+		interceptData,
+		buffer,
+		rc,
+		prc
+	) {
+		if (
+			arguments.interceptData.attributes.keyExists( "created_date" )
+			&& arguments.interceptData.attributes.keyExists( "modified_date" )
+		) {
+			variables.preInsertTimestamps = {
+				"createdDate"  : arguments.interceptData.attributes.created_date,
+				"modifiedDate" : arguments.interceptData.attributes.modified_date
+			};
+		}
+	}
+
+	function quickPreUpdate(
+		event,
+		interceptData,
+		buffer,
+		rc,
+		prc
+	) {
+		if ( arguments.interceptData.newAttributes.keyExists( "modified_date" ) ) {
+			variables.preUpdateTimestamps = { "modifiedDate" : arguments.interceptData.newAttributes.modified_date };
+		}
 	}
 
 }

@@ -1,11 +1,19 @@
 component extends="quick.models.BaseEntity" accessors="true" {
 
-    property name="wirebox" inject="wirebox" persistent="false";
+	variables.automaticTimestamps = false;
 
-    property name="link_id" column="link_id";
-    property name="url" column="link_url";
-    property name="createdDate" column="created_date" readonly="true";
+	property
+		name      ="wirebox"
+		inject    ="wirebox"
+		persistent="false";
 
-    variables._key = "link_id";
+	property name="link_id" column="link_id";
+	property name="url"     column="link_url";
+	property
+		name    ="createdDate"
+		column  ="created_date"
+		readonly="true";
+
+	variables._key = "link_id";
 
 }

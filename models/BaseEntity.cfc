@@ -222,6 +222,22 @@ component accessors="true" {
 		inject    ="box:setting:refreshOnSaveFallback@quick";
 
 	/**
+	 * The module-level default for automatic entity timestamps.
+	 */
+	property
+		name      ="_automaticTimestampsDefault"
+		persistent="false"
+		inject    ="box:setting:automaticTimestamps@quick";
+
+	/**
+	 * Whether automatic timestamps are disabled for the current operation chain.
+	 */
+	property
+		name      ="_withoutAutomaticTimestamps"
+		default   ="false"
+		persistent="false";
+
+	/**
 	 * A boolean flag representing that events should not be fired.
 	 */
 	property name="_withoutFiringEvents" persistent="false";
@@ -289,21 +305,23 @@ component accessors="true" {
 	private any function assignDefaultProperties() {
 		assignAttributesData( {} );
 		assignOriginalAttributes( {} );
-		variables._globalScopeExclusions          = [];
-		param variables._key                      = "id";
-		param variables._meta                     = {};
-		param variables._data                     = {};
-		param variables._relationshipsData        = {};
-		param variables._relationshipsLoaded      = {};
-		param variables._with                     = [];
-		variables._withoutRelationshipConstraints = createObject( "java", "java.util.HashSet" ).init();
-		variables._applyingGlobalScopes           = false;
-		variables._globalScopesApplied            = false;
-		variables._ignoreNotLoadedGuard           = false;
-		variables._withoutFiringEvents            = false;
-		variables._nullValueArgumentSentinel      = createObject( "java", "java.lang.Object" ).init();
-		param variables._preventLazyLoading       = false;
-		param variables._refreshOnSaveFallback    = true;
+		variables._globalScopeExclusions            = [];
+		param variables._key                        = "id";
+		param variables._meta                       = {};
+		param variables._data                       = {};
+		param variables._relationshipsData          = {};
+		param variables._relationshipsLoaded        = {};
+		param variables._with                       = [];
+		variables._withoutRelationshipConstraints   = createObject( "java", "java.util.HashSet" ).init();
+		variables._applyingGlobalScopes             = false;
+		variables._globalScopesApplied              = false;
+		variables._ignoreNotLoadedGuard             = false;
+		variables._withoutFiringEvents              = false;
+		variables._nullValueArgumentSentinel        = createObject( "java", "java.lang.Object" ).init();
+		param variables._preventLazyLoading         = false;
+		param variables._refreshOnSaveFallback      = true;
+		param variables._automaticTimestampsDefault = true;
+		param variables._withoutAutomaticTimestamps = false;
 		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
 				throw(
@@ -490,7 +508,49 @@ component accessors="true" {
 	 * @return  [String]
 	 */
 	public array function timestampFields() {
-		return [ "createdDate", "modifiedDate" ];
+		return [
+			retrieveCreatedDateAttribute(),
+			retrieveModifiedDateAttribute()
+		].filter( ( attribute ) => len( attribute ) );
+	}
+
+	/**
+	 * Returns whether this entity automatically maintains timestamps.
+	 */
+	public boolean function usesAutomaticTimestamps() {
+		return variables.automaticTimestamps && !variables._withoutAutomaticTimestamps;
+	}
+
+	/**
+	 * Returns the configured created timestamp attribute when it exists on the entity.
+	 */
+	public string function retrieveCreatedDateAttribute() {
+		return hasAttribute( variables.createdDateAttribute ) ? variables.createdDateAttribute : "";
+	}
+
+	/**
+	 * Returns the configured modified timestamp attribute when it exists on the entity.
+	 */
+	public string function retrieveModifiedDateAttribute() {
+		return hasAttribute( variables.modifiedDateAttribute ) ? variables.modifiedDateAttribute : "";
+	}
+
+	/**
+	 * Applies conventional timestamps to the current insert or update when configured attributes exist.
+	 */
+	private void function applyAutomaticTimestamps() {
+		if ( !usesAutomaticTimestamps() ) {
+			return;
+		}
+		var timestamp             = now();
+		var modifiedDateAttribute = retrieveModifiedDateAttribute();
+		if ( len( modifiedDateAttribute ) && !isDirty( modifiedDateAttribute ) ) {
+			assignAttribute( modifiedDateAttribute, timestamp );
+		}
+		var createdDateAttribute = retrieveCreatedDateAttribute();
+		if ( !isLoaded() && len( createdDateAttribute ) && !isDirty( createdDateAttribute ) ) {
+			assignAttribute( createdDateAttribute, timestamp );
+		}
 	}
 
 	/**
@@ -1354,13 +1414,15 @@ component accessors="true" {
 	 */
 	public any function newEntity( string name ) {
 		if ( isNull( arguments.name ) ) {
-			return variables._wirebox.getInstance(
-				name          = mappingName(),
-				initArguments = {
-					meta                    : variables._meta,
-					runtimeAttributeOverlay : variables._runtimeAttributeOverlay
-				}
-			);
+			return variables._wirebox
+				.getInstance(
+					name          = mappingName(),
+					initArguments = {
+						meta                    : variables._meta,
+						runtimeAttributeOverlay : variables._runtimeAttributeOverlay
+					}
+				)
+				.set_withoutAutomaticTimestamps( variables._withoutAutomaticTimestamps );
 		}
 		// Custom named instance
 		return variables._wirebox.getInstance( arguments.name );
@@ -1563,6 +1625,7 @@ component accessors="true" {
 		}
 		guardNoAttributes();
 		guardReadOnly();
+		applyAutomaticTimestamps();
 		fireEvent(
 			"preSave",
 			{
@@ -1971,7 +2034,12 @@ component accessors="true" {
 		var timestamp           = now();
 		var timestampAttributes = {};
 		for ( var field in timestampFields() ) {
-			timestampAttributes[ field ] = timestamp;
+			if ( hasAttribute( field ) ) {
+				timestampAttributes[ field ] = timestamp;
+			}
+		}
+		if ( timestampAttributes.isEmpty() ) {
+			return this;
 		}
 		guardAgainstReadOnlyAttributes( timestampAttributes );
 
@@ -3753,13 +3821,16 @@ component accessors="true" {
 				meta[ "entityName" ]                   = meta.originalMetadata.entityName;
 				param meta.localMetadata.properties    = [];
 				guardDuplicatePropertyNames( meta.localMetadata, meta.mapping );
-				param meta.originalMetadata.table            = variables._str.plural( variables._str.snake( meta.entityName ) );
-				meta[ "table" ]                              = meta.originalMetadata.table;
-				param meta.originalMetadata.readonly         = false;
-				meta[ "readonly" ]                           = meta.originalMetadata.readonly;
-				param meta.originalMetadata.softDeletes      = false;
-				param meta.originalMetadata.softDeleteColumn = "deletedDate";
-				meta[ "softDeletes" ]                        = isBoolean( meta.originalMetadata.softDeletes )
+				param meta.originalMetadata.table                 = variables._str.plural( variables._str.snake( meta.entityName ) );
+				meta[ "table" ]                                   = meta.originalMetadata.table;
+				param meta.originalMetadata.readonly              = false;
+				meta[ "readonly" ]                                = meta.originalMetadata.readonly;
+				param meta.originalMetadata.softDeletes           = false;
+				param meta.originalMetadata.softDeleteColumn      = "deletedDate";
+				param meta.originalMetadata.automaticTimestamps   = variables._automaticTimestampsDefault;
+				param meta.originalMetadata.createdDateAttribute  = "createdDate";
+				param meta.originalMetadata.modifiedDateAttribute = "modifiedDate";
+				meta[ "softDeletes" ]                             = isBoolean( meta.originalMetadata.softDeletes )
 				 ? meta.originalMetadata.softDeletes
 				 : lCase( trim( meta.originalMetadata.softDeletes & "" ) ) == "true";
 				meta[ "softDeleteColumn" ]                         = meta.originalMetadata.softDeleteColumn;
@@ -3883,14 +3954,20 @@ component accessors="true" {
 		if ( variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists( "datasource" ) ) {
 			variables._queryOptions = { datasource : variables._meta.originalMetadata.datasource };
 		}
-		variables._readonly                = variables._meta.readonly;
-		variables._softDeletes             = variables._meta.softDeletes;
-		variables._softDeleteColumn        = variables._meta.softDeleteColumn;
-		variables._attributes              = variables._meta.attributes;
-		variables._columns                 = variables._meta.columns;
-		variables._functionNames           = variables._meta.functionNames;
-		variables._nonPersistentProperties = variables._meta.nonPersistentProperties;
-		variables._grammar                 = variables._meta.originalMetadata.keyExists( "grammar" )
+		variables._readonly             = variables._meta.readonly;
+		variables._softDeletes          = variables._meta.softDeletes;
+		variables._softDeleteColumn     = variables._meta.softDeleteColumn;
+		var metadataAutomaticTimestamps = isBoolean( variables._meta.originalMetadata.automaticTimestamps )
+		 ? variables._meta.originalMetadata.automaticTimestamps
+		 : lCase( trim( variables._meta.originalMetadata.automaticTimestamps & "" ) ) == "true";
+		param variables.automaticTimestamps   = metadataAutomaticTimestamps;
+		param variables.createdDateAttribute  = variables._meta.originalMetadata.createdDateAttribute;
+		param variables.modifiedDateAttribute = variables._meta.originalMetadata.modifiedDateAttribute;
+		variables._attributes                 = variables._meta.attributes;
+		variables._columns                    = variables._meta.columns;
+		variables._functionNames              = variables._meta.functionNames;
+		variables._nonPersistentProperties    = variables._meta.nonPersistentProperties;
+		variables._grammar                    = variables._meta.originalMetadata.keyExists( "grammar" )
 		 ? variables._meta.originalMetadata.grammar
 		 : "";
 		variables._discriminatorColumn = variables._meta.localMetadata.keyExists( "discriminatorColumn" )
@@ -3959,7 +4036,10 @@ component accessors="true" {
 					"singleTableInheritance",
 					"datasource",
 					"grammar",
-					"discriminatorColumn"
+					"discriminatorColumn",
+					"automaticTimestamps",
+					"createdDateAttribute",
+					"modifiedDateAttribute"
 				]
 			) {
 				if ( arguments.metadata.annotations.keyExists( key ) && !isNull( arguments.metadata.annotations[ key ] ) ) {

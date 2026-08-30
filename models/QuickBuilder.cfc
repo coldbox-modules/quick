@@ -81,6 +81,11 @@ component accessors="true" transientCache="false" {
 	property name="_entityTransformers";
 
 	/**
+	 * Whether automatic timestamps are disabled for mutations created by this builder.
+	 */
+	property name="_withoutAutomaticTimestamps" default="false";
+
+	/**
 	 * Used to quickly identify QueryBuilder instances
 	 * instead of resorting to `isInstanceOf` which is slow.
 	 */
@@ -93,14 +98,15 @@ component accessors="true" transientCache="false" {
 	this.isQuickBuilder = true;
 
 	function init() {
-		variables._eagerLoad                = [];
-		variables._globalScopesApplied      = false;
-		variables._globalScopeExcludeAll    = false;
-		variables._asMemento                = false;
-		variables._asQuery                  = false;
-		variables._withAliases              = false;
-		variables._entityTransformers       = [];
-		param variables._preventLazyLoading = false;
+		variables._eagerLoad                  = [];
+		variables._globalScopesApplied        = false;
+		variables._globalScopeExcludeAll      = false;
+		variables._asMemento                  = false;
+		variables._asQuery                    = false;
+		variables._withAliases                = false;
+		variables._entityTransformers         = [];
+		variables._withoutAutomaticTimestamps = false;
+		param variables._preventLazyLoading   = false;
 		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
 				throw(
@@ -136,8 +142,18 @@ component accessors="true" transientCache="false" {
 
 	public QuickBuilder function setEntity( required any newEntity ) {
 		variables.entity = arguments.newEntity;
+		variables.entity.set_withoutAutomaticTimestamps( variables._withoutAutomaticTimestamps );
 		variables.qb.setEntity( arguments.newEntity );
 		variables.aliasMap[ arguments.newEntity.tableAlias() ] = arguments.newEntity;
+		return this;
+	}
+
+	/**
+	 * Disables automatic timestamps for mutations and entities created by this builder.
+	 */
+	public QuickBuilder function withoutAutomaticTimestamps() {
+		variables._withoutAutomaticTimestamps = true;
+		getEntity().set_withoutAutomaticTimestamps( true );
 		return this;
 	}
 
@@ -492,6 +508,7 @@ component accessors="true" transientCache="false" {
 			getEntity().guardReadOnly();
 			getEntity().guardAgainstReadOnlyAttributes( arguments.attributes );
 		}
+		arguments.attributes = appendUpdatedTimestamp( arguments.attributes );
 		return variables.qb.update( prepareBulkMutationAttributes( arguments.attributes ) );
 	}
 
@@ -534,9 +551,21 @@ component accessors="true" transientCache="false" {
 			}
 		}
 
+		arguments.values = appendInsertTimestamps( arguments.values );
 		arguments.values = prepareBulkMutationValues( arguments.values );
 		if ( structKeyExists( arguments, "update" ) && isStruct( arguments.update ) ) {
+			arguments.update = appendUpdatedTimestamp( arguments.update );
 			arguments.update = prepareBulkMutationAttributes( arguments.update );
+		} else if ( structKeyExists( arguments, "update" ) && isArray( arguments.update ) ) {
+			var modifiedDateAttribute = getEntity().retrieveModifiedDateAttribute();
+			if (
+				!variables._withoutAutomaticTimestamps
+				&& getEntity().usesAutomaticTimestamps()
+				&& len( modifiedDateAttribute )
+				&& !arguments.update.findNoCase( modifiedDateAttribute )
+			) {
+				arguments.update.append( modifiedDateAttribute );
+			}
 		}
 
 		structDelete( arguments, "force" );
@@ -555,6 +584,48 @@ component accessors="true" transientCache="false" {
 			);
 		}
 		return preparedAttributes;
+	}
+
+	/**
+	 * Adds the configured modified timestamp to bulk mutation attributes when available.
+	 */
+	private struct function appendUpdatedTimestamp( required struct attributes ) {
+		var timestampAttributes   = duplicate( arguments.attributes );
+		var modifiedDateAttribute = getEntity().retrieveModifiedDateAttribute();
+		if (
+			!variables._withoutAutomaticTimestamps
+			&& getEntity().usesAutomaticTimestamps()
+			&& len( modifiedDateAttribute )
+			&& !timestampAttributes.keyExists( modifiedDateAttribute )
+		) {
+			timestampAttributes[ modifiedDateAttribute ] = now();
+		}
+		return timestampAttributes;
+	}
+
+	/**
+	 * Adds configured insert timestamps to literal upsert rows when available.
+	 */
+	private any function appendInsertTimestamps( required any values ) {
+		if ( variables._withoutAutomaticTimestamps || !getEntity().usesAutomaticTimestamps() ) {
+			return arguments.values;
+		}
+		if ( isArray( arguments.values ) ) {
+			return arguments.values.map( ( value ) => isStruct( value ) ? appendInsertTimestamps( value ) : value );
+		}
+		if (
+			!isStruct( arguments.values )
+			|| structKeyExists( arguments.values, "isBuilder" )
+			|| structKeyExists( arguments.values, "isQuickBuilder" )
+		) {
+			return arguments.values;
+		}
+		var timestampAttributes  = appendUpdatedTimestamp( arguments.values );
+		var createdDateAttribute = getEntity().retrieveCreatedDateAttribute();
+		if ( len( createdDateAttribute ) && !timestampAttributes.keyExists( createdDateAttribute ) ) {
+			timestampAttributes[ createdDateAttribute ] = now();
+		}
+		return timestampAttributes;
 	}
 
 	/**
@@ -2052,6 +2123,9 @@ component accessors="true" transientCache="false" {
 		newBuilder.set_asMemento( this.get_asMemento() );
 		newBuilder.set_asMementoSettings( this.get_asMementoSettings() );
 		newBuilder.set_entityTransformers( this.get_entityTransformers() );
+		if ( variables._withoutAutomaticTimestamps ) {
+			newBuilder.withoutAutomaticTimestamps();
+		}
 		return newBuilder;
 	}
 

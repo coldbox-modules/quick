@@ -4,6 +4,8 @@ component
 	table    ="users"
 {
 
+	variables.automaticTimestamps = false;
+
 	property name="id";
 	property name="username";
 	property name="firstName" column="first_name";

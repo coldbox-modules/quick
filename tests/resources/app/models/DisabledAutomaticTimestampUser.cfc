@@ -4,8 +4,6 @@ component
 	table    ="users"
 {
 
-	variables.automaticTimestamps = false;
-
 	property name="id";
 	property name="username";
 	property name="firstName" column="first_name";
@@ -13,5 +11,7 @@ component
 	property name="password";
 	property name="createdDate"  column="created_date";
 	property name="modifiedDate" column="modified_date";
+
+	variables.automaticTimestamps = false;
 
 }

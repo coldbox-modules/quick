@@ -4,8 +4,6 @@ component
 	table    ="users"
 {
 
-	variables.automaticTimestamps = false;
-
 	property name="id";
 	property name="username";
 	property name="firstName" column="first_name";
@@ -21,6 +19,8 @@ component
 		update       ="false"
 		refreshOnSave="true"
 		casts        ="UppercaseCast";
+
+	variables.automaticTimestamps = false;
 
 	function postLoad( eventData ) {
 		param request.databaseGeneratedUserPostLoadCount = 0;

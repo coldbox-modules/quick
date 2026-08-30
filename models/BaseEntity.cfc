@@ -508,10 +508,16 @@ component accessors="true" {
 	 * @return  [String]
 	 */
 	public array function timestampFields() {
-		return [
-			retrieveCreatedDateAttribute(),
-			retrieveModifiedDateAttribute()
-		].filter( ( attribute ) => len( attribute ) );
+		var fields               = [];
+		var createdDateAttribute = retrieveCreatedDateAttribute();
+		if ( len( createdDateAttribute ) ) {
+			fields.append( createdDateAttribute );
+		}
+		var modifiedDateAttribute = retrieveModifiedDateAttribute();
+		if ( len( modifiedDateAttribute ) ) {
+			fields.append( modifiedDateAttribute );
+		}
+		return fields;
 	}
 
 	/**

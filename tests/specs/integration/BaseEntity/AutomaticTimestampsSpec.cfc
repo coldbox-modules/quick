@@ -19,7 +19,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					{
 						"modifiedDate" : {
 							"value"   : previousModifiedDate,
-							"sqltype" : "timestamp"
+							"sqltype" : "cf_sql_timestamp"
 						}
 					}
 				);
@@ -50,7 +50,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					{
 						"modifiedDate" : {
 							"value"   : previousModifiedDate,
-							"sqltype" : "timestamp"
+							"sqltype" : "cf_sql_timestamp"
 						},
 						"id" : user.getId()
 					}
@@ -96,7 +96,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					{
 						"modifiedDate" : {
 							"value"   : previousModifiedDate,
-							"sqltype" : "timestamp"
+							"sqltype" : "cf_sql_timestamp"
 						}
 					}
 				);
@@ -122,7 +122,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					{
 						"modifiedDate" : {
 							"value"   : previousModifiedDate,
-							"sqltype" : "timestamp"
+							"sqltype" : "cf_sql_timestamp"
 						}
 					}
 				);
@@ -144,7 +144,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					{
 						"modifiedDate" : {
 							"value"   : previousModifiedDate,
-							"sqltype" : "timestamp"
+							"sqltype" : "cf_sql_timestamp"
 						}
 					}
 				);

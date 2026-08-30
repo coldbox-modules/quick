@@ -378,6 +378,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( newUser.isLoaded() ).toBeTrue();
 					var attrs = newUser.retrieveAttributesData( aliased = true );
 					attrs.delete( "id" );
+					attrs.delete( "createdDate" );
+					attrs.delete( "modifiedDate" );
 					expect( attrs ).toBe( {
 						"username"  : "doesntexist",
 						"firstName" : "doesnt",
@@ -398,6 +400,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( newUser.isLoaded() ).toBeTrue();
 					var attrs = newUser.retrieveAttributesData( aliased = true );
 					attrs.delete( "id" );
+					attrs.delete( "createdDate" );
+					attrs.delete( "modifiedDate" );
 					expect( attrs ).toBe( {
 						"username"  : "doesntexist",
 						"firstName" : "doesnt",
@@ -485,6 +489,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					expect( newUser.isLoaded() ).toBeTrue();
 					var attrs = newUser.retrieveAttributesData( aliased = true );
 					attrs.delete( "id" );
+					attrs.delete( "createdDate" );
+					attrs.delete( "modifiedDate" );
 					expect( attrs ).toBe( {
 						"username"  : "doesntexist",
 						"firstName" : "doesnt",

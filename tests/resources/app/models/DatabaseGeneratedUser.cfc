@@ -20,6 +20,8 @@ component
 		refreshOnSave="true"
 		casts        ="UppercaseCast";
 
+	variables.automaticTimestamps = false;
+
 	function postLoad( eventData ) {
 		param request.databaseGeneratedUserPostLoadCount = 0;
 		request.databaseGeneratedUserPostLoadCount++;

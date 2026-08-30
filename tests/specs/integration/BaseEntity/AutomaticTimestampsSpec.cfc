@@ -11,18 +11,9 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "touches the configured timestamp fields", function() {
-				var user                 = getInstance( "AutomaticTimestampUser" ).findOrFail( 1 );
-				var originalCreatedDate  = user.getCreatedDate();
-				var previousModifiedDate = dateAdd( "d", -1, now() );
-				queryExecute(
-					"UPDATE users SET modified_date = :modifiedDate WHERE id = 1",
-					{
-						"modifiedDate" : {
-							"value"   : previousModifiedDate,
-							"sqltype" : "cf_sql_timestamp"
-						}
-					}
-				);
+				var user                = getInstance( "AutomaticTimestampUser" ).findOrFail( 1 );
+				var originalCreatedDate = user.getCreatedDate();
+				queryExecute( "UPDATE users SET modified_date = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY) WHERE id = 1" );
 				user                     = getInstance( "AutomaticTimestampUser" ).findOrFail( 1 );
 				var originalModifiedDate = user.getModifiedDate();
 
@@ -44,18 +35,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getCreatedDate() ).toBeDate();
 				expect( user.getModifiedDate() ).toBeDate();
 
-				var previousModifiedDate = dateAdd( "d", -1, now() );
 				queryExecute(
-					"UPDATE users SET modified_date = :modifiedDate WHERE id = :id",
-					{
-						"modifiedDate" : {
-							"value"   : previousModifiedDate,
-							"sqltype" : "cf_sql_timestamp"
-						},
-						"id" : user.getId()
-					}
+					"UPDATE users SET modified_date = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY) WHERE id = :id",
+					{ "id" : user.getId() }
 				);
-				user = getInstance( "AutomaticTimestampUser" ).findOrFail( user.getId() );
+				user                     = getInstance( "AutomaticTimestampUser" ).findOrFail( user.getId() );
+				var previousModifiedDate = user.getModifiedDate();
 				user.update( { "firstName" : "Updated" } );
 
 				expect( dateCompare( user.getModifiedDate(), previousModifiedDate ) ).toBe( 1 );
@@ -90,16 +75,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "can disable automatic timestamps per entity", function() {
-				var previousModifiedDate = dateAdd( "d", -1, now() );
-				queryExecute(
-					"UPDATE users SET modified_date = :modifiedDate WHERE id = 1",
-					{
-						"modifiedDate" : {
-							"value"   : previousModifiedDate,
-							"sqltype" : "cf_sql_timestamp"
-						}
-					}
-				);
+				queryExecute( "UPDATE users SET modified_date = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY) WHERE id = 1" );
 				var user                 = getInstance( "DisabledAutomaticTimestampUser" ).findOrFail( 1 );
 				var originalModifiedDate = user.getModifiedDate();
 				user.update( { "firstName" : "No Timestamp" } );
@@ -116,16 +92,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "can disable automatic timestamps for a builder chain", function() {
-				var previousModifiedDate = dateAdd( "d", -1, now() );
-				queryExecute(
-					"UPDATE users SET modified_date = :modifiedDate WHERE id = 1",
-					{
-						"modifiedDate" : {
-							"value"   : previousModifiedDate,
-							"sqltype" : "cf_sql_timestamp"
-						}
-					}
-				);
+				queryExecute( "UPDATE users SET modified_date = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY) WHERE id = 1" );
 				var originalModifiedDate = getInstance( "AutomaticTimestampUser" ).findOrFail( 1 ).getModifiedDate();
 
 				getInstance( "AutomaticTimestampUser" )
@@ -138,16 +105,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "adds the update timestamp to normal bulk updates", function() {
-				var previousModifiedDate = dateAdd( "d", -1, now() );
-				queryExecute(
-					"UPDATE users SET modified_date = :modifiedDate WHERE id = 1",
-					{
-						"modifiedDate" : {
-							"value"   : previousModifiedDate,
-							"sqltype" : "cf_sql_timestamp"
-						}
-					}
-				);
+				queryExecute( "UPDATE users SET modified_date = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY) WHERE id = 1" );
+				var previousModifiedDate = getInstance( "AutomaticTimestampUser" ).findOrFail( 1 ).getModifiedDate();
 
 				getInstance( "AutomaticTimestampUser" ).whereId( 1 ).updateAll( { "firstName" : "Builder Timestamp" } );
 

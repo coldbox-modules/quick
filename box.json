@@ -30,7 +30,7 @@
     },
     "type":"modules",
     "dependencies":{
-        "qb":"14.0.0-beta.5",
+        "qb":"^14.0.0",
         "str":"^4.0.0",
         "mementifier":"^3.0.0"
     },

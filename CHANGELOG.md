@@ -1,3 +1,11 @@
+# v13.0.0
+## 15 Sep 2026 — 23:27:45 UTC
+
+### BREAKING
+
++ __qb:__ document the qb 14 requirement ([3d4ea75](https://github.com/coldbox-modules/quick/commit/3d4ea75050baf950b2a725e2a2b3d957c7a3a1f7))
+
+
 # v12.1.0
 ## 15 Sep 2026 — 23:18:46 UTC
 

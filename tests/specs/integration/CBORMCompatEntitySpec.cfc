@@ -27,7 +27,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "list (with arguments)", function() {
 				var users = user.list(
-					criteria  = { lastName  : "Doe" },
+					criteria  = { lastName   : "Doe" },
 					sortOrder = "username",
 					max       = 2,
 					offset    = 1,
@@ -101,7 +101,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "findWhere", function() {
-				var john = user.findWhere( { firstName  : "John" } );
+				var john = user.findWhere( { firstName   : "John" } );
 				expect( john.getId() ).toBe( 2 );
 				expect( john.getUsername() ).toBe( "johndoe" );
 			} );
@@ -178,14 +178,14 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "new (with properties)", function() {
-				var newUser = user.new( { username  : "new_username" } );
+				var newUser = user.new( { username   : "new_username" } );
 				expect( newUser.isLoaded() ).toBeFalse();
 				expect( newUser.getUsername() ).toBe( "new_username" );
 			} );
 
 			it( "populate", function() {
 				var newUser = user.new();
-				newUser.populate( { username  : "new_username" } );
+				newUser.populate( { username   : "new_username" } );
 				expect( newUser.getUsername() ).toBe( "new_username" );
 			} );
 

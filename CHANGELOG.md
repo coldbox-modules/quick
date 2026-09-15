@@ -1,3 +1,129 @@
+# v12.1.0
+## 15 Sep 2026 — 23:18:46 UTC
+
+### chore
+
++ __ci:__ fix dependency setup and upgrade semantic release
+ ([bac546d](https://github.com/coldbox-modules/quick/commit/bac546db70b6cbea5b7af96689b30d982a09ffd7))
+
+### feat
+
++ __Casts:__ delegate null handling to custom casts (#279) ([914bfaf](https://github.com/coldbox-modules/quick/commit/914bfaf3e7063b7b6192925951eae47da2c8c4f1))
+
+### fix
+
++ __Events:__ cast attributes assigned in preSave (#273) (#280) ([7ce1dd4](https://github.com/coldbox-modules/quick/commit/7ce1dd4ab4187b581eaeacd3ca02f004f1e9162b))
++ __BaseEntity:__ handle null values in fill (#278) ([9f534dc](https://github.com/coldbox-modules/quick/commit/9f534dcb74d99ade2c7a04ae749bbb5d0226909c))
+
+### other
+
++ __\*:__ fix: Use qb 14 ([d88715f](https://github.com/coldbox-modules/quick/commit/d88715f637697f2c240ee8f14b05e29e8b8a9c52))
++ __\*:__ Apply cfformat changes
+ ([cc98bbd](https://github.com/coldbox-modules/quick/commit/cc98bbd20bb996488138d58db5ceded6e49a0539))
++ __\*:__ Apply cfformat changes
+ ([4fa72d0](https://github.com/coldbox-modules/quick/commit/4fa72d07c6fd0b6e6a6859c91ab319d38b0318b5))
++ __\*:__ test: verify timestamps precede persistence events ([fbc0006](https://github.com/coldbox-modules/quick/commit/fbc00060b2c4288964f8e58ed74c85b1269b3252))
++ __\*:__ fix: preserve uninitialized BoxLang attributes ([590c370](https://github.com/coldbox-modules/quick/commit/590c370ae30b593ffc293f1f42993d5624924cd0))
++ __\*:__ feat: Add automatic entity timestamps ([d2fc9cb](https://github.com/coldbox-modules/quick/commit/d2fc9cb8fad1b8494274e303324f5396f88f47e4))
++ __\*:__ test: collect concurrent registry results portably
+ ([8df610b](https://github.com/coldbox-modules/quick/commit/8df610b6970d13522ec0cf73e1dbdad91312c565))
++ __\*:__ docs: record final performance verification
+ ([fe06ee0](https://github.com/coldbox-modules/quick/commit/fe06ee082ebaa25f5731f5d74dcf06b1088247a0))
++ __\*:__ docs: complete architecture candidate dispositions
+ ([7524f1e](https://github.com/coldbox-modules/quick/commit/7524f1e915e27e4f4af9bd52c0876eefcd6e81ae))
++ __\*:__ docs: record query seed outcome
+ ([7066c9f](https://github.com/coldbox-modules/quick/commit/7066c9fd2e4e82efae3301112629a99ee21951a3))
++ __\*:__ docs: record hydration plan outcome
+ ([8dda70f](https://github.com/coldbox-modules/quick/commit/8dda70f1b3356919c9e69ef10597c87a6f0a3dc5))
++ __\*:__ perf: resolve hydration attributes once
+ ([082dab2](https://github.com/coldbox-modules/quick/commit/082dab2524846ef33b0574928161529e6d62e1bc))
++ __\*:__ perf: separate entity definitions from metadata cache
+ ([395f81b](https://github.com/coldbox-modules/quick/commit/395f81b735e66b996854a254117823b6eb95674b))
++ __\*:__ test: decompose metadata and hydration performance
+ ([ac22297](https://github.com/coldbox-modules/quick/commit/ac22297b88c936bf8bb210399d2f5bbcd9fe723f))
++ __\*:__ docs: record cross-engine performance verification
+ ([7dbd605](https://github.com/coldbox-modules/quick/commit/7dbd6053620d65bc1aed74ff2d09cd94d164e384))
++ __\*:__ docs: record performance candidate outcomes
+ ([64474d8](https://github.com/coldbox-modules/quick/commit/64474d886464803081c617a4b7db40c055f76d1a))
++ __\*:__ perf: index deep runtime attribute overlays
+ ([c28b033](https://github.com/coldbox-modules/quick/commit/c28b0330920714bc67a50a04a142eaf2b87e664e))
++ __\*:__ perf: clone refresh queries on demand
+ ([b4c9483](https://github.com/coldbox-modules/quick/commit/b4c94832466cebfd6b1779825b98c7ca1573970d))
++ __\*:__ perf: reduce attribute state allocations
+ ([8db931d](https://github.com/coldbox-modules/quick/commit/8db931da466b0e23e98064e9fd09a02b4aef0c92))
++ __\*:__ refactor: remove soft delete closures (#356) ([5e2997c](https://github.com/coldbox-modules/quick/commit/5e2997cc200e1ef8cf5b68174fabd83aa66e2210))
++ __\*:__ feat: add model factories for testing (#355) ([fbcf968](https://github.com/coldbox-modules/quick/commit/fbcf9687d0048f0fc222a4dcb26513720b479fc8))
++ __\*:__ Add built-in soft delete support (#340) ([10989a0](https://github.com/coldbox-modules/quick/commit/10989a0bd2a161f9d20976bc67342c4589bf88e5))
++ __\*:__ feat: guard loaded entity keys from mutation (#349) ([d087d36](https://github.com/coldbox-modules/quick/commit/d087d365fa08113984d2b81d89e1be05ca204e6c))
++ __\*:__ feat: add entity replication (#350) ([4e9c35a](https://github.com/coldbox-modules/quick/commit/4e9c35a8e2c6701614fa2468365da5277d0ad853))
++ __\*:__ test: cover has-many deleteAll bindings (#352) ([76de7d2](https://github.com/coldbox-modules/quick/commit/76de7d22ae331e68a23bf17b44def02407d67fe0))
++ __\*:__ Refresh database-generated attributes on save (#338) ([c90d39c](https://github.com/coldbox-modules/quick/commit/c90d39c304cd8bf1ffb7894257a49d5e70e9024d))
++ __\*:__ Support upserts through Quick entity queries (#334) ([9e6a746](https://github.com/coldbox-modules/quick/commit/9e6a746b08773d1d0492d092e5e4c4f4df2a2733))
++ __\*:__ feat: return empty relationships for new entities (#304) ([5e2143c](https://github.com/coldbox-modules/quick/commit/5e2143ca1858acde23beccc0e2e4fad5a0e260d4))
++ __\*:__ fix: restore cross-engine CI compatibility (#354) ([8a3544f](https://github.com/coldbox-modules/quick/commit/8a3544ff1815014f78932352fd28914a2f85ee69))
++ __\*:__ feat: fill relationships on new entities (#303) ([219975a](https://github.com/coldbox-modules/quick/commit/219975ae9fb24e37a3150ba6a61e69fa69e715a7))
++ __\*:__ feat: support virtual attribute defaults (#113) (#328) ([85cad3a](https://github.com/coldbox-modules/quick/commit/85cad3ab9849b3266ee91a863804e258ac6336b5))
++ __\*:__ refactor: reduce internal closure usage
+ ([05b8a6f](https://github.com/coldbox-modules/quick/commit/05b8a6f7ab1554ea3b155ccef454c2b8980d5b36))
++ __\*:__ Touch only configured timestamp fields (#341) ([057c5b3](https://github.com/coldbox-modules/quick/commit/057c5b3f7427fe63ef48e110f4f06ab402325169))
++ __\*:__ Add selective and explicit eager-load clearing (#345) ([5bc7d7c](https://github.com/coldbox-modules/quick/commit/5bc7d7ce5ba181a660d81baed3d8303e2311208a))
++ __\*:__ Reject duplicate entity property names (#337) ([80a206b](https://github.com/coldbox-modules/quick/commit/80a206b13ab6ea7f07cf57e97bb82acd8bf84121))
++ __\*:__ Add isClean entity state checks (#344) ([833adf6](https://github.com/coldbox-modules/quick/commit/833adf6ef7cad429e478cfc6cbcb413762c79205))
++ __\*:__ Allow isDirty checks for one attribute (#343) ([3b21380](https://github.com/coldbox-modules/quick/commit/3b21380309690a7f89fbb61af2f828752883ba0f))
++ __\*:__ Add entity-aware chunk queries (#342) ([5ba2231](https://github.com/coldbox-modules/quick/commit/5ba2231d0184487b2c4ba2d1c0eba5a247c94c27))
++ __\*:__ Test scoped subselects with all (#336) ([92db1cb](https://github.com/coldbox-modules/quick/commit/92db1cb11d3426938054b524c3447d2448ea925a))
++ __\*:__ Add createAll for multiple entities (#335) ([9d605a3](https://github.com/coldbox-modules/quick/commit/9d605a34aa5d498d93cdce69b6556ffb4c3af844))
++ __\*:__ feat: create belongs-to-many related entities (#331) ([a808fa6](https://github.com/coldbox-modules/quick/commit/a808fa6687490c73dd695ab8bde5f4276be69717))
++ __\*:__ feat: add belongs-to-many pivot models (#353) ([56103b9](https://github.com/coldbox-modules/quick/commit/56103b988d909cda291d1df538b2ac4a772665b8))
++ __\*:__ feat: dispatch custom entity lifecycle events (#330) ([27a165e](https://github.com/coldbox-modules/quick/commit/27a165e8f562246b14dd67c512a6aae21d099218))
++ __\*:__ feat: add whereBelongsTo relationship constraints (#311) ([12fefa3](https://github.com/coldbox-modules/quick/commit/12fefa3b73c7db189a840b23260637866969fbee))
++ __\*:__ Fix eager-load key type coercion (#274) ([ada23eb](https://github.com/coldbox-modules/quick/commit/ada23ebabf98001b416671f8ac61ad84704095f0))
++ __\*:__ feat: fill non-persistent entity properties (#313) ([32c370b](https://github.com/coldbox-modules/quick/commit/32c370bd4154cee1d42b80e61ee0ad93fc889e13))
++ __\*:__ Add whereHasValue relationship shortcut (#318) ([99c5cfc](https://github.com/coldbox-modules/quick/commit/99c5cfc3cd9ec19cff0449a5fdae2e705906ad90))
++ __\*:__ fix: transform default relationships to mementos (#159) (#310) ([9cb2615](https://github.com/coldbox-modules/quick/commit/9cb261550834e376a36a9b76511ca0ac393e9668))
++ __\*:__ feat: add relationship loaded hooks (#305) ([2536ec2](https://github.com/coldbox-modules/quick/commit/2536ec26ee09514d9bec8cd496778a0c9350425d))
++ __\*:__ fix: recognize key columns mapped to aliases (#235) (#296) ([3b2f5c6](https://github.com/coldbox-modules/quick/commit/3b2f5c635d7d647ac060ab5f9dc1917a86d78825))
++ __\*:__ test: ignore non-persistent structs in dirty hashes (#146) (#316) ([62143b5](https://github.com/coldbox-modules/quick/commit/62143b5c4de002f962586bad36d593ea28e73265))
++ __\*:__ test: distinguish UUID and GUID key types (#80) (#332) ([e5c47eb](https://github.com/coldbox-modules/quick/commit/e5c47eb38ebd2b6bb3069e2d5c8b735003c79d3f))
++ __\*:__ test: cover updateOrCreate primary key aliases (#107) (#329) ([675e55c](https://github.com/coldbox-modules/quick/commit/675e55c9bd6db920406fd5a3b558a3c8cd23a212))
++ __\*:__ test: compare whereHas through constraints (#116) (#327) ([a89a72d](https://github.com/coldbox-modules/quick/commit/a89a72d0296d14d63138faee8f22372a66720657))
++ __\*:__ test: cover has one through initial constraints (#119) (#326) ([41c3b1f](https://github.com/coldbox-modules/quick/commit/41c3b1fff35f84b2e6434553f5e2f5ae170e91d5))
++ __\*:__ test: verify relationship fill does not persist (#120) (#325) ([4192148](https://github.com/coldbox-modules/quick/commit/41921486433db5da3e76fa4179826621c58febcb))
++ __\*:__ test: cover polymorphic eager loading key names (#122) (#324) ([830f99f](https://github.com/coldbox-modules/quick/commit/830f99f60732cb29e98f4012ce8fe1489a06baea))
++ __\*:__ Test eager loading on CBORM compatible entities (#322) ([4963e5a](https://github.com/coldbox-modules/quick/commit/4963e5adc07bf25b023af9833dd72684e69ebd9e))
++ __\*:__ test: preserve bindings while chunking scoped queries (#151) (#315) ([4ce97c3](https://github.com/coldbox-modules/quick/commit/4ce97c3b040cd02ac7f9ee4225071c48d6c83f32))
++ __\*:__ test: support full-null relationship coverage (#312) ([e37ac8d](https://github.com/coldbox-modules/quick/commit/e37ac8d894b7a12eb07eab290a1ffac5e1a4a310))
++ __\*:__ test: cover QuickCollection eager loading (#309) ([6c486ae](https://github.com/coldbox-modules/quick/commit/6c486aed7845a83b88af081e1ab01e21d0f866a6))
++ __\*:__ test: strengthen relationship fill coverage (#188) (#302) ([a460136](https://github.com/coldbox-modules/quick/commit/a460136f0930b53fd020bab9a88a1b441032fd0e))
++ __\*:__ test: cover date updates through query receivers (#228) (#298) ([cae103b](https://github.com/coldbox-modules/quick/commit/cae103b368782bf870ce685f3bd30802544b47d7))
++ __\*:__ test: cover discriminated cast mementos (#233) (#297) ([00dcdff](https://github.com/coldbox-modules/quick/commit/00dcdfff3ed323da12eae328e4eb03d6f3d37bac))
++ __\*:__ test: cover pagination ordered by subquery attributes (#236) (#295) ([633c922](https://github.com/coldbox-modules/quick/commit/633c9228389e994862ffac17e668ee828cb09800))
++ __\*:__ test: cover original data in entity preUpdate events (#239) (#293) ([1633021](https://github.com/coldbox-modules/quick/commit/16330213d68ff3ff0d0055cf35c8627270935373))
++ __\*:__ test: cover constrained hasManyThrough eager loading (#241) (#292) ([0d5f177](https://github.com/coldbox-modules/quick/commit/0d5f177ba2a6dc17e408f37120ab05b31293d5fe))
++ __\*:__ test: cover eager loaded relationship defaults (#242) (#291) ([4c088cc](https://github.com/coldbox-modules/quick/commit/4c088cce2bf94f9518072e5add17e12b0c700215))
++ __\*:__ test: cover simple QuickQB update values (#246) (#289) ([436aac4](https://github.com/coldbox-modules/quick/commit/436aac4305633f5435c9465f9bc6aec0fd70504a))
++ __\*:__ test: cover scoped compound-key withCount (#262) (#286) ([3a72541](https://github.com/coldbox-modules/quick/commit/3a72541f1288bb8515048f96ff9b34dc768122b7))
++ __\*:__ test: verify hasManyThrough subselect aliases (#264) (#285) ([d6a0ba9](https://github.com/coldbox-modules/quick/commit/d6a0ba94f106660b84c37d40b8cacf5832f1b200))
++ __\*:__ fix: pass query options through find (#347) ([024a7e7](https://github.com/coldbox-modules/quick/commit/024a7e7073c43d3bac19ae69fbe196535df894b9))
++ __\*:__ fix: qualify aliased selected attributes (#351) ([c55ce37](https://github.com/coldbox-modules/quick/commit/c55ce3741ee293653f71d0564c7e566150dc3db6))
++ __\*:__ fix: preserve entity keys in selected columns (#348) ([5967b7e](https://github.com/coldbox-modules/quick/commit/5967b7eaf477aa3a4cdad20bdb75c1a251466c85))
++ __\*:__ Skip hasMany queries with null composite keys (#323) ([ab790c1](https://github.com/coldbox-modules/quick/commit/ab790c14b112d4fd86d1c75268dbe714fae2b842))
++ __\*:__ fix: synchronize loaded has-many relationships (#301) ([e32eecd](https://github.com/coldbox-modules/quick/commit/e32eecd15cb62f5bba2de4d844eee0c064a513fb))
++ __\*:__ fix: reset cached queries with entity state (#300) ([2300482](https://github.com/coldbox-modules/quick/commit/23004824e46e40466362602870b1fb0b0f9e6a39))
++ __\*:__ fix: refresh scoped virtual projections (#299) ([8add4f9](https://github.com/coldbox-modules/quick/commit/8add4f9b5064fddd199bedf61c37156eedb5346a))
++ __\*:__ perf: cache qualified entity columns (#306) ([17fd8d6](https://github.com/coldbox-modules/quick/commit/17fd8d68e14ed27c3a20c179f7e2fe9e4166af7c))
++ __\*:__ Fix table qualification in whereIn subqueries (#288) ([b854e30](https://github.com/coldbox-modules/quick/commit/b854e305f97371a23ceeae72e8e450ee7e1f55e3))
++ __\*:__ fix: advance nested has relationship paths (#294) ([0545868](https://github.com/coldbox-modules/quick/commit/054586874760cd7de1ef0c8f624cee575ba4802b))
++ __\*:__ fix: eager load one-through relationships (#307) ([9fad424](https://github.com/coldbox-modules/quick/commit/9fad424019739c3937a3508d6a998bbc3714dec2))
++ __\*:__ fix: eager load belongsToThrough relationships (#254) (#287) ([9e8accd](https://github.com/coldbox-modules/quick/commit/9e8accd4c6ddfdb21deaca1e3f89a2acfbe76e8e))
++ __\*:__ Improve missing query scope errors (#317) ([1a8fe7c](https://github.com/coldbox-modules/quick/commit/1a8fe7c82b62621b09e33d9bb338781284aedf15))
++ __\*:__ Surface missing methods inside qb callbacks (#319) ([908a44e](https://github.com/coldbox-modules/quick/commit/908a44e17230c44a6d05c00ad61dd4049b532dcc))
++ __\*:__ test: cover QuickService get options (#266) (#284) ([205754a](https://github.com/coldbox-modules/quick/commit/205754a3a4373f68ba6f0c06d2d5949cf30152f5))
++ __\*:__ fix: restore qb 14 compatibility (#283) ([a3826be](https://github.com/coldbox-modules/quick/commit/a3826bec41f21aebb6cdb78a7d96b53fe5d6d6cb))
++ __\*:__ fix: exclude read-only attributes from persistence (#282) ([d771cca](https://github.com/coldbox-modules/quick/commit/d771ccaa5defcff508be10438fbb20c175d26de6))
++ __\*:__ fix: prioritize aliases over column names (#281) ([f732e77](https://github.com/coldbox-modules/quick/commit/f732e77a40a34d48c2beb84422ab0a1d8c2b88cd))
+
+
 # v12.0.12
 ## 21 Mar 2026 — 03:09:22 UTC
 

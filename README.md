@@ -27,6 +27,7 @@ You need the following configured before using Quick:
 
 -   Configure a default datasource in your CFML engine
 -   ColdBox 6+
+-   qb 14.x (installed as a dependency of Quick)
 -   Add a mapping for `quick` in your `Application.cfc`
 -   Configure your `BaseGrammar` in `config/ColdBox.cfc`
 

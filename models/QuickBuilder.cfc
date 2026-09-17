@@ -509,6 +509,7 @@ component accessors="true" transientCache="false" {
 			getEntity().guardAgainstReadOnlyAttributes( arguments.attributes );
 		}
 		arguments.attributes = appendUpdatedTimestamp( arguments.attributes );
+		clearOrdersForUnboundedMutation();
 		return variables.qb.update( prepareBulkMutationAttributes( arguments.attributes ) );
 	}
 
@@ -784,6 +785,7 @@ component accessors="true" transientCache="false" {
 			activateGlobalScopes();
 			return updateAll( { "#getEntity().retrieveSoftDeleteColumn()#" : now() } );
 		}
+		clearOrdersForUnboundedMutation();
 		return variables.qb.delete();
 	}
 
@@ -807,7 +809,20 @@ component accessors="true" transientCache="false" {
 	public struct function forceDeleteAll( array ids = [] ) {
 		getEntity().guardReadOnly();
 		addIdConstraints( arguments.ids );
+		clearOrdersForUnboundedMutation();
 		return variables.qb.delete();
+	}
+
+	/**
+	 * Ordering cannot affect an unbounded bulk mutation, but relationship queries
+	 * often carry a default order intended only for reads. Remove that irrelevant
+	 * state before compiling the mutation. Keep ordering when a limit or offset is
+	 * present because it can determine which rows are mutated.
+	 */
+	private void function clearOrdersForUnboundedMutation() {
+		if ( isNull( variables.qb.getLimitValue() ) && isNull( variables.qb.getOffsetValue() ) ) {
+			variables.qb.clearOrders();
+		}
 	}
 
 	/**

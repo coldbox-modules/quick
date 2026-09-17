@@ -1,5 +1,17 @@
 component extends="tests.resources.ModuleIntegrationSpec" {
 
+	function beforeAll() {
+		super.beforeAll();
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "DeleteSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "DeleteSpec" );
+		super.afterAll();
+	}
+
 	function run() {
 		describe( "Delete Spec", function() {
 			it( "can delete an entity", function() {
@@ -25,6 +37,18 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				} ).toThrow( type = "EntityNotFound" );
 			} );
 
+			it( "discards irrelevant ordering before an unbounded bulk delete", function() {
+				structDelete( request, "deleteSpecPreQBExecute" );
+
+				getInstance( "User" )
+					.whereUsername( "johndoe" )
+					.orderByDesc( "createdDate" )
+					.deleteAll();
+
+				expect( request.deleteSpecPreQBExecute ).toHaveLength( 1 );
+				expect( request.deleteSpecPreQBExecute[ 1 ].sql ).notToInclude( "ORDER BY" );
+			} );
+
 			it( "can delete multiple ids at once", function() {
 				getInstance( "User" ).deleteAll( [ 2 ] );
 				expect( getInstance( "User" ).count() ).toBe( 4 );
@@ -40,6 +64,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				elpete.purchases().deleteAll();
 			} );
 		} );
+	}
+
+	function preQBExecute(
+		event,
+		interceptData,
+		buffer,
+		rc,
+		prc
+	) {
+		param request.deleteSpecPreQBExecute = [];
+		request.deleteSpecPreQBExecute.append( duplicate( arguments.interceptData ) );
 	}
 
 }

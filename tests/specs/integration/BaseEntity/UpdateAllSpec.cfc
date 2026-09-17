@@ -1,5 +1,17 @@
 component extends="tests.resources.ModuleIntegrationSpec" {
 
+	function beforeAll() {
+		super.beforeAll();
+		controller
+			.getInterceptorService()
+			.registerInterceptor( interceptorObject = this, interceptorName = "UpdateAllSpec" );
+	}
+
+	function afterAll() {
+		controller.getInterceptorService().unregister( "UpdateAllSpec" );
+		super.afterAll();
+	}
+
 	function run() {
 		describe( "Mass Create Spec", function() {
 			it( "can mass update all entities that fit the query criteria", function() {
@@ -16,6 +28,27 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				expect( postA.getBody() ).toBe( "The new body" );
 				expect( postB.getBody() ).toBe( "The new body" );
+			} );
+
+			it( "discards irrelevant ordering before an unbounded bulk update", function() {
+				structDelete( request, "updateAllSpecPreQBExecute" );
+
+				getInstance( "Post" ).orderByDesc( "createdDate" ).updateAll( { "body" : "The new body" } );
+
+				expect( request.updateAllSpecPreQBExecute ).toHaveLength( 1 );
+				expect( request.updateAllSpecPreQBExecute[ 1 ].sql ).notToInclude( "ORDER BY" );
+			} );
+
+			it( "preserves ordering that selects rows for a limited bulk update", function() {
+				structDelete( request, "updateAllSpecPreQBExecute" );
+
+				getInstance( "Post" )
+					.orderByDesc( "createdDate" )
+					.limit( 1 )
+					.updateAll( { "body" : "The new body" } );
+
+				expect( request.updateAllSpecPreQBExecute ).toHaveLength( 1 );
+				expect( request.updateAllSpecPreQBExecute[ 1 ].sql ).toInclude( "ORDER BY" );
 			} );
 
 			it( "can update date values after switching to query results", function() {
@@ -44,6 +77,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( getInstance( "User" ).findOrFail( 1 ).getModifiedDate() ).notToBe( originalDate );
 			} );
 		} );
+	}
+
+	function preQBExecute(
+		event,
+		interceptData,
+		buffer,
+		rc,
+		prc
+	) {
+		param request.updateAllSpecPreQBExecute = [];
+		request.updateAllSpecPreQBExecute.append( duplicate( arguments.interceptData ) );
 	}
 
 }

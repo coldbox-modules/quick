@@ -61,6 +61,15 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.isNullAttribute( "updatedDate" ) ).toBeTrue();
 			} );
 
+			it( "preserves configured null values when conversion is disabled", function() {
+				var user = getInstance( "UserFill" );
+
+				user.fill( { "emptyString" : "" } );
+
+				expect( user.retrieveAttribute( "emptyString" ) ).toBe( "" );
+				expect( isNull( user.retrieveAttribute( "emptyString" ) ) ).toBeFalse();
+			} );
+
 			it( "can fill relationships on a new entity without persisting the aggregate", function() {
 				var user = getInstance( "User" ).fill( {
 					"posts" : [

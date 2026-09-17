@@ -849,7 +849,11 @@ component accessors="true" {
 				continue;
 			}
 			var value = arguments.attributes[ key ];
-			if ( hasAttribute( key ) && isNullValue( key, value ) ) {
+			if (
+				hasAttribute( key ) &&
+				canConvertToNull( key ) &&
+				isNullValue( key, value )
+			) {
 				clearAttribute( key, true );
 				continue;
 			}

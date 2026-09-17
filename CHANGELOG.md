@@ -1,3 +1,16 @@
+# v13.0.1
+## 17 Sep 2026 — 17:47:28 UTC
+
+### other
+
++ __\*:__ Apply cfformat changes
+ ([f9a0b4e](https://github.com/coldbox-modules/quick/commit/f9a0b4e4eb4deff550853032d4cf13ad7563daa7))
++ __\*:__ fix: ignore irrelevant ordering for bulk mutations
+ ([f7c76eb](https://github.com/coldbox-modules/quick/commit/f7c76ebc958a8d44bc06f253828192d241b35362))
++ __\*:__ fix: honor convertToNull when filling entities
+ ([5cd81e3](https://github.com/coldbox-modules/quick/commit/5cd81e36634dafe3e80fdad8e1703bb8330f0b05))
+
+
 # v13.0.0
 ## 15 Sep 2026 — 23:27:45 UTC
 

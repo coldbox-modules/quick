@@ -3,9 +3,9 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 	function run() {
 		describe( "Quick model factories", function() {
 			it( "makes unsaved entities from defaults and explicit overrides", function() {
-				var user = newFactoryManager( { suffix         : "make" } )
+				var user = newFactoryManager( { suffix          : "make" } )
 					.factory( "User" )
-					.make( { firstName         : "Overridden" } );
+					.make( { firstName          : "Overridden" } );
 
 				expect( user ).toBeInstanceOf( "User" );
 				expect( user.isLoaded() ).toBeFalse();
@@ -16,17 +16,17 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			} );
 
 			it( "combines counts, named states, sequences, and persisted Quick entities", function() {
-				var users = newFactoryManager( { suffix         : "sequence" } )
+				var users = newFactoryManager( { suffix          : "sequence" } )
 					.factory( "User" )
 					.count( 3 )
 					.administrator()
 					.state( function( attributes, context ) {
-						return { firstName         : "State #context.index#" };
+						return { firstName          : "State #context.index#" };
 					} )
 					.sequence( [
-						{ lastName         : "Sequence A" },
+						{ lastName          : "Sequence A" },
 						function( attributes, context ) {
-							return { lastName         : "Sequence #context.index#" };
+							return { lastName          : "Sequence #context.index#" };
 						}
 					] )
 					.create();
@@ -55,7 +55,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var created = [];
 				var user    = newFactoryManager()
 					.factory( "User" )
-					.state( { username         : "factory-callback" } )
+					.state( { username          : "factory-callback" } )
 					.afterMaking( function( entity, attributes ) {
 						arrayAppend( made, attributes.username );
 					} )

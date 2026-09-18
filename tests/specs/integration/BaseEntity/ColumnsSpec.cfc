@@ -100,7 +100,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "translates attributes to their column names", function() {
 				expect( function() {
-					getInstance( "Link" ).create( { url      : "https://example.com" } );
+					getInstance( "Link" ).create( { url       : "https://example.com" } );
 				} ).notToThrow();
 			} );
 

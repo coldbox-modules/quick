@@ -85,7 +85,6 @@ jobs:
       - name: Install dependencies
         run: |
           box install
-          git apply --unidiff-zero .github/patches/testbox-full-null.patch
           git apply --unidiff-zero .github/patches/mementifier-full-null.patch
           box config set modules.commandbox-dotenv.checkEnvPreServerStart=false
           box install ${{ matrix.coldbox }} --noSave

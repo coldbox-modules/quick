@@ -64,7 +64,18 @@ component
 			arguments.value = arguments.value.getQB();
 		}
 
-		if ( isSimpleValue( arguments.column ) && getEntity().hasAttribute( arguments.column ) ) {
+		if (
+			isSimpleValue( arguments.column ) &&
+			getEntity().hasAttribute( arguments.column ) &&
+			!(
+				!isNull( arguments.value ) && (
+					isClosure( arguments.value ) ||
+					isCustomFunction( arguments.value ) ||
+					getUtils().isBuilder( arguments.value ) ||
+					getUtils().isExpression( arguments.value )
+				)
+			)
+		) {
 			arguments.value = generateQueryParamStruct(
 				column           = arguments.column,
 				value            = isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,

@@ -367,7 +367,7 @@ component accessors="true" {
 		metadataInspection();
 		if ( !variables._loadShallow ) {
 			setUpMementifier();
-			fireEvent( "instanceReady", { entity      : this } );
+			fireEvent( "instanceReady", { entity : this } );
 		}
 	}
 
@@ -1172,7 +1172,7 @@ component accessors="true" {
 	 */
 	public any function markLoaded() {
 		variables._loaded = true;
-		fireEvent( "postLoad", { entity      : this } );
+		fireEvent( "postLoad", { entity : this } );
 		return this;
 	}
 
@@ -1968,7 +1968,7 @@ component accessors="true" {
 	 */
 	public any function delete() {
 		guardReadOnly();
-		fireEvent( "preDelete", { entity      : this } );
+		fireEvent( "preDelete", { entity : this } );
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot be deleted. " &
 			"Did you maybe mean to use `deleteAll`?"
@@ -1986,12 +1986,12 @@ component accessors="true" {
 			deleteQuery.updateAll( { "#column#" : deletedDate } );
 			assignAttribute( column, deletedDate );
 			assignOriginalAttributes( retrieveAttributesData() );
-			fireEvent( "postDelete", { entity      : this } );
+			fireEvent( "postDelete", { entity : this } );
 			return this;
 		}
 
 		forceDelete( fireEvents = false );
-		fireEvent( "postDelete", { entity      : this } );
+		fireEvent( "postDelete", { entity : this } );
 		return this;
 	}
 
@@ -2002,7 +2002,7 @@ component accessors="true" {
 		guardReadOnly();
 		guardAgainstNotLoaded( "This instance is not loaded so it cannot be force deleted." );
 		if ( arguments.fireEvents ) {
-			fireEvent( "preDelete", { entity      : this } );
+			fireEvent( "preDelete", { entity : this } );
 		}
 
 		var deleteQuery  = newQuery().withoutGlobalScope( "softDeletes" );
@@ -2026,7 +2026,7 @@ component accessors="true" {
 
 		variables._loaded = false;
 		if ( arguments.fireEvents ) {
-			fireEvent( "postDelete", { entity      : this } );
+			fireEvent( "postDelete", { entity : this } );
 		}
 		return this;
 	}
@@ -2474,7 +2474,7 @@ component accessors="true" {
 				invoke(
 					this,
 					relationshipMethod,
-					{ entity      : relatedEntity }
+					{ entity : relatedEntity }
 				);
 			}
 			fireEvent(
@@ -3364,6 +3364,9 @@ component accessors="true" {
 		if ( !isNull( columnValue ) ) {
 			return columnValue;
 		}
+		if ( isAttributeGetter( arguments.missingMethodName ) ) {
+			return;
+		}
 		var rg = tryRelationshipGetter( arguments.missingMethodName, arguments.missingMethodArguments );
 		if ( !isNull( rg ) ) {
 			return rg;
@@ -3423,17 +3426,22 @@ component accessors="true" {
 	 * @return             any
 	 */
 	private any function tryAttributeGetter( required string missingMethodName ) {
+		if ( isAttributeGetter( arguments.missingMethodName ) ) {
+			return retrieveAttribute( retrieveColumnForAlias( variables._str.slice( arguments.missingMethodName, 4 ) ) );
+		}
+		return;
+	}
+
+	/**
+	 * Identifies attribute getters independently of their possibly null values.
+	 */
+	private boolean function isAttributeGetter( required string missingMethodName ) {
 		if ( !variables._str.startsWith( arguments.missingMethodName, "get" ) ) {
-			return;
+			return false;
 		}
 
 		var columnName = variables._str.slice( arguments.missingMethodName, 4 );
-
-		if ( hasAttribute( columnName ) || variables._casts.keyExists( columnName ) ) {
-			return retrieveAttribute( retrieveColumnForAlias( columnName ) );
-		}
-
-		return;
+		return hasAttribute( columnName ) || variables._casts.keyExists( columnName );
 	}
 
 	/**
@@ -3985,7 +3993,7 @@ component accessors="true" {
 
 		param variables._queryOptions = {};
 		if ( variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists( "datasource" ) ) {
-			variables._queryOptions = { datasource      : variables._meta.originalMetadata.datasource };
+			variables._queryOptions = { datasource : variables._meta.originalMetadata.datasource };
 		}
 		variables._readonly             = variables._meta.readonly;
 		variables._softDeletes          = variables._meta.softDeletes;
@@ -4741,7 +4749,7 @@ component accessors="true" {
 			invoke(
 				this,
 				arguments.eventName,
-				{ eventData      : arguments.eventData }
+				{ eventData : arguments.eventData }
 			);
 		}
 		announceInterceptionPoint( "quick" & arguments.eventName, arguments.eventData );

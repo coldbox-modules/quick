@@ -132,7 +132,11 @@ component
 			arguments.input = arguments.input.getQB();
 		}
 
-		return super.fromSub( argumentCollection = arguments );
+		super.fromSub( argumentCollection = arguments );
+		// Keep derived-table metadata available on released qb versions that
+		// compile the alias into the FROM expression without recording it.
+		setAlias( arguments.alias );
+		return this;
 	}
 
 	/**

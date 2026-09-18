@@ -203,7 +203,7 @@ component accessors="true" transientCache="false" {
 		}
 
 		for ( var keyColumn in getEntity().keyColumns() ) {
-			var qualifiedKey = getEntity().qualifyColumn( keyColumn );
+			var qualifiedKey = qualifyColumnForQuery( keyColumn, variables.qb );
 			var hasKey       = false;
 			for ( var column in selectedColumns ) {
 				if ( column.type == "simple" && compareNoCase( column.value, qualifiedKey ) == 0 ) {
@@ -1344,17 +1344,9 @@ component accessors="true" transientCache="false" {
 			return result;
 		}
 
-		throw(
-			type    = "QuickMissingMethod",
-			message = arrayToList(
-				[
-					"Quick couldn't figure out what to do with [#arguments.missingMethodName#].",
-					"We tried checking columns, aliases, scopes, and relationships locally.",
-					"We also forwarded the call on to qb to see if it could do anything with it, but it couldn't."
-				],
-				" "
-			)
-		);
+		// A delegated method may succeed without returning a value (for example,
+		// qb's existence assertions). Missing methods already throw from qb.
+		return;
 	}
 
 	/**

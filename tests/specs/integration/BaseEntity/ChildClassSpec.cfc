@@ -378,7 +378,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				// comment id 4 = internal comment
 				var internalComment = getInstance( "Comment" )
 					.findOrFail( 4 )
-					.update( { reason           : "Super private, ya know?" } );
+					.update( { reason            : "Super private, ya know?" } );
 
 				var uInternalComment = getInstance( "Comment" ).findOrFail( 4 );
 
@@ -388,7 +388,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				// comment id 5 = picture comment
 				var pictureComment = getInstance( "Comment" )
 					.findOrFail( 5 )
-					.update( { filename           : "Lenna.jpeg" } );
+					.update( { filename            : "Lenna.jpeg" } );
 
 				var uPictureComment = getInstance( "Comment" ).findOrFail( 5 );
 

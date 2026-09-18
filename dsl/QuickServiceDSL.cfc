@@ -27,7 +27,7 @@ component {
 		return variables.injector.getInstance(
 			name          = "BaseService@quick",
 			initArguments = {
-				entity        : variables.injector.getInstance( listRest( arguments.definition.dsl, ":" ) )
+				entity         : variables.injector.getInstance( listRest( arguments.definition.dsl, ":" ) )
 			}
 		);
 	}

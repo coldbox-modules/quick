@@ -1521,6 +1521,9 @@ component accessors="true" {
 		}
 		freshQB.addNestedWhereQuery( freshConstraints );
 		var freshData = freshEntity.first();
+		if ( isStruct( freshData ) && structIsEmpty( freshData ) ) {
+			return javacast( "null", "" );
+		}
 		if ( !isStruct( freshData ) || structKeyExists( freshData, "isQuickEntity" ) ) {
 			return freshData;
 		}

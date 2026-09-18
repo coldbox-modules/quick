@@ -66,6 +66,12 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( freshUser.getLatestPostId() ).toBe( 523526 );
 			} );
 
+			it( "does not bypass global restrictions when refreshing a projected entity", function() {
+				var user = getInstance( "Admin" ).whereUsername( "elpete" ).firstOrFail();
+				user.update( { "type": "limited" } );
+				expect( user.fresh() ).toBeNull();
+			} );
+
 			it( "returns global scoped virtual columns with the memento by default", function() {
 				var user = getInstance( "UserWithGlobalScope" ).findOrFail( 1 ).getMemento();
 				expect( user ).toHaveKey( "countryName" );

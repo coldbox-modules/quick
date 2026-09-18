@@ -68,7 +68,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "does not bypass global restrictions when refreshing a projected entity", function() {
 				var user = getInstance( "Admin" ).whereUsername( "elpete" ).firstOrFail();
-				user.update( { "type": "limited" } );
+				user.update( { "type" : "limited" } );
 				expect( user.fresh() ).toBeNull();
 			} );
 

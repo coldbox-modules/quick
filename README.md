@@ -123,6 +123,40 @@ component extends="quick.models.BaseEntity" {
 
 Query caching stores database results, not live Quick entities or loaded relationships. Cache lifetime and invalidation are managed by the CFML engine, so use short lifetimes for data that Quick or another process may update. For application-specific invalidation or distributed caching, cache entity mementos in CacheBox at the service layer and rehydrate them through Quick's public APIs.
 
+### Passing a Quick query to qb
+
+`asQuery()` changes how Quick returns results; it still returns a QuickBuilder. When a plain qb query needs a subquery built with Quick, pass the underlying qb builder using `getQB()` or `retrieveQuery()`:
+
+```javascript
+var userIds = getInstance( "User" ).where( "active", true ).select( "id" );
+var posts = getInstance( "QueryBuilder@qb" )
+    .from( "posts" )
+    .whereIn( "user_id", userIds.getQB() )
+    .get();
+```
+
+Keep Quick-specific scopes and column selection on the Quick builder before crossing this boundary. `asQuery()` is not a replacement for `retrieveQuery()`.
+
+### Creating related entities
+
+`belongsToMany().create( attributes, pivotAttributes )` saves the related entity, attaches its pivot row, and returns the saved entity. Supply additional pivot values in the second argument. Configure a pivot model with `using()` when reading pivot attributes through a model with casts or behavior.
+
+A through relationship can traverse multiple intermediate entities and relationship types. Creating a target does not identify which intermediate records to reuse or create. Persist the target and intermediate associations explicitly through the direct relationship methods, using a transaction when those writes must succeed together. Quick does not infer and cascade-create an arbitrary through path.
+
+### Optional parallel eager loading
+
+Independent eager-load branches can run concurrently on Lucee and BoxLang:
+
+```javascript
+var posts = getInstance( "Post" )
+    .with( [ "author", "tags" ], true )
+    .get();
+```
+
+The default is sequential. Adobe ColdFusion, a single top-level relationship, and active database transactions use the sequential path. Parallel workers retrieve and hydrate separate branches; matching the results onto the parent entities happens on the calling thread. Worker errors and timeouts propagate to the caller.
+
+Quick's module settings include `parallelEagerLoadingMaxThreads` (default `4`), `parallelEagerLoadingTimeout` (default `60000` milliseconds per batch), and `parallelEagerLoadingExecutor` (the name of an optional application-provided bounded ColdBox executor). Quick creates and manages a fixed executor when none is supplied. Account for database connection capacity when increasing concurrency.
+
 ### Testing with model factories
 
 Quick includes Laravel-inspired model factories under `quick.resources.testing`. Define application factories outside of your production model code:

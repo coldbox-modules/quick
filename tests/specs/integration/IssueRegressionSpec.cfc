@@ -2,6 +2,29 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Issue regressions", function() {
+			it( "passes a Quick query to qb using getQB (issue 226)", function() {
+				var users = getInstance( "User" ).whereId( 1 ).select( "id" );
+				var rows  = getInstance( "QueryBuilder@qb" )
+					.from( "users" )
+					.whereIn( "id", users.getQB() )
+					.get();
+				expect( rows ).toHaveLength( 1 );
+				expect( rows[ 1 ].id ).toBe( 1 );
+			} );
+
+			it( "retains retrieveQuery for qb subquery interoperability (issue 226)", function() {
+				var users = getInstance( "User" )
+					.whereId( 1 )
+					.asQuery()
+					.reselect( "id" );
+				var rows = getInstance( "QueryBuilder@qb" )
+					.from( "users" )
+					.whereIn( "id", users.retrieveQuery() )
+					.get();
+				expect( rows ).toHaveLength( 1 );
+				expect( rows[ 1 ].id ).toBe( 1 );
+			} );
+
 			it( "returns null from a known virtual attribute getter (issue 363)", function() {
 				var user = getInstance( "User" ).appendVirtualAttribute( "missingValue" );
 				user.clearAttribute( "missingValue", true );

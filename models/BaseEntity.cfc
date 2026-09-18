@@ -367,7 +367,7 @@ component accessors="true" {
 		metadataInspection();
 		if ( !variables._loadShallow ) {
 			setUpMementifier();
-			fireEvent( "instanceReady", { entity  : this } );
+			fireEvent( "instanceReady", { entity   : this } );
 		}
 	}
 
@@ -1172,7 +1172,7 @@ component accessors="true" {
 	 */
 	public any function markLoaded() {
 		variables._loaded = true;
-		fireEvent( "postLoad", { entity  : this } );
+		fireEvent( "postLoad", { entity   : this } );
 		return this;
 	}
 
@@ -1968,7 +1968,7 @@ component accessors="true" {
 	 */
 	public any function delete() {
 		guardReadOnly();
-		fireEvent( "preDelete", { entity  : this } );
+		fireEvent( "preDelete", { entity   : this } );
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot be deleted. " &
 			"Did you maybe mean to use `deleteAll`?"
@@ -1986,12 +1986,12 @@ component accessors="true" {
 			deleteQuery.updateAll( { "#column#" : deletedDate } );
 			assignAttribute( column, deletedDate );
 			assignOriginalAttributes( retrieveAttributesData() );
-			fireEvent( "postDelete", { entity  : this } );
+			fireEvent( "postDelete", { entity   : this } );
 			return this;
 		}
 
 		forceDelete( fireEvents = false );
-		fireEvent( "postDelete", { entity  : this } );
+		fireEvent( "postDelete", { entity   : this } );
 		return this;
 	}
 
@@ -2002,7 +2002,7 @@ component accessors="true" {
 		guardReadOnly();
 		guardAgainstNotLoaded( "This instance is not loaded so it cannot be force deleted." );
 		if ( arguments.fireEvents ) {
-			fireEvent( "preDelete", { entity  : this } );
+			fireEvent( "preDelete", { entity   : this } );
 		}
 
 		var deleteQuery  = newQuery().withoutGlobalScope( "softDeletes" );
@@ -2026,7 +2026,7 @@ component accessors="true" {
 
 		variables._loaded = false;
 		if ( arguments.fireEvents ) {
-			fireEvent( "postDelete", { entity  : this } );
+			fireEvent( "postDelete", { entity   : this } );
 		}
 		return this;
 	}
@@ -2474,7 +2474,7 @@ component accessors="true" {
 				invoke(
 					this,
 					relationshipMethod,
-					{ entity  : relatedEntity }
+					{ entity   : relatedEntity }
 				);
 			}
 			fireEvent(
@@ -3985,7 +3985,7 @@ component accessors="true" {
 
 		param variables._queryOptions = {};
 		if ( variables._queryOptions.isEmpty() && variables._meta.originalMetadata.keyExists( "datasource" ) ) {
-			variables._queryOptions = { datasource  : variables._meta.originalMetadata.datasource };
+			variables._queryOptions = { datasource   : variables._meta.originalMetadata.datasource };
 		}
 		variables._readonly             = variables._meta.readonly;
 		variables._softDeletes          = variables._meta.softDeletes;
@@ -4741,7 +4741,7 @@ component accessors="true" {
 			invoke(
 				this,
 				arguments.eventName,
-				{ eventData  : arguments.eventData }
+				{ eventData   : arguments.eventData }
 			);
 		}
 		announceInterceptionPoint( "quick" & arguments.eventName, arguments.eventData );

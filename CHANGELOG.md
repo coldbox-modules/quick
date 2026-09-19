@@ -1,3 +1,101 @@
+# v13.0.2
+## 19 Sep 2026 — 01:42:03 UTC
+
+### other
+
++ __\*:__ Merge next into main
+ ([23d0e4e](https://github.com/coldbox-modules/quick/commit/23d0e4e88a2c452a56d5bac09c365deb5e8bc163))
++ __\*:__ Apply cfformat changes
+ ([d9a89bd](https://github.com/coldbox-modules/quick/commit/d9a89bd5232acb9c7504fae121971c9bccade78a))
++ __\*:__ fix: require qb 14.0.2
+ ([fae22b3](https://github.com/coldbox-modules/quick/commit/fae22b35f8dc4e3d78192a0c3ade0561bf9a2971))
++ __\*:__ Apply cfformat changes
+ ([27ff030](https://github.com/coldbox-modules/quick/commit/27ff0306efc22e11eaff773f23dd1bcc26ca9ba0))
++ __\*:__ Apply cfformat changes
+ ([fa442b1](https://github.com/coldbox-modules/quick/commit/fa442b136e506938a6ea4b1fe6f140442a01307a))
++ __\*:__ docs: clarify query interop and relationship persistence boundaries
+ ([21dbb4c](https://github.com/coldbox-modules/quick/commit/21dbb4c17da2a92fd900213765ce23629588b7ef))
++ __\*:__ Apply cfformat changes
+ ([cde9cf4](https://github.com/coldbox-modules/quick/commit/cde9cf4aa7e90973d56d910a9e6c69e1c17db661))
++ __\*:__ Use cross-engine array membership in tests
+ ([018953f](https://github.com/coldbox-modules/quick/commit/018953f911d7c6e8ceeee42af7992d17909bd6b7))
++ __\*:__ Restore application mappings in Lucee workers
+ ([07bf73f](https://github.com/coldbox-modules/quick/commit/07bf73f6173fc8a25c9b4cf0382231e858b33fc4))
++ __\*:__ Resolve worker query clones through WireBox
+ ([cdd019d](https://github.com/coldbox-modules/quick/commit/cdd019d858b3f528671a0d424aa3482d71998359))
++ __\*:__ Expand parallel eager loading hydration
+ ([4e165bd](https://github.com/coldbox-modules/quick/commit/4e165bdd175700f4692bc0bbf0ec5a52b76b7586))
++ __\*:__ Isolate BoxLang parallel worker requests
+ ([e27d867](https://github.com/coldbox-modules/quick/commit/e27d867b42fd80a4ebfacaaeed68c7fbf91b80d4))
++ __\*:__ Track parallel worker contexts explicitly
+ ([f0e73f8](https://github.com/coldbox-modules/quick/commit/f0e73f8aa10eaf43b0e6485ced6f070b9c42a656))
++ __\*:__ Use ColdBox executor for parallel eager loading
+ ([0313d42](https://github.com/coldbox-modules/quick/commit/0313d4218f42da6c1a39ca3bb3687b2001ff8e4a))
++ __\*:__ avoid Lucee test bytecode verifier failure
+ ([4e17ffb](https://github.com/coldbox-modules/quick/commit/4e17ffbe0d02431edac8d940e6002ae44bf08bdd))
++ __\*:__ split eager loading test registrations
+ ([cb3049c](https://github.com/coldbox-modules/quick/commit/cb3049c79c06f4b3b89d559cd009be38832a8105))
++ __\*:__ fix parallel eager loading isolation
+ ([7a2c347](https://github.com/coldbox-modules/quick/commit/7a2c34795513e256f0aee8b699e7a1d540c3c71e))
++ __\*:__ fix: avoid BoxLang thread scope collision
+ ([e062805](https://github.com/coldbox-modules/quick/commit/e062805f9fd838d53b622162399225d35654506d))
++ __\*:__ fix: disambiguate serialized attribute state
+ ([839583b](https://github.com/coldbox-modules/quick/commit/839583b7ac48f94b4de31ca2420ded77e818d707))
++ __\*:__ fix: use portable thread attribute resolution
+ ([001e13e](https://github.com/coldbox-modules/quick/commit/001e13e49bdb2249f787cd7c0a42d6ebfdba1bf4))
++ __\*:__ test: allow concurrent worker failure ordering
+ ([20bf778](https://github.com/coldbox-modules/quick/commit/20bf7784beeed42ec6de5b58cf920c7802366734))
++ __\*:__ fix: preserve parallel eager loading semantics
+ ([d8c38b6](https://github.com/coldbox-modules/quick/commit/d8c38b6a2a281c990f9142f116788c3e81cbf72d))
++ __\*:__ fix: hydrate parallel entities inside workers
+ ([38499d0](https://github.com/coldbox-modules/quick/commit/38499d0eb27cbf403253c9b50a1feaa452a50094))
++ __\*:__ fix: hydrate loaded entities for parallel workers
+ ([541e33e](https://github.com/coldbox-modules/quick/commit/541e33e4653a9a173f731e076a2171cfb51d374f))
++ __\*:__ fix: tag null thread values before assignment
+ ([ec7801f](https://github.com/coldbox-modules/quick/commit/ec7801f52d831aa2ce7f997e7dc7ab92bc567952))
++ __\*:__ fix: transfer parallel eager loads as entity state
+ ([cc23c28](https://github.com/coldbox-modules/quick/commit/cc23c28e6171a0cd4dd06e43b5ed9f05798cb938))
++ __\*:__ fix: retain eager-loaded CFCs in their worker state
+ ([4c9a4ee](https://github.com/coldbox-modules/quick/commit/4c9a4ee3dbb8f7858bbcc660592a5ce667ce1a61))
++ __\*:__ fix: detect parallel support on BoxLang
+ ([ca0122e](https://github.com/coldbox-modules/quick/commit/ca0122e61704e4049edf512aa2cca96e1ca59a34))
++ __\*:__ fix: transfer eager relationship values directly
+ ([4119599](https://github.com/coldbox-modules/quick/commit/41195998aa2f9277d132a4fb0ddeea8a36aa3dd2))
++ __\*:__ fix: preserve parallel eager-load results across threads
+ ([991849f](https://github.com/coldbox-modules/quick/commit/991849feba8834ceb9ce15e13752513c9b50ca62))
++ __\*:__ fix: preserve Lucee thread merge scope
+ ([c840e82](https://github.com/coldbox-modules/quick/commit/c840e8220cb2ef5712de6c032dbbf2c8d82d0728))
++ __\*:__ fix: isolate parallel merge loop variables
+ ([5eabe8a](https://github.com/coldbox-modules/quick/commit/5eabe8a0bc9ec708670417f33cabaad207779662))
++ __\*:__ refactor: avoid internal closures
+ ([f147b0b](https://github.com/coldbox-modules/quick/commit/f147b0b7cea5c12dd4cdac41de41f1679b62ce09))
++ __\*:__ fix: preserve engine thread transfer semantics
+ ([3f02055](https://github.com/coldbox-modules/quick/commit/3f0205557645bc3031427429fcd08ca333c4afdb))
++ __\*:__ fix: make parallel eager loading cross-engine safe
+ ([bb15413](https://github.com/coldbox-modules/quick/commit/bb154134dcbff563760ad21589784a9b3357c1d8))
++ __\*:__ Add optional parallel eager loading ([c11ef6b](https://github.com/coldbox-modules/quick/commit/c11ef6b8909b8d8c40872d2c4e869df7aa9969ae))
++ __\*:__ fix: support derived table aliases with released qb 14.0.1
+ ([e324280](https://github.com/coldbox-modules/quick/commit/e324280019a7e8824cb25703b5b1b08b5247797d))
++ __\*:__ fix: preserve null getters and SQL-valued where arguments
+ ([e466373](https://github.com/coldbox-modules/quick/commit/e46637333bb03709fcf83910bccd35f6743c5c35))
++ __\*:__ Apply cfformat changes
+ ([ddb7edd](https://github.com/coldbox-modules/quick/commit/ddb7eddc5da02d3b1bdd92e612059e5788243362))
++ __\*:__ Apply cfformat changes
+ ([c805881](https://github.com/coldbox-modules/quick/commit/c80588193bfeea43c701bd5e168611683fc0fe96))
++ __\*:__ Apply cfformat changes
+ ([164e946](https://github.com/coldbox-modules/quick/commit/164e946ffd6f656f462f6761630dd5df6727f1b8))
++ __\*:__ ci: use released TestBox null-safety fixes
+ ([0b8c206](https://github.com/coldbox-modules/quick/commit/0b8c2068afda4677ca5ce247499bd08879526c4b))
++ __\*:__ Apply cfformat changes
+ ([b953704](https://github.com/coldbox-modules/quick/commit/b95370426ba91ed870e153c9e4aa180a875b7187))
++ __\*:__ test: retain global restrictions for refreshed projections
+ ([d43b069](https://github.com/coldbox-modules/quick/commit/d43b069ce8cd0ce6a99c5d0bea2252777eeaf095))
++ __\*:__ Apply cfformat changes
+ ([c213f2f](https://github.com/coldbox-modules/quick/commit/c213f2f0d6cab64f8a97ce183627bf8d50357471))
++ __\*:__ fix: preserve query identity and delegated void results
+ ([a0b6fd6](https://github.com/coldbox-modules/quick/commit/a0b6fd62c194780b48889fe97a1c27297354e4ba))
+
+
 # v13.0.1
 ## 17 Sep 2026 — 17:47:28 UTC
 

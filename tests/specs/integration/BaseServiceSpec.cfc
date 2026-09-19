@@ -19,7 +19,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 					var user    = getInstance( "User" );
 					var service = getInstance(
 						name          = "BaseService@quick",
-						initArguments = { entity            : user }
+						initArguments = { entity             : user }
 					);
 					expect( service.entityName() ).toBe( "User" );
 				} );
@@ -27,7 +27,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				it( "can be instantiated with a wirebox mapping", function() {
 					var service = getInstance(
 						name          = "BaseService@quick",
-						initArguments = { entity            : "User" }
+						initArguments = { entity             : "User" }
 					);
 					expect( service.entityName() ).toBe( "User" );
 				} );
@@ -68,7 +68,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 					var users = variables.service
 						.whereNotNull( "created_date" )
-						.get( options = { datasource            : "quick" } );
+						.get( options = { datasource             : "quick" } );
 
 					expect( users ).toBeArray();
 					expect( request.baseServiceSpecPreQBExecute ).toHaveLength( 1 );

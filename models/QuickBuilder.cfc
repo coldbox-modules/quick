@@ -135,7 +135,7 @@ component accessors="true" transientCache="false" {
 		param variables._parallelEagerLoadingMaxThreads = 4;
 		param variables._parallelEagerLoadingTimeout    = 60000;
 		param variables._preventLazyLoading             = false;
-		variables._withoutAutomaticTimestamps = false;
+		variables._withoutAutomaticTimestamps           = false;
 		if ( !variables.keyExists( "_lazyLoadingViolationCallback" ) || isNull( variables._lazyLoadingViolationCallback ) ) {
 			variables._lazyLoadingViolationCallback = ( entity, relationName ) => {
 				throw(

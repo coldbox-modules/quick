@@ -15,7 +15,7 @@ component {
 			"parallelEagerLoadingTimeout"    : 60000,
 			"preventDuplicateJoins"          : true,
 			"preventLazyLoading"             : false,
-			"automaticTimestamps" : true,
+			"automaticTimestamps"            : true,
 			"refreshOnSaveFallback"          : true,
 			"lazyLoadingViolationCallback"   : ( entity, relationName ) => {
 				throw(

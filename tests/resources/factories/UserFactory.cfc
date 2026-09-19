@@ -17,11 +17,11 @@ component extends="quick.resources.testing.Factory" {
 	}
 
 	any function administrator() {
-		return state( { type            : "admin" } );
+		return state( { type             : "admin" } );
 	}
 
 	any function wired() {
-		return state( { firstName            : isObject( variables.wirebox ) ? "Injected" : "Missing" } );
+		return state( { firstName             : isObject( variables.wirebox ) ? "Injected" : "Missing" } );
 	}
 
 }

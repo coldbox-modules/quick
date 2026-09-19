@@ -55,6 +55,23 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( user.getCountryName() ).toBe( "United States" );
 			} );
 
+			it( "retains global restrictions when replacing stale refresh filters", function() {
+				var user = getInstance( "Admin" ).whereUsername( "elpete" ).firstOrFail();
+				user.update( { "username" : "changed_admin" } );
+				user.refresh();
+				expect( user.getUsername() ).toBe( "changed_admin" );
+				expect( user.getType() ).toBe( "admin" );
+				var freshUser = user.fresh();
+				expect( freshUser.getId() ).toBe( 1 );
+				expect( freshUser.getLatestPostId() ).toBe( 523526 );
+			} );
+
+			it( "does not bypass global restrictions when refreshing a projected entity", function() {
+				var user = getInstance( "Admin" ).whereUsername( "elpete" ).firstOrFail();
+				user.update( { "type" : "limited" } );
+				expect( user.fresh() ).toBeNull();
+			} );
+
 			it( "returns global scoped virtual columns with the memento by default", function() {
 				var user = getInstance( "UserWithGlobalScope" ).findOrFail( 1 ).getMemento();
 				expect( user ).toHaveKey( "countryName" );

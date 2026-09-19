@@ -45,10 +45,19 @@
 			viewCaching				= false
 		};
 
+		executors = {
+			"quick-test-parallel-eager-loading" = {
+				"type" = "fixed",
+				"threads" = 3,
+				"loadAppContext" = true
+			}
+		};
+
 		moduleSettings = {
 			"quick" = {
-				"defaultGrammar" = "MySQLGrammar@qb"
-            },
+				"defaultGrammar" = "MySQLGrammar@qb",
+				"parallelEagerLoadingExecutor" = "quick-test-parallel-eager-loading"
+			},
 			"mementifier" = {
 				"convertToTimezone" = "UTC"
 			}

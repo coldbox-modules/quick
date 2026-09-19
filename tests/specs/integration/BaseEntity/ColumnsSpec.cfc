@@ -100,7 +100,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 			it( "translates attributes to their column names", function() {
 				expect( function() {
-					getInstance( "Link" ).create( { url    : "https://example.com" } );
+					getInstance( "Link" ).create( { url           : "https://example.com" } );
 				} ).notToThrow();
 			} );
 
@@ -122,6 +122,31 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				expect( user.getId() ).toBe( 1 );
 				expect( user.getUsername() ).toBe( "elpete" );
+			} );
+
+			it( "qualifies automatically selected keys with a derived table alias", function() {
+				var users = getInstance( "User" )
+					.newQuery()
+					.fromSub( "selected_users", getInstance( "User" ).select( [ "id", "username" ] ) )
+					.reselect( "selected_users.username" )
+					.orderBy( "selected_users.id" )
+					.get();
+				expect( users[ 1 ].getId() ).toBe( 1 );
+				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
+			} );
+
+			it( "does not add the original table key when a derived key is already selected", function() {
+				var users = getInstance( "User" )
+					.newQuery()
+					.fromSub( "selected_users", getInstance( "User" ).select( [ "id", "username" ] ) )
+					.reselect( [
+						"selected_users.id",
+						"selected_users.username"
+					] )
+					.orderBy( "selected_users.id" )
+					.get();
+				expect( users[ 1 ].getId() ).toBe( 1 );
+				expect( users[ 1 ].getUsername() ).toBe( "elpete" );
 			} );
 
 			it( "preserves every composite key column when selecting specific columns", function() {

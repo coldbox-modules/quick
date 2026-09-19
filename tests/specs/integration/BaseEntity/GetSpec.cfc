@@ -22,7 +22,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			it( "passes query options when finding an entity by primary key", function() {
 				structDelete( request, "baseEntityGetSpecPreQBExecute" );
 
-				var user                     = getInstance( "User" ).find( 1, { datasource    : "quick" } );
+				var user                     = getInstance( "User" ).find( 1, { datasource           : "quick" } );
 				var executionsWithDatasource = request.baseEntityGetSpecPreQBExecute.filter( function( execution ) {
 					return execution.options.keyExists( "datasource" );
 				} );
@@ -78,6 +78,32 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 				user.refresh();
 				expect( user.getLatestPostId() ).toBe( 1245 );
+			} );
+
+			it( "refreshes a scoped projection after the original filter value changes", function() {
+				var user = getInstance( "User" )
+					.withFullName()
+					.whereUsername( "elpete" )
+					.firstOrFail();
+				user.update( { "username" : "changed" } );
+				user.refresh();
+				expect( user.isLoaded() ).toBeTrue();
+				expect( user.getId() ).toBe( 1 );
+				expect( user.getUsername() ).toBe( "changed" );
+				expect( user.getFullName() ).toBe( "Eric Peterson" );
+			} );
+
+			it( "retrieves a fresh projected entity after the original filter value changes", function() {
+				var user = getInstance( "User" )
+					.withFullName()
+					.whereUsername( "elpete" )
+					.firstOrFail();
+				user.update( { "username" : "changed" } );
+				var freshUser = user.fresh();
+				expect( freshUser ).notToBeNull();
+				expect( freshUser.getId() ).toBe( 1 );
+				expect( freshUser.getUsername() ).toBe( "changed" );
+				expect( freshUser.getFullName() ).toBe( "Eric Peterson" );
 			} );
 
 			it( "can get a fresh instance from the database", function() {
@@ -140,6 +166,28 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 							return "No #entity.entityName()# found with that criteria";
 						} );
 				} ).toThrow( type = "EntityNotFound", regex = "No User found with that criteria" );
+			} );
+
+			it( "forwards successful void qb assertions without treating them as missing methods", function() {
+				expect( function() {
+					getInstance( "User" ).whereUsername( "doesnt-exist" ).expectNotToExist();
+					getInstance( "User" ).whereUsername( "johndoe" ).expectToExist();
+				} ).notToThrow();
+			} );
+
+			it( "preserves failures from forwarded qb assertions", function() {
+				expect( function() {
+					getInstance( "User" ).whereUsername( "johndoe" ).expectNotToExist();
+				} ).toThrow( "TestBox.AssertionFailed" );
+				expect( function() {
+					getInstance( "User" ).whereUsername( "doesnt-exist" ).expectToExist();
+				} ).toThrow( "TestBox.AssertionFailed" );
+			} );
+
+			it( "still rejects a method that qb does not provide", function() {
+				expect( function() {
+					getInstance( "User" ).methodThatDoesNotExist();
+				} ).toThrow( "QuickMissingMethod" );
 			} );
 
 			it( "can return if an entity exists", function() {

@@ -18,6 +18,9 @@ component extends="User" table="users"  accessors="true" {
     }
 
     function applyGlobalScopes( qb ) {
+        if ( request.keyExists( "trackParallelScopeThreads" ) ) {
+            request.parallelScopeThreads.append( createObject( "java", "java.lang.Thread" ).currentThread().getName() );
+        }
         qb.withCountryName();
         qb.withTeamName();
         qb.withBoundCountryName();

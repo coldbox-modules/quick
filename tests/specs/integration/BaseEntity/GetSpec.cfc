@@ -22,7 +22,7 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			it( "passes query options when finding an entity by primary key", function() {
 				structDelete( request, "baseEntityGetSpecPreQBExecute" );
 
-				var user                     = getInstance( "User" ).find( 1, { datasource          : "quick" } );
+				var user                     = getInstance( "User" ).find( 1, { datasource           : "quick" } );
 				var executionsWithDatasource = request.baseEntityGetSpecPreQBExecute.filter( function( execution ) {
 					return execution.options.keyExists( "datasource" );
 				} );

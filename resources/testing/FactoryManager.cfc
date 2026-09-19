@@ -27,11 +27,11 @@ component {
 			variables.factories[ arguments.name ] = variables.wirebox.getInstance(
 				name          = "#variables.factoryPath#.#arguments.name#Factory",
 				initArguments = {
-					entityProvider             : variables.wirebox.getInstance(
+					entityProvider              : variables.wirebox.getInstance(
 						dsl          = "provider:#arguments.name#",
 						targetObject = this
 					),
-					context             : variables.context
+					context              : variables.context
 				}
 			);
 		}

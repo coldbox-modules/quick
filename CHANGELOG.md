@@ -1,3 +1,12 @@
+# v13.0.3
+## 21 Sep 2026 — 03:32:08 UTC
+
+### other
+
++ __\*:__ ci: contain experimental cron failures
+ ([a752824](https://github.com/coldbox-modules/quick/commit/a7528249c0b1c22f68a02f817732a356b5a6b9d1))
+
+
 # v13.0.2
 ## 19 Sep 2026 — 01:42:03 UTC
 

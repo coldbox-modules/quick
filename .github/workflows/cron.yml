@@ -1,6 +1,7 @@
 name: Cron
 
 on:
+  workflow_dispatch:
   schedule:
     - cron:  0 0 * * 1
 
@@ -8,6 +9,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     name: Tests
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
@@ -113,5 +115,4 @@ jobs:
           DB_NAME: quick
           DB_USER: quick
           DB_PASSWORD: quick
-        continue-on-error: ${{ matrix.experimental }}
         run: box testbox run

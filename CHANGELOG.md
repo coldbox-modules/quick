@@ -1,3 +1,12 @@
+# v13.0.4
+## 25 Sep 2026 — 19:25:07 UTC
+
+### other
+
++ __\*:__ ci: apply full-null compatibility patches only to ColdBox 7 ([b1504f0](https://github.com/coldbox-modules/quick/commit/b1504f0fb809c94f19dbea6e8179377cbcfeb4c9))
++ __\*:__ fix: disable parallel eager loading infrastructure by default ([bc80a56](https://github.com/coldbox-modules/quick/commit/bc80a567677d553c62a2d924b1c2d4e0a7d7476b))
+
+
 # v13.0.3
 ## 21 Sep 2026 — 03:32:08 UTC
 

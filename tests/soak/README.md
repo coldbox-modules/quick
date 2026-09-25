@@ -24,7 +24,7 @@ bounded drain add time. It cannot qualify a release or establish a CI baseline.
 The default profile declares the full 60-minute schedule and provisional CI
 budgets. Its rate remains uncalibrated. Without `--development`, the controller
 can collect that schedule but **always returns an inconclusive result** until
-complete resource/memory analysis and an accepted baseline are implemented.
+CI calibration, overload attribution, and accepted-baseline identity checks are complete.
 Do not connect it to publication yet.
 
 Optional inputs: `--output NEW_DIRECTORY`, `--candidate FULL_SHA`, and
@@ -84,8 +84,12 @@ The manual GitHub Actions entry point is **Soak diagnostics (no publication)**
 in `.github/workflows/soak-diagnostics.yml`. It pins Ubuntu 24.04, Temurin
 21.0.10+7, and x64, has only read permission, and uploads evidence even on failure.
 It runs measurement/package self-tests and a separate isolated-application job
-with HTTP contract probes, development traffic, and container cancellation proof.
-Capacity sweeps and full application calibration are not implemented yet.
+with HTTP contract probes, all controlled-fault cases, read-only release preparation,
+and container cancellation proof.
+The diagnostic workflow also accepts explicit `soak-diagnostics-*` tags so it can
+be validated before the new workflow exists on the default branch. These tags
+have no publication capability and do not add soak traffic to branch/PR/cron
+workflows. Capacity sweeps and full application calibration remain pending.
 
 ```sh
 python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
@@ -121,9 +125,35 @@ matched-load growth signal, not an exact live-object census. Source references:
 [JDK diagnostic commands](https://docs.oracle.com/en/java/javase/21/docs/specs/man/jcmd.html).
 
 The pilot's 16 MiB detector threshold and ten-second windows are detector-test
-inputs. They are not accepted release thresholds. Production analysis still
-needs the plan's early/late ten-minute comparisons, five-minute windows, minimum
-20-minute reclamation span, healthy-run noise, and absolute baseline occupancy.
+inputs. They are not accepted release thresholds. The application analyzer now applies early/late ten-minute medians, five-minute
+windows, a minimum 20-minute reclamation span, sustained and late growth rules,
+and unsettled-reference checks. It can compare calibrated noise and absolute
+baseline occupancy, but those inputs remain unaccepted and are not wired into
+release qualification. The four-minute development run correctly leaves this
+memory assessment inconclusive.
+
+The resource analyzer checks telemetry coverage, stable lifecycle identity,
+declared heap/pool/cache/OS bounds, sustained container headroom, stop-the-world
+GC pause windows, and idle connection/queue/scratch recovery. It compares idle
+threads and descriptors with the early plateau. Profile `limits` are provisional
+engineering bounds requiring CI calibration; they are not measured healthy-run
+limits. RSS and total concurrent collection elapsed time do not substitute for
+retained heap or stop-the-world pauses.
+
+```sh
+python3 tests/soak/verify_faults.py --output tests/results/soak/fault-suite
+```
+
+The verifier runs a healthy control and four fresh application/database cases:
+a real pooled JDBC connection deliberately left borrowed, a wrong error code
+from the normal Quick exception handler, sustained report latency, and report
+latency beginning in the final comparison window. The process environment fixes
+the fault before boot; authenticated HTTP can activate it once. `--fault` requires
+`--development`, and all cases remain ineligible for publication. The held-connection
+injector uses the pinned Lucee pool API solely to create the deliberate leak.
+It retains one connection after a real `SELECT 1`, without adding a running query.
+The verifier requires the specific detector reason and cleanup evidence; an
+unrelated timeout or crash does not count as successful fault verification.
 
 ## Application contracts
 
@@ -167,7 +197,7 @@ It exercises actual HTTP contracts, concurrent committed writes and re-queries,
 real Quick not-found paths, rollback, cleanup, deterministic reads, cache
 eviction, and stable lifecycle identity. The controller now provisions those
 dependencies automatically and exercises the endpoints with arrival-rate k6
-traffic. Release qualification and full resource/memory analysis remain pending.
+traffic. Resource and memory analysis are integrated; CI calibration and release qualification remain pending.
 
 ## Package identity and promotion
 
@@ -189,23 +219,39 @@ The inspected CommandBox semantic-release 4.1.0 publisher calls `package version
 and then `forgebox publish`, which rebuilds from the directory. CommandBox 6.3.5
 also rebuilds the storage ZIP inside its ForgeBox endpoint despite having a
 `zipPath` argument. Consequently the existing publisher cannot provide tested
-artifact promotion. A separate preparation/provider integration is required;
-do not wire the current directory publisher behind the new gate.
+artifact promotion. Read-only preparation now invokes the pinned 4.1.0 parser, filter, analyzer, and
+notes generator against explicit Git object IDs. It verifies ForgeBox/GitHub
+agreement, the exact last-release tag and commit, ancestry, and unchanged provider
+state after preparation. Source/plugin hashes and preparation inputs are retained.
+It does not invoke semantic-release's publishing or repository mutation hooks.
+
+```sh
+python3 tests/soak/release/verify_preparation.py -v
+python3 tests/soak/release/prepare.py --repo . --candidate FULL_SHA --output NEW_DIRECTORY
+```
+
+Preparation requires CommandBox 6.3.5, installed `commandbox-semantic-release@4.1.0`,
+an authenticated read-only-capable `gh` session, and a full Git checkout with tags.
+It currently supports stable versions. A `noRelease: true` result has no proposed
+version and must not be packaged or published. The integration verifier uses
+actual disposable Git history and the actual plugins, with provider identities
+supplied locally; it proves patch/minor/breaking/no-change/skip behavior and rejects
+stale provider state or mismatched tags without altering the repository.
+
+The real immutable provider adapter and guarded workflow promotion still need
+implementation. Do not wire the directory publisher behind the new gate.
 
 ## Remaining acceptance work
 
 - Validate the complete 60-minute workload in CI and finish capacity-sweep
   orchestration; only the short development schedule has run end to end.
-- Complete the combined resource/memory/GC/recovery analyzer, telemetry-gap rules,
-  overload attribution, accepted-baseline identity checks, and resource bounds.
-  The current traffic analyzer covers fixed windows, latency, delivered work,
-  operation/bucket coverage, and expected-failure recovery; other sampled signals
-  are not yet a complete release gate.
-- Implement complete trend analysis and deliberate bad response, held connection,
-  latency, saturation, and late-failure detection through the full harness.
+- Finish overload attribution, accepted-baseline identity validation, and calibration
+  of the implemented traffic/resource/memory/GC/recovery checks.
+- Complete live proof of held-connection and saturation detection, and run all
+  controlled faults on the final CI profile. Retain every unsuccessful proof.
 - Run the capacity sweep and three full healthy CI trials, investigate noise,
   establish a justified reference, and review an accepted baseline manifest.
-- Implement semantic-release preparation and real immutable package promotion,
+- Finish real immutable package promotion from the read-only prepared artifact,
   with provider/commit revalidation under repository publication concurrency.
 - Enable exactly one soak row in the release-only fail-fast matrix **after**
   baseline acceptance, preserve all functional rows, and test both failure
@@ -287,3 +333,23 @@ reset was used to turn that failed run into a pass.
   attributable to recorded runs were removed after matching creation timestamps
   and inspecting synthetic fixture contents; the audit is retained in
   `anonymous-volume-cleanup-20260925.json`. No general Docker volume prune ran.
+
+### Resource and fault-analysis milestone
+
+- `resource-analysis-live-20260925/` completed all development phases with passing
+  traffic and resource assessments. Threads recovered from an early median of 40
+  to 44 (allowance 8), descriptors fell from 186 to 109, and idle connections,
+  queues, and scratch rows cleared. Memory remained inconclusive because the
+  required 20-minute observation span was not reached. The extended report was
+  inspected in the browser.
+- Forty-one memory/traffic/resource tests and eleven package tests pass. Eight
+  integration tests exercise the real semantic-release preparation plugins and
+  disposable Git repositories without publication or repository changes.
+- `fault-suite-20260925/` preserves the initial full detector batch. Its healthy
+  control, wrong-contract, sustained-latency, and late-latency cases verified
+  their intended outcomes. The late latency result was inconclusive, with all
+  offered work completed and resource recovery passing. The original held-query injector encountered a report timeout during
+  JVM allocation stalls before idle recovery; it does **not** prove connection-leak
+  detection. That failed run and its thread dump, GC logs, and JFR are retained.
+  The injector was subsequently narrowed to borrowing and retaining one validated
+  pool connection, removing the running query and CFML thread from this test.

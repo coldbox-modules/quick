@@ -145,7 +145,17 @@ A through relationship can traverse multiple intermediate entities and relations
 
 ### Optional parallel eager loading
 
-Independent eager-load branches can run concurrently on Lucee and BoxLang:
+Parallel eager loading is disabled by default. To allow independent eager-load branches to run concurrently on Lucee and BoxLang, explicitly enable it in your ColdBox module settings:
+
+```javascript
+moduleSettings = {
+    quick = {
+        parallelEagerLoading = true
+    }
+};
+```
+
+Then opt in on individual queries:
 
 ```javascript
 var posts = getInstance( "Post" )
@@ -153,9 +163,9 @@ var posts = getInstance( "Post" )
     .get();
 ```
 
-The default is sequential. Adobe ColdFusion, a single top-level relationship, and active database transactions use the sequential path. Parallel workers retrieve and hydrate separate branches; matching the results onto the parent entities happens on the calling thread. Worker errors and timeouts propagate to the caller.
+With `parallelEagerLoading = false` (the default), Quick does not create or validate a parallel executor, and all eager loading remains sequential even when `.with( relations, true )` is used. Enabling the module setting still requires the per-query opt-in shown above. Adobe ColdFusion, a single top-level relationship, and active database transactions use the sequential path. Parallel workers retrieve and hydrate separate branches; matching the results onto the parent entities happens on the calling thread. Worker errors and timeouts propagate to the caller.
 
-Quick's module settings include `parallelEagerLoadingMaxThreads` (default `4`), `parallelEagerLoadingTimeout` (default `60000` milliseconds per batch), and `parallelEagerLoadingExecutor` (the name of an optional application-provided bounded ColdBox executor). Quick creates and manages a fixed executor when none is supplied. Account for database connection capacity when increasing concurrency.
+Quick's module settings include `parallelEagerLoadingMaxThreads` (default `4`), `parallelEagerLoadingTimeout` (default `60000` milliseconds per batch), and `parallelEagerLoadingExecutor` (the name of an optional application-provided bounded ColdBox executor). When parallel eager loading is enabled, Quick creates and manages a fixed executor when none is supplied. Account for database connection capacity when increasing concurrency.
 
 ### Testing with model factories
 

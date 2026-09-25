@@ -84,9 +84,12 @@ component accessors="true" transientCache="false" {
 		inject ="box:setting:parallelEagerLoadingTimeout@quick";
 
 	/**
-	 * Application-wide coordinator for parallel eager-loading queries.
+	 * Whether the application permits parallel eager loading. Disabled by default.
 	 */
-	property name="_parallelEagerLoadingCoordinator" inject="quick.models.ParallelEagerLoadingCoordinator";
+	property
+		name   ="_parallelEagerLoadingEnabled"
+		default="false"
+		inject ="box:setting:parallelEagerLoading@quick";
 
 	/**
 	 * A map of aliases to entities to use when qualifying aliased columns.
@@ -132,6 +135,7 @@ component accessors="true" transientCache="false" {
 		variables._asQuery                              = false;
 		variables._withAliases                          = false;
 		variables._entityTransformers                   = [];
+		param variables._parallelEagerLoadingEnabled    = false;
 		param variables._parallelEagerLoadingMaxThreads = 4;
 		param variables._parallelEagerLoadingTimeout    = 60000;
 		param variables._preventLazyLoading             = false;
@@ -482,8 +486,20 @@ component accessors="true" transientCache="false" {
 	 * @return       [quick.models.BaseEntity]
 	 */
 	private array function getEntities( any columns, struct options = {} ) {
-		return hydrateEagerRows( retrieveUnhydratedResults( argumentCollection = arguments ) );
+		if ( !variables._asQuery ) {
+			ensureKeyColumnsSelected();
+		}
+		var results = variables.qb.get( argumentCollection = arguments );
+		if ( variables._asQuery ) {
+			return results;
+		}
+		var entities = [];
+		for ( var result in results ) {
+			entities.append( variables.loadEntity( result ) );
+		}
+		return entities;
 	}
+
 
 	/**
 	 * Executes the configured query without hydrating entities.
@@ -561,6 +577,7 @@ component accessors="true" transientCache="false" {
 	 * @return   any
 	 */
 	public any function get( any columns, struct options = {} ) {
+		activateGlobalScopes();
 		return getEntity().newCollection(
 			handleTransformations( eagerLoadRelations( getEntities( argumentCollection = arguments ) ) )
 		);
@@ -907,7 +924,7 @@ component accessors="true" transientCache="false" {
 	 * @relationName  A single relation name or array of relation
 	 *                names to eager load.
 	 *
-	 * @parallel      If true, eager loads top-level relationships concurrently.
+	 * @parallel      If true and enabled in the module settings, eager loads top-level relationships concurrently.
 	 *
 	 * @return        QuickBuilder
 	 */
@@ -1008,7 +1025,8 @@ component accessors="true" transientCache="false" {
 
 		var eagerLoads = denestEagerLoads( variables._eagerLoad );
 		if (
-			variables._parallelEagerLoading
+			variables._parallelEagerLoadingEnabled
+			&& variables._parallelEagerLoading
 			&& eagerLoads.count() > 1
 			&& supportsParallelEagerLoading()
 			&& !isInsideDatabaseTransaction()
@@ -1031,10 +1049,11 @@ component accessors="true" transientCache="false" {
 	 * Eager loads independent top-level relationships on Quick's fixed executor.
 	 */
 	private void function eagerLoadRelationsInParallel( required struct eagerLoads, required array entities ) {
+		var coordinator   = variables._wirebox.getInstance( "quick.models.ParallelEagerLoadingCoordinator" );
 		var relationNames = arguments.eagerLoads.keyArray();
 		var maxWorkers    = min(
 			max( 1, int( variables._parallelEagerLoadingMaxThreads ) ),
-			variables._parallelEagerLoadingCoordinator.getMaximumThreads()
+			coordinator.getMaximumThreads()
 		);
 		var timeout        = max( 1, int( variables._parallelEagerLoadingTimeout ) );
 		var targetEntities = arguments.entities;
@@ -1066,13 +1085,13 @@ component accessors="true" transientCache="false" {
 				var task = new quick.models.ParallelEagerLoadingTask(
 					plan,
 					taskName,
-					variables._parallelEagerLoadingCoordinator,
-					variables._parallelEagerLoadingCoordinator.createWorkerRequestContext( taskName ),
-					variables._parallelEagerLoadingCoordinator.getWorkerApplicationSettings(),
+					coordinator,
+					coordinator.createWorkerRequestContext( taskName ),
+					coordinator.getWorkerApplicationSettings(),
 					completionQueue
 				);
 				try {
-					var future = variables._parallelEagerLoadingCoordinator.submit( task );
+					var future = coordinator.submit( task );
 				} catch ( any e ) {
 					cancelParallelEagerLoadingTasks( batchTasks );
 					throw(

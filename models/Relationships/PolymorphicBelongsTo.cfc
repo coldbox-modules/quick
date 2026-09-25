@@ -255,17 +255,30 @@ component extends="quick.models.Relationships.BelongsTo" accessors="true" {
 		boolean asQuery     = false,
 		boolean withAliases = false
 	) {
+		var localKeys = variables.localKeys.isEmpty() ? arguments.instance.keyNames() : variables.localKeys;
+
 		var allKeys = gatherKeysByType( type );
+
 		if ( allKeys.isEmpty() ) {
 			return [];
 		}
-		return prepareResultsQueryByType(
-			arguments.type,
-			arguments.instance,
-			arguments.asQuery,
-			arguments.withAliases
-		).get();
+
+		var query = arguments.instance;
+		if ( arguments.asQuery ) {
+			query = query.asQuery( arguments.withAliases );
+		}
+		var eagerConstraints = query.getQB().forNestedWhere();
+		for ( var keys in allKeys ) {
+			var keyConstraints = eagerConstraints.forNestedWhere();
+			for ( var i = 1; i <= localKeys.len(); i++ ) {
+				keyConstraints.where( localKeys[ i ], keys[ i ] );
+			}
+			eagerConstraints.addNestedWhereQuery( keyConstraints, "or" );
+		}
+		query.getQB().addNestedWhereQuery( eagerConstraints );
+		return query.get();
 	}
+
 
 	private any function prepareResultsQueryByType(
 		required string type,

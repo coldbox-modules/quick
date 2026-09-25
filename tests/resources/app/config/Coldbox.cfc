@@ -56,6 +56,8 @@
 		moduleSettings = {
 			"quick" = {
 				"defaultGrammar" = "MySQLGrammar@qb",
+				// Explicit opt-in for the parallel regression tests; the module default is false.
+				"parallelEagerLoading" = true,
 				"parallelEagerLoadingExecutor" = "quick-test-parallel-eager-loading"
 			},
 			"mementifier" = {

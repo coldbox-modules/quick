@@ -51,6 +51,10 @@ def main():
     volumes = subprocess.check_output(['docker', 'volume', 'ls', '-q', '--filter', 'label=org.quick.soak=' + summary['runId']], text=True).strip()
     networks = subprocess.check_output(['docker', 'network', 'ls', '-q', '--filter', 'label=org.quick.soak=' + summary['runId']], text=True).strip()
     rows = [json.loads(line) for line in (run / 'jvm/jvm.ndjson').read_text().splitlines() if line]
+    mysql_volumes = json.loads((run / 'mysql-volumes.json').read_text())
+    database_volume_removed = bool(mysql_volumes) and all(subprocess.run(
+        ['docker', 'volume', 'inspect', volume['name']], stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL).returncode != 0 for volume in mysql_volumes)
     checks = {
         'liveWorkBeforeCancellation': ready,
         'nonzeroControllerExit': code != 0,
@@ -58,6 +62,7 @@ def main():
         'ownedContainersRemoved': not remaining,
         'ownedVolumeRemoved': not volumes,
         'ownedNetworkRemoved': not networks,
+        'anonymousDatabaseVolumeRemoved': database_volume_removed,
         'jvmSamplesRetained': sum(row['kind'] == 'sample' for row in rows) >= 3,
         'collectorFlushed': rows[-1]['kind'] == 'collectorEnd',
         'partialRecordingRetained': (run / 'jvm/recording-final.jfr').stat().st_size > 0,

@@ -281,3 +281,9 @@ reset was used to turn that failed run into a pass.
 - `controller-cancellation-final-20260925/cancellation-verification.json` repeats
   live cancellation on the final controller, additionally verifying ownership-
   labeled network removal and source/dependency snapshots. All ten checks pass.
+- `controller-cancellation-volumes-20260925/cancellation-verification.json` adds
+  explicit proof that MySQL's anonymous data volume is removed; all eleven checks
+  pass. Earlier cleanup omitted Docker's `rm -v` flag. Twelve orphaned volumes
+  attributable to recorded runs were removed after matching creation timestamps
+  and inspecting synthetic fixture contents; the audit is retained in
+  `anonymous-volume-cleanup-20260925.json`. No general Docker volume prune ran.

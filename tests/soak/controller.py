@@ -384,7 +384,12 @@ class Controller:
                 write_json(self.out / (role + "-exit.json"), state["State"])
                 if role == "collector" and state["State"]["ExitCode"] != 0:
                     errors.append("Collector did not finish cleanly")
-            attempt("remove " + role, lambda: self.docker("rm", name))
+                write_json(self.out / (role + "-volumes.json"),
+                           [{"name": mount["Name"], "destination": mount["Destination"]}
+                            for mount in state["Mounts"] if mount["Type"] == "volume"])
+            # -v removes anonymous image volumes (notably MySQL's data volume).
+            # The named application volume is removed separately with its label.
+            attempt("remove " + role, lambda: self.docker("rm", "-v", name))
         def remove_owned_resource(kind):
             inspected = self.docker(kind, "inspect", self.prefix, check=False)
             if inspected.returncode and b"no such" in inspected.stderr.lower():

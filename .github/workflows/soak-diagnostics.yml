@@ -34,3 +34,37 @@ jobs:
           path: tests/results/soak/
           if-no-files-found: error
           retention-days: 30
+
+  application-harness:
+    name: Isolated HTTP workload and controller self-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7'
+          architecture: x64
+      - uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          version: '6.3.5'
+      - name: Prove malformed HTTP responses fail k6 thresholds
+        run: python3 tests/soak/verify_http_contracts.py --output tests/results/soak/http-contracts
+      - name: Exercise the isolated application through all development phases
+        run: tests/soak/run.sh --development --output tests/results/soak/development
+      - name: Cancel the live container controller and preserve evidence
+        run: python3 tests/soak/verify_controller_cancellation.py --output tests/results/soak/controller-cancellation
+      - name: Preserve application evidence, including failed runs
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-application-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tests/results/soak/
+            !tests/results/soak/**/app/coldbox/**
+            !tests/results/soak/**/app/modules/**
+            !tests/results/soak/**/tmp/**
+            !tests/results/soak/**/jvm/stream/**
+          if-no-files-found: error
+          retention-days: 30

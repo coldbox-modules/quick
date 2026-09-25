@@ -450,7 +450,7 @@ workflows. Setup and artifact collection add time beyond the 60-minute profile.
    | Proposed location | Responsibility |
    |---|---|
    | `tests/soak/app/Application.cfc`, `index.cfm` | Persistent ColdBox bootstrap and lifecycle identity |
-   | `tests/soak/app/config/ColdBox.cfc`, `Router.cfc` | Modules, routes, pools, caching, and profile settings |
+   | `tests/soak/app/config/Coldbox.cfc`, `Router.cfc` | Modules, routes, pools, caching, and profile settings |
    | `tests/soak/app/handlers/` | Read, relationship, report, write, rollback, readiness, and diagnostic endpoints |
    | `tests/soak/app/models/` | Domain entities, casts, listeners, and stateless workload services |
    | `tests/soak/Seed.cfc`, migrations/fixtures | Disposable schema, deterministic data, scratch-record invariants |

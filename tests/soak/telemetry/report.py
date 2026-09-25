@@ -1,0 +1,94 @@
+"""Offline, dependency-free run report from persisted evidence only."""
+import html
+import json
+from pathlib import Path
+
+MIB = 1024 * 1024
+
+
+def document(path, default):
+    return json.loads(path.read_text()) if path.exists() else default
+
+
+def rows(path):
+    if not path.exists():
+        return []
+    # Cancellation can leave one unfinished final line. Preserve the raw file;
+    # charts may show complete earlier observations without declaring a pass.
+    result = []
+    with path.open() as stream:
+        for line in stream:
+            try:
+                result.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return result
+
+
+def chart(title, points, unit):
+    if not points:
+        return f'<h2>{html.escape(title)}</h2><p>No observations available.</p>'
+    start, end = points[0][0], points[-1][0]
+    maximum = max(1, max(value for _, value in points))
+    # Preserve peaks and troughs in each display bucket, bounding SVG size.
+    stride = max(1, len(points) // 1000)
+    displayed = []
+    for i in range(0, len(points), stride):
+        bucket = points[i:i + stride]
+        displayed.extend(sorted({min(bucket, key=lambda p: p[1]), max(bucket, key=lambda p: p[1])}))
+    coordinates = ' '.join(f'{55 + (time-start)/max(1,end-start)*875:.1f},{215-value/maximum*175:.1f}' for time, value in displayed)
+    return f'''<h2>{html.escape(title)}</h2><svg viewBox="0 0 960 250" role="img" aria-label="{html.escape(title)}">
+      <text x="10" y="20">{maximum:.1f} {html.escape(unit)}</text>
+      <path d="M55 35V215H930" fill="none" stroke="#aaa"/>
+      <polyline points="{coordinates}" fill="none" stroke="#195fad" stroke-width="2"/>
+      <text x="10" y="217">0</text><text x="55" y="240">0 min</text>
+      <text x="835" y="240">{(end-start)/60000:.1f} min</text></svg>'''
+
+
+def render(directory):
+    summary = document(directory / 'summary.json', {'status': 'inconclusive', 'reasons': ['Missing summary']})
+    profile = document(directory / 'profile.json', {})
+    package = document(directory / 'package/package-manifest.json', {})
+    traffic = document(directory / 'traffic-analysis.json', {})
+    jvm, observations = rows(directory / 'jvm/jvm.ndjson'), rows(directory / 'observations.ndjson')
+    parts = ['<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">',
+             '<title>Quick soak evidence</title><style>body{font:16px/1.5 system-ui;max-width:1050px;margin:35px auto;padding:0 20px;color:#202a36}h2{margin-top:2em;font-size:20px}svg{width:100%;background:#f5f7fa}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:7px;text-align:left;border-bottom:1px solid #ddd}code{overflow-wrap:anywhere}.notice{background:#fff1cc;padding:14px}pre{white-space:pre-wrap}</style>',
+             '<h1>Quick soak evidence</h1>',
+             '<p class="notice">Release qualification: <strong>not granted</strong>. Development results, canceled runs, and unaccepted profiles cannot authorize publication.</p>',
+             f'<p>Run <code>{html.escape(summary.get("runId", directory.name))}</code> · <strong>{html.escape(summary["status"])}</strong></p>',
+             f'<p>Profile: <code>{html.escape(profile.get("id", "unknown"))}</code><br>Candidate: <code>{html.escape(package.get("candidateSha", "unknown"))}</code><br>Package SHA-256: <code>{html.escape(package.get("packageSha256", "unknown"))}</code></p>']
+    parts += ['<ul>' + ''.join('<li>' + html.escape(reason) + '</li>' for reason in summary.get('reasons', [])) + '</ul>']
+    if traffic:
+        parts.append(f'<h2>Delivered sustained load</h2><p>Offered: {traffic["offeredJourneys"]:,} journeys. Started: {traffic["startedJourneys"]:,}. Completed: {traffic["completedJourneys"]:,}. Traffic assessment: {html.escape(traffic["status"])}.</p>')
+        parts.append('<h2>Expected failures and recovery</h2><table><tr><th>Case</th><th>Attempted</th><th>Verified</th><th>Recovered</th></tr>')
+        for case, count in sorted(traffic['totals'].get('expected_failure_attempted', {}).items()):
+            verified = traffic['totals'].get('expected_failure_verified', {}).get(case, 0)
+            recovered = traffic['totals'].get('followup_succeeded', {}).get(case, 0)
+            parts.append(f'<tr><td>{html.escape(case)}</td><td>{count}</td><td>{verified}</td><td>{recovered}</td></tr>')
+        parts.append('</table><h2>Latency by comparison window</h2><p>Each cell shows p95 milliseconds (sample count). Successful operations and expected failures remain separate. Histogram resolution is 1 ms.</p><table><tr><th>Operation</th><th>Windows, in time order</th></tr>')
+        for operation, value in traffic['latency'].items():
+            cells = ' · '.join(f'{p95 if p95 is not None else "missing"} ({count})' for p95, count in zip(value['p95Ms'], value['counts']))
+            parts.append(f'<tr><td>{html.escape(operation)}</td><td>{cells}</td></tr>')
+        parts.append('</table>')
+        for category in ('failures', 'invalid', 'warnings'):
+            if traffic[category]:
+                parts.append('<h2>Traffic ' + category + '</h2><ul>' + ''.join('<li>' + html.escape(x) + '</li>' for x in traffic[category]) + '</ul>')
+    samples = [row for row in jvm if row.get('kind') == 'sample']
+    for field, title, factor, unit in [('heapUsed', 'Heap occupancy', MIB, 'MiB'), ('metaspaceUsed', 'Metaspace', MIB, 'MiB'),
+        ('rssBytes', 'Process resident memory (includes ZGC mappings)', MIB, 'MiB'), ('threads', 'JVM threads', 1, 'threads'), ('descriptors', 'Open descriptors', 1, 'descriptors')]:
+        parts.append(chart(title, [(r['time'], r[field] / factor) for r in samples if field in r], unit))
+    complete = {r['gcId'] for r in jvm if r.get('kind') == 'gc' and r.get('name') == 'Z'}
+    parts.append(chart('Occupancy after completed ZGC cycles', [(r['time'], r['heapUsed'] / MIB) for r in jvm
+        if r.get('kind') == 'heap' and r.get('when') == 'After GC' and r['gcId'] in complete], 'MiB'))
+    parts.append('<p>Post-cycle occupancy includes concurrent allocations. A short chart cannot establish retained-memory stability or replace the required matched-load analysis.</p>')
+    for field, title in [('jdbcActive', 'Borrowed JDBC connections'), ('jdbcWaiting', 'Waiting JDBC borrowers'), ('queuedRequests', 'Queued application requests')]:
+        parts.append(chart(title, [(r['time'], r['application'][field]) for r in observations if field in r.get('application', {})], 'count'))
+    parts.append('<h2>Raw evidence</h2><p><a href="summary.json">Summary</a> · <a href="profile.json">Profile</a> · <a href="harness-manifest.json">Harness identity</a> · <a href="dependencies.json">Dependencies</a> · <a href="jvm/jvm.ndjson">JVM telemetry</a> · <a href="observations.ndjson">Application and resources</a> · <a href="k6.ndjson">k6 observations</a> · <a href="jvm/recording-final.jfr">Final JFR</a></p></html>')
+    (directory / 'report.html').write_text('\n'.join(parts))
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('directory', type=Path)
+    render(parser.parse_args().directory)

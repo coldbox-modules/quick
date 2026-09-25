@@ -19,10 +19,18 @@ component extends="coldbox.system.EventHandler" {
 		if (
 			!isStruct( data ) || !structKeyExists( data, "title" ) || !len( trim( data.title ) ) || len( data.title ) > 80
 		) {
-			throw( type = "SoakValidationFailed", message = "Invalid title" );
+			throw(
+				type    = "SoakValidationFailed",
+				message = "Invalid title",
+				detail  = "title"
+			);
 		}
 		if ( !structKeyExists( data, "ownerToken" ) || !reFind( "^[a-zA-Z0-9_-]{16,100}$", data.ownerToken ) ) {
-			throw( type = "SoakValidationFailed", message = "Invalid token" );
+			throw(
+				type    = "SoakValidationFailed",
+				message = "Invalid token",
+				detail  = "ownerToken"
+			);
 		}
 		return data;
 	}
@@ -47,6 +55,11 @@ component extends="coldbox.system.EventHandler" {
 	}
 
 	function diagnostics( event, rc, prc ) {
+		var engine = getSystemMetrics();
+		var errors = {};
+		for ( var label in application.soakErrors ) {
+			errors[ label ] = application.soakErrors[ label ].get();
+		}
 		var runtime = createObject( "java", "java.lang.management.ManagementFactory" ).getRuntimeMXBean();
 		var scratch = queryExecute(
 			"SELECT COUNT(*) AS n FROM posts WHERE owner_token IS NOT NULL",
@@ -56,24 +69,42 @@ component extends="coldbox.system.EventHandler" {
 		json(
 			event,
 			{
-				"bootId"            : application.soakBootId,
-				"applicationStarts" : application.soakStartCount,
-				"uptimeMs"          : runtime.getUptime(),
-				"scratchPosts"      : scratch.n[ 1 ],
-				"registry"          : registry.getStats()
+				"appName"             : getSetting( "appName" ),
+				"exceptionHandler"    : getSetting( "exceptionHandler" ),
+				"bootId"              : application.soakBootId,
+				"applicationStarts"   : application.soakStartCount,
+				"uptimeMs"            : runtime.getUptime(),
+				"pid"                 : runtime.getPid(),
+				"scratchPosts"        : scratch.n[ 1 ],
+				"registry"            : registry.getStats(),
+				"errors"              : errors,
+				"jdbcActive"          : engine.activeDatasourceConnections,
+				"jdbcIdle"            : engine.idleDatasourceConnections,
+				"jdbcWaiting"         : engine.waitingForConn,
+				"activeRequests"      : engine.activeRequests,
+				"queuedRequests"      : engine.queueRequests,
+				"applicationContexts" : engine.applicationContextCount
 			}
 		);
 	}
 
 	function users( event, rc, prc ) {
-		param rc.team  = 1;
-		param rc.limit = 25;
-		param rc.page  = 1;
-		var limit      = val( rc.limit ) == 100 ? 100 : 25;
-		var page       = max( 1, min( 2, val( rc.page ) ) );
-		var users      = entity( "User" )
-			.where( "teamId", val( rc.team ) )
-			.orderBy( "id" )
+		param rc.team       = 1;
+		param rc.limit      = 25;
+		param rc.page       = 1;
+		param rc.nullable   = false;
+		param rc.descending = false;
+		var limit           = val( rc.limit ) == 100 ? 100 : 25;
+		var page            = max( 1, min( 2, val( rc.page ) ) );
+		var query           = entity( "User" ).newQuery();
+		if ( val( rc.team ) > 0 ) {
+			query.where( "teamId", val( rc.team ) );
+		}
+		if ( rc.nullable ) {
+			query.whereNull( "nickname" );
+		}
+		var users = query
+			.orderBy( "id", rc.descending ? "desc" : "asc" )
 			.offset( ( page - 1 ) * limit )
 			.limit( limit )
 			.get();
@@ -90,6 +121,7 @@ component extends="coldbox.system.EventHandler" {
 	}
 
 	function user( event, rc, prc ) {
+		prc.soakCase    = "missing_pk";
 		var user        = entity( "User" ).with( "team" ).findOrFail( rc.id );
 		var data        = user.getMemento( includes = "team" );
 		data[ "posts" ] = user
@@ -105,6 +137,7 @@ component extends="coldbox.system.EventHandler" {
 	}
 
 	function lookup( event, rc, prc ) {
+		prc.soakCase     = "empty_lookup";
 		param rc.email   = "missing@example.invalid";
 		var query        = entity( "User" ).where( "email", rc.email );
 		param rc.message = "default";
@@ -121,8 +154,9 @@ component extends="coldbox.system.EventHandler" {
 	}
 
 	function relatedPost( event, rc, prc ) {
-		var user = entity( "User" ).findOrFail( rc.id );
-		var post = user
+		prc.soakCase = "relationship";
+		var user     = entity( "User" ).findOrFail( rc.id );
+		var post     = user
 			.posts()
 			.where( "id", rc.postId )
 			.firstOrFail();
@@ -183,18 +217,23 @@ component extends="coldbox.system.EventHandler" {
 		// 32 actual table aliases exceed the qualifiedColumns derived-cache limit (16).
 		var user = entity( "User" ).withAlias( "shape_" & variant );
 		user.retrieveQualifiedColumns();
-		user = user.where( "id", 1 + variant ).firstOrFail();
+		var selected = variant MOD 2 == 0 ? "id,displayName,nickname" : "id,displayName,nickname,teamId";
+		user         = user
+			.select( listToArray( selected ) )
+			.where( "id", 1 + variant )
+			.firstOrFail();
 		json(
 			event,
 			{
 				"variant" : variant,
-				"data"    : user.getMemento()
+				"data"    : user.getMemento( includes = selected, ignoreDefaults = true )
 			}
 		);
 	}
 
 	function createPost( event, rc, prc ) {
-		var body = payload( event );
+		prc.soakCase = "invalid_write";
+		var body     = payload( event );
 		transaction {
 			var post = entity( "Post" ).create( {
 				"userId"     : 1,
@@ -221,7 +260,8 @@ component extends="coldbox.system.EventHandler" {
 	}
 
 	function post( event, rc, prc ) {
-		var post = ownedPost( rc );
+		prc.soakCase = "post_delete";
+		var post     = ownedPost( rc );
 		json( event, { "data" : post.getMemento( includes = "tags" ) } );
 	}
 
@@ -245,7 +285,8 @@ component extends="coldbox.system.EventHandler" {
 	}
 
 	function rollback( event, rc, prc ) {
-		var body = payload( event );
+		prc.soakCase = "rollback";
+		var body     = payload( event );
 		transaction {
 			var post = entity( "Post" ).create( {
 				"userId"     : 1,
@@ -285,6 +326,14 @@ component extends="coldbox.system.EventHandler" {
 	function onException( event, rc, prc ) {
 		var exception = prc.exception.getExceptionStruct();
 		var type      = exception.type ?: "Unknown";
+		var label     = prc.soakCase ?: "unexpected";
+		if ( type != "EntityNotFound" && type != "SoakValidationFailed" ) {
+			label = "unexpected";
+		}
+		if ( !structKeyExists( application.soakErrors, label ) ) {
+			label = "unexpected";
+		}
+		application.soakErrors[ label ].incrementAndGet();
 		if ( type == "EntityNotFound" ) {
 			json(
 				event,
@@ -297,15 +346,15 @@ component extends="coldbox.system.EventHandler" {
 				404
 			);
 		} else if ( type == "SoakValidationFailed" ) {
+			var fields      = {};
+			var field       = exception.detail == "title" ? "title" : "ownerToken";
+			fields[ field ] = field == "title" ? "required,maximum:80" : "required,format";
 			json(
 				event,
 				{
 					"error" : {
 						"code"   : "ValidationFailed",
-						"fields" : {
-							"title"      : "required,maximum:80",
-							"ownerToken" : "required,format"
-						}
+						"fields" : fields
 					}
 				},
 				422

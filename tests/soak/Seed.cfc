@@ -44,6 +44,8 @@ component {
 			javacast( "string[]", arguments.command )
 		);
 		builder.redirectErrorStream( true );
+		var outputFile = createObject( "java", "java.io.File" ).createTempFile( "quick-soak-seed-", ".log" );
+		builder.redirectOutput( outputFile );
 		for ( var key in arguments.environment ) {
 			builder.environment().put( key, arguments.environment[ key ] );
 		}
@@ -53,8 +55,18 @@ component {
 			process.getOutputStream().write( arguments.input );
 		}
 		process.getOutputStream().close();
-		var text     = charsetEncode( process.getInputStream().readAllBytes(), "UTF-8" );
-		var exitCode = process.waitFor();
+		var finished = process.waitFor(
+			javacast( "long", 120 ),
+			createObject( "java", "java.util.concurrent.TimeUnit" ).SECONDS
+		);
+		if ( !finished ) {
+			process.destroyForcibly();
+			outputFile.delete();
+			throw( type = "SoakSetupFailed", message = "Fixture setup exceeded its 120-second deadline" );
+		}
+		var text = left( fileRead( outputFile.getAbsolutePath(), "UTF-8" ), 4000 );
+		outputFile.delete();
+		var exitCode = process.exitValue();
 		if ( exitCode != 0 ) {
 			throw(
 				type    = "SoakSetupFailed",

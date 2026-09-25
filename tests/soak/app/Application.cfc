@@ -19,7 +19,7 @@ component {
 			) & "/quick_soak?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
 			username          : "quick_soak",
 			password          : env( "SOAK_DB_PASSWORD", "quick_soak" ),
-			connectionLimit   : 16,
+			connectionLimit   : val( env( "SOAK_DB_POOL_LIMIT", "16" ) ),
 			connectionTimeout : 1,
 			liveTimeout       : 120,
 			validate          : true
@@ -39,7 +39,21 @@ component {
 			application.soakStartCount = server.quickSoakStarts.incrementAndGet();
 		}
 		application.soakBootId = createUUID();
-		application.soakToken  = env( "SOAK_TOKEN" );
+		application.soakErrors = {};
+		for (
+			var label in [
+				"missing_pk",
+				"empty_lookup",
+				"relationship",
+				"invalid_write",
+				"rollback",
+				"post_delete",
+				"unexpected"
+			]
+		) {
+			application.soakErrors[ label ] = createObject( "java", "java.util.concurrent.atomic.AtomicLong" ).init( 0 );
+		}
+		application.soakToken = env( "SOAK_TOKEN" );
 		if ( len( application.soakToken ) < 32 ) {
 			throw( type = "SoakConfiguration", message = "SOAK_TOKEN must contain at least 32 characters." );
 		}

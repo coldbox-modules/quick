@@ -5,6 +5,60 @@ This is under construction. The required release gate is **not enabled** and no
 accepted baseline exists yet. A short local pilot or HTTP smoke pass does not
 qualify a package for publication.
 
+## Isolated development run
+
+Prerequisites: Docker, Python 3, and CommandBox 6.3.5 on the host (for the seed
+setup task). The measured application uses the digest-pinned CommandBox 6.3.1
+container and Java 21.0.10+7 JDK from `docker/Dockerfile`.
+
+```sh
+tests/soak/run.sh --development
+```
+
+This creates a fresh private Docker network, application volume, MySQL database,
+application JVM, external JVM collector, and k6 process. The development profile
+uses the host Docker architecture, 5 journeys/second for a three-minute plateau,
+and 15 seconds each of warmup, ramp, recovery, and idle observation. Setup and
+bounded drain add time. It cannot qualify a release or establish a CI baseline.
+
+The default profile declares the full 60-minute schedule and provisional CI
+budgets. Its rate remains uncalibrated. Without `--development`, the controller
+can collect that schedule but **always returns an inconclusive result** until
+complete resource/memory analysis and an accepted baseline are implemented.
+Do not connect it to publication yet.
+
+Optional inputs: `--output NEW_DIRECTORY`, `--candidate FULL_SHA`, and
+`--package PREPARED_PACKAGE_DIRECTORY`. Without a prepared package, it builds an
+explicitly diagnostic package from the selected commit; promotion rejects such
+packages. Every installed candidate file is checked against its manifest.
+
+Application code and the engine use a fresh Docker volume; host bind mounts are
+reserved for evidence. Setup resolves the engine and checksum-pinned JDBC driver
+before measured traffic starts. The measured containers have explicit resource
+limits and no external network access. There is no published application port;
+readiness and sparse diagnostics execute inside the application container.
+The controller snapshots harness sources and records their hashes, all resolved
+dependency file hashes, image identities, runtime settings, and actual budgets.
+
+Each run retains JSON summaries, an offline HTML chart report, fixed-window
+traffic/latency analysis, raw k6 and JVM observations, application/database/container
+samples, rotating logs, and bounded JFR recordings. Cleanup removes only the run's
+owned containers/network/volume. Failures and cancellation retain their evidence.
+
+```sh
+python3 tests/soak/verify_http_contracts.py \
+  --output tests/results/soak/http-contracts
+python3 tests/soak/verify_controller_cancellation.py \
+  --output tests/results/soak/controller-cancellation
+```
+
+The HTTP proof checks actual k6 exit codes and metric summaries: wrong error
+codes, unrelated exception types, unexpected success/500 responses, extra data,
+and wrong validation fields must fail. Several cases deliberately keep the HTTP
+status metric green to prove response-body assertions independently block them.
+The container cancellation proof waits for completed HTTP work and JVM samples,
+then verifies child removal, partial recording flush, and a non-passing result.
+
 ## Measurement pilot
 
 From the repository root, with Python 3 and a Java 21 **JDK** (including `javac`):
@@ -29,8 +83,9 @@ samples, GC cycles, rotating GC logs, bounded JFR recordings, child exit codes,
 The manual GitHub Actions entry point is **Soak diagnostics (no publication)**
 in `.github/workflows/soak-diagnostics.yml`. It pins Ubuntu 24.04, Temurin
 21.0.10+7, and x64, has only read permission, and uploads evidence even on failure.
-It currently runs detector, cancellation, and package-promotion self-tests;
-capacity sweeps and full application calibration are not implemented yet.
+It runs measurement/package self-tests and a separate isolated-application job
+with HTTP contract probes, development traffic, and container cancellation proof.
+Capacity sweeps and full application calibration are not implemented yet.
 
 ```sh
 python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
@@ -75,7 +130,8 @@ needs the plan's early/late ten-minute comparisons, five-minute windows, minimum
 `app/` is a separate persistent, sessionless ColdBox application. Its engine is
 Lucee 6.2.8+20, ColdBox is 8.2.0, JDBC is MySQL Connector/J 8.0.33, full-null
 support is enabled, and Quick eager loading is serial. The dedicated server
-binds to loopback port 60399. `SOAK_TOKEN` must be at least 32 characters;
+binds to loopback port 60399 when run directly; the container controller uses
+private port 8080. `SOAK_TOKEN` must be at least 32 characters;
 every harness HTTP request requires it in `X-Soak-Token`.
 
 `fixtures/generate.py OUTPUT_DIRECTORY` generates immutable SQL and a manifest
@@ -109,9 +165,9 @@ SOAK_TOKEN="$YOUR_LOCAL_SOAK_TOKEN" python3 tests/soak/http_smoke.py \
 
 It exercises actual HTTP contracts, concurrent committed writes and re-queries,
 real Quick not-found paths, rollback, cleanup, deterministic reads, cache
-eviction, and stable lifecycle identity. Automatic application provisioning,
-Docker resource isolation, k6, full telemetry,
-profiles, and the full run controller are still pending.
+eviction, and stable lifecycle identity. The controller now provisions those
+dependencies automatically and exercises the endpoints with arrival-rate k6
+traffic. Release qualification and full resource/memory analysis remain pending.
 
 ## Package identity and promotion
 
@@ -138,12 +194,13 @@ do not wire the current directory publisher behind the new gate.
 
 ## Remaining acceptance work
 
-- Finish reproducible isolated provisioning and the remaining contract coverage
-  (additional browse filters/projections and fixed error-classification counters).
-- Implement arrival-rate k6 traffic, exact body assertions, negative contract
-  self-tests, coverage and per-window sample requirements, and the 60-minute phases.
-- Extend telemetry to database pools/locks/query latency, container budgets,
-  generator health, operation latency, GC pressure, and recovery deadlines.
+- Validate the complete 60-minute workload in CI and finish capacity-sweep
+  orchestration; only the short development schedule has run end to end.
+- Complete the combined resource/memory/GC/recovery analyzer, telemetry-gap rules,
+  overload attribution, accepted-baseline identity checks, and resource bounds.
+  The current traffic analyzer covers fixed windows, latency, delivered work,
+  operation/bucket coverage, and expected-failure recovery; other sampled signals
+  are not yet a complete release gate.
 - Implement complete trend analysis and deliberate bad response, held connection,
   latency, saturation, and late-failure detection through the full harness.
 - Run the capacity sweep and three full healthy CI trials, investigate noise,
@@ -188,3 +245,39 @@ Earlier development HTTP failures are not qualifying runs. In particular,
 `http-smoke.json` records a cleanup failure; the retained row IDs and subsequent
 cleanup through the corrected HTTP endpoint are recorded separately. No table
 reset was used to turn that failed run into a pass.
+
+### Container workload milestone
+
+- `r20260925t213414-d01806/traffic-analysis.json`: all 900 offered plateau
+  journeys started and completed; each intentional failure case was verified and
+  recovered 36 times; all 32 query variants ran; every development comparison
+  window met its declared coverage/sample requirements. Final scratch rows,
+  borrowed connections, waiting borrowers, and queued requests were zero.
+  Application starts stayed at one; derived entries stayed at 22 with 32 evictions.
+- `controller-cancellation-20260925/cancellation-verification.json`: cancellation
+  after real HTTP work removed every owned container and volume, flushed JFR,
+  retained telemetry, and left an inconclusive canceled result.
+- `http-contract-negative-final-20260925/verification.json`: both valid contracts
+  passed and all six malformed contracts produced k6 threshold exit 99. Wrong
+  body contracts failed even when their expected HTTP status metric passed.
+- Twenty memory/traffic analyzer tests and eleven package-promotion tests pass.
+  The manual diagnostics workflow passes actionlint 1.7.7; it has not run in CI.
+- Earlier container runs are retained, including database readiness, offline JDBC,
+  browse-builder, Linux configuration filename, and bind-mount performance failures.
+  The 10- and 5-journey/second bind-mounted runs timed out and remain failed.
+  Moving runtime files to a Docker volume changed the tested environment; their
+  failures are not overwritten or counted as qualifying calibration trials.
+
+- `development-final-20260925/` repeats the complete development schedule with
+  source snapshots, dependency file identities, strict projections, configuration
+  checks, and automatic reporting. It completed 901 plateau journeys for a nominal
+  target of 900: k6 admitted one arrival 4.8 ms after the phase boundary. The old
+  analyzer incorrectly labeled this overdelivery a shortfall. Its original
+  inconclusive summary is preserved. `traffic-reanalysis-boundary.json` records
+  the corrected analyzer's passing result on the unchanged raw observations.
+  The correction accepts only one completed boundary arrival, never dropped or
+  missing work; dedicated tests also reject an extra arrival away from the boundary.
+  See the pinned [k6 arrival-timer/duration selection](https://github.com/grafana/k6/blob/v1.3.0/lib/executor/constant_arrival_rate.go#L327-L366).
+- `controller-cancellation-final-20260925/cancellation-verification.json` repeats
+  live cancellation on the final controller, additionally verifying ownership-
+  labeled network removal and source/dependency snapshots. All ten checks pass.

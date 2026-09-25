@@ -76,8 +76,9 @@ jobs:
           git apply --unidiff-zero .github/patches/mementifier-full-null.patch
           box config set modules.commandbox-dotenv.checkEnvPreServerStart=false
           box install ${{ matrix.coldbox }} --noSave
-          git apply --unidiff-zero .github/patches/coldbox-full-null.patch
+          # ColdBox 8.2 includes these full-null fixes; only ColdBox 7 needs the patches.
           if [ "${{ matrix.coldbox }}" = "coldbox@^7" ]; then
+            git apply --unidiff-zero .github/patches/coldbox-full-null.patch
             git apply --unidiff-zero .github/patches/coldbox7-full-null.patch
           fi
 

@@ -38,7 +38,12 @@ component {
 			}
 			application.soakStartCount = server.quickSoakStarts.incrementAndGet();
 		}
-		application.soakBootId = createUUID();
+		application.soakBootId       = createUUID();
+		application.soakFaultMode    = env( "SOAK_FAULT_MODE", "none" );
+		application.soakFaultStarted = 0;
+		if ( !listFind( "none,held-connection,wrong-contract,latency,late-latency", application.soakFaultMode ) ) {
+			throw( type = "SoakConfiguration", message = "Unknown controlled fault" );
+		}
 		application.soakErrors = {};
 		for (
 			var label in [

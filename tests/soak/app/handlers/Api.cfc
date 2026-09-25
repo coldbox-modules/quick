@@ -184,7 +184,16 @@ component extends="coldbox.system.EventHandler" {
 	function report( event, rc, prc ) {
 		param rc.limit = 100;
 		var limit      = listFind( "100,500,1000", rc.limit ) ? val( rc.limit ) : 100;
-		var data       = entity( "Post" )
+		if ( limit == 100 && application.soakFaultStarted > 0 ) {
+			var elapsed = getTickCount() - application.soakFaultStarted;
+			if (
+				( application.soakFaultMode == "latency" && elapsed > 90000 ) ||
+				( application.soakFaultMode == "late-latency" && elapsed > 190000 )
+			) {
+				sleep( 750 );
+			}
+		}
+		var data = entity( "Post" )
 			.where( "id", "<=", limit )
 			.orderBy( "id" )
 			.get()
@@ -339,7 +348,7 @@ component extends="coldbox.system.EventHandler" {
 				event,
 				{
 					"error" : {
-						"code" : "EntityNotFound",
+						"code" : application.soakFaultMode == "wrong-contract" && application.soakFaultStarted > 0 ? "WrongErrorCode" : "EntityNotFound",
 						"type" : "EntityNotFound"
 					}
 				},

@@ -36,6 +36,7 @@ def evaluate(points, workload, baseline=None):
     totals = defaultdict(Counter)
     latency = [defaultdict(Counter) for _ in range(windows_count)]
     epoch = None
+    phase_starts = {}
     invalid, failures, warnings = [], [], []
     unexpected = 0
     boundary_arrivals = 0
@@ -50,6 +51,12 @@ def evaluate(points, workload, baseline=None):
             failures.append('incorrect-response-contract')
         if metric == 'http_req_failed' and value:
             failures.append('unexpected-http-failure')
+        if metric == 'journey_started':
+            phase = tags.get('scenario')
+            phase_epoch = float(tags['phaseStart'])
+            if phase in phase_starts and phase_starts[phase] != phase_epoch:
+                invalid.append('scenario-clock-changed:' + phase)
+            phase_starts[phase] = phase_epoch
         if tags.get('scenario') != 'plateau':
             continue
         if metric == 'journey_started':
@@ -94,7 +101,8 @@ def evaluate(points, workload, baseline=None):
                 continue
             # Discard requests straddling a comparison boundary. A response from
             # an earlier window must not pollute the next window's percentile.
-            if at - value >= epoch + index * workload['windowSeconds'] * 1000:
+            if at - value >= max(epoch + index * workload['windowSeconds'] * 1000,
+                                 epoch + workload.get('drainSeconds', 0) * 1000):
                 latency[index][operation][math.ceil(value)] += 1
     if unexpected:
         failures.append('unexpected-errors')
@@ -164,6 +172,7 @@ def evaluate(points, workload, baseline=None):
                                   'lateP95Ms': percentile(late), 'baseline': accepted}
     return {'status': 'failed' if failures else 'inconclusive' if invalid else 'passed',
             'failures': sorted(set(failures)), 'invalid': sorted(set(invalid)), 'warnings': sorted(set(warnings)),
-            'plateauStartMs': epoch, 'offeredJourneys': offered, 'nominalOfferedJourneys': nominal, 'startedJourneys': started,
+            'plateauStartMs': epoch, 'phaseStartsMs': phase_starts,
+            'offeredJourneys': offered, 'nominalOfferedJourneys': nominal, 'startedJourneys': started,
             'completedJourneys': completed, 'totals': dict(totals), 'windows': [dict(window) for window in windows],
             'latency': comparisons, 'quantizationMs': 1}

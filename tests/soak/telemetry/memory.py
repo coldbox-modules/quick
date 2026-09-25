@@ -13,7 +13,9 @@ METHOD = "jdk21-zgc-nongenerational-periodic-jfr-v1"
 
 
 def evaluate(rows, *, start_ms, end_ms, window_ms, min_span_ms,
-             min_cycles=2, growth_bytes=64 * MIB, noise_bytes=0):
+             min_cycles=2, growth_bytes=64 * MIB, noise_bytes=0,
+             reference_ms=None, heap_max_bytes=0, exclude_initial_ms=0,
+             baseline_bytes=None):
     reasons, warnings = [], []
     runtime = [r for r in rows if r["kind"] == "runtime"]
     if len(runtime) != 1 or set(runtime[0].get("collectors", "").split(",")) != {"ZGC Cycles", "ZGC Pauses"}:
@@ -29,7 +31,7 @@ def evaluate(rows, *, start_ms, end_ms, window_ms, min_span_ms,
     # JMX names the collector "ZGC Cycles"; JFR's name for that completed cycle is "Z".
     complete = {r["gcId"]: r for r in rows if r["kind"] == "gc" and r["name"] == "Z"}
     reclaimed = sorted((r for r in rows if r["kind"] == "heap" and r["when"] == "After GC"
-                        and r["gcId"] in complete and start_ms <= r["time"] < end_ms), key=lambda r: r["time"])
+                        and r["gcId"] in complete and start_ms + exclude_initial_ms <= r["time"] < end_ms), key=lambda r: r["time"])
     # Duplicate or out-of-order inputs cannot manufacture additional observations.
     reclaimed = list({r["gcId"]: r for r in reclaimed}.values())
     count = math.ceil((end_ms - start_ms) / window_ms)
@@ -51,12 +53,28 @@ def evaluate(rows, *, start_ms, end_ms, window_ms, min_span_ms,
               "observations": [{"time": r["time"], "bytes": r["heapUsed"]} for r in reclaimed]}
     if reasons:
         return result
-    reference = windows[0]["medianBytes"]
-    threshold = max(growth_bytes, noise_bytes)
-    growth = windows[-1]["medianBytes"] - reference
-    result.update(growthBytes=growth, thresholdBytes=threshold)
+    reference_ms = reference_ms or window_ms
+    if reference_ms > (end_ms - start_ms) / 2 or reference_ms % window_ms:
+        result.update(status="inconclusive", reasons=["invalid-reference-duration"])
+        return result
+    early = [r["heapUsed"] for r in reclaimed if r["time"] < start_ms + reference_ms]
+    late = [r["heapUsed"] for r in reclaimed if r["time"] >= end_ms - reference_ms]
+    if not early or not late:
+        result.update(status="inconclusive", reasons=["missing-early-or-late-reclamation"])
+        return result
+    reference = statistics.median(early)
+    late_median = statistics.median(late)
+    threshold = max(growth_bytes, 0.05 * heap_max_bytes, noise_bytes)
+    warning_threshold = max(32 * MIB, 0.03 * heap_max_bytes, noise_bytes)
+    growth = late_median - reference
+    values = [w["medianBytes"] for w in windows]
+    center = (len(values) - 1) / 2
+    slope = sum((i - center) * value for i, value in enumerate(values)) / sum((i - center) ** 2 for i in range(len(values)))
+    result.update(growthBytes=growth, thresholdBytes=threshold, warningBytes=warning_threshold,
+                  earlyMedianBytes=reference, lateMedianBytes=late_median,
+                  slopeBytesPerMinute=slope * 60000 / window_ms, referenceMs=reference_ms)
     consecutive = 0
-    for window in windows[1:]:
+    for window in windows[reference_ms // window_ms:]:
         above = window["medianBytes"] - reference > threshold
         consecutive = consecutive + 1 if above else 0
         window["growthBytes"] = window["medianBytes"] - reference
@@ -66,6 +84,15 @@ def evaluate(rows, *, start_ms, end_ms, window_ms, min_span_ms,
     if result["status"] != "failed" and consecutive:
         result["status"] = "inconclusive"
         result["reasons"] = ["late-retained-growth-needs-observation"]
-    if growth > max(32 * MIB, noise_bytes):
+    if growth > warning_threshold:
         warnings.append("retained-growth-warning")
+    if all(b > a for a, b in zip(values, values[1:])):
+        warnings.append("persistent-positive-retained-trend")
+    if baseline_bytes is not None and reference - baseline_bytes > warning_threshold:
+        warnings.append("absolute-retained-occupancy-shift")
+        result["baselineShiftBytes"] = reference - baseline_bytes
+        if reference - baseline_bytes > threshold and result["status"] != "failed":
+            result.update(status="inconclusive", reasons=["unexplained-retained-occupancy-shift"])
+    if reference_ms > window_ms and abs(values[reference_ms // window_ms - 1] - values[0]) > warning_threshold and result["status"] != "failed":
+        result.update(status="inconclusive", reasons=["unsettled-early-memory-reference"])
     return result

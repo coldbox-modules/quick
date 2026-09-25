@@ -2,6 +2,7 @@ component {
 
 	function configure() {
 		route( "/health/ready" ).to( "Api.ready" );
+		route( "/diagnostics/fault" ).withHandler( "Faults" ).toAction( { POST : "start" } );
 		route( "/diagnostics" ).to( "Api.diagnostics" );
 		route( "/api/users/lookup" ).to( "Api.lookup" );
 		route( "/api/users/:id/posts/:postId" ).to( "Api.relatedPost" );

@@ -27,6 +27,8 @@ from package import build, verify
 sys.path.insert(0, str(HERE / "telemetry"))
 from traffic import evaluate as evaluate_traffic
 from report import render as render_report
+from resources import evaluate as evaluate_resources
+from memory import evaluate as evaluate_memory
 
 
 def write_json(path, value):
@@ -100,9 +102,9 @@ class Controller:
                     "--platform", "linux/" + self.profile["architecture"], *arguments, image, *command)
         return name
 
-    def http(self, path, timeout=10):
+    def http(self, path, timeout=10, method="GET"):
         result = self.docker("exec", self.app, "curl", "--fail", "--silent", "--show-error",
-                             "--max-time", str(timeout), "-H", "X-Soak-Token: " + self.env["SOAK_TOKEN"],
+                             "--max-time", str(timeout), "-X", method, "-H", "X-Soak-Token: " + self.env["SOAK_TOKEN"],
                              "http://127.0.0.1:8080" + path, check=False, timeout=timeout + 2)
         if result.returncode:
             raise urllib.error.URLError("Diagnostic request failed: " + result.stderr.decode(errors="replace")[:300])
@@ -136,6 +138,8 @@ class Controller:
                                  sampleSeconds=5, windowSeconds=30, rate=5, vus=40,
                                  minimumFailuresPerCase=3, minimumLatencySamples=1, shortDevelopment=True)
             p["id"] += "-development"
+        p["fault"] = self.args.fault
+        self.env["SOAK_FAULT_MODE"] = self.args.fault
         write_json(self.out / "profile.json", p)
         write_json(self.out / "host.json", {"docker": json.loads(self.docker("info", "--format", "{{json .}}").stdout),
                    "runnerImage": os.environ.get("ImageOS"), "runnerImageVersion": os.environ.get("ImageVersion"),
@@ -229,7 +233,7 @@ class Controller:
             "--cpus", str(resources["application"]["cpus"]), "--memory", f'{resources["application"]["memoryMiB"]}m',
             "--memory-swap", f'{resources["application"]["memoryMiB"]}m',
             "-v", f"{self.out}:/work", "-v", f"{self.prefix}:/app", "-v", f"{app / 'logs'}:/app/logs", "-v", f"{self.out / 'tmp'}:/tmp",
-            "-e", "SOAK_TOKEN", "-e", "SOAK_DB_PASSWORD", "-e", "SOAK_DB_HOST=mysql", "-e", "SOAK_DB_PORT=3306",
+            "-e", "SOAK_TOKEN", "-e", "SOAK_FAULT_MODE", "-e", "SOAK_DB_PASSWORD", "-e", "SOAK_DB_HOST=mysql", "-e", "SOAK_DB_PORT=3306",
             "-e", "SOAK_DB_POOL_LIMIT=" + str(resources["application"]["jdbcPoolLimit"])], image)
         self.wait_for(self.app, lambda: self.http("/health/ready").get("ready"), 240)
         self.initial_diag = self.http("/diagnostics")
@@ -296,9 +300,12 @@ class Controller:
         r = self.profile["resources"]["generator"]
         self.env["SOAK_URL"] = "http://application:8080"
         self.env["SOAK_RUN_ID"] = self.run_id
+        if self.args.fault != "none":
+            write_json(self.out / "fault.json", self.http("/diagnostics/fault", method="POST"))
         self.measured_start = time.time()
-        write_json(self.out / "timing.json", {"controllerStartMs": int(self.measured_start * 1000),
-                   "workloadSeconds": sum(w[k] for k in ("warmupSeconds", "rampSeconds", "plateauSeconds", "recoverySeconds")), "idleSeconds": w["idleSeconds"]})
+        self.timing = {"controllerStartMs": int(self.measured_start * 1000),
+                   "workloadSeconds": sum(w[k] for k in ("warmupSeconds", "rampSeconds", "plateauSeconds", "recoverySeconds")), "idleSeconds": w["idleSeconds"]}
+        write_json(self.out / "timing.json", self.timing)
         self.generator = self.start_container("k6", ["--network", self.prefix, "--cpus", str(r["cpus"]), "--memory", f'{r["memoryMiB"]}m',
             "--user", "0", "-v", f"{self.out}:/work", "-e", "SOAK_TOKEN", "-e", "SOAK_URL", "-e", "SOAK_RUN_ID",
             "-e", "SOAK_PROFILE=/work/profile.json", "-e", "SOAK_FIXTURES=/work/fixtures/fixture-manifest.json", "-e", "SOAK_SUMMARY=/work/k6-summary.json"],
@@ -314,10 +321,19 @@ class Controller:
                 raise TimeoutError("Generator exceeded declared duration and drain")
             time.sleep(max(0, sample_started + w["sampleSeconds"] - time.monotonic()))
         self.docker("logs", self.generator, log="k6.log")
+        self.timing["generatorEndedMs"] = int(time.time() * 1000)
+        with (self.out / "k6.ndjson").open() as stream:
+            traffic = evaluate_traffic((json.loads(line) for line in stream if line.strip()), w)
+        write_json(self.out / "traffic-analysis.json", traffic)
+        self.timing["warmupStartMs"] = traffic["phaseStartsMs"].get("warmup")
+        self.timing["phaseStartsMs"] = traffic["phaseStartsMs"]
+        write_json(self.out / "timing.json", self.timing)
         state = self.inspect(self.generator)["State"]
         if state["ExitCode"] != 0 or state["OOMKilled"]:
             raise RuntimeError(f"k6 failed: exit={state['ExitCode']}, oom={state['OOMKilled']}")
         self.summary["state"] = "idle-observation"
+        self.timing["idleStartedMs"] = int(time.time() * 1000)
+        write_json(self.out / "timing.json", self.timing)
         write_json(self.out / "summary.json", self.summary)
         idle_end = time.monotonic() + w["idleSeconds"]
         while time.monotonic() < idle_end:
@@ -325,18 +341,47 @@ class Controller:
             self.collect()
             time.sleep(max(0, min(idle_end, sample_started + w["sampleSeconds"]) - time.monotonic()))
         final = self.http("/diagnostics")
-        if final["scratchPosts"] != 0 or final["jdbcActive"] != 0 or final["jdbcWaiting"] != 0:
-            raise RuntimeError("Scratch records or borrowed connections did not recover")
+        self.timing["idleFinishedMs"] = int(time.time() * 1000)
+        write_json(self.out / "timing.json", self.timing)
         write_json(self.out / "final-diagnostics.json", final)
-        with (self.out / "k6.ndjson").open() as stream:
-            traffic = evaluate_traffic((json.loads(line) for line in stream if line.strip()), w)
-        write_json(self.out / "traffic-analysis.json", traffic)
-        if traffic["status"] != "passed":
-            if traffic["status"] == "inconclusive":
-                raise Inconclusive("Traffic analysis was inconclusive; see traffic-analysis.json")
-            raise RuntimeError("Traffic analysis did not pass; see traffic-analysis.json")
         self.summary.update(status="development-passed" if self.args.development else "inconclusive", state="complete",
-                            reasons=[] if self.args.development else ["accepted-baseline-and-complete-trend-analysis-required"])
+                            reasons=[] if self.args.development else ["accepted-baseline-and-profile-qualification-required"])
+        if traffic["status"] != "passed":
+            self.summary.update(status=traffic["status"], reasons=traffic["failures"] + traffic["invalid"])
+        for field in ("scratchPosts", "jdbcActive", "jdbcWaiting", "queuedRequests"):
+            if final[field] != 0:
+                self.summary["status"] = "failed"
+                self.summary["reasons"].append("final-resource-not-released:" + field)
+
+    def analyze_resources(self):
+        if self.summary.get("state") != "complete":
+            return  # Canceled/aborted runs retain partial evidence and their original outcome.
+        jvm = [json.loads(line) for line in (self.out / "jvm/jvm.ndjson").read_text().splitlines()]
+        observations = [json.loads(line) for line in (self.out / "observations.ndjson").read_text().splitlines()]
+        traffic = json.loads((self.out / "traffic-analysis.json").read_text())
+        exits = {role: json.loads((self.out / (role + "-exit.json")).read_text()) for role in ("app", "mysql", "k6", "collector")}
+        assessment = evaluate_resources(jvm, observations, self.profile, self.timing,
+                                        plateau_start=traffic["plateauStartMs"], exits=exits)
+        write_json(self.out / "resource-analysis.json", assessment)
+        # Preserve proven hard failures even if later memory/report analysis
+        # cannot finish because another part of the evidence is incomplete.
+        if assessment["status"] != "passed":
+            if self.summary["status"] != "failed":
+                self.summary["status"] = assessment["status"]
+            self.summary["reasons"].extend(assessment["failures"] + assessment["invalid"])
+        w = self.profile["workload"]
+        start = traffic["plateauStartMs"]
+        memory = evaluate_memory(jvm, start_ms=start, end_ms=start + w["plateauSeconds"] * 1000,
+            window_ms=w["windowSeconds"] * 1000, min_span_ms=1200000, reference_ms=600000,
+            min_cycles=10, heap_max_bytes=self.profile["resources"]["application"]["heapMiB"] * 1024 * 1024,
+            exclude_initial_ms=w["drainSeconds"] * 1000)
+        write_json(self.out / "memory-analysis.json", memory)
+        if not self.args.development and memory["status"] != "passed":
+            if self.summary["status"] != "failed":
+                self.summary["status"] = memory["status"]
+            self.summary["reasons"].extend(memory["reasons"])
+        self.summary["assessments"] = {"traffic": traffic["status"], "resources": assessment["status"], "memory": memory["status"]}
+        write_json(self.out / "summary.json", self.summary)
 
     def cleanup(self):
         # Every owned resource gets a cleanup attempt even when diagnostics fail.
@@ -427,7 +472,11 @@ def main():
     parser.add_argument("--candidate")
     parser.add_argument("--package", type=Path, help="Verified prepared package directory; omitted for diagnostic-only builds")
     parser.add_argument("--development", action="store_true", help="Four-minute local harness validation; cannot qualify releases")
+    parser.add_argument("--fault", choices=("none", "held-connection", "wrong-contract", "latency", "late-latency"),
+                        default="none", help="Controlled diagnostic fault; requires --development")
     args = parser.parse_args()
+    if args.fault != "none" and not args.development:
+        parser.error("Controlled faults require --development and cannot qualify a release")
     controller = Controller(args)
     def cancel(signum, frame):
         raise KeyboardInterrupt(f"Canceled by signal {signum}")
@@ -449,9 +498,10 @@ def main():
                 controller.summary["status"] = "inconclusive"
             write_json(controller.out / "summary.json", controller.summary)
         try:
+            controller.analyze_resources()
             render_report(controller.out)
         except Exception as exc:
-            controller.summary["reasons"].append("Report incomplete: " + str(exc))
+            controller.summary["reasons"].append("Analysis/report incomplete: " + str(exc))
             if controller.summary["status"] != "failed":
                 controller.summary["status"] = "inconclusive"
             write_json(controller.out / "summary.json", controller.summary)

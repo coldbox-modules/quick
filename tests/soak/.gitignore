@@ -1,0 +1,5 @@
+__pycache__/
+app/coldbox/
+app/modules/
+app/.engine/
+app/logs/

@@ -1,0 +1,36 @@
+name: Soak diagnostics (no publication)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  measurement-pilot:
+    name: JVM measurement and artifact promotion self-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7'
+          architecture: x64
+      - name: Verify fail-closed analyzer and fake publisher
+        run: |
+          python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
+          python3 -m unittest discover -s tests/soak/release -p 'test_*.py' -v
+      - name: Validate measurement on healthy, leaking, and late-leaking JVMs
+        run: python3 tests/soak/telemetry/pilot.py --output tests/results/soak/measurement-pilot
+      - name: Cancel a live controller and verify its children stop
+        run: python3 tests/soak/telemetry/verify_cancellation.py --output tests/results/soak/cancellation-pilot
+      - name: Preserve evidence, including failed pilot runs
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-measurement-${{ github.sha }}-${{ github.run_attempt }}
+          path: tests/results/soak/
+          if-no-files-found: error
+          retention-days: 30

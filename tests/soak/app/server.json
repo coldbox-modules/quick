@@ -1,0 +1,23 @@
+{
+    "name": "quick-release-soak",
+    "app": {
+        "cfengine": "lucee@6.2.8+20",
+        "serverHomeDirectory": ".engine"
+    },
+    "web": {
+        "host": "127.0.0.1",
+        "http": {
+            "port": 60399
+        },
+        "rewrites": {
+            "enable": true
+        }
+    },
+    "JVM": {
+        "heapSize": 1024,
+        "minHeapSize": 1024,
+        "args": "-XX:+UseZGC -XX:-ZGenerational -XX:ZCollectionInterval=15"
+    },
+    "openBrowser": false,
+    "profile": "production"
+}

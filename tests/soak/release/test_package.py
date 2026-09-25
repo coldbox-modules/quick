@@ -80,6 +80,15 @@ class PromotionTests(unittest.TestCase):
         self.assertEqual(receipt["downloadSha256"], self.manifest["packageSha256"])
         self.assertEqual(self.publisher.events, ["upload:1.0.1", "publicize:1.0.1"])
 
+    def test_diagnostic_artifact_cannot_be_promoted(self):
+        self.prepared["lastRelease"] = {"diagnosticOnly": True}
+        diagnostic = self.root / "diagnostic"
+        build(self.repo, self.prepared, diagnostic)
+        publisher = FakePublisher(self.sha, self.prepared["lastRelease"])
+        with self.assertRaisesRegex(ValueError, "Diagnostic packages"):
+            promote(diagnostic, self.sha, publisher)
+        self.assertEqual(publisher.events, [])
+
     def test_harness_and_generated_files_are_excluded_even_when_tracked(self):
         with zipfile.ZipFile(self.output / "quick.zip") as package:
             self.assertEqual(set(package.namelist()), {"box.json", "ModuleConfig.cfc", "models/User.cfc", "README.md", "LICENSE", "CHANGELOG.md"})

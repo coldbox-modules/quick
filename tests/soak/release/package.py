@@ -110,6 +110,8 @@ def promote(directory, expected_sha, publisher):
     The eventual network adapter must not rebuild, retry writes, or select a version.
     """
     manifest = verify(directory, expected_sha)
+    if manifest["lastRelease"].get("diagnosticOnly"):
+        raise ValueError("Diagnostic packages cannot be promoted")
     if publisher.candidate_sha() != expected_sha:
         raise ValueError("Candidate superseded")
     if publisher.last_release() != manifest["lastRelease"]:

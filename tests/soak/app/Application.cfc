@@ -41,6 +41,7 @@ component {
 		application.soakBootId       = createUUID();
 		application.soakFaultMode    = env( "SOAK_FAULT_MODE", "none" );
 		application.soakFaultStarted = 0;
+		application.soakFaultDelayMs = val( env( "SOAK_FAULT_DELAY_MS", "90000" ) );
 		if ( !listFind( "none,held-connection,wrong-contract,latency,late-latency", application.soakFaultMode ) ) {
 			throw( type = "SoakConfiguration", message = "Unknown controlled fault" );
 		}

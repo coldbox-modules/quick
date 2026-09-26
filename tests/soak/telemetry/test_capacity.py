@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
-from capacity import complete_rows, recommendation
+from capacity import complete_rows, recommendation, step_profile
 
 PROFILE = json.loads((Path(__file__).parents[1] / 'profiles/lucee6-serial.json').read_text())
 
@@ -57,6 +57,16 @@ class CapacityTests(unittest.TestCase):
             path.write_bytes(b'{"time":1}\nnot-json\n')
             with self.assertRaises(json.JSONDecodeError):
                 complete_rows(path)
+
+    def test_capacity_comparisons_have_enough_samples_before_rate_increase(self):
+        for rate in (5, 10, 20, 40):
+            with self.subTest(rate=rate):
+                stage = step_profile(PROFILE, rate)['workload']
+                self.assertEqual(stage['minimumLatencySamples'], 200)
+                self.assertEqual(stage['windowSeconds'], stage['plateauSeconds'])
+                usable = stage['plateauSeconds'] - stage['drainSeconds'] - stage['requestTimeoutSeconds']
+                self.assertGreaterEqual(usable * rate / 30, 200)
+        self.assertEqual(PROFILE['workload']['windowSeconds'], 300)
 
 
 if __name__ == '__main__':

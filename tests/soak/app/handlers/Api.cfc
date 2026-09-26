@@ -70,6 +70,8 @@ component extends="coldbox.system.EventHandler" {
 			event,
 			{
 				"appName"             : getSetting( "appName" ),
+				"luceeVersion"        : server.lucee.version,
+				"coldboxVersion"      : controller.getColdBoxVersion(),
 				"exceptionHandler"    : getSetting( "exceptionHandler" ),
 				"bootId"              : application.soakBootId,
 				"applicationStarts"   : application.soakStartCount,
@@ -187,8 +189,8 @@ component extends="coldbox.system.EventHandler" {
 		if ( limit == 100 && application.soakFaultStarted > 0 ) {
 			var elapsed = getTickCount() - application.soakFaultStarted;
 			if (
-				( application.soakFaultMode == "latency" && elapsed > 90000 ) ||
-				( application.soakFaultMode == "late-latency" && elapsed > 190000 )
+				listFind( "latency,late-latency", application.soakFaultMode ) &&
+				elapsed > application.soakFaultDelayMs
 			) {
 				sleep( 750 );
 			}

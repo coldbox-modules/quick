@@ -30,6 +30,7 @@ from traffic import evaluate as evaluate_traffic
 from report import render as render_report
 from resources import evaluate as evaluate_resources
 from memory import evaluate as evaluate_memory
+from delivery import evaluate as evaluate_delivery
 
 
 def write_json(path, value):
@@ -134,13 +135,16 @@ class Controller:
         if self.args.development:
             arch = self.docker("info", "--format", "{{.Architecture}}").stdout.decode().strip()
             p["architecture"] = {"aarch64": "arm64", "x86_64": "amd64"}.get(arch, arch)
-            p["workload"].update(warmupSeconds=15, rampSeconds=15, plateauSeconds=180,
+            p["workload"].update(warmupSeconds=300, rampSeconds=15, plateauSeconds=180,
                                  recoverySeconds=15, idleSeconds=15, drainSeconds=10,
                                  sampleSeconds=5, windowSeconds=30, rate=5, vus=40,
                                  minimumFailuresPerCase=3, minimumLatencySamples=1, shortDevelopment=True)
             p["id"] += "-development"
         p["fault"] = self.args.fault
         self.env["SOAK_FAULT_MODE"] = self.args.fault
+        w = p["workload"]
+        delay = w["warmupSeconds"] + w["rampSeconds"] + (w["plateauSeconds"] - 20 if self.args.fault == "late-latency" else 60)
+        self.env["SOAK_FAULT_DELAY_MS"] = str(delay * 1000)
         write_json(self.out / "profile.json", p)
         write_json(self.out / "host.json", {"docker": json.loads(self.docker("info", "--format", "{{json .}}").stdout),
                    "cpu": json.loads(self.command(["lscpu", "--json"]).stdout) if platform.system() == "Linux" else
@@ -236,10 +240,11 @@ class Controller:
             "--cpus", str(resources["application"]["cpus"]), "--memory", f'{resources["application"]["memoryMiB"]}m',
             "--memory-swap", f'{resources["application"]["memoryMiB"]}m',
             "-v", f"{self.out}:/work", "-v", f"{self.prefix}:/app", "-v", f"{app / 'logs'}:/app/logs", "-v", f"{self.out / 'tmp'}:/tmp",
-            "-e", "SOAK_TOKEN", "-e", "SOAK_FAULT_MODE", "-e", "SOAK_DB_PASSWORD", "-e", "SOAK_DB_HOST=mysql", "-e", "SOAK_DB_PORT=3306",
+            "-e", "SOAK_TOKEN", "-e", "SOAK_FAULT_MODE", "-e", "SOAK_FAULT_DELAY_MS", "-e", "SOAK_DB_PASSWORD", "-e", "SOAK_DB_HOST=mysql", "-e", "SOAK_DB_PORT=3306",
             "-e", "SOAK_DB_POOL_LIMIT=" + str(resources["application"]["jdbcPoolLimit"])], image)
         self.wait_for(self.app, lambda: self.http("/health/ready").get("ready"), 240)
         self.initial_diag = self.http("/diagnostics")
+        write_json(self.out / "initial-diagnostics.json", self.initial_diag)
         if self.initial_diag.get("appName") != "Quick release soak" or self.initial_diag.get("exceptionHandler") != "Api.onException":
             raise RuntimeError("The dedicated ColdBox configuration was not loaded")
         self.app_pid = self.initial_diag["pid"]
@@ -336,8 +341,14 @@ class Controller:
         self.timing["phaseStartsMs"] = traffic["phaseStartsMs"]
         write_json(self.out / "timing.json", self.timing)
         state = self.inspect(self.generator)["State"]
+        observations = [json.loads(line) for line in (self.out / "observations.ndjson").read_text().splitlines()]
+        delivery = evaluate_delivery(traffic, observations, self.profile, state)
+        write_json(self.out / "delivery-analysis.json", delivery)
         if state["ExitCode"] != 0 or state["OOMKilled"]:
-            raise RuntimeError(f"k6 failed: exit={state['ExitCode']}, oom={state['OOMKilled']}")
+            reason = "; ".join(delivery["reasons"])
+            if delivery["status"] == "failed":
+                raise RuntimeError(reason)
+            raise Inconclusive(reason)
         self.summary["state"] = "idle-observation"
         self.timing["idleStartedMs"] = int(time.time() * 1000)
         write_json(self.out / "timing.json", self.timing)
@@ -353,8 +364,8 @@ class Controller:
         write_json(self.out / "final-diagnostics.json", final)
         self.summary.update(status="development-passed" if self.args.development else "inconclusive", state="complete",
                             reasons=[] if self.args.development else ["accepted-baseline-and-profile-qualification-required"])
-        if traffic["status"] != "passed":
-            self.summary.update(status=traffic["status"], reasons=traffic["failures"] + traffic["invalid"])
+        if delivery["status"] != "passed":
+            self.summary.update(status=delivery["status"], reasons=delivery["reasons"])
         for field in ("scratchPosts", "jdbcActive", "jdbcWaiting", "queuedRequests"):
             if final[field] != 0:
                 self.summary["status"] = "failed"
@@ -510,7 +521,7 @@ def main():
     parser.add_argument("--output", type=Path)
     parser.add_argument("--candidate")
     parser.add_argument("--package", type=Path, help="Verified prepared package directory; omitted for diagnostic-only builds")
-    parser.add_argument("--development", action="store_true", help="Four-minute local harness validation; cannot qualify releases")
+    parser.add_argument("--development", action="store_true", help="Short plateau with full warmup; cannot qualify releases")
     parser.add_argument("--fault", choices=("none", "held-connection", "wrong-contract", "latency", "late-latency"),
                         default="none", help="Controlled diagnostic fault; requires --development")
     args = parser.parse_args()

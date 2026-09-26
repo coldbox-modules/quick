@@ -3,6 +3,11 @@ name: Soak capacity calibration (no publication)
 on:
   workflow_dispatch:
     inputs:
+      trials:
+        description: Follow eligible capacity with three full 60-minute baseline trials
+        required: true
+        default: false
+        type: boolean
       candidate:
         description: Full healthy candidate commit SHA
         required: true
@@ -11,6 +16,7 @@ on:
   push:
     tags:
       - 'soak-capacity-*'
+      - 'soak-calibration-*'
 
 permissions:
   contents: read
@@ -19,7 +25,7 @@ jobs:
   capacity:
     name: Measure capacity before selecting the baseline target
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4.2.2
         with:
@@ -40,6 +46,12 @@ jobs:
         env:
           CANDIDATE_SHA: ${{ inputs.candidate || 'af2c93d2604de73d7ccac23b7bf69c4be221dbb0' }}
         run: python3 tests/soak/capacity.py --candidate "$CANDIDATE_SHA" --output tests/results/soak/capacity
+      - name: Run three complete trials at the frozen capacity-selected target
+        if: inputs.trials || startsWith(github.ref, 'refs/tags/soak-calibration-')
+        run: |
+          python3 tests/soak/calibration.py --capacity tests/results/soak/capacity --output tests/results/soak/trial-1
+          python3 tests/soak/calibration.py --capacity tests/results/soak/capacity --output tests/results/soak/trial-2
+          python3 tests/soak/calibration.py --capacity tests/results/soak/capacity --output tests/results/soak/trial-3
       - name: Preserve every step, including the first unclean rate
         if: always()
         uses: actions/upload-artifact@v4.6.2

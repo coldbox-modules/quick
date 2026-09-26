@@ -49,6 +49,27 @@ def recommendation(steps, profile):
             'trialProfileEligible': not reasons, 'reasons': reasons}
 
 
+def step_profile(base, rate):
+    profile = copy.deepcopy(base)
+    config = base.get('capacity', {})
+    profile['mode'] = 'capacity-step'
+    profile['workload'].update(rate=rate, plateauSeconds=config.get('stepSeconds', 180), recoverySeconds=0,
+        idleSeconds=config.get('idleSeconds', 30), windowSeconds=60, minimumFailuresPerCase=10,
+        minimumLatencySamples=3, capacityProbe=True)
+    if not base['workload'].get('shortDevelopment'):
+        w = profile['workload']
+        # Rare reports receive 1/30 of arrivals. Compare aggregate step p95s
+        # only after each operation has >=200 samples; a three-minute low-rate
+        # probe had only 5-10 and could mistake one slow response for a trend.
+        # Full trials retain independent five-minute windows and trend rules.
+        minimum = base['workload']['minimumLatencySamples']
+        seconds = math.ceil((minimum * 30 / rate + w['drainSeconds'] + w['requestTimeoutSeconds']) / 60) * 60
+        seconds = max(seconds, config.get('stepSeconds', 180))
+        w.update(plateauSeconds=seconds, windowSeconds=seconds, minimumLatencySamples=minimum,
+                 minimumFailuresPerCase=base['workload']['minimumFailuresPerCase'])
+    return profile
+
+
 class CapacityController(Controller):
     def run_generator(self, label, profile):
         stage = self.out / 'capacity' / label
@@ -124,11 +145,7 @@ class CapacityController(Controller):
         self.steps = []
         reference = None
         for rate in rates:
-            profile = copy.deepcopy(base)
-            profile['mode'] = 'capacity-step'
-            profile['workload'].update(rate=rate, plateauSeconds=config.get('stepSeconds', 180), recoverySeconds=0,
-                idleSeconds=config.get('idleSeconds', 30), windowSeconds=60, minimumFailuresPerCase=10,
-                minimumLatencySamples=3, capacityProbe=True)
+            profile = step_profile(base, rate)
             w = profile['workload']
             label = 'rate-' + str(rate)
             print(f'Capacity: {rate} journeys/second for {w["plateauSeconds"]} seconds', flush=True)
@@ -186,7 +203,7 @@ def main():
     parser.add_argument('--output', type=Path)
     parser.add_argument('--candidate')
     parser.add_argument('--package', type=Path)
-    parser.add_argument('--development', action='store_true', help='Local architecture and shortened warmup; never CI calibration')
+    parser.add_argument('--development', action='store_true', help='Local architecture and short capacity probes; never CI calibration')
     args = parser.parse_args()
     args.fault = 'none'
     return execute(CapacityController(args))

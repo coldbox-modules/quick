@@ -18,7 +18,7 @@ tests/soak/run.sh --development
 This creates a fresh private Docker network, application volume, MySQL database,
 application JVM, external JVM collector, and k6 process. The development profile
 uses the host Docker architecture, 5 journeys/second for a three-minute plateau,
-and 15 seconds each of warmup, ramp, recovery, and idle observation. Setup and
+five minutes of warmup, and 15 seconds each of ramp, recovery, and idle observation. Setup and
 bounded drain add time. It cannot qualify a release or establish a CI baseline.
 
 The default profile declares the full 60-minute schedule and provisional CI
@@ -129,7 +129,7 @@ inputs. They are not accepted release thresholds. The application analyzer now a
 windows, a minimum 20-minute reclamation span, sustained and late growth rules,
 and unsettled-reference checks. It can compare calibrated noise and absolute
 baseline occupancy, but those inputs remain unaccepted and are not wired into
-release qualification. The four-minute development run correctly leaves this
+release qualification. The short development plateau correctly leaves this
 memory assessment inconclusive.
 
 The resource analyzer checks telemetry coverage, stable lifecycle identity,
@@ -154,6 +154,11 @@ injector uses the pinned Lucee pool API solely to create the deliberate leak.
 It retains one connection after a real `SELECT 1`, without adding a running query.
 The verifier requires the specific detector reason and cleanup evidence; an
 unrelated timeout or crash does not count as successful fault verification.
+Development runs now retain five minutes of warmup after a CI detector case
+encountered allocation stalls before fault activation. Latency injection delays
+are derived from the declared warmup/ramp schedule, so they still begin at the
+intended sustained or final plateau windows. This changes diagnostic timing,
+not the already-declared full release schedule.
 
 ## Application contracts
 
@@ -371,11 +376,47 @@ idle resource recovery between clean steps, and proposes 60% of the highest
 clean rate with measured journey-duration headroom. A proposed trial profile is
 written only after successful evidence collection and only if its rate can
 satisfy the full latency sample floor. No baseline is accepted automatically.
-Capacity steps use three one-minute comparison windows; they do not replace the
-full five-minute windows or 60-minute baseline trials.
+CI capacity steps collect at least 200 observations per operation and compare
+aggregate step p95s before increasing the rate. Low-rate steps consequently take
+longer (the initial 5/second step takes 21 minutes). They do not replace the
+independent five-minute windows or 60-minute baseline trials. Development probes
+remain short and cannot produce a qualifying profile.
 
 `capacity-controller-local-20260925/` is development evidence: 5 journeys/second
 passed, while 10 encountered HTTP timeouts and dropped arrivals. The sweep
 stopped, preserved both steps, flushed JFR, and removed its resources. This local
 arm64 run uses shortened warmup and sample requirements and cannot produce a
-qualifying trial profile. CI capacity and full baseline trials remain pending.
+qualifying trial profile.
+
+CI run `36209974082` preserved an inconclusive first capacity attempt. All
+offered work completed at 5/second and resources recovered, but report latency
+crossed the late-window band with only 5-10 observations. The revised sweep
+requires 200 per operation before comparing rates; the original inconclusive
+evidence is retained. Its first run and full baseline trials remain pending.
+
+### Full baseline bootstrap and input matching
+
+`python3 tests/soak/calibration.py --capacity <complete-ci-capacity-directory>`
+validates the capacity evidence and runs one complete 60-minute trial using its
+exact candidate ZIP and proposed target. It rejects changed hardware, runner
+image, executable harness sources, runtime, fixture data, dependencies, budgets,
+or workload before arrivals. Actual Lucee/ColdBox versions and JVM arguments are
+recorded. The complete source snapshot is retained; review metadata and baseline
+pointers are excluded from the comparison digest to avoid self-reference.
+
+The capacity workflow's `trials` option (or explicit `soak-calibration-*` tag)
+runs three trials sequentially on the same runner, creating a fresh application
+and database for each. `calibration-passed` never means `releaseQualified` and
+does not accept or replace a baseline. Missing eligibility stops before trials.
+
+Delivery analysis aligns shortfall windows with container CPU budgets and
+application/database queues. Proven application saturation fails; generator
+capacity loss, joint saturation, or unresolved attribution is inconclusive.
+Wrong responses and unexpected HTTP failures remain hard failures regardless
+of generator pressure. Actual capacity saturation proof remains pending.
+
+CI run `36208965667` passed measurement/promotion tests and verified the healthy,
+held-connection, wrong-contract, and sustained-latency application cases. Its
+late-latency case timed out on a graph request before fault activation, with ZGC
+allocation stalls in the retained recording/logs. That case remains unproven in
+CI; the workflow's overall result is failed and has not been waived.

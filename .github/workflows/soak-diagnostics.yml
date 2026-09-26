@@ -45,7 +45,7 @@ jobs:
   application-harness:
     name: Isolated HTTP workload and controller self-tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 50
+    timeout-minutes: 65
     steps:
       - uses: actions/checkout@v4.2.2
       - name: Retain environment evidence even if setup fails

@@ -9,9 +9,25 @@ import math
 
 CASES = ('missing_pk', 'empty_lookup', 'relationship', 'invalid_write', 'rollback')
 JOURNEYS = ('browse', 'detail', 'graph', 'write', 'report', 'variant', *CASES)
-OPERATIONS = ('browse', 'user_detail', 'graph', 'post_create', 'post_read', 'post_update',
-              'post_read_updated', 'post_delete', 'scratch_verify', 'report_100',
-              'report_500', 'report_1000', 'query_variant', 'lookup_recovery', 'relationship_recovery')
+BASE_OPERATIONS = ('browse', 'user_detail', 'graph', 'post_create', 'post_read', 'post_update',
+                   'post_read_updated', 'post_delete', 'scratch_verify',
+                   'query_variant', 'lookup_recovery', 'relationship_recovery')
+
+
+def report_sizes(workload):
+    sizes = workload.get('reportSizes', [100, 500, 1000])
+    if (not isinstance(sizes, list) or len(sizes) != 3 or
+            any(type(size) is not int or size not in (25, 100, 250, 500, 1000) for size in sizes)
+            or sizes != sorted(set(sizes))):
+        raise ValueError('reportSizes requires three distinct ascending supported row limits')
+    return sizes
+
+
+def operation_names(workload):
+    return (*BASE_OPERATIONS, *(f'report_{size}' for size in report_sizes(workload)))
+
+
+OPERATIONS = operation_names({})  # Historical profiles retain their original operation set.
 
 
 def percentile(histogram, percentile=95):
@@ -31,6 +47,7 @@ def timestamp(value):
 
 
 def evaluate(points, workload, baseline=None):
+    operations = operation_names(workload)
     windows_count = workload['plateauSeconds'] // workload['windowSeconds']
     windows = [defaultdict(Counter) for _ in range(windows_count)]
     totals = defaultdict(Counter)
@@ -93,7 +110,7 @@ def evaluate(points, workload, baseline=None):
                 window[metric][label] += value
         if metric in ('successful_latency', 'expected_failure_latency') and window is not None:
             operation = tags.get('operation') if metric == 'successful_latency' else 'failure:' + tags.get('case', '')
-            if operation not in OPERATIONS and operation not in ['failure:' + c for c in (*CASES, 'post_delete')]:
+            if operation not in operations and operation not in ['failure:' + c for c in (*CASES, 'post_delete')]:
                 invalid.append('unknown-latency-operation')
                 continue
             if not math.isfinite(value) or value < 0 or value > workload['requestTimeoutSeconds'] * 1000:
@@ -133,14 +150,14 @@ def evaluate(points, workload, baseline=None):
         for journey in JOURNEYS:
             if window['journey_started'][journey] < 1:
                 failures.append(f'missing-journey-window:{i}:{journey}')
-        for bucket in ('browse_25', 'browse_100', 'report_100', 'report_500', 'report_1000', *(f'variant_{i}' for i in range(32) if not workload.get('shortDevelopment') and not workload.get('capacityProbe'))):
+        for bucket in ('browse_25', 'browse_100', *(f'report_{size}' for size in report_sizes(workload)), *(f'variant_{i}' for i in range(32) if not workload.get('shortDevelopment') and not workload.get('capacityProbe'))):
             if window['bucket_completed'][bucket] < 1:
                 failures.append(f'missing-bucket-window:{i}:{bucket}')
     for i in range(32):
         if totals["bucket_completed"][f"variant_{i}"] < 1:
             failures.append(f"missing-query-variant:{i}")
     comparisons = {}
-    for operation in (*OPERATIONS, *('failure:' + c for c in (*CASES, 'post_delete'))):
+    for operation in (*operations, *('failure:' + c for c in (*CASES, 'post_delete'))):
         histograms = [window[operation] for window in latency]
         values = [percentile(histogram) for histogram in histograms]
         counts = [sum(histogram.values()) for histogram in histograms]

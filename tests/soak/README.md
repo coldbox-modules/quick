@@ -106,7 +106,7 @@ recorded under **Native matrix cancellation proof** below.
 
 ## Memory measurement method
 
-Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v5
+Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v6
 runtime uses generational ZGC with a fixed periodic major collection interval,
 identically in baseline and candidate. The pilot uses a 256 MiB heap and a
 five-second major interval to validate detection cheaply. The application uses
@@ -776,3 +776,29 @@ Both verified cleanup and recording preservation. The first tiny-generator-quota
 experiment is retained as failed detector evidence because it also caused HTTP
 timeouts. The final CI suite additionally binds the generated CPU-work script
 by hash and must pass both cases before its evidence can be reviewed.
+
+
+### Provisional v6 standard-runner report sizes
+
+V5 capacity `36218384344` completed a clean 5/second step, with application median
+CPU at 80.1% of its quota, then failed at 10/second. Its conservative target of
+3/second provides only 108 observations for the rarest first-window operation.
+Full trials correctly refused that target; no sample requirement was waived.
+The clean short/native result does not make this a viable release profile.
+
+The default v6 profile explicitly reduces report sizes to **25, 100 and 250**
+rows. All three still hydrate Quick entities, serialize projections, validate
+fixture checksums and have separate 200-sample latency requirements. The prior
+100/500/1,000-row workload is preserved as
+`profiles/lucee6-serial-large-reports.json`; its report scope is not claimed by
+a future default-profile pass. The API and HTTP contract smoke test support all
+five bounded sizes. Historical profiles without `reportSizes` retain the original
+three limits, and duplicate, unsupported or unordered selections are rejected.
+
+The large seeded domain, 180-comment high-fanout relationship graph, fixed
+journey mix, four real repeated report/variant/failure sequences, exception paths,
+resource budgets, 60-minute schedule and all acceptance thresholds stay fixed.
+This reduces work per report request rather than reducing the number of measured
+requests. Fresh capacity and detector proofs are required for the new profile;
+all previous failed or successful measurements remain evidence only for their
+recorded inputs. No baseline or release gate is enabled by this change.

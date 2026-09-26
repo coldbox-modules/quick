@@ -8,14 +8,14 @@ import unittest
 sys.path.insert(0, str(Path(__file__).parents[1]))
 from identity import digest, profile_identity
 from qualification import accepted_baseline, seal_qualification, verify_qualification, QUALIFICATION_EVIDENCE, seal_validation, validate_package_purpose
-from traffic import CASES, OPERATIONS
+from traffic import CASES, operation_names
 
 PROFILE = json.loads((Path(__file__).parents[1] / 'profiles/lucee6-serial.json').read_text())
 
 
 def reviewed():
     values = {'profile': profile_identity(PROFILE)}
-    operations = [*OPERATIONS, *('failure:' + case for case in (*CASES, 'post_delete'))]
+    operations = [*operation_names(PROFILE['workload']), *('failure:' + case for case in (*CASES, 'post_delete'))]
     proposal = {'status': 'proposed-for-review', 'investigations': [], 'accepted': False, 'releaseQualified': False,
         'trials': [{'runId': str(i), 'bootId': str(i), 'jvmStart': i, 'githubRunId': '123', 'evidenceSha256': 'a'*64} for i in range(3)],
         'measurementIdentity': {'values': values, 'sha256': digest(values)}, 'profile': PROFILE,
@@ -73,7 +73,7 @@ class QualificationTests(unittest.TestCase):
 
     def test_missing_absolute_budget_and_missing_detector_block(self):
         data = reviewed()
-        del data['latencyBudgetsMs']['report_1000']
+        del data['latencyBudgetsMs']['report_100']
         with self.assertRaisesRegex(ValueError, 'Every operation'):
             self.load(data)
         for detector in reviewed()['detectors']:

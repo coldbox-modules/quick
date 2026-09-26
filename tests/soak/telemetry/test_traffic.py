@@ -1,6 +1,6 @@
 import datetime
 import unittest
-from traffic import CASES, JOURNEYS, OPERATIONS, evaluate
+from traffic import CASES, JOURNEYS, operation_names, report_sizes, evaluate
 
 START = 1790371200000
 WORKLOAD = dict(plateauSeconds=2400, windowSeconds=300, rate=24,
@@ -13,7 +13,7 @@ def point(metric, value, at, **tags):
         'tags': {'scenario': 'plateau', **tags}}}
 
 
-def healthy(latencies=None):
+def healthy(latencies=None, workload=WORKLOAD):
     for i in range(8):
         at = START + i * 300000 + 1000
         for j, journey in enumerate(JOURNEYS):
@@ -23,9 +23,9 @@ def healthy(latencies=None):
         for case in CASES:
             for metric in ('expected_failure_attempted', 'expected_failure_verified', 'followup_succeeded'):
                 yield point(metric, 288, at, case=case)
-        for bucket in ('browse_25', 'browse_100', 'report_100', 'report_500', 'report_1000', *(f'variant_{n}' for n in range(32))):
+        for bucket in ('browse_25', 'browse_100', *(f'report_{size}' for size in report_sizes(workload)), *(f'variant_{n}' for n in range(32))):
             yield point('bucket_completed', 5, at, bucket=bucket)
-        for operation in (*OPERATIONS, *('failure:' + case for case in (*CASES, 'post_delete'))):
+        for operation in (*operation_names(workload), *('failure:' + case for case in (*CASES, 'post_delete'))):
             for n in range(200):
                 metric = 'expected_failure_latency' if operation.startswith('failure:') else 'successful_latency'
                 tags = {'case': operation.split(':')[1]} if metric == 'expected_failure_latency' else {'operation': operation}
@@ -34,6 +34,22 @@ def healthy(latencies=None):
 
 
 class TrafficTests(unittest.TestCase):
+    def test_selected_report_sizes_each_require_their_own_latency_samples(self):
+        workload = {**WORKLOAD, 'reportSizes': [25, 100, 250]}
+        result = evaluate(healthy(workload=workload), workload)
+        self.assertEqual(result['status'], 'passed')
+        self.assertEqual(result['latency']['report_250']['counts'], [200] * 8)
+        self.assertNotIn('report_1000', result['latency'])
+        missing = (row for row in healthy(workload=workload)
+                   if row['data']['tags'].get('operation') != 'report_250')
+        self.assertIn('insufficient-latency-samples:report_250', evaluate(missing, workload)['invalid'])
+
+    def test_report_sizes_are_bounded_unique_and_keep_historical_defaults(self):
+        self.assertEqual(report_sizes({}), [100, 500, 1000])
+        for sizes in ([25, 100, 100], [250, 100, 25], [25, 100, 2000], [25, 100], [True, 100, 250]):
+            with self.subTest(sizes=sizes), self.assertRaises(ValueError):
+                report_sizes({'reportSizes': sizes})
+
     def test_healthy_matched_load(self):
         result = evaluate(healthy(), WORKLOAD)
         self.assertEqual(result['status'], 'passed', result)

@@ -26,7 +26,7 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE / "release"))
 from package import build, verify
 sys.path.insert(0, str(HERE / "telemetry"))
-from traffic import evaluate as evaluate_traffic
+from traffic import evaluate as evaluate_traffic, report_sizes
 from report import render as render_report
 from resources import evaluate as evaluate_resources
 from memory import evaluate as evaluate_memory
@@ -152,6 +152,7 @@ class Controller:
         p["fault"] = self.args.fault
         self.env["SOAK_FAULT_MODE"] = self.args.fault
         w = p["workload"]
+        report_sizes(w)
         if type(w.get("coverageRepeats", 1)) is not int or not 1 <= w.get("coverageRepeats", 1) <= 4:
             raise Inconclusive("coverageRepeats must be an integer from 1 through 4")
         delay = w["warmupSeconds"] + w["rampSeconds"] + (w["plateauSeconds"] - 20 if self.args.fault == "late-latency" else 60)

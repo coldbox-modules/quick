@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "id": "lucee6-serial-arm64-standard-reports-v6",
+  "id": "lucee6-serial-arm64-large-reports-v5",
   "status": "provisional-unaccepted",
   "runner": "ubuntu-24.04-arm",
   "architecture": "arm64",
@@ -39,7 +39,7 @@
     }
   },
   "workload": {
-    "version": "v3",
+    "version": "v2",
     "seed": 20260925,
     "rate": 24,
     "vus": 100,
@@ -56,9 +56,9 @@
     "minimumLatencySamples": 200,
     "coverageRepeats": 4,
     "reportSizes": [
-      25,
       100,
-      250
+      500,
+      1000
     ]
   },
   "acceptedBaseline": null,

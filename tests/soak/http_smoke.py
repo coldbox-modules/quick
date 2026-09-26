@@ -69,7 +69,7 @@ def run(base, token, fixture):
             assert sorted(t["id"] for t in post["tags"]) == sorted(fixture["postTags"][key]), post
             assert all(c["commentableId"] == post["id"] and c["commentableType"] == "Post"
                        and c["author"]["id"] == c["userId"] for c in post["comments"]), post
-    for limit in [100, 500, 1000]:
+    for limit in [25, 100, 250, 500, 1000]:
         result = call("GET", f"/api/reports/posts?limit={limit}")
         assert len(result["data"]) == limit, limit
         canonical = "|".join(f'{p["id"]}:{p["userId"]}:{p["title"]}' for p in result["data"])

@@ -10,6 +10,10 @@ const profile = JSON.parse(open(__ENV.SOAK_PROFILE));
 const w = profile.workload;
 const coverageRepeats = w.coverageRepeats ?? 1;
 c.invariant(Number.isInteger(coverageRepeats) && coverageRepeats >= 1 && coverageRepeats <= 4, 'coverage repeats must be an integer from 1 through 4');
+const reportSizes = w.reportSizes ?? [100, 500, 1000];
+c.invariant(Array.isArray(reportSizes) && reportSizes.length === 3 && reportSizes.every((size, i) =>
+    Number.isInteger(size) && [25, 100, 250, 500, 1000].includes(size) && (i === 0 || size > reportSizes[i - 1])),
+    'report sizes must be three distinct ascending supported row limits');
 const fixtureRows = new SharedArray('post-fixtures', () => {
     const f = JSON.parse(open(__ENV.SOAK_FIXTURES));
     return Array.from({length: 10000}, (_, i) => ({comments: f.postCommentCounts[String(i+1)], tags: f.postTags[String(i+1)]}));
@@ -152,7 +156,7 @@ export function mixedJourney() {
     } else if (journey === 'write') {
         write(token);
     } else if (journey === 'report') {
-        const limit = [100, 500, 1000][(Math.floor(n / 100) * 10 + slot - 65) % 3];
+        const limit = reportSizes[(Math.floor(n / 100) * 10 + slot - 65) % reportSizes.length];
         for (let repeat = 0; repeat < coverageRepeats; repeat++) {
             request('GET', `/api/reports/posts?limit=${limit}`, `report_${limit}`,
                 (b, r) => c.report(b, limit, r.body.length, {reportChecksums: fixtureMeta}, v => crypto.sha256(v, 'hex')));

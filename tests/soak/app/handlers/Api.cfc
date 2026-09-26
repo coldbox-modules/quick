@@ -199,7 +199,7 @@ component extends="coldbox.system.EventHandler" {
 
 	function report( event, rc, prc ) {
 		param rc.limit = 100;
-		var limit      = listFind( "100,500,1000", rc.limit ) ? val( rc.limit ) : 100;
+		var limit      = listFind( "25,100,250,500,1000", rc.limit ) ? val( rc.limit ) : 100;
 		if ( limit == 100 && application.soakFaultStarted > 0 ) {
 			var elapsed = getTickCount() - application.soakFaultStarted;
 			if (

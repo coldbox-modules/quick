@@ -13,7 +13,7 @@ from pathlib import Path
 import time
 
 from controller import Controller, HERE, Inconclusive, execute, write_json
-from traffic import evaluate as evaluate_traffic, timestamp
+from traffic import evaluate as evaluate_traffic, timestamp, report_sizes
 from resources import evaluate as evaluate_resources
 
 
@@ -30,7 +30,7 @@ def rarest_operation_fraction(workload):
         raise ValueError('coverageRepeats must be an integer from 1 through 4')
     # Reports rotate three sizes; graph and standalone detail each have 15%.
     # Every repeated sample requires a distinct, asserted HTTP request.
-    return min(0.1 / 3 * repeats, 0.15)
+    return min(0.1 / len(report_sizes(workload)) * repeats, 0.15)
 
 
 def recommendation(steps, profile):

@@ -16,7 +16,7 @@ from calibration import validate_trial_profile
 from controller import Controller, Inconclusive, execute, write_json
 from identity import build_identity, digest, profile_identity, read, require_match, sha_file
 from package import verify
-from traffic import CASES, OPERATIONS
+from traffic import CASES, operation_names
 
 QUALIFICATION_EVIDENCE = tuple(name for name in EVIDENCE if name != 'capacity-reference.json') + ('accepted-baseline.json',)
 SHA256 = re.compile(r'[0-9a-f]{64}')
@@ -48,7 +48,7 @@ def accepted_baseline(path):
     if profile_identity(proposal['profile']) != identity['values']['profile']:
         raise ValueError('Reviewed profile differs from measured inputs')
     limits = accepted['latencyBudgetsMs']
-    operations = {*OPERATIONS, *('failure:' + case for case in (*CASES, 'post_delete'))}
+    operations = {*operation_names(proposal['profile']['workload']), *('failure:' + case for case in (*CASES, 'post_delete'))}
     if set(limits) != operations or set(proposal['latency']) != operations:
         raise ValueError('Every operation requires a reviewed absolute latency budget')
     for operation, value in limits.items():

@@ -1384,3 +1384,22 @@ original-runner cleanup checks. The downloaded evidence and independent
 attribution comparison are under `ci-36246858832-saturation/`. This completes
 matching v11 saturation proof; full application diagnostics and calibration
 remain in progress.
+
+
+### Inspecting long calibrations and runner variation
+
+New capacity workflow runs upload the public runner identity before toolchain
+setup and retain each complete or partial trial immediately after that trial's
+step. Three separate trial steps preserve stop-on-failure behavior; proposal
+generation requires all three to succeed. A preflight rejection may create no
+trial directory, so that immediate upload can be empty; the original final
+always-upload still retains capacity evidence and every existing trial directory.
+The workflow passes actionlint. These orchestration changes leave the runtime,
+workload, sampler and comparison inputs unchanged.
+
+V11 calibration `36246554787` advanced from the completed capacity sweep to the
+three-trial step at 14:19:27 UTC. The step's status is not proof of completed
+workload or a passing full trial. One independent calibration on another standard
+runner will provide additional evidence about between-runner variation. Both
+attempts and any differing CPU identities must be retained and evaluated before
+baseline acceptance.

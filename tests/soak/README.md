@@ -1331,3 +1331,18 @@ manifest/profile agreement, preserved domain size, complete arrivals, clean
 collector flush/final recording, and removal of owned containers, named/anonymous
 volumes and network. This is development proof only; v11 CI calibration and
 matching diagnostics are still running.
+
+
+The v11 measurement job in `36246858832` passes. Downloaded raw JVM telemetry
+reproduces every saved healthy/sustained-growth/late-growth assessment, all target
+and collector exit codes are zero, and final recordings are retained. The live
+cancellation probe stopped both children and retained partial evidence without
+qualification. `ci-36246858832-measurement/raw-evidence-verification.json` records
+this completed milestone; application diagnostics and capacity remain pending.
+
+A comparison of both v10 capacity artifacts confirms greater application pressure
+in the rejected repeat: median quota use at 10/second rose from 64.3% to 75.3%,
+while generator use rose only from 22.0% to 23.9%. Both were Neoverse-N2 with
+passing resource assessments. `v10-repeated-capacity-comparison.json` retains
+these values and graph p95 evidence. The earlier green step is not used to
+dismiss the repeat's latency failure or justify accepting v10 unchanged.

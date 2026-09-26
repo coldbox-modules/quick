@@ -1276,3 +1276,28 @@ and each final recording is nonempty. Cancellation stopped both children,
 retained partial evidence and never qualified the interrupted run. This proof
 is saved in `ci-36245768374-measurement/raw-evidence-verification.json` and does
 not stand in for the still-running application or full calibration work.
+
+
+### V10 repeated capacity and provisional v11 fanout
+
+Fresh calibration `36244968012` on Neoverse-N2 did not reproduce the earlier
+eligible v10 rate. Complete collection recorded a clean 5/second step, then
+an inconclusive 10/second step with the single blocking reason
+`late-latency-regression-needs-observation:graph`. Graph p95 increased from
+520 to 626 ms (20.4%, +106 ms). Reports at 25/50/100 rows changed from
+44/76/141 to 49/93/190 ms and did not cross both blocking bands. Resources
+passed at both rates. The resulting 3/second target supplies only 108 rare
+first-window samples; full-trial preflight rejected it before provisioning.
+The complete failed attempt is retained in `ci-36244968012/`. No full trial
+started, and the earlier 6/second result is not treated as repeatable acceptance.
+
+V11 continues the approved reduction for standard GitHub hardware by lowering
+the hot-post fanout from 60 to **30 comments**. Total comments remain 50,000
+(45,000 Post / 5,000 User); remaining comments are deterministically distributed
+across the other populated posts, and the reserved empty post remains empty.
+Thirty is still substantially above ordinary post fanout. Report sizes remain
+25/50/100. The success/failure mix, timing, budgets, repetition and all numerical
+acceptance thresholds are unchanged. The fixture generator retains explicit
+60 and historical 180 options; the optional large-report profile retains 180.
+Actual generated SQL, manifest counts, determinism and the historical SQL hash
+are checked. Fresh development, capacity and detector evidence is required.

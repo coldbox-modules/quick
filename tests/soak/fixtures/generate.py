@@ -24,8 +24,8 @@ def fixture_settings(profile):
     settings = profile.get("fixtures", {"highFanoutComments": 180})
     if (not isinstance(settings, dict) or set(settings) != {"highFanoutComments"}
             or type(settings["highFanoutComments"]) is not int
-            or settings["highFanoutComments"] not in (60, 180)):
-        raise ValueError("fixtures must declare highFanoutComments as 60 or 180")
+            or settings["highFanoutComments"] not in (30, 60, 180)):
+        raise ValueError("fixtures must declare highFanoutComments as 30, 60 or 180")
     return dict(settings)
 
 
@@ -96,6 +96,6 @@ CREATE TABLE fixture_manifest (version VARCHAR(20) PRIMARY KEY);
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
-    parser.add_argument("--high-fanout-comments", type=int, choices=(60, 180), default=180)
+    parser.add_argument("--high-fanout-comments", type=int, choices=(30, 60, 180), default=180)
     args = parser.parse_args()
     print(json.dumps({k: v for k, v in generate(args.output, args.high_fanout_comments).items() if k not in ("postCommentCounts", "postTags")}, indent=2))

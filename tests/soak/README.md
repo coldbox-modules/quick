@@ -1564,3 +1564,13 @@ unexpected HTTP/contract errors. Both collectors flushed and retained nonempty
 final JFR recordings; the original CI verification confirms restored quotas and
 owned-resource cleanup. Evidence is under `ci-36252126235-saturation/`. Matching
 application diagnostics and calibration `36252125924` remain running.
+
+Independent calibration `36254251872` was dispatched once on the same standard
+runner label to measure between-host variation with v12. Before dispatch,
+`v12-independent-host-plan.json` records the fixed scope: accept the next assigned
+host, retain every outcome, and run three full trials only if its capacity sweep
+is eligible. Git comparison confirms that commit `59e4fa6` has identical measured
+source files and profiles to the primary v12 run at `60a7248`; intervening changes
+are comparison/proof verification and documentation. This is an additional host
+observation, not a replacement for either inconclusive v11 trial or for any v12
+failure. Neither calibration has an accepted baseline yet.

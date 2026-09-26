@@ -409,6 +409,17 @@ runs three trials sequentially on the same runner, creating a fresh application
 and database for each. `calibration-passed` never means `releaseQualified` and
 does not accept or replace a baseline. Missing eligibility stops before trials.
 
+Completed trials seal their raw measurements, package, manifests, assessments,
+and final JFR in `trial-evidence.json`. After three complete matching trials,
+`baseline.py --trials <trial-1> <trial-2> <trial-3> --output <proposal.json>`
+produces a review proposal with measured p95 variation, memory noise, proposed
+per-operation absolute budgets, and resource recovery. Reused JVMs, changed
+evidence, differing inputs, and incomplete trial windows are rejected. More
+than 10% run-to-run p95 variation or unexplained retained-growth/noise blocks
+proposal readiness. This tool cannot accept a baseline or qualify a release.
+Seventy-seven telemetry/calibration policy tests and eleven package tests pass;
+no three-trial proposal has been produced from real full-length runs yet.
+
 Delivery analysis aligns shortfall windows with container CPU budgets and
 application/database queues. Proven application saturation fails; generator
 capacity loss, joint saturation, or unresolved attribution is inconclusive.

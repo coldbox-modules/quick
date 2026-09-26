@@ -52,6 +52,7 @@ jobs:
           python3 tests/soak/calibration.py --capacity tests/results/soak/capacity --output tests/results/soak/trial-1
           python3 tests/soak/calibration.py --capacity tests/results/soak/capacity --output tests/results/soak/trial-2
           python3 tests/soak/calibration.py --capacity tests/results/soak/capacity --output tests/results/soak/trial-3
+          python3 tests/soak/baseline.py --trials tests/results/soak/trial-1 tests/results/soak/trial-2 tests/results/soak/trial-3 --output tests/results/soak/baseline-proposal.json
       - name: Preserve every step, including the first unclean rate
         if: always()
         uses: actions/upload-artifact@v4.6.2

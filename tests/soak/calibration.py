@@ -112,7 +112,7 @@ class CalibrationController(Controller):
     def setup(self):
         # Fail before provisioning if the proposed rate or package provenance
         # does not follow from the complete capacity evidence.
-        self.reference = capacity_reference(self.args.capacity)
+        self.reference = self.args.reference
         if profile_identity(self.profile) != profile_identity(self.reference['profile']):
             raise Inconclusive('Trial profile differs from the capacity proposal')
         validate_trial_profile(self.profile)
@@ -151,12 +151,19 @@ def main():
     parser.add_argument('--capacity', type=Path, required=True, help='Downloaded complete CI capacity artifact directory')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
+    try:
+        args.reference = capacity_reference(args.capacity)
+    except (ValueError, KeyError, OSError) as error:
+        parser.error(str(error))
     args.profile = args.capacity / 'proposed-trial-profile.json'
     args.package = args.capacity / 'package'
     args.candidate = read(args.package / 'package-manifest.json')['candidateSha']
     args.development, args.fault = False, 'none'
     controller = CalibrationController(args)
     execute(controller)
+    if controller.summary['status'] == 'calibration-passed':
+        from baseline import seal_trial
+        seal_trial(controller.out)
     return 0 if controller.summary['status'] == 'calibration-passed' else 1
 
 

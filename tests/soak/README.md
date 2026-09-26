@@ -172,7 +172,9 @@ intended sustained or final plateau windows. This changes diagnostic timing,
 not the already-declared full release schedule.
 `late-latency-full-warmup-20260925/verification.json` verifies the revised local
 timing: all offered work completed, resources recovered, and the exact late
-report-latency rule produced an inconclusive result. CI proof is still pending.
+report-latency rule produced an inconclusive result. CI v5 subsequently passed
+the complete suite in run `36218946123`; the latest profile requires its own
+matching evidence.
 
 ## Application contracts
 
@@ -863,3 +865,16 @@ future diagnostic CI runs through `--mode collector-stop`.
 The paired `controller-cancellation-v7-20260925` run also passed the normal
 SIGTERM path, including a clean collector end marker, final recording and full
 owned-resource cleanup.
+
+### Complete v5 CI detector evidence
+
+Run `36218946123` completed successfully. Its downloaded application artifact
+(`ci-36218946123-application/fault-suite/verification.json`) verifies all five
+fresh cases: healthy control passed; held JDBC connection, wrong response
+contract and sustained latency failed for their required reasons; final-window
+latency was inconclusive with the exact late-regression reason. Every case
+passed its cleanup/recording and same-harness checks. The paired container
+cancellation proof also passed. Its separate saturation artifact verifies both
+application-overload and generator-capacity attribution, and the measurement
+job passed healthy, retained-growth and late-growth pilots. This is complete
+diagnostic evidence for v5, not an accepted v7 baseline or a full healthy trial.

@@ -298,19 +298,18 @@ the live release workflow until baseline and detector acceptance are complete.
 
 ## Remaining acceptance work
 
-- Validate the complete 60-minute workload in CI and finish capacity-sweep
-  orchestration; only the short development schedule has run end to end.
-- Finish overload attribution, accepted-baseline identity validation, and calibration
-  of the implemented traffic/resource/memory/GC/recovery checks.
-- Complete live proof of held-connection and saturation detection, and run all
-  controlled faults on the final CI profile. Retain every unsuccessful proof.
-- Run the capacity sweep and three full healthy CI trials, investigate noise,
+- Obtain an eligible capacity target and validate the complete 60-minute workload
+  in CI; only development schedules have completed end to end so far.
+- Prove actual generator/application saturation attribution and resolve noisy
+  latency detector trials on the final CI profile. Repeat controlled detector
+  proofs after profile changes and retain every unsuccessful attempt.
+- Run three full healthy CI trials, investigate noise and hosted-runner variance,
   establish a justified reference, and review an accepted baseline manifest.
-- Finish real immutable package promotion from the read-only prepared artifact,
-  with provider/commit revalidation under repository publication concurrency.
+- Integrate verified immutable promotion under repository-wide publication
+  concurrency, including full validation of candidates that require no release.
 - Enable exactly one soak row in the release-only fail-fast matrix **after**
-  baseline acceptance, preserve all functional rows, and test both failure
-  directions, explicit cancellation, and all-pass publication with a stub.
+  baseline acceptance, preserve all 23 functional rows, and finish native
+  bidirectional cancellation, explicit cancellation, and all-pass stub evidence.
 - Deliver full reports and final acceptance evidence. No milestone above can be
   substituted by the short pilot or by the fake-publisher unit tests.
 
@@ -562,3 +561,10 @@ controller. The always-run cleanup step waits for completion. This follows
 The original incomplete proofs remain retained. Also, whole-workflow cancellation
 can mark an unstarted publication job `cancelled`; verification requires that it
 has no executed steps and no publication-stub artifact.
+
+With the direct entry process, `36214152174` passed functional-failure native
+cancellation and all cleanup/evidence checks. Explicit-cancel run `36214153690`
+received the signal but exposed a second termination from the always-run cleanup
+step, which interrupted the controller's teardown. The probe now records one
+shared stop request; subsequent cleanup invocations wait rather than sending a
+second signal. That failed run remains preserved and requires a fresh proof.

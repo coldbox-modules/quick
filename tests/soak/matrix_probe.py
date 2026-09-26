@@ -61,7 +61,10 @@ def child(output):
 
 def stop(output, *, wait=True):
     process = read(output / 'process.json')
-    if process and not (output / 'exit.json').exists():
+    if process and not (output / 'exit.json').exists() and not (output / 'stop-requested.json').exists():
+        # Observe and the subsequent always-run cleanup share one termination
+        # request. A second signal could interrupt the controller's teardown.
+        write(output / 'stop-requested.json', {'pid': process['pid'], 'time': time.time()})
         try:
             os.kill(process['pid'], signal.SIGTERM)
         except ProcessLookupError:
@@ -249,7 +252,15 @@ def main():
     if args.command == 'verify-remote':
         if not args.run_id:
             parser.error('--run-id is required')
-        return verify_remote(args.output.resolve(), args.run_id)
+        try:
+            return verify_remote(args.output.resolve(), args.run_id)
+        except (ValueError, KeyError, OSError, subprocess.CalledProcessError) as error:
+            result = {'passed': False, 'mode': mode(), 'runId': args.run_id,
+                      'releaseQualified': False, 'error': str(error)}
+            if args.output.exists():
+                write(args.output / 'verification.json', result)
+            print(json.dumps(result, indent=2))
+            return 1
     return globals()[args.command.replace('-', '_')](args.output.resolve())
 
 

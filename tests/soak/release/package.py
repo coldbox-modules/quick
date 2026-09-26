@@ -33,6 +33,8 @@ def git(repo, *args):
 
 
 def build(repo, prepared, output):
+    if prepared.get('noRelease'):
+        raise ValueError('No-release preparation must not produce a publication package')
     sha = prepared["candidateSha"]
     if not re.fullmatch(r"[0-9a-f]{40}", sha):
         raise ValueError("Candidate must be a full commit SHA")
@@ -110,6 +112,8 @@ def promote(directory, expected_sha, publisher):
     The eventual network adapter must not rebuild, retry writes, or select a version.
     """
     manifest = verify(directory, expected_sha)
+    if json.loads((directory / 'prepared.json').read_text()).get('noRelease'):
+        raise ValueError('No-release preparation cannot be promoted')
     if manifest["lastRelease"].get("diagnosticOnly"):
         raise ValueError("Diagnostic packages cannot be promoted")
     if publisher.candidate_sha() != expected_sha:

@@ -8,7 +8,7 @@ import time
 import unittest
 import zipfile
 
-from package import build, promote, verify
+from package import build, promote, verify, digest
 
 
 class FakePublisher:
@@ -88,6 +88,21 @@ class PromotionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Diagnostic packages"):
             promote(diagnostic, self.sha, publisher)
         self.assertEqual(publisher.events, [])
+
+    def test_no_release_preparation_cannot_build_an_artifact(self):
+        prepared = {**self.prepared, 'noRelease': True}
+        with self.assertRaisesRegex(ValueError, 'No-release preparation'):
+            build(self.repo, prepared, self.root / 'no-release')
+        self.assertFalse((self.root / 'no-release').exists())
+
+    def test_legacy_no_release_metadata_cannot_reach_publisher(self):
+        prepared = {**self.prepared, 'noRelease': True}
+        (self.output / 'prepared.json').write_text(json.dumps(prepared))
+        manifest = {**self.manifest, 'preparedSha256': digest(json.dumps(prepared, sort_keys=True).encode())}
+        (self.output / 'package-manifest.json').write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, 'No-release preparation'):
+            promote(self.output, self.sha, self.publisher)
+        self.assertEqual(self.publisher.events, [])
 
     def test_harness_and_generated_files_are_excluded_even_when_tracked(self):
         with zipfile.ZipFile(self.output / "quick.zip") as package:

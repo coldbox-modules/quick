@@ -46,6 +46,7 @@ GitHub Actions artifacts have finite retention.
 | `ci-36252126235-saturation/raw-evidence-verification.json` | Both v12 traffic and attribution results exactly match raw reanalysis: generator exhaustion is inconclusive (48/829 journeys), application overload fails (59/94). Final recordings and collector flush verified; original CI cleanup checks passed. |
 | `ci-36252126235-application/raw-evidence-verification.json` | All five v12 cases match raw traffic analysis; all four completed cases also match resource and memory reanalysis. Healthy, held-connection, sustained-latency and late-latency cases each completed 901/901 journeys. Largest application sample gap was 5.065 seconds. Original CI passed eight HTTP contract probes, cancellation, observer loss and owned cleanup. |
 | `ci-36252126235-application/profile-source-verification.json` | All five cases ran on N2 and match the current v12 measured source, runtime, images, resource limits, fixture fanout and report sizes. Development schedules and diagnostic faults remain explicit; this is not full-trial qualification. |
+| `diagnostic-archive-v12-36252126235/archive-verification.json` | Local bundle contains all three v12 diagnostic artifacts, raw reanalysis, reanalysis source and GitHub provenance. All 1,953 source files passed archive readback hashing. Durable remote storage remains pending. |
 | `development-v11-fanout-20260926/development-verification.json` | All development checks passed, including direct SQL fixture verification, 901/901 journeys, selected report coverage, collector flush, final recording and owned-resource cleanup. Memory remains inconclusive on this short schedule. |
 | `ci-36246858832-measurement/raw-evidence-verification.json` | Raw JVM reanalysis matches all three saved detector results; child exits and final JFR verified. Canceled pilot retained partial evidence and did not qualify. |
 | `ci-36246858832-saturation/raw-evidence-verification.json` | Raw attribution matches generator-capacity inconclusive and application-overload failure. Cleanup evidence comes from live checks on the original CI runner. |
@@ -68,6 +69,13 @@ The diagnostic bundle is `diagnostic-archive-v11-36246858832/v11-diagnostics-362
 `94fad5414f2a6e864b47289cdba75468096d2c8ba69652986fe109d10f39d4f0`.
 Its `manifest.json` records every member's hash and size; `github-provenance.json`
 records the original run SHA and artifact digests and retention dates.
+
+The current v12 diagnostic bundle is
+`diagnostic-archive-v12-36252126235/v12-diagnostics-36252126235.tar.gz`
+(106,316,566 bytes), SHA-256
+`22eb95f8fdc39b5ea2a47c2abddd7883cdec33c79216070aca531f2707dd1343`.
+Its manifest and provenance preserve every member's hash/size and the original
+GitHub artifact digests. This is a verified local archive, not remote durability.
 
 Current CI handles, checked on 2026-09-26:
 

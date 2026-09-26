@@ -1631,6 +1631,14 @@ against the local Docker daemon. The reproducible local reanalysis helper is
 `tests/results/soak/reanalyze_application.py`, whose SHA-256 is recorded in the
 verification report. Full calibration `36252125924` remains running.
 
+`diagnostic-archive-v12-36252126235/` packages all three v12 artifacts, raw
+reanalysis, the reanalysis helper source and GitHub provenance. Every one of its
+1,953 source files was read back from the archive and SHA-256 verified. The
+106,316,566-byte bundle has SHA-256
+`22eb95f8fdc39b5ea2a47c2abddd7883cdec33c79216070aca531f2707dd1343`.
+It is prepared locally; durable remote storage and baseline acceptance remain
+pending. Actions artifact expiry is retained in `github-provenance.json`.
+
 Independent calibration `36254251872` was dispatched once on the same standard
 runner label to measure between-host variation with v12. Before dispatch,
 `v12-independent-host-plan.json` records the fixed scope: accept the next assigned

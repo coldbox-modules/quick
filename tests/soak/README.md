@@ -446,7 +446,12 @@ workflow, records that snapshot, and cancels that existing run once. After its
 terminal state, pass `--mode explicit-cancel --cancellation-evidence PATH` to
 `verify_full_probe.py`. For the other failure modes, pass their matching `--mode`.
 Every failure verifier requires blocked publication, retained HTTP/JVM evidence,
-and owned-resource cleanup. These full-matrix scenarios are staged and unit
+and owned-resource cleanup. Failure proofs also require exactly 25 jobs, including
+the named publication stub: a missing stub or an unexpected extra job cannot
+establish blocked publication. Both malformed evidence cases reproduced before
+the verifier fix; all 59 release tests pass afterward, with Pyflakes and generated
+workflow drift checks clean. Evidence is in `full-proof-verifier-20260926/`.
+These full-matrix scenarios are staged and unit
 checked; their real native executions remain pending baseline acceptance.
 The isolated CommandBox/TestBox probe
 `full-fault-assertion-20260926/verification.json` executes the actual injected CFC

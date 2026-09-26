@@ -95,7 +95,7 @@ class FullMatrixEvidenceTests(unittest.TestCase):
         self.write('artifacts/full-functional-0-123/testbox.json', {'totalPass': 9, 'totalFail': 1, 'totalError': 0})
         self.assertFalse(verify(self.root)['checks']['everyActualTestBoxReportPassed'])
 
-    def test_functional_failure_requires_the_real_expected_assertion_and_cleanup(self):
+    def prepare_functional_failure(self):
         from verify_full_probe import epoch
         run = 'artifacts/release-soak-123-1/supervision/run'
         (self.root / run / 'qualification.json').unlink()
@@ -121,10 +121,28 @@ class FullMatrixEvidenceTests(unittest.TestCase):
             'name': 'fails deliberately after the sibling soak has real HTTP and JVM evidence',
             'status': 'Failed', 'failMessage': 'Intentional full-matrix functional failure'}]}]}]}
         self.write(directory + 'testbox.json', report)
+        return directory, report
+
+    def test_functional_failure_requires_the_real_expected_assertion_and_cleanup(self):
+        directory, report = self.prepare_functional_failure()
         self.assertTrue(verify_failure(self.root, 'functional-failure')['passed'])
         report['bundleStats'][0]['suiteStats'][0]['specStats'][0]['failMessage'] = 'Unrelated exception'
         self.write(directory + 'testbox.json', report)
         self.assertFalse(verify_failure(self.root, 'functional-failure')['checks']['actualAssertionFailed'])
+
+    def test_missing_publication_job_cannot_prove_blocked_publication(self):
+        self.prepare_functional_failure()
+        self.jobs.pop()
+        self.write('jobs.json', {'jobs': self.jobs})
+        with self.assertRaisesRegex(ValueError, 'exactly one publication stub'):
+            verify_failure(self.root, 'functional-failure')
+
+    def test_unexpected_job_cannot_hide_in_failure_proof(self):
+        self.prepare_functional_failure()
+        self.jobs.append(self.job('Unexpected publisher', 'Publish',
+            '2026-01-01T00:06:00Z', '2026-01-01T00:07:00Z'))
+        self.write('jobs.json', {'jobs': self.jobs})
+        self.assertFalse(verify_failure(self.root, 'functional-failure')['passed'])
 
 
 if __name__ == '__main__':

@@ -66,6 +66,7 @@ def verify_failure(output, mode):
     workflow, jobs = read(output / 'workflow.json'), read(output / 'jobs.json')['jobs']
     artifacts = output / 'artifacts'
     soak = one((j for j in jobs if j['name'].startswith('Validation / soak /')), 'soak row')
+    publisher = one((j for j in jobs if j['name'] == 'Full receipt publication stub (no provider calls)'), 'publication stub')
     run = one(artifacts.glob('release-soak-*/supervision/run'), 'interrupted full soak')
     summary, cleanup = read(run / 'summary.json'), read(run.parent / 'cleanup-verification.json')
     functional = [j for j in jobs if j['name'].startswith('Validation / functional /')]
@@ -74,11 +75,11 @@ def verify_failure(output, mode):
         'expectedWorkflow': workflow['path'] == '.github/workflows/soak-release-proof.yml',
         'terminalExpectedOutcome': workflow['status'] == 'completed' and workflow['conclusion'] == ('cancelled' if mode == 'explicit-cancel' else 'failure'),
         'entireFunctionalMatrixPresent': len(functional) == len(expected) == 23 and {j['name'] for j in functional} == expected,
+        'exactJobCount': len(jobs) == 25,
         'liveFullSoakStarted': read(run.parent / 'live.json').get('live') is True,
         'noQualificationReceipt': not (run / 'qualification.json').exists() and not (run / 'validation.json').exists(),
         'neverQualified': summary.get('releaseQualified') is False,
-        'publicationBlocked': all(j['conclusion'] in ('skipped', 'cancelled') for j in jobs
-            if j['name'] == 'Full receipt publication stub (no provider calls)'),
+        'publicationBlocked': publisher['conclusion'] in ('skipped', 'cancelled'),
         'noPublicationArtifact': not list(artifacts.rglob('qualified-publication-stub.json')),
         'ownedResourcesRemoved': all(cleanup.get('checks', {}).get(key) is True for key in
             ('containersRemoved', 'volumesRemoved', 'networksRemoved', 'anonymousDatabaseVolumeRemoved')),

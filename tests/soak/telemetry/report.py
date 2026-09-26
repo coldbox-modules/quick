@@ -37,12 +37,13 @@ def chart(title, points, unit):
         bucket = points[i:i + stride]
         displayed.extend(sorted({min(bucket, key=lambda p: p[1]), max(bucket, key=lambda p: p[1])}))
     coordinates = ' '.join(f'{55 + (time-start)/max(1,end-start)*875:.1f},{215-value/maximum*175:.1f}' for time, value in displayed)
-    return f'''<h2>{html.escape(title)}</h2><svg viewBox="0 0 960 250" role="img" aria-label="{html.escape(title)}">
-      <text x="10" y="20">{maximum:.1f} {html.escape(unit)}</text>
+    return f'''<h2>{html.escape(title)}</h2><div class="chart">
+      <p class="chart-range">0–{maximum:.1f} {html.escape(unit)}</p>
+      <svg viewBox="45 25 895 200" role="img" aria-label="{html.escape(title)}">
       <path d="M55 35V215H930" fill="none" stroke="#aaa"/>
-      <polyline points="{coordinates}" fill="none" stroke="#195fad" stroke-width="2"/>
-      <text x="10" y="217">0</text><text x="55" y="240">0 min</text>
-      <text x="835" y="240">{(end-start)/60000:.1f} min</text></svg>'''
+      <polyline points="{coordinates}" fill="none" stroke="#195fad" stroke-width="2"/></svg>
+      <p class="chart-time"><span>0 min</span><span>{(end-start)/60000:.1f} min</span></p></div>'''
+
 
 
 def render(directory):
@@ -55,7 +56,7 @@ def render(directory):
     capacity = document(directory / 'capacity-analysis.json', {})
     jvm, observations = rows(directory / 'jvm/jvm.ndjson'), rows(directory / 'observations.ndjson')
     parts = ['<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">',
-             '<title>Quick soak evidence</title><style>body{font:16px/1.5 system-ui;max-width:1050px;margin:35px auto;padding:0 20px;color:#202a36}h2{margin-top:2em;font-size:20px}svg{width:100%;background:#f5f7fa}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:7px;text-align:left;border-bottom:1px solid #ddd}code{overflow-wrap:anywhere}.notice{background:#fff1cc;padding:14px}pre{white-space:pre-wrap}</style>',
+             '<title>Quick soak evidence</title><style>body{font:16px/1.5 system-ui;max-width:1050px;margin:35px auto;padding:0 20px;color:#202a36}h2{margin-top:2em;font-size:20px}svg{display:block;width:100%}.chart{background:#f5f7fa;padding:10px 12px}.chart p{margin:0}.chart-time{display:flex;justify-content:space-between}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:7px;text-align:left;border-bottom:1px solid #ddd}code{overflow-wrap:anywhere}.notice{background:#fff1cc;padding:14px}pre{white-space:pre-wrap}</style>',
              '<h1>Quick soak evidence</h1>',
              ('<p class="notice">Soak qualification passed. Publication still requires a verified qualification receipt and every other required validation job.</p>'
               if summary.get('releaseQualified') and summary['status'] == 'passed' else

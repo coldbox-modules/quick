@@ -1244,3 +1244,24 @@ Fresh diagnostics `36245768374` test that commit's half-CPU injection and curren
 normal measured sources. Calibration `36244968012` continues separately at
 `734f112`, with the same normal measured sources. Neither running workflow is
 completion evidence, and neither has accepted a baseline or qualified a release.
+
+
+### Rendered report verification
+
+The real `development-v10-reports-20260926/report.html` was inspected in headless
+Chromium at 1440×1000 and 390×844. The title, visible qualification warning,
+assessment details, latency tables and 16 charts render with meaningful content;
+no page overflow, framework overlay or browser console errors were observed.
+Following the Summary evidence link loads that run's actual `summary.json` at
+both widths. This is browser rendering/interaction evidence, separate from the
+previous comparison of table values and raw files.
+
+The first mobile inspection found that SVG scaling made axis labels about six
+pixels tall. Chart range/time labels now use ordinary HTML text at the report's
+normal size; plotted data and numeric scaling are unchanged. A second desktop
+and mobile inspection confirms readable labels and working evidence links.
+The Impeccable detector reports no findings, and Pyflakes passes. Screenshots and
+the temporary Playwright check are retained outside the repository under
+`/tmp/quick-soak-report-*`; physical mobile devices and other browser engines were
+not tested. Rendering occurs after measurement and is outside measured-source
+identity, so this presentation-only change does not invalidate active calibration.

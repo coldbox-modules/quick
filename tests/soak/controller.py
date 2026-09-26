@@ -31,6 +31,7 @@ from report import render as render_report
 from resources import evaluate as evaluate_resources
 from memory import evaluate as evaluate_memory
 from delivery import evaluate as evaluate_delivery
+from native import parse_memory_stat
 
 
 def write_json(path, value):
@@ -148,7 +149,9 @@ class Controller:
         delay = w["warmupSeconds"] + w["rampSeconds"] + (w["plateauSeconds"] - 20 if self.args.fault == "late-latency" else 60)
         self.env["SOAK_FAULT_DELAY_MS"] = str(delay * 1000)
         write_json(self.out / "profile.json", p)
-        write_json(self.out / "host.json", {"docker": json.loads(self.docker("info", "--format", "{{json .}}").stdout),
+        docker_info = json.loads(self.docker("info", "--format", "{{json .}}").stdout)
+        self.cgroup_version = docker_info["CgroupVersion"]
+        write_json(self.out / "host.json", {"docker": docker_info,
                    "cpu": json.loads(self.command(["lscpu", "--json"]).stdout) if platform.system() == "Linux" else
                           {"model": self.command(["sysctl", "-n", "machdep.cpu.brand_string"]).stdout.decode().strip()},
                    "runnerImage": os.environ.get("ImageOS"), "runnerImageVersion": os.environ.get("ImageVersion"),
@@ -276,9 +279,13 @@ class Controller:
             return dict(zip(("lockWaits", "locks", "queries", "queryTimePicoseconds"), map(int, values)))
         def resources():
             return [json.loads(x) for x in self.docker("stats", "--no-stream", "--format", "{{json .}}", self.app, self.db, self.observer, self.generator, timeout=8).stdout.decode().splitlines()]
+        def native_memory():
+            path = "/sys/fs/cgroup/memory.stat" if self.cgroup_version == "2" else "/sys/fs/cgroup/memory/memory.stat"
+            raw = self.docker("exec", self.app, "cat", path, timeout=5).stdout.decode()
+            return parse_memory_stat(raw, self.cgroup_version)
         row = {"time": timestamp}
-        with ThreadPoolExecutor(max_workers=3) as pool:
-            jobs = {key: pool.submit(fn) for key, fn in (("application", app_sample), ("database", db_sample), ("containers", resources))}
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            jobs = {key: pool.submit(fn) for key, fn in (("application", app_sample), ("database", db_sample), ("containers", resources), ("applicationMemory", native_memory))}
             for key, job in jobs.items():
                 try:
                     row[key] = job.result()

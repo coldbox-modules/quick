@@ -10,7 +10,7 @@ from pathlib import Path
 
 SOURCE_FILES = {'controller.py', 'Seed.cfc', 'release/package.py',
                 'telemetry/Collector.java', 'telemetry/memory.py',
-                'telemetry/resources.py', 'telemetry/traffic.py', 'telemetry/delivery.py'}
+                'telemetry/resources.py', 'telemetry/traffic.py', 'telemetry/delivery.py', 'telemetry/native.py'}
 SOURCE_DIRS = {'app', 'k6', 'fixtures', 'docker'}
 DOCKER_FIELDS = ('Architecture', 'NCPU', 'MemTotal', 'KernelVersion', 'ServerVersion',
                  'CgroupDriver', 'CgroupVersion', 'OperatingSystem', 'OSType')

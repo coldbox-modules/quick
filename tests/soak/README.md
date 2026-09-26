@@ -466,3 +466,14 @@ held-connection, wrong-contract, and sustained-latency application cases. Its
 late-latency case timed out on a graph request before fault activation, with ZGC
 allocation stalls in the retained recording/logs. That case remains unproven in
 CI; the workflow's overall result is failed and has not been waived.
+
+CI capacity run `36210905572` stopped at 5/second after application container
+memory exceeded 90% of its 2 GiB budget for two minutes. The run is failed, not
+a baseline. Across its observation, metaspace remained about 61-63 MiB and
+post-cycle heap medians varied with allocation (roughly 128-326 MiB in two-minute
+groups); these short observations do not establish retained-memory stability.
+The next provisional profile allows 3 GiB of container memory while retaining
+the same 1 GiB heap. New per-sample cgroup memory categories distinguish anonymous,
+file/shared, and kernel usage; they are overlapping categories and are not summed.
+This is a diagnostic/calibration change requiring fresh capacity and baseline
+trials, not acceptance of the failed run or an explanation of the growth.

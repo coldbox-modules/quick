@@ -19,7 +19,7 @@
   "resources": {
     "application": {
       "cpus": 2,
-      "memoryMiB": 2048,
+      "memoryMiB": 3072,
       "heapMiB": 1024,
       "jdbcPoolLimit": 16
     },

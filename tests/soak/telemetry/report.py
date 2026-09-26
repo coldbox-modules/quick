@@ -57,7 +57,9 @@ def render(directory):
     parts = ['<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">',
              '<title>Quick soak evidence</title><style>body{font:16px/1.5 system-ui;max-width:1050px;margin:35px auto;padding:0 20px;color:#202a36}h2{margin-top:2em;font-size:20px}svg{width:100%;background:#f5f7fa}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:7px;text-align:left;border-bottom:1px solid #ddd}code{overflow-wrap:anywhere}.notice{background:#fff1cc;padding:14px}pre{white-space:pre-wrap}</style>',
              '<h1>Quick soak evidence</h1>',
-             '<p class="notice">Release qualification: <strong>not granted</strong>. Development results, canceled runs, and unaccepted profiles cannot authorize publication.</p>',
+             ('<p class="notice">Soak qualification passed. Publication still requires a verified qualification receipt and every other required validation job.</p>'
+              if summary.get('releaseQualified') and summary['status'] == 'passed' else
+              '<p class="notice">Release qualification: <strong>not granted</strong>. Development results, canceled runs, and unaccepted profiles cannot authorize publication.</p>'),
              f'<p>Run <code>{html.escape(summary.get("runId", directory.name))}</code> · <strong>{html.escape(summary["status"])}</strong></p>',
              f'<p>Profile: <code>{html.escape(profile.get("id", "unknown"))}</code><br>Candidate: <code>{html.escape(package.get("candidateSha", "unknown"))}</code><br>Package SHA-256: <code>{html.escape(package.get("packageSha256", "unknown"))}</code></p>']
     parts += ['<ul>' + ''.join('<li>' + html.escape(reason) + '</li>' for reason in summary.get('reasons', [])) + '</ul>']
@@ -100,6 +102,13 @@ def render(directory):
             if traffic[category]:
                 parts.append('<h2>Traffic ' + category + '</h2><ul>' + ''.join('<li>' + html.escape(x) + '</li>' for x in traffic[category]) + '</ul>')
     samples = [row for row in jvm if row.get('kind') == 'sample']
+    if any('applicationMemory' in row for row in observations):
+        parts.append('<h2>Application cgroup memory</h2><p>These kernel categories explain the container budget separately from JVM heap and process RSS. Shared, mapped, and dirty memory are overlapping subcategories; do not sum the charts. Growth requires investigation and is not automatically a retained-object leak.</p>')
+        for field in ('anon', 'file', 'kernel', 'shmem', 'file_mapped', 'file_dirty', 'inactive_file'):
+            points = [(row['time'], row['applicationMemory']['bytesAndCounters'][field] / MIB) for row in observations
+                      if field in row.get('applicationMemory', {}).get('bytesAndCounters', {})]
+            if points:
+                parts.append(chart('Cgroup ' + field, points, 'MiB'))
     for field, title, factor, unit in [('heapUsed', 'Heap occupancy', MIB, 'MiB'), ('metaspaceUsed', 'Metaspace', MIB, 'MiB'),
         ('rssBytes', 'Process resident memory (includes ZGC mappings)', MIB, 'MiB'), ('threads', 'JVM threads', 1, 'threads'), ('descriptors', 'Open descriptors', 1, 'descriptors')]:
         parts.append(chart(title, [(r['time'], r[field] / factor) for r in samples if field in r], unit))

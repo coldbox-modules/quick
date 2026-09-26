@@ -18,10 +18,12 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4.2.2
+      - name: Retain environment evidence even if setup fails
+        run: python3 tests/soak/ci_environment.py
       - uses: actions/setup-java@v4.7.1
         with:
           distribution: temurin
-          java-version: '21.0.10+7'
+          java-version: '21.0.10+7.0.LTS'
           architecture: x64
       - name: Verify fail-closed analyzer and fake publisher
         run: |
@@ -46,10 +48,12 @@ jobs:
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4.2.2
+      - name: Retain environment evidence even if setup fails
+        run: python3 tests/soak/ci_environment.py
       - uses: actions/setup-java@v4.7.1
         with:
           distribution: temurin
-          java-version: '21.0.10+7'
+          java-version: '21.0.10+7.0.LTS'
           architecture: x64
       - uses: Ortus-Solutions/setup-commandbox@v2.0.1
         with:

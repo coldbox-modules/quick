@@ -42,11 +42,18 @@ GitHub Actions artifacts have finite retention.
 | `ci-36245768374-application/raw-evidence-verification.json` | All five v10 application cases match raw k6 reanalysis. Original CI checks passed HTTP contracts, controller cancellation and observer loss. This is historical v10 evidence. |
 | `ci-36244968012/` | Repeated v10 capacity was ineligible after graph latency degradation. The failed attempt remains retained and is not replaced by an earlier eligible result. |
 | `ci-36248290534-runner/` | Independent v11 host identity: four-core Neoverse-N2, Ubuntu ARM image `20260920.129.1`. This proves identity, not workload completion. |
+| `diagnostic-archive-v11-36246858832/archive-verification.json` | Local archive contains all three v11 diagnostic artifacts, raw reanalysis and GitHub provenance. All 1,908 files passed SHA-256 archive readback verification. This prepares diagnostic evidence for durable storage; it does not establish remote archival. |
+
+The diagnostic bundle is `diagnostic-archive-v11-36246858832/v11-diagnostics-36246858832.tar.gz`
+(107,150,144 bytes), SHA-256
+`94fad5414f2a6e864b47289cdba75468096d2c8ba69652986fe109d10f39d4f0`.
+Its `manifest.json` records every member's hash and size; `github-provenance.json`
+records the original run SHA and artifact digests and retention dates.
 
 Current CI handles, checked on 2026-09-26:
 
 - [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): full-trial step running; no full trial verified yet.
-- [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): capacity sweep running on another standard runner.
+- [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): first full-trial step started at 14:50:31 UTC on another standard runner; no full trial verified yet.
 - [V11 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36246858832): all three jobs passed; measurement, saturation and application raw evidence independently reanalyzed.
 
 ## Acceptance order

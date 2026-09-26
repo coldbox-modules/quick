@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "id": "lucee6-serial-arm64-large-reports-v5",
+  "id": "lucee6-serial-arm64-large-reports-v7",
   "status": "provisional-unaccepted",
   "runner": "ubuntu-24.04-arm",
   "architecture": "arm64",
@@ -35,7 +35,8 @@
     },
     "collector": {
       "cpus": 0.25,
-      "memoryMiB": 256
+      "memoryMiB": 768,
+      "heapMiB": 512
     }
   },
   "workload": {

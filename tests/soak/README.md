@@ -106,7 +106,7 @@ recorded under **Native matrix cancellation proof** below.
 
 ## Memory measurement method
 
-Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v6
+Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v7
 runtime uses generational ZGC with a fixed periodic major collection interval,
 identically in baseline and candidate. The pilot uses a 256 MiB heap and a
 five-second major interval to validate detection cheaply. The application uses
@@ -802,3 +802,36 @@ This reduces work per report request rather than reducing the number of measured
 requests. Fresh capacity and detector proofs are required for the new profile;
 all previous failed or successful measurements remain evidence only for their
 recorded inputs. No baseline or release gate is enabled by this change.
+
+### Native artifact transport and contended publication guards
+
+Runs `36219423715` and `36219423717` both passed their downloaded native
+verifiers. Their workflows overlapped on the same commit, and the second
+validation completed while the first publication guard held its 180-second
+lease. The provider job intervals and recorded stub bodies did not overlap.
+Both publishers waited for every validation job, downloaded the actual tested
+ZIP and verified its copied bytes against SHA-256
+`60477d696d1b7e46e72506a59207ec716c4d180fac9b7e4a99c4fc956b48b881`.
+The combined verifier passed in
+`tests/results/soak/native-serialization-v5-20260925/verification.json`.
+These are diagnostic two-row proofs with no provider writes; the full release
+matrix and a qualified publication remain separate acceptance requirements.
+
+### Provisional v7 collector headroom
+
+The local v6 development run stopped because the observer JVM exhausted its
+128 MiB Java heap. Docker reported exit 1 without a container OOM kill; the
+collector log contains `OutOfMemoryError: Java heap space`. Replaying the
+retained 25 MiB JFR file alone reached approximately 124 MiB of Java heap,
+leaving little headroom for live JMX and streaming. This is an observer failure,
+not proof of an application leak. The incomplete run is retained as failed
+evidence and cannot become a baseline.
+
+V7 gives the collector an explicit 512 MiB heap inside a 768 MiB container,
+keeping its 0.25 CPU quota. The collector records its own maximum, used and
+committed heap; resource validation requires the configured maximum and valid
+usage samples. A collector process failure is inconclusive and still blocks
+qualification. Application/DB process failures retain their failure outcome.
+The application workload, application resources and acceptance thresholds are
+unchanged from v6. This measurement-resource change requires fresh capacity,
+full trials and detector evidence before baseline acceptance.

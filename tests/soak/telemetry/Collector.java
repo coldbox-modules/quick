@@ -85,6 +85,7 @@ public final class Collector {
             manifest.put("arguments", String.join(" ", runtime.getInputArguments()));
             manifest.put("collectors", String.join(",", collectors.stream().map(GarbageCollectorMXBean::getName).toList()));
             manifest.put("startTime", runtime.getStartTime());
+            manifest.put("collectorHeapMax", Runtime.getRuntime().maxMemory());
             emit(manifest);
             try (var stream = new RemoteRecordingStream(connection, dir.resolve("stream"))) {
                 stream.setMaxSize(64L * 1024 * 1024);
@@ -139,6 +140,9 @@ public final class Collector {
                     r.put("processCpuLoad", os.getProcessCpuLoad());
                     r.put("processCpuTimeNs", os.getProcessCpuTime());
                     r.put("rssBytes", residentBytes(pid));
+                    var observerHeap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+                    r.put("collectorHeapUsed", observerHeap.getUsed());
+                    r.put("collectorHeapCommitted", observerHeap.getCommitted());
                     emit(r);
                     if (System.nanoTime() - lastDump >= dumpInterval * 1_000_000_000L) {
                         Path next = dir.resolve("recording-next.jfr");

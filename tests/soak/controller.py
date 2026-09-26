@@ -267,9 +267,12 @@ class Controller:
         if self.initial_diag.get("parallelEagerLoading") != p["runtime"]["parallelEagerLoading"]:
             raise RuntimeError("Actual eager-loading mode differs from profile")
         self.app_pid = self.initial_diag["pid"]
+        collector_heap = resources["collector"].get("heapMiB", 128)
+        if type(collector_heap) is not int or not 64 <= collector_heap <= resources["collector"]["memoryMiB"] * 0.75:
+            raise Inconclusive("Collector heap must leave bounded native-memory headroom")
         self.observer = self.start_container("collector", ["--pid", "container:" + self.app, "--network", "container:" + self.app,
             "--volumes-from", self.app, "--cpus", str(resources["collector"]["cpus"]), "--memory", f'{resources["collector"]["memoryMiB"]}m'], image,
-            ["java", "-Xmx128m", "-Dsun.rmi.transport.tcp.responseTimeout=5000", "--add-modules", "jdk.attach,jdk.management.jfr", "-cp", "/work/classes",
+            ["java", f"-Xmx{collector_heap}m", "-Dsun.rmi.transport.tcp.responseTimeout=5000", "--add-modules", "jdk.attach,jdk.management.jfr", "-cp", "/work/classes",
              "Collector", str(self.app_pid), "/work/jvm", str(p["workload"]["sampleSeconds"]), "60"])
         self.wait_for(self.observer, lambda: (self.out / "jvm/ready").exists(), 45)
         write_json(self.out / "runtime-containers.json", [{"name": n, "image": self.inspect(n)["Image"],
@@ -323,7 +326,8 @@ class Controller:
         for name in (self.app, self.db, self.observer):
             state = self.inspect(name)["State"]
             if state["OOMKilled"] or not state["Running"]:
-                raise RuntimeError(f"Required process {name} stopped or OOMed")
+                error = Inconclusive if name == self.observer else RuntimeError
+                raise error(f"Required process {name} stopped or OOMed")
         return row
 
     def run(self):

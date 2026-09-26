@@ -10,12 +10,13 @@ TIMING = dict(warmupStartMs=START, idleStartedMs=IDLE, idleFinishedMs=FINISH)
 
 
 def healthy():
-    jvm = [{'kind': 'runtime', 'javaVersion': '21.0.10+7-LTS'}]
+    jvm = [{'kind': 'runtime', 'javaVersion': '21.0.10+7-LTS',
+            'collectorHeapMax': PROFILE['resources']['collector']['heapMiB']*1024*1024}]
     observations = []
     for t in range(START, FINISH + 1, 10000):
         jvm.append(dict(kind='sample', time=t, uptimeMs=t+1, heapMax=PROFILE['resources']['application']['heapMiB']*1024*1024,
                         threads=44, descriptors=120, metaspaceUsed=70*1024*1024,
-                        rssBytes=2000*1024*1024, processCpuTimeNs=t*1000))
+                        rssBytes=2000*1024*1024, processCpuTimeNs=t*1000, collectorHeapUsed=100*1024*1024))
         observations.append({'time': t, 'application': dict(bootId='one', applicationStarts=1, uptimeMs=t+1,
             parallelEagerLoading=False, executor={}, jdbcActive=0, jdbcIdle=4, jdbcWaiting=0, activeRequests=1, queuedRequests=0, scratchPosts=0,
             registry=dict(definitionCount=6, derivedBucketCount=6, derivedEntryCount=22), errors={'unexpected':0}),
@@ -26,6 +27,14 @@ def healthy():
 
 
 class ResourceTests(unittest.TestCase):
+    def test_collector_heap_budget_and_observation_are_required_when_declared(self):
+        jvm, rows = healthy()
+        jvm[0]['collectorHeapMax'] = 128*1024*1024
+        self.assertIn('collector-heap-budget-mismatch', self.analyze(jvm, rows)['invalid'])
+        jvm, rows = healthy()
+        del jvm[1]['collectorHeapUsed']
+        self.assertIn('missing-or-invalid-collector-heap-metric', self.analyze(jvm, rows)['invalid'])
+
     def analyze(self, jvm, observations, **kwargs):
         return evaluate(jvm, observations, PROFILE, kwargs.pop('timing', TIMING), plateau_start=PLATEAU, **kwargs)
 

@@ -986,3 +986,22 @@ and samples to stay within their respective bounds. The test covers Serial's
 actual CI values and rejects usage above its smaller usable maximum. No budget,
 workload, duration, sample floor or acceptance threshold changes. The rejected
 v7 run remains evidence of the validator defect; fresh v8 calibration is required.
+
+### V8 capacity result: sample-ineligible target
+
+Run `36221908906` completed collection and a clean 5/second step. At 10/second,
+traffic stayed correct and resources passed, but the single capacity window
+detected sharp p95 increases relative to 5/second: graph 1,074 to 1,495 ms,
+100-row report 123 to 313 ms, and 250-row report 288 to 583 ms, among others.
+The step was inconclusive under the late-latency rule and was not accepted.
+Application median CPU rose from 33.7% to 82.4% of its quota; generator median
+at 10/second remained 26.0% of its own quota. Observer heap accounting and final
+collection passed. This is not another observer OOM or generator limitation.
+
+The resulting 60%-of-clean target is 3/second, with only 108 expected samples for
+the rarest first-window operation. Full trials rejected it before provisioning;
+no baseline trial started and no sample floor or latency threshold was waived.
+The current v8 workload remains unaccepted. The repository reports zero
+configured self-hosted runners, and the organization API reports larger hosted
+runners unsupported. Fixture sizing or additional CI capacity must be resolved
+before a fresh complete calibration can establish a release baseline.

@@ -7,6 +7,7 @@ on:
   push:
     tags:
       - 'soak-diagnostics-*'
+      - 'soak-saturation-*'
 
 permissions:
   contents: read
@@ -14,6 +15,7 @@ permissions:
 jobs:
   measurement-pilot:
     name: JVM measurement and artifact promotion self-tests
+    if: ${{ !startsWith(github.ref, 'refs/tags/soak-saturation-') }}
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     steps:
@@ -77,6 +79,7 @@ jobs:
 
   application-harness:
     name: Isolated HTTP workload and controller self-tests
+    if: ${{ !startsWith(github.ref, 'refs/tags/soak-saturation-') }}
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 65
     steps:

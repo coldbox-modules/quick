@@ -1096,6 +1096,16 @@ incorrect responses. Its application case fails with
 Both cases verify their controlled injection, restoration of the diagnostic
 quota, final recording/collector flush and removal of all owned resources.
 
+V9 diagnostics `36241478992` subsequently completed successfully. Its downloaded
+application artifact (`ci-36241478992-application/`) passes the complete five-case
+fault suite and both interruption probes. The healthy, sustained-latency and
+late-latency cases each completed 901/901 plateau journeys; the held-connection
+case completed 900/900 and failed only the final/idle JDBC-active checks. Wrong
+contract failed the intended assertion before plateau. Both latency cases have
+only their exact sustained/late report-100 detector reason. All fault cases and
+both interruption probes passed their recording and owned-resource cleanup checks.
+This completes v9 diagnostic proof but does not change its rejected capacity target.
+
 ### V9 capacity result and provisional v10 report calibration
 
 Capacity `36241479101` completed collection cleanly. The 60-comment graph no
@@ -1135,3 +1145,17 @@ V10 calibration `36242953744` and diagnostics `36242953890` test commit
 and late-growth outcomes, plus successful live cancellation and retained partial
 evidence. Capacity/full trials and application detectors remain pending; the
 release gate is still disabled.
+
+V10's first saturation suite (`ci-36242953890-saturation/`) verifies generator
+exhaustion, but its application injection was too weak: reducing the application
+to one CPU still completed all 901 offered journeys with correct traffic and
+healthy resources. The suite correctly rejected this as overload-detector proof;
+the application was never overloaded. That failed attempt remains retained.
+
+The diagnostic application injection now uses 0.25 CPU only after normal startup
+and warmup, then restores the original quota before cleanup. This changes neither
+the three-CPU release profile nor the workload or acceptance thresholds. The
+helper is outside measured-source identity; the existing v10 capacity run remains
+valid for its recorded inputs. `soak-saturation-*` tags run only the saturation
+job in the diagnostic workflow so this controlled-fault correction can be tested
+without restarting healthy calibration or the unrelated detector jobs.

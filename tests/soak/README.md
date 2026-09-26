@@ -4,6 +4,8 @@ Implementation of [the release soak plan](../../docs/release-soak-testing-plan.m
 This is under construction. The required release gate is **not enabled** and no
 accepted baseline exists yet. A short local pilot or HTTP smoke pass does not
 qualify a package for publication.
+The [acceptance checklist](ACCEPTANCE.md) maps all nine plan items to current
+evidence and outstanding requirements.
 
 ## Isolated development run
 

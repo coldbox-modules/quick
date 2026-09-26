@@ -11,6 +11,7 @@ TIMING = dict(warmupStartMs=START, idleStartedMs=IDLE, idleFinishedMs=FINISH)
 
 def healthy():
     jvm = [{'kind': 'runtime', 'javaVersion': '21.0.10+7-LTS',
+            'collectorHeapLimit': PROFILE['resources']['collector']['heapMiB']*1024*1024,
             'collectorHeapMax': PROFILE['resources']['collector']['heapMiB']*1024*1024}]
     observations = []
     for t in range(START, FINISH + 1, 10000):
@@ -29,10 +30,18 @@ def healthy():
 class ResourceTests(unittest.TestCase):
     def test_collector_heap_budget_and_observation_are_required_when_declared(self):
         jvm, rows = healthy()
-        jvm[0]['collectorHeapMax'] = 128*1024*1024
+        jvm[0]['collectorHeapLimit'] = 128*1024*1024
         self.assertIn('collector-heap-budget-mismatch', self.analyze(jvm, rows)['invalid'])
         jvm, rows = healthy()
         del jvm[1]['collectorHeapUsed']
+        self.assertIn('missing-or-invalid-collector-heap-metric', self.analyze(jvm, rows)['invalid'])
+
+    def test_serial_collector_usable_heap_may_be_smaller_than_configured_limit(self):
+        jvm, rows = healthy()
+        # Actual CI value with -Xmx512m and the Serial collector.
+        jvm[0]['collectorHeapMax'] = 518979584
+        self.assertEqual(self.analyze(jvm, rows)['status'], 'passed')
+        jvm[1]['collectorHeapUsed'] = 520000000
         self.assertIn('missing-or-invalid-collector-heap-metric', self.analyze(jvm, rows)['invalid'])
 
     def analyze(self, jvm, observations, **kwargs):

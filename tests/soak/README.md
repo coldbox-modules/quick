@@ -113,7 +113,7 @@ recorded under **Native matrix cancellation proof** below.
 
 ## Memory measurement method
 
-Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v7
+Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v8
 runtime uses generational ZGC with a fixed periodic major collection interval,
 identically in baseline and candidate. The pilot uses a 256 MiB heap and a
 five-second major interval to validate detection cheaply. The application uses
@@ -917,3 +917,21 @@ cancellation proof also passed. Its separate saturation artifact verifies both
 application-overload and generator-capacity attribution, and the measurement
 job passed healthy, retained-growth and late-growth pilots. This is complete
 diagnostic evidence for v5, not an accepted v7 baseline or a full healthy trial.
+
+### V8 configured versus usable observer heap
+
+V7 capacity `36220760764` completed correct traffic at 5/second but rejected the
+resource evidence solely for `collector-heap-budget-mismatch`. Its observer
+stayed alive and flushed cleanly. The new check incorrectly equated configured
+`-Xmx` with `Runtime.maxMemory()`: the CI observer returned 518,979,584 usable
+bytes for a 536,870,912-byte limit. A real Java 21 reproduction with Serial GC
+returns those exact values; G1 returns 536,870,912 for both.
+
+V8 records the observer's actual `MaxHeapSize` VM option through
+[HotSpotDiagnosticMXBean](https://docs.oracle.com/en/java/javase/21/docs/api/jdk.management/com/sun/management/HotSpotDiagnosticMXBean.html),
+its usable maximum and GC names separately. Resource analysis requires the
+configured option to equal the declared 512 MiB, then requires usable maximum
+and samples to stay within their respective bounds. The test covers Serial's
+actual CI values and rejects usage above its smaller usable maximum. No budget,
+workload, duration, sample floor or acceptance threshold changes. The rejected
+v7 run remains evidence of the validator defect; fresh v8 calibration is required.

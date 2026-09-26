@@ -83,8 +83,12 @@ def evaluate(jvm, observations, profile, timing, *, plateau_start, exits=None, f
     if len(runtime) != 1 or not runtime[0].get('javaVersion', '').startswith(profile['runtime']['java']):
         invalid.append('runtime-version-mismatch')
     collector_heap = profile['resources']['collector'].get('heapMiB')
-    if collector_heap is not None and (len(runtime) != 1 or runtime[0].get('collectorHeapMax') != collector_heap * MIB):
-        invalid.append('collector-heap-budget-mismatch')
+    observer_max = runtime[0].get('collectorHeapMax') if len(runtime) == 1 else None
+    if collector_heap is not None:
+        if len(runtime) != 1 or runtime[0].get('collectorHeapLimit') != collector_heap * MIB:
+            invalid.append('collector-heap-budget-mismatch')
+        if not isinstance(observer_max, (int, float)) or not 0 < observer_max <= collector_heap * MIB:
+            invalid.append('missing-or-invalid-collector-heap-maximum')
     if any(r.get('kind') == 'collectorError' for r in jvm) or (finalized and not any(r.get('kind') == 'collectorEnd' for r in jvm)):
         invalid.append('collector-incomplete')
     for r in jvm:
@@ -95,7 +99,7 @@ def evaluate(jvm, observations, profile, timing, *, plateau_start, exits=None, f
             failures.append('jvm-restarted')
     for sample in samples:
         if collector_heap is not None and (not isinstance(sample.get('collectorHeapUsed'), (int, float))
-                or not 0 <= sample['collectorHeapUsed'] <= collector_heap * MIB):
+                or not isinstance(observer_max, (int, float)) or not 0 <= sample['collectorHeapUsed'] <= observer_max):
             invalid.append('missing-or-invalid-collector-heap-metric')
         if any(sample.get(key, -1) < 0 for key in ('threads', 'descriptors', 'metaspaceUsed', 'rssBytes', 'processCpuTimeNs')):
             invalid.append('missing-os-jvm-metric')

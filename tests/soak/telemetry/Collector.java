@@ -86,6 +86,10 @@ public final class Collector {
             manifest.put("collectors", String.join(",", collectors.stream().map(GarbageCollectorMXBean::getName).toList()));
             manifest.put("startTime", runtime.getStartTime());
             manifest.put("collectorHeapMax", Runtime.getRuntime().maxMemory());
+            manifest.put("collectorHeapLimit", Long.parseLong(ManagementFactory.getPlatformMXBean(
+                com.sun.management.HotSpotDiagnosticMXBean.class).getVMOption("MaxHeapSize").getValue()));
+            manifest.put("collectorCollectors", String.join(",", ManagementFactory.getGarbageCollectorMXBeans()
+                .stream().map(GarbageCollectorMXBean::getName).toList()));
             emit(manifest);
             try (var stream = new RemoteRecordingStream(connection, dir.resolve("stream"))) {
                 stream.setMaxSize(64L * 1024 * 1024);

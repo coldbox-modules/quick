@@ -205,10 +205,10 @@ coverage. The harness does not replace that failure with a serial fallback.
 for 20 teams, 1,000 users, 10,000 posts, 50,000 polymorphic comments, 100 tags,
 and 17,144 pivots. It records expected relationship counts and report checksums.
 The controller passes the profile's `fixtures.highFanoutComments` explicitly:
-60 for the standard/parallel profiles, 180 for the larger-report profile.
-The standalone generator accepts `--high-fanout-comments 60`; omitting it retains
+30 for the standard/parallel profiles, 180 for the larger-report profile.
+The standalone generator accepts `--high-fanout-comments 30`; omitting it retains
 the historical 180-comment SQL. The seed task's corresponding optional input is
-`:highFanoutComments=60`. Profile and fixture identities record the choice.
+`:highFanoutComments=30`. Profile and fixture identities record the choice.
 The SQL deliberately uses `CREATE DATABASE`, never `DROP` or `TRUNCATE`: an
 existing database causes setup to fail. Seed records occupy IDs through 10,000;
 scratch posts start at 1,000,000 and missing IDs start at 2,000,000,000.
@@ -219,7 +219,7 @@ the CommandBox setup task creates and seeds the database once:
 ```sh
 SOAK_MYSQL_ROOT_PASSWORD="$YOUR_DISPOSABLE_ROOT_PASSWORD" box task run \
   taskFile=tests/soak/Seed.cfc :container=quick-soak-your-run-id \
-  :output=tests/results/soak/YOUR-RUN-ID/fixtures
+  :output=tests/results/soak/YOUR-RUN-ID/fixtures :highFanoutComments=30
 ```
 
 Container names must match `quick-soak-[a-z0-9-]+`. Output paths are relative to

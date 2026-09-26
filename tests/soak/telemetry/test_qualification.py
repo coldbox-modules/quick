@@ -4,9 +4,10 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
-from identity import digest, profile_identity, sha_file
+from identity import digest, profile_identity, require_match, sha_file
 from qualification import baseline_paths, select_baseline, resolve_artifact_baseline, accepted_baseline, seal_qualification, verify_qualification, QUALIFICATION_EVIDENCE, seal_validation, validate_package_purpose
 from traffic import CASES, operation_names
 
@@ -98,6 +99,42 @@ class QualificationTests(unittest.TestCase):
         first.write_text(json.dumps(data))
         with self.assertRaisesRegex(ValueError, 'explicitly accepted'):
             baseline_paths(self.path)
+
+    def test_receipt_verification_recomputes_hardware_comparison_and_catalog_membership(self):
+        leaf, _ = self.cohort('n2.json', 'Neoverse-N2')
+        self.catalog([leaf.name])
+        accepted = json.loads(leaf.read_text())
+        expected = accepted['proposal']['measurementIdentity']
+        actual = copy.deepcopy(expected)
+        actual['values']['host']['docker']['MemTotal'] += 4096
+        actual['sha256'] = digest(actual['values'])
+        run = self.directory / 'run'
+        for name in QUALIFICATION_EVIDENCE:
+            path = run / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('{}')
+        def write(name, value):
+            (run / name).write_text(json.dumps(value))
+        write('accepted-baseline.json', accepted)
+        write('baseline-comparison.json', require_match(expected, actual))
+        write('summary.json', {'status': 'passed', 'releaseQualified': True, 'reasons': [],
+                              'assessments': {'traffic': 'passed', 'resources': 'passed', 'memory': 'passed'}})
+        for name in ('traffic', 'delivery', 'resource', 'memory'):
+            write(name + '-analysis.json', {'status': 'passed'})
+        package = {'candidateSha': 'a' * 40, 'packageSha256': 'b' * 64, 'lastRelease': {}}
+        write('package/package-manifest.json', package)
+        write('package/prepared.json', {})
+        seal_qualification(run)
+        with patch('qualification.build_identity', return_value=actual), patch('qualification.verify', return_value=package):
+            self.assertEqual(verify_qualification(run, 'a' * 40, self.path)['baselineSha256'], sha_file(leaf))
+            write('baseline-comparison.json', {'policy': 'exact-inputs-with-one-host-memory-page-v1', 'hostMemoryDifferenceBytes': 0})
+            seal_qualification(run)
+            with self.assertRaisesRegex(ValueError, 'Recorded baseline comparison changed'):
+                verify_qualification(run, 'a' * 40, self.path)
+            replacement, _ = self.cohort('v3.json', 'Neoverse-V3')
+            self.catalog([replacement.name])
+            with self.assertRaisesRegex(ValueError, 'absent from the catalog'):
+                verify_qualification(run, 'a' * 40, self.path)
 
     def test_reviewed_complete_manifest_loads_without_accepting_any_candidate(self):
         result = self.load(reviewed())

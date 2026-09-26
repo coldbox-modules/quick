@@ -1224,3 +1224,23 @@ timed out before traffic analysis. The failed attempt is retained under
 `ci-36244253719-saturation/`. The next diagnostic injection uses half a CPU after
 warmup, restoring the original allocation before cleanup. Its result is pending;
 no application overload proof is claimed from the quarter-CPU attempt.
+
+
+V10 diagnostics `36242953890` subsequently finished with only its weak one-CPU
+saturation case failing. The complete five-case application fault suite, malformed
+HTTP response contracts, controller cancellation and observer-loss verification
+all passed. Sustained and late latency had only their intended report-100 reason;
+the held connection failed only final/idle JDBC-active checks. The raw artifact
+is retained in `ci-36242953890-application/`.
+
+Commit `d1059d6` passes 118 telemetry and 57 release unit tests, Pyflakes and the
+staged full-matrix workflow comparison. A subsequent receipt-verification test
+also proves the hardware-comparison record is recomputed and that removing the
+selected leaf from its catalog invalidates qualification. Applying the comparison
+policy to the four real host records accepts the three N2 observations and
+rejects V3, recorded in `v10-ci-host-policy-verification.json`.
+
+Fresh diagnostics `36245768374` test that commit's half-CPU injection and current
+normal measured sources. Calibration `36244968012` continues separately at
+`734f112`, with the same normal measured sources. Neither running workflow is
+completion evidence, and neither has accepted a baseline or qualified a release.

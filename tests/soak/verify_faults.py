@@ -66,15 +66,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--cases', nargs='+', choices=CASES, default=list(CASES))
+    parser.add_argument('--candidate', help='Exact candidate shared by all fault cases')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     reports, identity = [], None
     for case in args.cases:
         run = args.output.resolve() / case
         print('Starting fault verification: ' + case, flush=True)
+        command = [sys.executable, str(HERE / 'controller.py'), '--development', '--fault', case, '--output', str(run)]
+        if args.candidate:
+            command.extend(['--candidate', args.candidate])
         with (args.output / (case + '.log')).open('w') as log:
-            process = subprocess.Popen([sys.executable, str(HERE / 'controller.py'), '--development', '--fault', case,
-                                        '--output', str(run)], stdout=log, stderr=subprocess.STDOUT)
+            process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT)
             try:
                 code = process.wait(timeout=1200)
             finally:

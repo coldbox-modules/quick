@@ -65,7 +65,7 @@ jobs:
       - name: Prove malformed HTTP responses fail k6 thresholds
         run: python3 tests/soak/verify_http_contracts.py --output tests/results/soak/http-contracts
       - name: Verify healthy traffic and controlled connection, contract and latency faults
-        run: python3 tests/soak/verify_faults.py --output tests/results/soak/fault-suite
+        run: python3 tests/soak/verify_faults.py --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 --output tests/results/soak/fault-suite
       - name: Cancel the live container controller and preserve evidence
         run: python3 tests/soak/verify_controller_cancellation.py --output tests/results/soak/controller-cancellation
       - name: Preserve application evidence, including failed runs

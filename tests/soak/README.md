@@ -358,12 +358,14 @@ python3 tests/soak/release/stage_full_probe.py
 python3 tests/soak/release/stage_full_probe.py --check
 ```
 
-The generator copies validation verbatim except for the release-marker skip
-condition and replaces the entire publisher job. Diagnostic CI checks that the
-generated workflow remains identical to the pending template. This full proof
-uses manual dispatch or `soak-release-proof-*` tags; dispatch waits for accepted
-baseline availability. It retains the same fail-fast behavior, supervisor,
-receipt checks, package artifact and timeouts. It is not a development fallback.
+The generator preserves every validation row, workload command and qualification
+step. It removes the release-marker skip condition, adds diagnostic fault hooks
+and TestBox JSON output retention, and replaces the entire publisher job.
+Diagnostic CI checks these explicit transformations against the pending template.
+This full proof uses manual dispatch or `soak-release-proof-<mode>-*` tags;
+dispatch waits for accepted baseline availability. It retains the same fail-fast
+behavior, supervisor, receipt checks, package artifact and timeouts. It is not
+a development fallback.
 
 After every validation succeeds, `release/probe_qualified.py` verifies the full
 downloaded receipt. A publication candidate traverses `promote_qualified()` and
@@ -387,6 +389,35 @@ requires all 23 exact functional combinations plus the soak, checks real TestBox
 execution overlaps soak observation, verifies the raw receipt against that
 baseline, and checks publication starts after every validation finishes. It
 hashes the actual stub-uploaded ZIP; a claimed checksum is insufficient.
+All 23 rows must also retain nonempty, passing TestBox JSON reports. A green
+job cannot hide a failed report.
+
+Full-matrix modes are `all-pass`, `functional-failure`, `soak-failure` and
+`explicit-cancel`. Functional failure waits for live soak evidence, then adds
+one deliberately failing TestBox assertion in the Lucee 6 / ColdBox 8 / full-null
+row. That row executes the normal full TestBox command; the verifier requires
+the exact assertion failure in its raw report and canceled soak cleanup.
+Soak failure waits for a retained JFR and actual TestBox execution, then kills
+only its owned application. The verifier requires that application's exit 137,
+a failed soak, cancellation of the observed functional sibling, partial evidence
+and complete removal of owned resources. An unavailable final recording after
+the deliberate target death is not mistaken for successful telemetry flush.
+
+For `explicit-cancel`, tag the run with `soak-release-proof-explicit-cancel-*`
+and use the bounded helper, which refuses other workflows/tags:
+
+```sh
+python3 tests/soak/release/cancel_full_probe.py --run-id RUN_ID \
+  --output tests/results/soak/full-cancel-RUN_ID.json
+```
+
+It waits until both live soak and real TestBox work are observed in the same
+workflow, records that snapshot, and cancels that existing run once. After its
+terminal state, pass `--mode explicit-cancel --cancellation-evidence PATH` to
+`verify_full_probe.py`. For the other failure modes, pass their matching `--mode`.
+Every failure verifier requires blocked publication, retained HTTP/JVM evidence,
+and owned-resource cleanup. These full-matrix scenarios are staged and unit
+checked; their real native executions remain pending baseline acceptance.
 
 ## Remaining acceptance work
 

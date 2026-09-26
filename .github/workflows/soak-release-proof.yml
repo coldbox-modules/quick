@@ -4,12 +4,23 @@ name: Full release validation proof (no publication)
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Full native matrix scenario
+        required: true
+        default: all-pass
+        type: choice
+        options: [all-pass, functional-failure, soak-failure, explicit-cancel]
   push:
     tags:
       - 'soak-release-proof-*'
 
 permissions:
   contents: read
+  actions: read
+
+env:
+  FULL_PROBE_MODE: ${{ inputs.mode || '' }}
 
 jobs:
   validation:
@@ -170,6 +181,12 @@ jobs:
           box server start serverConfigFile="server-${{ matrix.cfengine }}.json" --noSaveSettings --debug
           curl http://127.0.0.1:60299
 
+      - name: Prepare the requested live functional fault
+        if: matrix.kind == 'functional' && matrix.cfengine == 'lucee@6' && matrix.coldbox == 'coldbox@^8' && matrix.fullNull == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tests/soak/release/full_faults.py functional --output tests/results/soak/full-functional-probe
+
       - name: Run TestBox Tests
         if: matrix.kind == 'functional'
         env:
@@ -179,7 +196,17 @@ jobs:
           DB_NAME: quick
           DB_USER: quick
           DB_PASSWORD: quick
-        run: box testbox run
+        run: |
+          python3 tests/soak/release/full_faults.py record --output tests/results/soak/full-functional-probe --engine "${{ matrix.cfengine }}" --coldbox "${{ matrix.coldbox }}" --full-null "${{ matrix.fullNull }}"
+          box testbox run outputFile=tests/results/soak/full-functional-probe/testbox.json
+      - name: Preserve the actual functional result and fault record
+        if: always() && matrix.kind == 'functional'
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: full-functional-${{ strategy.job-index }}-${{ github.run_id }}
+          path: tests/results/soak/full-functional-probe/
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Record soak runner identity
         if: matrix.kind == 'soak'
@@ -215,6 +242,11 @@ jobs:
             --package tests/results/soak/release-candidate/package \
             --candidate "$CANDIDATE_SHA" \
             --output tests/results/soak/release-candidate/supervision
+      - name: Inject the requested live soak fault
+        if: matrix.kind == 'soak'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tests/soak/release/full_faults.py soak --output tests/results/soak/release-candidate/probe --supervision tests/results/soak/release-candidate/supervision
       - name: Observe the complete required soak
         if: matrix.kind == 'soak'
         run: exec python3 tests/soak/release/supervisor.py observe --output tests/results/soak/release-candidate/supervision

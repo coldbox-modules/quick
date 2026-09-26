@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate the full native diagnostic matrix from the pending release workflow.
 
-Validation is copied verbatim except for the semantic-release skip condition;
-publication is replaced wholesale with a local-only receipt/promotion probe.
+Validation keeps every row, test command and qualification step; diagnostic
+fault hooks and JSON report retention are added. Publication is replaced
+wholesale with a local-only receipt/promotion probe.
 Do not dispatch until the accepted baseline and matching detectors exist.
 """
 import argparse
@@ -16,14 +17,51 @@ HEADER = '''name: Full release validation proof (no publication)
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Full native matrix scenario
+        required: true
+        default: all-pass
+        type: choice
+        options: [all-pass, functional-failure, soak-failure, explicit-cancel]
   push:
     tags:
       - 'soak-release-proof-*'
 
 permissions:
   contents: read
+  actions: read
+
+env:
+  FULL_PROBE_MODE: ${{ inputs.mode || '' }}
 
 jobs:
+'''
+
+FUNCTIONAL_HOOK = '''      - name: Prepare the requested live functional fault
+        if: matrix.kind == 'functional' && matrix.cfengine == 'lucee@6' && matrix.coldbox == 'coldbox@^8' && matrix.fullNull == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tests/soak/release/full_faults.py functional --output tests/results/soak/full-functional-probe
+
+'''
+FUNCTIONAL_COMMAND = '''        run: |
+          python3 tests/soak/release/full_faults.py record --output tests/results/soak/full-functional-probe --engine "${{ matrix.cfengine }}" --coldbox "${{ matrix.coldbox }}" --full-null "${{ matrix.fullNull }}"
+          box testbox run outputFile=tests/results/soak/full-functional-probe/testbox.json
+      - name: Preserve the actual functional result and fault record
+        if: always() && matrix.kind == 'functional'
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: full-functional-${{ strategy.job-index }}-${{ github.run_id }}
+          path: tests/results/soak/full-functional-probe/
+          if-no-files-found: warn
+          retention-days: 30
+'''
+SOAK_HOOK = '''      - name: Inject the requested live soak fault
+        if: matrix.kind == 'soak'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tests/soak/release/full_faults.py soak --output tests/results/soak/release-candidate/probe --supervision tests/results/soak/release-candidate/supervision
 '''
 
 PUBLISHER = '''
@@ -74,6 +112,13 @@ def render(template):
     if validation.count(skip) != 1:
         raise ValueError('Expected exactly one release-message skip condition')
     validation = validation.replace(skip, '')
+    for marker in ('      - name: Run TestBox Tests\n', '        run: box testbox run\n',
+                   '      - name: Observe the complete required soak\n'):
+        if validation.count(marker) != 1:
+            raise ValueError('Validation step changed; review diagnostic instrumentation')
+    validation = validation.replace('      - name: Run TestBox Tests\n', FUNCTIONAL_HOOK + '      - name: Run TestBox Tests\n')
+    validation = validation.replace('        run: box testbox run\n', FUNCTIONAL_COMMAND)
+    validation = validation.replace('      - name: Observe the complete required soak\n', SOAK_HOOK + '      - name: Observe the complete required soak\n')
     if validation.count('- kind: functional') != 23 or validation.count('- kind: soak') != 1:
         raise ValueError('Full proof requires all 23 functional rows and exactly one soak row')
     for forbidden in ('contents: write', 'FORGEBOX_TOKEN', 'promote_qualified.py'):

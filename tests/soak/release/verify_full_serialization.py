@@ -37,8 +37,13 @@ def serialization(directories):
         'actualGuardContention': second['validationFinished'] < first['guardFinished'],
         'guardJobsDidNotOverlap': first['guardFinished'] <= second['guardStarted'],
         'promotionBodiesDidNotOverlap': first['stub']['guardFinishedAt'] <= second['stub']['guardStartedAt'],
-        'bothHeldForThreeMinutes': all(row['stub']['holdSeconds'] == 180 and
-            row['stub']['guardFinishedAt'] - row['stub']['guardStartedAt'] >= 180 for row in records),
+        # Preserve the original three-minute proof format; new diagnostics hold
+        # ten minutes to accommodate measured full-soak completion skew. Both
+        # must use the same declared hold, and real contention is still required.
+        'bothHeldForDeclaredDuration': first['stub']['holdSeconds'] == second['stub']['holdSeconds'] and all(
+            row['stub']['holdSeconds'] in (180, 600) and
+            row['stub']['guardFinishedAt'] - row['stub']['guardStartedAt'] >= row['stub']['holdSeconds']
+            for row in records),
         'eachPublisherWaitedForEntireMatrix': all(row['validationFinished'] <= row['guardStarted'] for row in records),
     }
     # Independent preparations include their own timestamped release notes and

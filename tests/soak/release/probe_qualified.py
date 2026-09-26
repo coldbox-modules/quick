@@ -55,8 +55,8 @@ class LocalPublisher:
 
 
 def probe(run, candidate, baseline, output, hold_seconds=0):
-    if type(hold_seconds) is not int or not 0 <= hold_seconds <= 180:
-        raise ValueError('Guard hold must be an integer between 0 and 180 seconds')
+    if type(hold_seconds) is not int or not 0 <= hold_seconds <= 600:
+        raise ValueError('Guard hold must be an integer between 0 and 600 seconds')
     started = time.time()
     # No output or fake provider exists until the complete raw receipt verifies.
     eligibility = inspect_artifact(run, candidate, baseline)

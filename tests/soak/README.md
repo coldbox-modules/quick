@@ -445,7 +445,11 @@ downloaded receipt. A publication candidate traverses `promote_qualified()` and
 readback checksum and checkpoints. A no-release candidate verifies its complete
 validation receipt and never constructs that publisher. The proof has read-only
 repository permissions and no ForgeBox credential. Tags containing
-`-serialization-` hold its dedicated diagnostic publication guard for 180 seconds.
+`-serialization-` hold its dedicated diagnostic publication guard for 600 seconds.
+The original three-minute hold missed actual contention by three seconds after
+the full soaks finished at different times; that uncontended result is retained.
+The longer hold changes only the diagnostic publication stub, not the measured
+profile or live publisher.
 Artifacts are `release-soak-<SHA>-<attempt>` and
 `full-publication-proof-<run ID>`. Unit checks prove routing and exact-byte local
 promotion; full native receipt/promotion evidence awaits the active full-hour runs.
@@ -552,7 +556,8 @@ python3 tests/soak/release/verify_full_serialization.py \
 
 It re-verifies each raw full receipt and actual uploaded ZIP, then requires real
 contention (the second validation is ready while the first guard is held),
-nonoverlapping guard jobs/promotion bodies, and both three-minute holds. Separate
+nonoverlapping guard jobs/promotion bodies, and both complete declared holds
+(ten minutes for new proofs; three minutes for retained older proofs). Separate
 preparations may embed different timestamped notes; each uploaded ZIP must match
 its own tested receipt. The native proof establishes guard behavior; adapter
 tests separately prove rejection when provider state invalidates preparation.

@@ -45,6 +45,26 @@ class FullSerializationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Both full matrices'):
                 serialization(self.roots)
 
+    def test_longer_declared_hold_still_requires_its_full_duration(self):
+        for index, root in enumerate(self.roots):
+            jobs = json.loads((root / 'jobs.json').read_text())
+            start, end = ('01:00:00', '01:10:01') if index == 0 else ('01:10:02', '01:20:03')
+            start, end = '2026-01-01T' + start + 'Z', '2026-01-01T' + end + 'Z'
+            jobs['jobs'][1].update(started_at=start, completed_at=end)
+            self.write(root / 'jobs.json', jobs)
+            workflow = json.loads((root / 'workflow.json').read_text())
+            workflow['updated_at'] = '2026-01-01T01:21:00Z'
+            self.write(root / 'workflow.json', workflow)
+            path = root / 'artifacts/proof/qualified-publication-stub.json'
+            stub = json.loads(path.read_text())
+            stub.update(holdSeconds=600, guardStartedAt=epoch(start), guardFinishedAt=epoch(end))
+            self.write(path, stub)
+        with patch('verify_full_serialization.verify', return_value={'passed': True, 'publicationRequired': True}):
+            self.assertTrue(serialization(self.roots)['passed'])
+            stub['guardFinishedAt'] = stub['guardStartedAt'] + 599
+            self.write(path, stub)
+            self.assertFalse(serialization(self.roots)['checks']['bothHeldForDeclaredDuration'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -161,6 +161,19 @@ class ProviderTests(unittest.TestCase):
                 factory.assert_not_called()
         self.assertEqual(self.http.calls, [])
 
+    def test_diagnostic_guard_hold_remains_bounded(self):
+        for hold in (-1, 601, True, 180.5):
+            with self.subTest(hold=hold), patch('probe_qualified.inspect_artifact') as inspect:
+                with self.assertRaisesRegex(ValueError, 'between 0 and 600'):
+                    probe(self.root / 'run', self.sha, self.root / 'baseline.json', self.root / 'probe', hold)
+                inspect.assert_not_called()
+        with patch('probe_qualified.inspect_artifact', return_value={'publicationRequired': False}), \
+             patch('probe_qualified.time.sleep') as sleep:
+            result = probe(self.root / 'run', self.sha, self.root / 'baseline.json', self.root / 'probe', 600)
+        sleep.assert_called_once_with(600)
+        self.assertEqual(result['holdSeconds'], 600)
+        self.assertFalse(result['published'])
+
     def test_verified_evidence_is_bound_to_actual_adapter_publication_receipt(self):
         # The qualification verifier is independently exercised on raw evidence;
         # this test covers orchestration and the real adapter with fake HTTP.

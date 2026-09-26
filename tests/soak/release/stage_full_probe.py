@@ -85,7 +85,7 @@ PUBLISHER = '''
       - name: Verify the complete receipt and exercise local-only promotion
         env:
           CANDIDATE_SHA: ${{ github.sha }}
-          HOLD_SECONDS: ${{ contains(github.ref_name, '-serialization-') && '180' || '0' }}
+          HOLD_SECONDS: ${{ contains(github.ref_name, '-serialization-') && '600' || '0' }}
         run: |
           python3 tests/soak/release/probe_qualified.py \\
             --run tests/results/soak/downloaded-candidate/supervision/run \\

@@ -1494,6 +1494,17 @@ traffic analysis until idle sampling and final diagnostics finish. Failed
 generation is still classified and aborted promptly. Delivery classification
 uses the original workload observations, excluding subsequent quiet idle samples.
 
+Independent run `36248290534` completed its full trial on another standard N2
+runner and reproduced this outcome: 14,401/14,401 journeys, passing traffic and
+retained memory, and one 15.239-second resource-observation gap ending 1 ms after
+the idle marker. Synchronous analysis took 5.162 seconds. All three saved
+assessments match raw reanalysis in `ci-36248290534/raw-trial-diagnosis.json`.
+Its memory growth was -36 MiB across 155 usable major cycles. Both v11 trials
+remain inconclusive. `v11-full-trial-comparison.json` retains their early p95
+comparison: the only operation above 10% spread is empty-lookup failure at
+9 versus 10 ms. This diagnostic comparison does not accept a baseline or waive
+the required investigation of fresh v12 trial variation.
+
 The regression test inserts a 20-second analyzer delay: it reproduces the exact
 telemetry-gap failure on the old controller and passes on the corrected one. It
 also verifies immediate failed-generator handling and unchanged delivery inputs.

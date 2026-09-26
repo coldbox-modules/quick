@@ -51,10 +51,12 @@ GitHub Actions artifacts have finite retention.
 | `ci-36245768374-application/raw-evidence-verification.json` | All five v10 application cases match raw k6 reanalysis. Original CI checks passed HTTP contracts, controller cancellation and observer loss. This is historical v10 evidence. |
 | `ci-36244968012/` | Repeated v10 capacity was ineligible after graph latency degradation. The failed attempt remains retained and is not replaced by an earlier eligible result. |
 | `ci-36246554787/raw-trial-diagnosis.json` | V11 full trial at 6 journeys/second completed 14,401/14,401 journeys and passed retained memory. One 15.222-second telemetry gap at idle transition made resources inconclusive. Raw reanalysis exactly matches all assessments; the trial is not accepted. |
+| `ci-36248290534/raw-trial-diagnosis.json` | Independent v11 full trial also completed 14,401/14,401 journeys and passed retained memory. Its only resource invalidity is a 15.239-second gap at idle transition. All three raw analyses match; this second inconclusive trial is retained and not accepted. |
+| `v11-full-trial-comparison.json` | Early per-operation p95 values are compared across both inconclusive v11 trials. Only empty-lookup failure exceeds 10% spread (9 versus 10 ms); retained-memory growth is +36 versus -36 MiB. These are diagnostic noise observations, not an accepted baseline or waived limits. |
 | `controller-cadence-regression-20260926/` | The delayed-analysis regression reproduces that gap on the old controller and passes after the v12 change. All 123 telemetry and 57 release tests pass. Live v12 evidence remains required. |
 | `v11-ci-host-policy-verification.json` | The bounded 64 KiB host-memory policy matches four actual N2 records with up to 40 KiB variation and rejects V3. Unit coverage rejects changed CPU/cache/heap and altered receipt bounds. |
 | `no-release-current-tree-20260926/verification.json` | Actual semantic-release preparation against live provider identity produced a validation-only package from an identical source tree and rejected publication packaging. No refs changed or CI proof dispatched; complete no-release matrix/soak execution still requires an accepted baseline. |
-| `ci-36248290534-runner/` | Independent v11 host identity: four-core Neoverse-N2, Ubuntu ARM image `20260920.129.1`. This proves identity, not workload completion. |
+| `ci-36248290534-runner/` | Independent v11 host identity: four-core Neoverse-N2, Ubuntu ARM image `20260920.129.1`. Full-trial outcome is recorded separately above. |
 | `diagnostic-archive-v11-36246858832/archive-verification.json` | Local archive contains all three v11 diagnostic artifacts, raw reanalysis and GitHub provenance. All 1,908 files passed SHA-256 archive readback verification. This prepares diagnostic evidence for durable storage; it does not establish remote archival. |
 
 The diagnostic bundle is `diagnostic-archive-v11-36246858832/v11-diagnostics-36246858832.tar.gz`
@@ -68,7 +70,7 @@ Current CI handles, checked on 2026-09-26:
 - [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): running the corrected controller; no full trial verified yet.
 - [V12 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36252126235): measurement and saturation jobs passed and raw evidence reanalyzed; application diagnostics running.
 - [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): terminal failure after one full, inconclusive trial; raw diagnosis retained.
-- [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): first full-trial step started at 14:50:31 UTC on another standard runner; no full trial verified yet.
+- [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): terminal failure after its first full trial repeated the idle-transition telemetry gap; complete raw diagnosis retained.
 - [V11 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36246858832): all three jobs passed; measurement, saturation and application raw evidence independently reanalyzed.
 
 ## Acceptance order

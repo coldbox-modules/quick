@@ -418,6 +418,11 @@ terminal state, pass `--mode explicit-cancel --cancellation-evidence PATH` to
 Every failure verifier requires blocked publication, retained HTTP/JVM evidence,
 and owned-resource cleanup. These full-matrix scenarios are staged and unit
 checked; their real native executions remain pending baseline acceptance.
+The isolated CommandBox/TestBox probe
+`full-fault-assertion-20260926/verification.json` executes the actual injected CFC
+and verifies exactly one intended failed assertion, zero errors and the precise
+JSON status/message fields. It validates the fixture/report contract, not native
+matrix cancellation.
 
 For two complete `all-pass` runs whose tags contain `-serialization-`, run:
 

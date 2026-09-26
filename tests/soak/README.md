@@ -1087,3 +1087,11 @@ V9 CI calibration `36241479101` and diagnostics `36241478992` test commit
 growth failed, late growth was inconclusive, and live cancellation stopped both
 children while retaining partial evidence. Capacity, full trials and application
 detector results remain pending; this completed job is not a full workflow pass.
+
+The completed v9 saturation artifact (`ci-36241478992-saturation/`) also passes
+both cases. Its raw generator summary is inconclusive with
+`delivery-generator-capacity-exhausted`, a real workload shortfall and no
+incorrect responses. Its application case fails with
+`delivery-application-overloaded` and the observed incorrect/error responses.
+Both cases verify their controlled injection, restoration of the diagnostic
+quota, final recording/collector flush and removal of all owned resources.

@@ -11,6 +11,7 @@ from pathlib import Path
 import statistics
 
 from identity import build_identity, digest, read, require_match, sha_file
+from telemetry.traffic import timestamp
 
 EVIDENCE = ('summary.json', 'profile.json', 'timing.json', 'host.json', 'initial-diagnostics.json',
             'final-diagnostics.json', 'capacity-reference.json', 'measurement-identity.json',
@@ -20,6 +21,51 @@ EVIDENCE = ('summary.json', 'profile.json', 'timing.json', 'host.json', 'initial
             'fixtures/fixture-manifest.json', 'runtime-containers.json', 'generator.json', 'seed-commandbox-version.log',
             'package/package-manifest.json', 'package/prepared.json', 'package/quick.zip',
             'app-exit.json', 'mysql-exit.json', 'collector-exit.json', 'k6-exit.json')
+
+
+def rows(path):
+    with path.open() as stream:
+        for line in stream:
+            if line.strip():
+                yield json.loads(line)
+
+
+def raw_early_latency(run, workload, saved):
+    """Review unrounded timings with the analyzer's exact window exclusions."""
+    start = saved['plateauStartMs']
+    window_ms = workload['windowSeconds'] * 1000
+    early_windows = 600 // workload['windowSeconds']
+    values = {operation: [] for operation in saved['latency']}
+    for point in rows(run / 'k6.ndjson'):
+        if point.get('type') != 'Point' or point.get('metric') not in ('successful_latency', 'expected_failure_latency'):
+            continue
+        data = point['data']
+        tags = data.get('tags', {})
+        if tags.get('scenario') != 'plateau':
+            continue
+        at, value = timestamp(data['time']), data['value']
+        index = int((at - start) // window_ms)
+        if not 0 <= index < early_windows:
+            continue
+        if not math.isfinite(value) or not 0 <= value <= workload['requestTimeoutSeconds'] * 1000:
+            raise ValueError('Unusable raw latency observation')
+        if at - value < max(start + index * window_ms, start + workload['drainSeconds'] * 1000):
+            continue
+        operation = tags['operation'] if point['metric'] == 'successful_latency' else 'failure:' + tags['case']
+        values[operation].append(value)
+    result = {}
+    for operation, samples in values.items():
+        reference = saved['latency'][operation]
+        count = sum(reference['counts'][:early_windows])
+        if not samples or len(samples) != count:
+            raise ValueError('Raw early latency sample count differs: ' + operation)
+        samples.sort()
+        p95 = samples[math.ceil(len(samples) * .95) - 1]
+        if math.ceil(p95) != reference['earlyP95Ms']:
+            raise ValueError('Raw early latency does not reproduce rounded p95: ' + operation)
+        result[operation] = {'samples': count, 'exactNearestRankP95Ms': p95,
+                             'roundedP95Ms': reference['earlyP95Ms']}
+    return result
 
 
 def seal_trial(run):
@@ -53,13 +99,16 @@ def trial(run):
     traffic, memory, resources = (read(run / name) for name in ('traffic-analysis.json', 'memory-analysis.json', 'resource-analysis.json'))
     if any(item['status'] != 'passed' for item in (traffic, memory, resources)):
         raise ValueError('A trial assessment was not healthy')
+    if sha_file(run / 'harness/telemetry/traffic.py') != sha_file(Path(__file__).parent / 'telemetry/traffic.py'):
+        raise ValueError('Raw latency review requires the recorded traffic analyzer version')
+    raw_latency = raw_early_latency(run, read(run / 'profile.json')['workload'], traffic)
     with (run / 'jvm/jvm.ndjson').open() as stream:
         runtime = json.loads(next(stream))
     return {'runId': summary['runId'], 'bootId': read(run / 'initial-diagnostics.json')['bootId'],
             'jvmStart': runtime['startTime'], 'githubRunId': read(run / 'host.json')['githubRunId'],
             'evidenceSha256': seal['sha256'], 'identity': identity, 'package': capacity['package'],
             'capacityEvidenceSha256': capacity['evidenceSha256'], 'traffic': traffic, 'memory': memory,
-            'resources': resources, 'profile': read(run / 'profile.json')}
+            'resources': resources, 'profile': read(run / 'profile.json'), 'rawEarlyLatency': raw_latency}
 
 
 def propose(trials):
@@ -85,12 +134,23 @@ def propose(trials):
             raise ValueError('Unusable trial latency reference: ' + operation)
         center = statistics.median(p95)
         noise = (max(p95) - min(p95)) / center
+        raw_measurements = [item.get('rawEarlyLatency', {}).get(operation, {}) for item in trials]
+        raw_p95 = [item.get('exactNearestRankP95Ms') for item in raw_measurements]
+        if any(not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value) or value <= 0
+               for value in raw_p95):
+            raise ValueError('Missing or unusable raw latency reference: ' + operation)
+        if any(math.ceil(value) != rounded or measurement.get('roundedP95Ms') != rounded
+               for value, rounded, measurement in zip(raw_p95, p95, raw_measurements)):
+            raise ValueError('Inconsistent raw latency reference: ' + operation)
+        raw_noise = (max(raw_p95) - min(raw_p95)) / statistics.median(raw_p95)
         windows = [value for measurement in measurements for value in measurement['p95Ms']]
         if len(windows) != 24 or any(value is None or not math.isfinite(value) for value in windows):
             raise ValueError('Missing full trial latency windows: ' + operation)
-        if noise > .1:
+        if raw_noise > .1:
             investigations.append('run-to-run-p95-noise-exceeds-ten-percent:' + operation)
         latency[operation] = {'p95Ms': center, 'trialEarlyP95Ms': p95, 'rangeFraction': noise,
+                              'trialRawEarlyP95Ms': raw_p95, 'rawRangeFraction': raw_noise,
+                              'noiseComparison': 'exact-nearest-rank-p95',
                               'maxObservedWindowP95Ms': max(windows),
                               'proposedAbsoluteP95Ms': math.ceil(max(windows) + max(50, .2 * max(windows)))}
     memory = [item['memory'] for item in trials]

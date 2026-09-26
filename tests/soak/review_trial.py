@@ -6,11 +6,10 @@ inconclusive assessments. It does not accept a baseline or qualify a release.
 """
 import argparse
 import json
-import math
 from pathlib import Path
 import sys
 
-from baseline import EVIDENCE, trial
+from baseline import EVIDENCE, raw_early_latency, rows, trial
 from calibration import validate_trial_profile
 from identity import build_identity, read, require_match, sha_file
 
@@ -20,51 +19,6 @@ import delivery
 import memory
 import resources
 import traffic
-
-
-def rows(path):
-    with path.open() as stream:
-        for line in stream:
-            if line.strip():
-                yield json.loads(line)
-
-
-def raw_early_latency(run, workload, saved):
-    """Review unrounded timings with the analyzer's exact window exclusions."""
-    start = saved['plateauStartMs']
-    window_ms = workload['windowSeconds'] * 1000
-    early_windows = 600 // workload['windowSeconds']
-    values = {operation: [] for operation in saved['latency']}
-    for point in rows(run / 'k6.ndjson'):
-        if point.get('type') != 'Point' or point.get('metric') not in ('successful_latency', 'expected_failure_latency'):
-            continue
-        data = point['data']
-        tags = data.get('tags', {})
-        if tags.get('scenario') != 'plateau':
-            continue
-        at, value = traffic.timestamp(data['time']), data['value']
-        index = int((at - start) // window_ms)
-        if not 0 <= index < early_windows:
-            continue
-        if not math.isfinite(value) or not 0 <= value <= workload['requestTimeoutSeconds'] * 1000:
-            raise ValueError('Unusable raw latency observation')
-        if at - value < max(start + index * window_ms, start + workload['drainSeconds'] * 1000):
-            continue
-        operation = tags['operation'] if point['metric'] == 'successful_latency' else 'failure:' + tags['case']
-        values[operation].append(value)
-    result = {}
-    for operation, samples in values.items():
-        reference = saved['latency'][operation]
-        count = sum(reference['counts'][:early_windows])
-        if not samples or len(samples) != count:
-            raise ValueError('Raw early latency sample count differs: ' + operation)
-        samples.sort()
-        p95 = samples[math.ceil(len(samples) * .95) - 1]
-        if math.ceil(p95) != reference['earlyP95Ms']:
-            raise ValueError('Raw early latency does not reproduce rounded p95: ' + operation)
-        result[operation] = {'samples': count, 'exactNearestRankP95Ms': p95,
-                             'roundedP95Ms': reference['earlyP95Ms']}
-    return result
 
 
 def review(run):
@@ -110,7 +64,7 @@ def review(run):
         'rawReanalysisMatches': {name: True for name in computed},
         'rate': workload['rate'], 'offeredJourneys': computed['traffic']['offeredJourneys'],
         'completedJourneys': computed['traffic']['completedJourneys'],
-        'rawEarlyLatency': raw_early_latency(run, workload, computed['traffic']),
+        'rawEarlyLatency': sealed['rawEarlyLatency'] if sealed else raw_early_latency(run, workload, computed['traffic']),
         'maxApplicationGapSeconds': max(((b - a) / 1000 for a, b in zip(times, times[1:])), default=None),
         'idleTransitionMs': timing['idleStartedMs'] - timing['generatorEndedMs'],
         'collectorFlushed': jvm[-1]['kind'] == 'collectorEnd',
@@ -118,6 +72,7 @@ def review(run):
         'sealedTrialVerified': sealed is not None,
         'evidenceSha256': sealed['evidenceSha256'] if sealed else None,
         'inputSha256': hashes, 'reviewerSourceSha256': sha_file(Path(__file__)),
+        'reviewerDependencySha256': {'baseline.py': sha_file(HERE / 'baseline.py')},
         'releaseQualified': False}
 
 

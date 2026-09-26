@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 import sys
 import tempfile
@@ -18,6 +19,7 @@ def trials():
             'capacityEvidenceSha256': 'capacity', 'evidenceSha256': 'raw-' + str(i),
             'profile': {'resources': {'application': {'heapMiB': 1024}}},
             'traffic': {'latency': {'browse': {'earlyP95Ms': 100, 'p95Ms': [100]*8}}},
+            'rawEarlyLatency': {'browse': {'exactNearestRankP95Ms': 100, 'roundedP95Ms': 100, 'samples': 1000}},
             'memory': {'earlyMedianBytes': 100000000, 'growthBytes': 0,
                        'windows': [{'medianBytes': 100000000}]*8, 'warnings': []},
             'resources': {'recovery': {'threads': {'earlyMedian': 40, 'idleMedian': 40}}}})
@@ -54,10 +56,43 @@ class BaselineTests(unittest.TestCase):
     def test_run_to_run_noise_requires_investigation_not_wider_silent_bands(self):
         data = trials()
         data[2]['traffic']['latency']['browse']['earlyP95Ms'] = 115
+        data[2]['rawEarlyLatency']['browse'].update(exactNearestRankP95Ms=115, roundedP95Ms=115)
         proposal = propose(data)
         self.assertEqual(proposal['status'], 'needs-investigation')
         self.assertIn('run-to-run-p95-noise-exceeds-ten-percent:browse', proposal['investigations'])
         self.assertFalse(proposal['accepted'])
+
+    def latency_trials(self, values):
+        data = trials()
+        for item, value in zip(data, values):
+            rounded = math.ceil(value)
+            item['traffic']['latency']['browse'].update(earlyP95Ms=rounded, p95Ms=[rounded]*8)
+            item['rawEarlyLatency']['browse'].update(exactNearestRankP95Ms=value, roundedP95Ms=rounded)
+        return data
+
+    def test_rounding_cannot_inflate_sub_ten_percent_variation(self):
+        proposal = propose(self.latency_trials([3.237101, 2.980558, 3.024407]))
+        self.assertEqual(proposal['status'], 'proposed-for-review')
+        measurement = proposal['latency']['browse']
+        self.assertEqual(measurement['trialEarlyP95Ms'], [4, 3, 4])
+        self.assertEqual(measurement['rangeFraction'], .25)
+        self.assertLess(measurement['rawRangeFraction'], .1)
+
+    def test_rounding_cannot_hide_above_ten_percent_variation(self):
+        proposal = propose(self.latency_trials([19.578425, 21.792108, 21.7]))
+        self.assertEqual(proposal['status'], 'needs-investigation')
+        self.assertLess(proposal['latency']['browse']['rangeFraction'], .1)
+        self.assertGreater(proposal['latency']['browse']['rawRangeFraction'], .1)
+
+    def test_missing_or_inconsistent_raw_reference_is_rejected(self):
+        data = trials()
+        del data[0]['rawEarlyLatency']
+        with self.assertRaisesRegex(ValueError, 'raw latency'):
+            propose(data)
+        data = trials()
+        data[0]['rawEarlyLatency']['browse']['exactNearestRankP95Ms'] = 101
+        with self.assertRaisesRegex(ValueError, 'raw latency'):
+            propose(data)
 
     def test_repeatable_retained_growth_cannot_be_absorbed_into_noise(self):
         data = trials()

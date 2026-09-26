@@ -19,11 +19,14 @@ Hardware comparison permits a fixed 64 KiB difference in reported host usable
 RAM, covering the observed 40 KiB spread on otherwise identical N2 hosts. Raw
 values and the comparison bound remain recorded; all other inputs stay exact.
 
-The first v12 full-hour CI trial is independently verified healthy at the
-capacity-selected 6 journeys/second: traffic, delivery, resources and retained
-memory reproduce from raw evidence, and its evidence seal verifies. Two more
-matching healthy trials and the independent-host review remain required before
-baseline acceptance.
+All three primary v12 full-hour trials are independently verified healthy at
+the capacity-selected 6 journeys/second. The first two trials on the independent
+host also pass raw traffic, delivery, resource and memory reanalysis and seal
+verification; its third trial is running. Baseline acceptance remains pending:
+the primary proposal requires investigation of 10.7% raw p95 variation for the
+100-row report, and variation between the two hosts is materially larger.
+Replaying all five healthy trials against the original proposed references and
+budgets passes the unchanged release-blocking rules, while retaining warnings.
 
 ## Requirements and proof boundaries
 
@@ -50,6 +53,10 @@ GitHub Actions artifacts have finite retention.
 | `ci-36252125924-trial-1/raw-trial-review.json` | First v12 full trial is `calibration-passed`: 14,401/14,401 journeys at 6/second, all four raw assessments reproduce and the evidence seal verifies. Maximum application sample gap is 10.099 seconds; idle starts 23 ms after generator completion. Collector flush and a 30,055,461-byte final JFR are retained. This is one healthy trial, not an accepted baseline. |
 | `ci-36252125924-trial-1/profile-source-coverage-verification.json` | Current measured sources and calibrated profile match exactly. Each of five expected failure cases has 2,304 attempts, verifications and successful follow-ups; the minimum operation/window latency count is 212 against the 200 floor. Boot identity and final resource release checks pass. Retained growth is 18 MiB across 155 major cycles, with no memory warnings. |
 | `calibration-archive-v12-36252125924/trial-1-remote-verification.json` | Original Actions ZIP matches GitHub's digest and all 212 members match the reviewed download. All five assets in draft evidence release `397323222` pass remote readback hashing. Replaying the archived analyzer sources reproduces the complete review. The draft remains editable; latest product release v13.0.4 is unchanged. |
+| `ci-36252125924-complete/trial-2-review.json`, `trial-3-review.json` | The remaining primary trials pass all four raw assessments and seal verification. The original three-trial proposal reproduces exactly and remains retained with its original noise investigations. |
+| `ci-36254251872-trials/trial-1-review.json`, `trial-2-review.json` | The first two independent-host full trials pass all four raw assessments and seal verification. The third trial remains live. |
+| `ci-36252125924-complete/five-trial-noise-investigation.json`, `five-trial-host-resource-investigation.json`, `proposed-baseline-replay.json` | Recorded measurement identities match under the fixed host-memory policy. Primary report-100 raw p95 spread is 10.7%; independent-host timings are broadly slower. All five trials pass counterfactual replay against the original proposal's unchanged references/budgets. This is investigation evidence, not acceptance; physical-host contention and CPU frequency were not directly observed. |
+| `baseline-precision-20260926/verification.json` | Baseline noise comparison now uses exact raw p95 while preserving rounded references and budgets. Three regressions reproduce before the fix; 126 telemetry/calibration and 61 release tests pass. Primary empty-lookup and invalid-write spreads are 6.6% and 8.5% raw, instead of rounding-inflated 11.1% and 25%. The real report-100 investigation remains blocking at 10.7%; the 10% criterion is unchanged. |
 | `development-v12-cadence-20260926/development-verification.json` | All 901/901 journeys completed, traffic/resources passed, maximum application observation gap was 5.183 seconds and idle began 26 ms after generator completion. Final JFR, collector flush and live owned-resource cleanup checks passed. Short-schedule memory remains inconclusive. |
 | `ci-36252126235-measurement/raw-evidence-verification.json` | V12 raw JVM reanalysis reproduces healthy, retained-growth and late-growth classifications. Final recordings and all child exits verified; cancellation retained partial evidence and could not qualify. |
 | `ci-36252126235-saturation/raw-evidence-verification.json` | Both v12 traffic and attribution results exactly match raw reanalysis: generator exhaustion is inconclusive (48/829 journeys), application overload fails (59/94). Final recordings and collector flush verified; original CI cleanup checks passed. |
@@ -105,8 +112,8 @@ remaining trials are still pending.
 
 Current CI handles, checked on 2026-09-26:
 
-- [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): capacity selection and trial one passed; raw trial evidence independently verified. Trial two started at 16:59:57 UTC with the same frozen target and profile.
-- [Independent v12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36254251872): capacity selection passed on another four-core N2; the first full-trial step started at 16:34:33 UTC. Measured source files and profiles match the primary v12 run exactly; all results will be retained. Dispatch rationale is recorded in `v12-independent-host-plan.json`.
+- [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): terminal failure at baseline proposal after all three full trials passed. All three trials and the original proposal are independently reproduced. Noise investigation remains open; the original result is retained.
+- [Independent v12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36254251872): capacity and two full trials passed on another four-core N2; trial three started at 18:38:40 UTC. Full measured identities match the primary v12 run under the fixed host-memory policy. Dispatch rationale is recorded in `v12-independent-host-plan.json`.
 - [V12 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36252126235): terminal success; all three jobs passed, and measurement, saturation and application raw evidence independently reanalyzed.
 - [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): terminal failure after one full, inconclusive trial; raw diagnosis retained.
 - [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): terminal failure after its first full trial repeated the idle-transition telemetry gap; complete raw diagnosis retained.
@@ -114,10 +121,10 @@ Current CI handles, checked on 2026-09-26:
 
 ## Acceptance order
 
-1. Complete fresh v12 calibration after the cadence fix; matching diagnostics
-   have passed and their raw evidence is verified. Retain every failure or partial run. Keep
-   the independent v11 result as evidence of the earlier controller behavior.
-2. Establish three healthy full trials, resolve noise and hardware differences,
+1. Finish the independent v12 calibration; three primary healthy trials and
+   matching diagnostics are verified. Retain every failure or partial run,
+   including the primary proposal rejection and both earlier v11 trials.
+2. Resolve noise and hardware differences across the complete trial evidence,
    inspect raw and rounded latency variation, archive the evidence durably and
    review the baseline manifests and budgets.
 3. Execute and verify every staged full-matrix scenario, including no-release

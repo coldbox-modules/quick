@@ -725,8 +725,13 @@ per-operation absolute budgets, and resource recovery. Reused JVMs, changed
 evidence, differing inputs, and incomplete trial windows are rejected. More
 than 10% run-to-run p95 variation or unexplained retained-growth/noise blocks
 proposal readiness. This tool cannot accept a baseline or qualify a release.
-The telemetry/calibration and package/provider policy suites pass;
-no three-trial proposal has been produced from real full-length runs yet.
+Noise comparison uses exact nearest-rank p95 derived from sealed raw request
+timings, with the same early windows and boundary exclusions as the traffic
+analyzer. Proposals retain both raw and whole-millisecond values/ranges; rounded
+references and proposed absolute budgets remain unchanged by this precision fix.
+The telemetry/calibration and package/provider policy suites pass. A real v12
+three-trial proposal now exists but requires the noise investigation described
+below; it is not an accepted baseline.
 
 Runtime image builds use a fixed `SOURCE_DATE_EPOCH=0` following
 [Docker's reproducible-build guidance](https://docs.docker.com/build/cache/invalidation/).
@@ -1711,3 +1716,35 @@ evidence beyond Actions expiry without publishing Quick or accepting a baseline.
 Trial two started at 16:59:57 UTC on 2026-09-26. Baseline acceptance still requires
 the remaining matching full trials, independent-host/noise review, durable
 archival and reviewed budgets. One healthy hour does not enable the release gate.
+
+### V12 complete primary trials and noise investigation
+
+All three primary trials in run `36252125924` passed the full-hour assessments.
+Their raw traffic, delivery, resource and memory results and seals independently
+verify. The original baseline-proposal step failed with noise investigations for
+empty lookup, invalid write and the 100-row report; its exact proposal reproduces
+locally and remains retained. The first two independent trials in `36254251872`
+also pass raw verification. Its third trial remains running.
+
+Two primary findings are rounding artifacts: empty-lookup variation is 6.61%
+raw versus 11.11% rounded, and invalid-write variation is 8.48% raw versus 25%
+rounded. Baseline proposal generation now derives exact p95 from sealed raw
+samples for the unchanged 10% noise criterion, preserving the rounded references
+and budgets. Regression coverage proves rounding cannot either invent or hide
+excess variation, and missing/inconsistent raw references are rejected. All 126
+telemetry/calibration tests and 61 release tests pass. The updated primary
+proposal still requires investigation: report-100 spread is 10.72% raw.
+
+Full identities across the five completed trials match under the declared
+host-memory policy. Nevertheless, the independent host is broadly slower.
+Its median application CPU use is 39.7% and 42.7% of the allocation versus
+33.5–33.8% on the primary host; database query timings are also higher.
+These observations do not directly measure physical-host contention or CPU
+frequency, so no specific infrastructure cause is asserted.
+
+Counterfactual raw replay of all five trials against the original primary
+proposal's references and absolute budgets passes the unchanged release-blocking
+rules, with warnings retained. It is investigation evidence only. No threshold
+was widened and no baseline is accepted. Raw comparisons, host/resource evidence
+and replay are under `ci-36252125924-complete/`; precision-fix evidence is under
+`baseline-precision-20260926/`.

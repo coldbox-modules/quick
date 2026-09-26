@@ -19,6 +19,12 @@ Hardware comparison permits a fixed 64 KiB difference in reported host usable
 RAM, covering the observed 40 KiB spread on otherwise identical N2 hosts. Raw
 values and the comparison bound remain recorded; all other inputs stay exact.
 
+The first v12 full-hour CI trial is independently verified healthy at the
+capacity-selected 6 journeys/second: traffic, delivery, resources and retained
+memory reproduce from raw evidence, and its evidence seal verifies. Two more
+matching healthy trials and the independent-host review remain required before
+baseline acceptance.
+
 ## Requirements and proof boundaries
 
 | Plan item | Implementation and available evidence | Still required for completion |
@@ -41,6 +47,8 @@ GitHub Actions artifacts have finite retention.
 
 | Evidence | Verified result |
 |---|---|
+| `ci-36252125924-trial-1/raw-trial-review.json` | First v12 full trial is `calibration-passed`: 14,401/14,401 journeys at 6/second, all four raw assessments reproduce and the evidence seal verifies. Maximum application sample gap is 10.099 seconds; idle starts 23 ms after generator completion. Collector flush and a 30,055,461-byte final JFR are retained. This is one healthy trial, not an accepted baseline. |
+| `ci-36252125924-trial-1/profile-source-coverage-verification.json` | Current measured sources and calibrated profile match exactly. Each of five expected failure cases has 2,304 attempts, verifications and successful follow-ups; the minimum operation/window latency count is 212 against the 200 floor. Boot identity and final resource release checks pass. Retained growth is 18 MiB across 155 major cycles, with no memory warnings. |
 | `development-v12-cadence-20260926/development-verification.json` | All 901/901 journeys completed, traffic/resources passed, maximum application observation gap was 5.183 seconds and idle began 26 ms after generator completion. Final JFR, collector flush and live owned-resource cleanup checks passed. Short-schedule memory remains inconclusive. |
 | `ci-36252126235-measurement/raw-evidence-verification.json` | V12 raw JVM reanalysis reproduces healthy, retained-growth and late-growth classifications. Final recordings and all child exits verified; cancellation retained partial evidence and could not qualify. |
 | `ci-36252126235-saturation/raw-evidence-verification.json` | Both v12 traffic and attribution results exactly match raw reanalysis: generator exhaustion is inconclusive (48/829 journeys), application overload fails (59/94). Final recordings and collector flush verified; original CI cleanup checks passed. |
@@ -58,7 +66,7 @@ GitHub Actions artifacts have finite retention.
 | `ci-36248290534/raw-trial-diagnosis.json` | Independent v11 full trial also completed 14,401/14,401 journeys and passed retained memory. Its only resource invalidity is a 15.239-second gap at idle transition. All three raw analyses match; this second inconclusive trial is retained and not accepted. |
 | `v11-full-trial-comparison.json` | Rounded early per-operation p95 values are compared across both inconclusive v11 trials. Only empty-lookup failure exceeds 10% spread (9 versus 10 ms); retained-memory growth is +36 versus -36 MiB. These are diagnostic noise observations, not an accepted baseline or waived limits. |
 | `v11-latency-quantization-investigation.json` | Raw nearest-rank p95 reproduces all 21 saved sample counts and rounded values in both trials. Empty-lookup spread is 9.80% raw versus 10.53% rounded; relationship-failure spread is 10.70% raw versus 9.52% rounded. Baseline review must inspect both representations; neither trial is accepted and the 10% criterion is unchanged. |
-| `trial-review-verification-20260926/verification.json` | The reusable offline `review_trial.py` reproduces traffic, delivery, resources, memory and all 21 exact latency references from both v11 full trials. It rejects a deliberately altered saved assessment and preserves existing review files. Both trials remain inconclusive; verification of a real passing trial's seal is pending. |
+| `trial-review-verification-20260926/verification.json` | The reusable offline `review_trial.py` reproduces traffic, delivery, resources, memory and all 21 exact latency references from both v11 full trials. It rejects a deliberately altered saved assessment and preserves existing review files. Both v11 trials remain inconclusive; the first v12 trial above also verifies the real passing-trial seal path. |
 | `controller-cadence-regression-20260926/` | The delayed-analysis regression reproduces that gap on the old controller and passes after the v12 change. All 123 telemetry and 57 release tests pass. Live v12 evidence remains required. |
 | `v11-ci-host-policy-verification.json` | The bounded 64 KiB host-memory policy matches four actual N2 records with up to 40 KiB variation and rejects V3. Unit coverage rejects changed CPU/cache/heap and altered receipt bounds. |
 | `v12-independent-early-host-comparison.json` | The independent v12 allocation is another four-core N2 with matching recorded CPU, image and kernel; usable RAM differs by 36 KiB within the fixed bound. This is early host evidence only; full runtime identity and workload results remain pending. |
@@ -87,7 +95,7 @@ the draft is editable and does not accept a baseline or publish Quick.
 
 Current CI handles, checked on 2026-09-26:
 
-- [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): capacity selection passed; the first full-trial step started at 15:57:59 UTC with the corrected controller. No full trial verified yet.
+- [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): capacity selection and trial one passed; raw trial evidence independently verified. Trial two started at 16:59:57 UTC with the same frozen target and profile.
 - [Independent v12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36254251872): capacity selection passed on another four-core N2; the first full-trial step started at 16:34:33 UTC. Measured source files and profiles match the primary v12 run exactly; all results will be retained. Dispatch rationale is recorded in `v12-independent-host-plan.json`.
 - [V12 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36252126235): terminal success; all three jobs passed, and measurement, saturation and application raw evidence independently reanalyzed.
 - [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): terminal failure after one full, inconclusive trial; raw diagnosis retained.

@@ -1681,3 +1681,27 @@ source files and profiles to the primary v12 run at `60a7248`; intervening chang
 are comparison/proof verification and documentation. This is an additional host
 observation, not a replacement for either inconclusive v11 trial or for any v12
 failure. Neither calibration has an accepted baseline yet.
+
+### First verified v12 full-hour trial
+
+Run `36252125924` completed trial one (`r20260926t155801-bbbd6a`) with
+`calibration-passed` and `releaseQualified: false`. Raw review reproduces traffic,
+delivery, resources and retained-memory assessments, verifies the evidence seal,
+and confirms current measured source/profile identity. The frozen target is
+6 journeys/second; 14,401/14,401 plateau journeys completed, including one
+permitted completed boundary arrival. Every expected-failure case recorded
+2,304 attempts, exact verifications and successful follow-ups. The smallest
+operation/window latency sample count was 212, above the unchanged 200 floor.
+
+The maximum application observation gap was 10.099 seconds, within the fixed
+15-second bound; idle observation began 23 ms after generator completion.
+Retained memory passed across 155 usable major cycles spanning 2,358,910 ms,
+with 18 MiB late-versus-early growth and no warnings. Collector flush and the
+30,055,461-byte final JFR are retained. Evidence is under
+`ci-36252125924-trial-1/`, including `raw-trial-review.json`,
+`profile-source-coverage-verification.json` and original GitHub artifact metadata.
+Artifact `10911465944` expires on 2026-10-26; it is not yet a durable trial archive.
+
+Trial two started at 16:59:57 UTC on 2026-09-26. Baseline acceptance still requires
+the remaining matching full trials, independent-host/noise review, durable
+archival and reviewed budgets. One healthy hour does not enable the release gate.

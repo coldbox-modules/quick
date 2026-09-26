@@ -16,7 +16,7 @@ import shutil
 
 from baseline import EVIDENCE
 from calibration import validate_trial_profile
-from controller import Controller, Inconclusive, execute, write_json
+from controller import Controller, Inconclusive, execute, render_report, write_json
 from identity import DOCKER_FIELDS, build_identity, cpu_identity, digest, matching_host, profile_identity, read, require_match, sha_file
 from package import verify
 from traffic import CASES, operation_names
@@ -295,6 +295,10 @@ def main():
             controller.summary.update(status='inconclusive', releaseQualified=False)
             controller.summary['reasons'].append('qualification-receipt-failed: ' + str(error))
             write_json(controller.out / 'summary.json', controller.summary)
+            # Never retain the earlier successful report if receipt creation or
+            # verification fails, including when regenerating the report fails.
+            (controller.out / 'report.html').unlink(missing_ok=True)
+            render_report(controller.out)
     return 1
 
 

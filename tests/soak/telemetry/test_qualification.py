@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -10,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).parents[1]))
 from identity import digest, profile_identity, require_match, sha_file
 from qualification import baseline_paths, select_baseline, resolve_artifact_baseline, accepted_baseline, seal_qualification, verify_qualification, QUALIFICATION_EVIDENCE, seal_validation, validate_package_purpose
 from traffic import CASES, operation_names
+import qualification
+from report import render
 
 PROFILE = json.loads((Path(__file__).parents[1] / 'profiles/lucee6-serial.json').read_text())
 
@@ -253,6 +256,30 @@ class QualificationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'complete qualified'):
                 seal_qualification(self.directory)
         self.assertFalse((self.directory / 'qualification.json').exists())
+
+    def test_receipt_failure_updates_the_readable_report(self):
+        for validation in (False, True):
+            with self.subTest(validationOnly=validation):
+                controller = SimpleNamespace(out=self.directory, summary={
+                    'status': 'validation-passed' if validation else 'passed',
+                    'releaseQualified': not validation, 'state': 'complete', 'reasons': []})
+                def completed_observation(instance):
+                    (self.directory / 'summary.json').write_text(json.dumps(instance.summary))
+                    render(self.directory)
+                argv = ['qualification.py', '--baseline', str(self.path), '--profile', 'profile.json',
+                        '--package', 'package', '--candidate', 'a' * 40]
+                if validation:
+                    argv.append('--validation-only')
+                seal = 'seal_validation' if validation else 'seal_qualification'
+                with patch.object(sys, 'argv', argv), patch.object(qualification, 'baseline_paths'), \
+                     patch.object(qualification, 'QualificationController', return_value=controller), \
+                     patch.object(qualification, 'execute', side_effect=completed_observation), \
+                     patch.object(qualification, seal, side_effect=ValueError('raw evidence unavailable')):
+                    self.assertEqual(qualification.main(), 1)
+                report = (self.directory / 'report.html').read_text()
+                self.assertIn('<strong>inconclusive</strong>', report)
+                self.assertIn('qualification-receipt-failed: raw evidence unavailable', report)
+                self.assertNotIn('Soak qualification passed.', report)
 
     def test_validation_package_and_publication_mode_cannot_be_interchanged(self):
         validate_package_purpose({'validationOnly': True}, {'noRelease': True}, True)

@@ -344,7 +344,7 @@ full-matrix rollout and publication-stub evidence.
 
 - Obtain an eligible capacity target and validate the complete 60-minute workload
   in CI; only development schedules have completed end to end so far.
-- Prove actual generator/application saturation attribution and resolve noisy
+- Verify generator/application saturation attribution in CI and resolve noisy
   latency detector trials on the final CI profile. Repeat controlled detector
   proofs after profile changes and retain every unsuccessful attempt.
 - Run three full healthy CI trials, investigate noise and hosted-runner variance,
@@ -353,7 +353,8 @@ full-matrix rollout and publication-stub evidence.
   concurrency, including full validation of candidates that require no release.
 - Enable exactly one soak row in the release-only fail-fast matrix **after**
   baseline acceptance, preserve all 23 functional rows, reuse the verified native
-  cancellation handoff, and finish the all-pass stub evidence.
+  cancellation handoff, and verify the full release matrix with a publication
+  stub. The two-row diagnostic all-pass proof has passed (`36218396157`).
 - Deliver full reports and final acceptance evidence. No milestone above can be
   substituted by the short pilot or by the fake-publisher unit tests.
 
@@ -750,3 +751,28 @@ It is an explicit calibration experiment on the pinned diagnostic candidate;
 release candidates never trigger automatic budget increases. All memory and
 latency acceptance still requires fresh capacity and three full healthy trials
 under the new immutable profile. The live release gate remains disabled.
+
+
+### First successful v5 native all-pass proof
+
+CI run `36218396157` passed, and its downloaded artifact verifier passed every
+native matrix check. The soak completed all 901 offered plateau journeys;
+traffic and resource assessments passed, all owned resources were removed and
+the final recording was preserved. Its functional stub overlapped live HTTP/JVM
+work and succeeded. The publication stub executed only after both rows passed,
+with no provider calls. This proves the diagnostic two-row all-pass path, not
+the disabled 24-row release integration or a full qualification.
+
+No allocation stalls were recorded in this short run. Application median CPU
+was 71.2% of its quota and maximum container memory was 88.3% of its budget.
+The six 30-second 1,000-row report p95 values ranged from 1,180 to 1,543 ms.
+These are observed development measurements, not accepted absolute budgets.
+Capacity and full retained-memory/latency trials remain required.
+
+Local saturation diagnostics independently proved application overload after a
+3-to-1 CPU quota change (`saturation-v4-20260925/application`) and generator-only
+capacity exhaustion from bounded CPU work (`saturation-cpu-work-v5-20260925`).
+Both verified cleanup and recording preservation. The first tiny-generator-quota
+experiment is retained as failed detector evidence because it also caused HTTP
+timeouts. The final CI suite additionally binds the generated CPU-work script
+by hash and must pass both cases before its evidence can be reviewed.

@@ -523,10 +523,11 @@ tests separately prove rejection when provider state invalidates preparation.
   outcome with a 15.239-second gap. Both inconclusive trials remain retained.
   Primary v12 run `36252125924` is in its first full trial; independent host
   calibration `36254251872` uses the same measured source and profile.
-- Verify matching v12 diagnostics after the controller timing change. V11
-  diagnostics `36246858832` passed completely, including measurement, saturation,
-  all application faults, cancellation and observer loss. Retain every attempt;
-  those results do not establish v12 or full-trial qualification.
+- Review the completed v12 diagnostic evidence alongside full-trial results
+  before accepting a baseline. Run `36252126235` passed measurement, saturation,
+  all application faults, cancellation and observer loss; independent raw
+  reanalysis matches. Short diagnostic results do not establish full-trial
+  qualification, and every earlier attempt remains retained.
 - Run three full healthy CI trials, investigate noise and hosted-runner variance,
   establish a justified reference, and review an accepted baseline manifest.
 - Integrate verified immutable promotion under repository-wide publication
@@ -1609,8 +1610,26 @@ exactly reproduces both saved assessments: bounded generator CPU work completed
 half-CPU application completed 59 of 94 and fails for application overload and
 unexpected HTTP/contract errors. Both collectors flushed and retained nonempty
 final JFR recordings; the original CI verification confirms restored quotas and
-owned-resource cleanup. Evidence is under `ci-36252126235-saturation/`. Matching
-application diagnostics and calibration `36252125924` remain running.
+owned-resource cleanup. Evidence is under `ci-36252126235-saturation/`.
+
+The application job also passed, making diagnostic run `36252126235` terminal
+success. `ci-36252126235-application/raw-evidence-verification.json` reproduces
+all five traffic assessments and all four available resource/memory assessments
+from raw data. The healthy, held-connection, sustained-latency and late-latency
+cases each completed 901/901 plateau journeys; the wrong contract failed during
+warmup as intended. The held connection failed its exact final/idle JDBC checks,
+sustained latency failed `report_100`, and late latency remained inconclusive.
+All five retained a final JFR and collector flush. Completed cases had maximum
+application sampling gaps between 5.061 and 5.065 seconds.
+
+`profile-source-verification.json` confirms matching v12 measured sources,
+runtime, images, budgets, fixture fanout and report sizes on N2. Development
+timing and explicit faults remain distinct from full trials. Original CI checks
+also passed all eight HTTP contract probes, controller cancellation and observer
+loss, including live owned-resource cleanup; downloaded evidence is not checked
+against the local Docker daemon. The reproducible local reanalysis helper is
+`tests/results/soak/reanalyze_application.py`, whose SHA-256 is recorded in the
+verification report. Full calibration `36252125924` remains running.
 
 Independent calibration `36254251872` was dispatched once on the same standard
 runner label to measure between-host variation with v12. Before dispatch,

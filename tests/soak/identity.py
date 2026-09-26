@@ -7,6 +7,7 @@ source snapshots remain in the evidence independently of this comparison key.
 import hashlib
 import json
 from pathlib import Path
+from fixtures.generate import fixture_settings
 
 SOURCE_FILES = {'controller.py', 'Seed.cfc',
                 'telemetry/Collector.java', 'telemetry/memory.py',
@@ -56,10 +57,15 @@ def source_identity(run):
 
 def profile_identity(profile):
     # Explicit metadata exclusions avoid a self-referential baseline hash.
-    unknown = profile.keys() - set(PROFILE_FIELDS) - {'id', 'status', 'acceptedBaseline', 'capacity', 'fault'}
+    unknown = profile.keys() - set(PROFILE_FIELDS) - {'id', 'status', 'acceptedBaseline', 'capacity', 'fault', 'fixtures'}
     if unknown or profile.get('fault', 'none') != 'none':
         raise ValueError('Unrecognized or faulted measurement profile')
-    return {key: profile[key] for key in PROFILE_FIELDS}
+    fixtures = fixture_settings(profile)
+    result = {key: profile[key] for key in PROFILE_FIELDS}
+    # Preserve historical identities; explicit fixture controls are always bound.
+    if 'fixtures' in profile:
+        result['fixtures'] = fixtures
+    return result
 
 
 def cpu_identity(cpu):

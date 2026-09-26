@@ -136,6 +136,16 @@ class IdentityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Unrecognized'):
             profile_identity(profile)
 
+    def test_fanout_change_requires_new_measurement_identity(self):
+        before = build_identity(self.run)
+        changed = copy.deepcopy(PROFILE)
+        changed['fixtures']['highFanoutComments'] = 180
+        with self.assertRaisesRegex(ValueError, 'recalibration required: profile'):
+            require_match(before, build_identity(self.run, profile=changed))
+        historical = copy.deepcopy(PROFILE)
+        historical.pop('fixtures')
+        self.assertNotIn('fixtures', profile_identity(historical))
+
     def test_full_trial_cannot_be_shortened_or_weakened(self):
         validate_trial_profile(PROFILE)
         for key, value in (('plateauSeconds', 180), ('minimumLatencySamples', 199),

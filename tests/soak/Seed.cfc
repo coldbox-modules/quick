@@ -1,7 +1,11 @@
 /** Creates deterministic fixtures once in an explicitly named disposable container. */
 component {
 
-	function run( required string container, required string output ) {
+	function run(
+		required string container,
+		required string output,
+		numeric highFanoutComments = 180
+	) {
 		if ( !reFind( "^quick-soak-[a-z0-9-]+$", arguments.container ) ) {
 			throw( type = "SoakUnsafeDatabase", message = "Only explicitly named quick-soak-* containers are allowed." );
 		}
@@ -12,7 +16,13 @@ component {
 			.init( getDirectoryFromPath( getCurrentTemplatePath() ) & "../../" & arguments.output )
 			.getCanonicalPath();
 		var generator = getDirectoryFromPath( getCurrentTemplatePath() ) & "fixtures/generate.py";
-		execute( [ "python3", generator, destination ] );
+		execute( [
+			"python3",
+			generator,
+			destination,
+			"--high-fanout-comments",
+			toString( arguments.highFanoutComments )
+		] );
 		// Password is passed by environment; neither shell interpolation nor command echo is used.
 		var password = systemSettings.getSystemSetting( "SOAK_MYSQL_ROOT_PASSWORD", "" );
 		if ( !len( password ) ) {

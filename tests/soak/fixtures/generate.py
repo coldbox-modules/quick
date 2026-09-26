@@ -20,7 +20,19 @@ def sql_value(value):
     return "'" + str(value).replace("\\", "\\\\").replace("'", "''") + "'"
 
 
-def generate(output):
+def fixture_settings(profile):
+    settings = profile.get("fixtures", {"highFanoutComments": 180})
+    if (not isinstance(settings, dict) or set(settings) != {"highFanoutComments"}
+            or type(settings["highFanoutComments"]) is not int
+            or settings["highFanoutComments"] not in (60, 180)):
+        raise ValueError("fixtures must declare highFanoutComments as 60 or 180")
+    return dict(settings)
+
+
+def generate(output, high_fanout_comments=180):
+    fixture_settings({"fixtures": {"highFanoutComments": high_fanout_comments}})
+    # Every tenth comment belongs to a User, so the cutoff counts only Post rows.
+    cutoff = (high_fanout_comments // 9) * 10 + high_fanout_comments % 9
     output.mkdir(parents=True, exist_ok=False)
     counts = {"teams": 20, "users": 1000, "posts": 10000, "comments": 50000, "tags": 100, "post_tags": 0}
     comments = {str(i): 0 for i in range(1, 10001)}
@@ -57,7 +69,7 @@ CREATE TABLE fixture_manifest (version VARCHAR(20) PRIMARY KEY);
             for i in range(1, 50001):
                 user_id = 1+(i-1)%1000
                 kind = "User" if i%10 == 0 else "Post"
-                parent = user_id if kind == "User" else (1 if i <= 200 else 2+(i-201)%9998)
+                parent = user_id if kind == "User" else (1 if i <= cutoff else 2+(i-cutoff-1)%9998)
                 if kind == "Post":
                     comments[str(parent)] += 1
                 yield i, user_id, f"comment-{i:05}", parent, kind
@@ -73,6 +85,7 @@ CREATE TABLE fixture_manifest (version VARCHAR(20) PRIMARY KEY);
         out.write("ALTER TABLE posts AUTO_INCREMENT=1000000;\nINSERT INTO fixture_manifest VALUES ('v1');\n")
     checksums = {str(limit): hashlib.sha256("|".join(f"{i}:{owner(i)}:post-{i:05}" for i in range(1, limit+1)).encode()).hexdigest() for limit in (25, 100, 250, 500, 1000)}
     manifest = {"version": VERSION, "seed": 0, "counts": counts,
+                "highFanoutComments": high_fanout_comments,
                 "postCommentCounts": comments, "postTags": tags, "reportChecksums": checksums,
                 "sqlSha256": hashlib.sha256((output / "seed.sql").read_bytes()).hexdigest(),
                 "missingIdStart": 2000000000, "scratchIdStart": 1000000, "emptyUserIds": [999, 1000]}
@@ -83,5 +96,6 @@ CREATE TABLE fixture_manifest (version VARCHAR(20) PRIMARY KEY);
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--high-fanout-comments", type=int, choices=(60, 180), default=180)
     args = parser.parse_args()
-    print(json.dumps({k: v for k, v in generate(args.output).items() if k not in ("postCommentCounts", "postTags")}, indent=2))
+    print(json.dumps({k: v for k, v in generate(args.output, args.high_fanout_comments).items() if k not in ("postCommentCounts", "postTags")}, indent=2))

@@ -32,6 +32,7 @@ from resources import evaluate as evaluate_resources
 from memory import evaluate as evaluate_memory
 from delivery import evaluate as evaluate_delivery
 from native import parse_memory_stat
+from fixtures.generate import fixture_settings
 
 
 def write_json(path, value):
@@ -131,6 +132,7 @@ class Controller:
 
     def setup(self):
         p = self.profile
+        fixtures = fixture_settings(p)
         supported_runtime = {"lucee": "6.2.8+20", "coldbox": "8.2.0", "java": "21.0.10+7",
                              "jdbc": "8.0.33", "fullNull": True, "parallelEagerLoading": False}
         parallel_runtime = {**supported_runtime, "parallelEagerLoading": True,
@@ -219,8 +221,12 @@ class Controller:
         self.wait_for(self.db, lambda: self.docker("exec", "-e", "MYSQL_PWD", self.db, "mysql", "--protocol=TCP", "-h127.0.0.1", "-uroot", "-N", "-e", "SELECT 1", check=False).returncode == 0, 120)
         self.command(["box", "version"], log="seed-commandbox-version.log", timeout=30)
         self.command(["box", "task", "run", "taskFile=" + str(source / "Seed.cfc"),
-                      ":container=" + self.db, ":output=" + str(self.out / "fixtures")],
+                      ":container=" + self.db, ":output=" + str(self.out / "fixtures"),
+                      ":highFanoutComments=" + str(fixtures["highFanoutComments"])],
                      log="seed.log", timeout=180)
+        seeded = json.loads((self.out / "fixtures/fixture-manifest.json").read_text())
+        if seeded.get("highFanoutComments") != fixtures["highFanoutComments"] or seeded["postCommentCounts"]["1"] != fixtures["highFanoutComments"]:
+            raise Inconclusive("Seeded high-fanout fixture differs from profile")
         self.docker("exec", "-e", "MYSQL_PWD", self.db, "mysql", "-uroot", "-e",
                     "GRANT ALL PRIVILEGES ON quick_soak.* TO 'quick_soak'@'%';", log="seed.log")
         # Only setup has Internet access for dependency resolution. The measured app network is internal.

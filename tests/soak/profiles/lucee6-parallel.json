@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "id": "lucee6-parallel-arm64-standard-reports-v8",
+  "id": "lucee6-parallel-arm64-standard-reports-v9",
   "status": "provisional-unaccepted",
   "runner": "ubuntu-24.04-arm",
   "architecture": "arm64",
@@ -88,5 +88,8 @@
     ],
     "stepSeconds": 180,
     "idleSeconds": 30
+  },
+  "fixtures": {
+    "highFanoutComments": 60
   }
 }

@@ -113,7 +113,7 @@ recorded under **Native matrix cancellation proof** below.
 
 ## Memory measurement method
 
-Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v8
+Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v9
 runtime uses generational ZGC with a fixed periodic major collection interval,
 identically in baseline and candidate. The pilot uses a 256 MiB heap and a
 five-second major interval to validate detection cheaply. The application uses
@@ -204,6 +204,11 @@ coverage. The harness does not replace that failure with a serial fallback.
 `fixtures/generate.py OUTPUT_DIRECTORY` generates immutable SQL and a manifest
 for 20 teams, 1,000 users, 10,000 posts, 50,000 polymorphic comments, 100 tags,
 and 17,144 pivots. It records expected relationship counts and report checksums.
+The controller passes the profile's `fixtures.highFanoutComments` explicitly:
+60 for the standard/parallel profiles, 180 for the larger-report profile.
+The standalone generator accepts `--high-fanout-comments 60`; omitting it retains
+the historical 180-comment SQL. The seed task's corresponding optional input is
+`:highFanoutComments=60`. Profile and fixture identities record the choice.
 The SQL deliberately uses `CREATE DATABASE`, never `DROP` or `TRUNCATE`: an
 existing database causes setup to fail. Seed records occupy IDs through 10,000;
 scratch posts start at 1,000,000 and missing IDs start at 2,000,000,000.
@@ -1043,3 +1048,26 @@ and correct generator-versus-application overload attribution. These complete
 the v8 diagnostic evidence. They are development/controlled-fault proofs, not
 full 60-minute healthy trials, an accepted baseline, or full release-matrix
 qualification. The capacity rejection above remains unresolved.
+
+### Provisional v9 standard-runner relationship fanout
+
+The user approved reducing the high-fanout relationship fixture for the standard
+GitHub runner after v8 capacity could not support the required sample floor.
+V9 assigns 60 comments to the hot post instead of 180 and redistributes the
+remaining comments across the other nonempty posts. The total 50,000 comments
+(45,000 Post and 5,000 User), all other table counts, polymorphic cases, empty
+relationships, five-post graph shape and journey mix remain intact. Reports
+still use 25/100/250 rows. The optional larger-report profile retains 180-comment
+fanout and its original report sizes; its scope is not covered by the default.
+
+`fixtures.highFanoutComments` is validated, passed through the real seed task,
+checked against the generated manifest and bound into measurement identity.
+The generator's default 180-comment SQL retains its historical checksum; the
+60-comment fixture has a distinct checksum and must be recalibrated. Tests
+inspect actual SQL rows for counts and distribution, rather than trusting only
+the manifest. Both profiles preserve deterministic report checksums and pivots.
+
+Resource budgets, the 60-minute schedule, sample floors, latency/memory rules,
+and the 60%-of-clean capacity policy are unchanged. Fresh capacity, three full
+trials and detector proofs are required before acceptance. No previous v8 pass
+is reused as a v9 baseline, and the live release gate remains disabled.

@@ -1403,3 +1403,12 @@ workload or a passing full trial. One independent calibration on another standar
 runner will provide additional evidence about between-runner variation. Both
 attempts and any differing CPU identities must be retained and evaluated before
 baseline acceptance.
+
+
+Independent v11 calibration `36248290534` runs commit `0ce62ec` on a fresh
+four-core Neoverse-N2 host, with runner image `ubuntu24-arm64` version
+`20260920.129.1`. Its immediately available `soak-runner-*` artifact is retained
+under `ci-36248290534-runner/`. The first calibration remains in its three-trial
+step. Neither run has completed a full trial yet; the independent attempt is
+additional evidence for runner variation, and every outcome remains part of
+acceptance review.

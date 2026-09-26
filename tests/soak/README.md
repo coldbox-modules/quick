@@ -689,3 +689,24 @@ measurement cases on its CI JVM before starting a fresh sweep and any eligible
 full trials. This is a new calibration profile, not acceptance of the failed v2
 runs. Generational collection targets the observed short-lived allocation pattern;
 its application benefit remains to be measured ([Java 21 generational ZGC](https://inside.java/2023/11/28/gen-zgc-explainer/)).
+
+
+### Provisional v4 ARM64 runner calibration
+
+The generational measurement pilot passed on CI in `36216508204`, but the v3
+capacity sweep still timed out on a graph request during its first 5/second step.
+Native all-pass run `36216529683` failed on the same graph iteration. Its
+application approached its 3-CPU quota and recorded allocation stalls while the
+generator had headroom. Generational collection did not establish adequate
+application capacity. Neither run qualifies a baseline or permits publication.
+
+The next provisional profile uses `ubuntu-24.04-arm` and native ARM64 Java/images.
+GitHub documents the same 4-CPU, 16-GB standard public-runner allocation for this
+label ([runner specifications](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)).
+Workload, request timeouts, sample floors, GC mode, heap and container budgets
+remain those of v3. Local ARM development success motivates this experiment but
+is not evidence for the hosted ARM machine. The actual CPU model, runtime image
+and runner identity remain part of calibration; no x64 evidence is reused as an
+ARM baseline. Fresh image reproducibility, measurement pilots, capacity, full
+trials and application detectors are required. The release workflow template
+selects ARM only for its soak row; its 23 functional rows are unchanged.

@@ -24,7 +24,7 @@ permissions:
 jobs:
   capacity:
     name: Measure capacity before selecting the baseline target
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4.2.2
@@ -36,7 +36,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21.0.10+7.0.LTS'
-          architecture: x64
       - uses: Ortus-Solutions/setup-commandbox@v2.0.1
         with:
           version: '6.3.5'
@@ -45,7 +44,7 @@ jobs:
       - name: Prove generational major-cycle measurement before application calibration
         run: python3 tests/soak/telemetry/pilot.py --generational --output tests/results/soak/measurement-pilot
       - name: Verify the pinned runtime image rebuilds identically
-        run: python3 tests/soak/verify_image.py --architecture amd64 --output tests/results/soak/runtime-image-proof
+        run: python3 tests/soak/verify_image.py --architecture arm64 --output tests/results/soak/runtime-image-proof
       - name: Sweep the pinned healthy candidate with one application lifecycle
         env:
           CANDIDATE_SHA: ${{ inputs.candidate || 'af2c93d2604de73d7ccac23b7bf69c4be221dbb0' }}

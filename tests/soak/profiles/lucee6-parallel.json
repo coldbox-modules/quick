@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "id": "lucee6-parallel-generational-zgc-v3",
+  "id": "lucee6-parallel-arm64-generational-zgc-v4",
   "status": "provisional-unaccepted",
-  "runner": "ubuntu-24.04",
-  "architecture": "amd64",
+  "runner": "ubuntu-24.04-arm",
+  "architecture": "arm64",
   "runtime": {
     "lucee": "6.2.8+20",
     "coldbox": "8.2.0",

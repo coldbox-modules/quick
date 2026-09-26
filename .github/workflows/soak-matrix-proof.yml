@@ -22,7 +22,7 @@ env:
 jobs:
   validation:
     name: probe / ${{ matrix.kind }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 25
     strategy:
       fail-fast: true
@@ -39,7 +39,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21.0.10+7.0.LTS'
-          architecture: x64
       - uses: Ortus-Solutions/setup-commandbox@v2.0.1
         if: matrix.kind == 'soak'
         with:
@@ -75,7 +74,7 @@ jobs:
   publication-stub:
     name: Publication stub (no provider calls)
     needs: validation
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     concurrency:
       group: quick-soak-diagnostic-publication
       cancel-in-progress: false

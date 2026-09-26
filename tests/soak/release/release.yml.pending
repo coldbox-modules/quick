@@ -13,7 +13,7 @@ jobs:
   validation:
     name: Validation / ${{ matrix.kind }} / ${{ matrix.cfengine }} / ${{ matrix.coldbox }} / null=${{ matrix.fullNull }}
     if: "!contains(github.event.head_commit.message, '__SEMANTIC RELEASE VERSION UPDATE__')"
-    runs-on: ${{ matrix.kind == 'soak' && 'ubuntu-24.04' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.kind == 'soak' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: ${{ matrix.kind == 'soak' && 90 || 360 }}
     strategy:
       fail-fast: true
@@ -189,7 +189,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21.0.10+7.0.LTS'
-          architecture: x64
       - name: Set up the pinned soak preparation runtime
         if: matrix.kind == 'soak'
         uses: Ortus-Solutions/setup-commandbox@v2.0.1

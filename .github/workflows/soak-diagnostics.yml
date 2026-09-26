@@ -14,7 +14,7 @@ permissions:
 jobs:
   measurement-pilot:
     name: JVM measurement and artifact promotion self-tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4.2.2
@@ -24,7 +24,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21.0.10+7.0.LTS'
-          architecture: x64
       - name: Verify fail-closed analyzer and fake publisher
         run: |
           python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
@@ -44,7 +43,7 @@ jobs:
 
   application-harness:
     name: Isolated HTTP workload and controller self-tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 65
     steps:
       - uses: actions/checkout@v4.2.2
@@ -56,7 +55,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21.0.10+7.0.LTS'
-          architecture: x64
       - uses: Ortus-Solutions/setup-commandbox@v2.0.1
         with:
           version: '6.3.5'

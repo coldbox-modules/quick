@@ -1538,5 +1538,13 @@ The measurement job in v12 diagnostic run `36252126235` passed. Downloaded raw
 JVM data independently reproduces healthy, retained-growth and late-growth
 classifications, with all child exit codes zero and final recordings retained.
 The canceled pilot preserved partial evidence, stopped both children and never
-qualified. Its evidence is under `ci-36252126235-measurement/`. Matching
-application/saturation diagnostics and calibration `36252125924` remain running.
+qualified. Its evidence is under `ci-36252126235-measurement/`.
+
+The same run's saturation job passed. Raw k6 and container-observation reanalysis
+exactly reproduces both saved assessments: bounded generator CPU work completed
+48 of 829 offered journeys and is inconclusive for generator capacity; a
+half-CPU application completed 59 of 94 and fails for application overload and
+unexpected HTTP/contract errors. Both collectors flushed and retained nonempty
+final JFR recordings; the original CI verification confirms restored quotas and
+owned-resource cleanup. Evidence is under `ci-36252126235-saturation/`. Matching
+application diagnostics and calibration `36252125924` remain running.

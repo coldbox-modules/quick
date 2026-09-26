@@ -105,6 +105,23 @@ baseline proposal only when all three trials permit it. Artifacts have 30-day
 retention; accepted evidence must be archived before expiry. Current run handles
 and verification scope are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
+Review a downloaded, completed full trial from the repository root:
+
+```sh
+python3 tests/soak/review_trial.py \
+  --run PATH_TO_DOWNLOADED_TRIAL \
+  --output NEW_REVIEW_JSON
+```
+
+This offline command checks recorded analyzer versions, measurement identity
+and capacity/package identity, records raw-input hashes, then recomputes all four saved
+traffic, delivery, resource and memory assessments. Passing calibration trials
+also require a valid evidence seal. It reports exact and rounded early p95,
+observation gaps, idle-transition timing and recording completeness. Exit zero
+means the saved results reproduce; an inconclusive or failed trial remains so.
+It cannot accept a baseline or qualify a release. Partial trials need separate
+diagnosis, and existing review files are never overwritten.
+
 ## Measurement pilot
 
 From the repository root, with Python 3 and a Java 21 **JDK** (including `javac`):

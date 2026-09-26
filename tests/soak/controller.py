@@ -136,7 +136,9 @@ class Controller:
         parallel_runtime = {**supported_runtime, "parallelEagerLoading": True,
                             "parallelEagerLoadingMaxThreads": 4, "parallelEagerLoadingQueueCapacity": 64,
                             "parallelEagerLoadingTimeout": 8000}
-        if p["runtime"] not in (supported_runtime, parallel_runtime):
+        selected_runtime = dict(p["runtime"])
+        gc_mode = selected_runtime.pop("gcMode", "non-generational")
+        if selected_runtime not in (supported_runtime, parallel_runtime) or gc_mode not in ("non-generational", "generational"):
             raise Inconclusive("Unsupported runtime or eager-loading configuration")
         self.env["SOAK_PARALLEL"] = "true" if p["runtime"]["parallelEagerLoading"] else "false"
         if self.args.development:
@@ -196,6 +198,8 @@ class Controller:
         server["web"]["http"]["port"] = 8080
         server["JVM"]["heapSize"] = p["resources"]["application"]["heapMiB"]
         server["JVM"]["minHeapSize"] = p["resources"]["application"]["heapMiB"]
+        if gc_mode == "generational":
+            server["JVM"]["args"] = "-XX:+UseZGC -XX:+ZGenerational -XX:ZCollectionIntervalMajor=15"
         server["JVM"]["args"] += " -Xlog:gc*:file=/work/jvm/gc.log:time,uptime,level,tags:filecount=4,filesize=16M"
         write_json(app / "server.json", server)
         image = "quick-soak-runtime:" + p["architecture"]

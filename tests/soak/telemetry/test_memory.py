@@ -56,6 +56,44 @@ class MemoryEvidenceTests(unittest.TestCase):
         rows[0]["arguments"] += " -XX:+ZGenerational"
         self.assertEqual(self.evaluate(rows)["status"], "inconclusive")
 
+    def generational(self, values):
+        rows = self.rows(values)
+        rows[0].update(collectors="ZGC Minor Cycles,ZGC Minor Pauses,ZGC Major Cycles,ZGC Major Pauses",
+                       arguments="-XX:+ZGenerational -XX:ZCollectionIntervalMajor=5")
+        for row in rows:
+            if row['kind'] == 'gc': row['name'] = 'ZGC Major'
+        return rows
+
+    def test_generational_major_cycles_distinguish_churn_and_growth(self):
+        for values, expected in (([20, 24, 18, 25, 21, 22], 'passed'),
+                                 ([20, 30, 40, 50, 60, 70], 'failed'),
+                                 ([20, 20, 20, 20, 20, 60], 'inconclusive')):
+            result = self.evaluate(self.generational(values))
+            self.assertEqual(result['status'], expected)
+            self.assertEqual(result['method'], 'jdk21-zgc-generational-major-periodic-jfr-v1')
+
+    def test_generational_minor_cycles_cannot_replace_missing_major_cycles(self):
+        rows = self.generational([20] * 6)
+        for row in rows:
+            if row['kind'] == 'gc': row['name'] = 'ZGC Minor'
+        result = self.evaluate(rows)
+        self.assertEqual(result['cycles'], 0)
+        self.assertEqual(result['status'], 'inconclusive')
+
+    def test_minor_churn_does_not_hide_major_retained_growth(self):
+        rows = self.generational([20, 30, 40, 50, 60, 70])
+        for i in range(6):
+            rows += [{'kind': 'gc', 'gcId': 100+i, 'name': 'ZGC Minor', 'time': i*10000+200},
+                     {'kind': 'heap', 'gcId': 100+i, 'when': 'After GC', 'heapUsed': MIB, 'time': i*10000+200}]
+        result = self.evaluate(rows)
+        self.assertEqual(result['cycles'], 6)
+        self.assertEqual(result['status'], 'failed')
+
+    def test_minor_periodic_flag_cannot_substitute_for_major_collection(self):
+        rows = self.generational([20] * 6)
+        rows[0]['arguments'] = '-XX:+ZGenerational -XX:ZCollectionIntervalMinor=5'
+        self.assertIn('collector-method-mismatch', self.evaluate(rows)['reasons'])
+
     def production(self, values, **kwargs):
         rows = [{"kind": "runtime", "collectors": "ZGC Pauses,ZGC Cycles", "arguments": "-XX:ZCollectionInterval=15"}]
         for window, value in enumerate(values):

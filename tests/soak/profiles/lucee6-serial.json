@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "id": "lucee6-serial-zgc-v2",
+  "id": "lucee6-serial-generational-zgc-v3",
   "status": "provisional-unaccepted",
   "runner": "ubuntu-24.04",
   "architecture": "amd64",
@@ -10,7 +10,8 @@
     "java": "21.0.10+7",
     "jdbc": "8.0.33",
     "fullNull": true,
-    "parallelEagerLoading": false
+    "parallelEagerLoading": false,
+    "gcMode": "generational"
   },
   "images": {
     "mysql": "mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b",

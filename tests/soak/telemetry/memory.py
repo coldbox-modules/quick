@@ -1,8 +1,8 @@
 """Collector-specific evidence rules shared by the pilot and eventual release analyzer.
 
-Non-generational ZGC only: join an After GC heap summary to its *completed*
-ZGC cycle. Young collections, reservation, and unmatched summaries are not
-retained-heap evidence. Occupancy includes concurrent allocations, so compare
+Join an After GC heap summary to its completed full-heap ZGC cycle.
+For generational ZGC, only completed major collections qualify. Young
+collections, reservation, and unmatched summaries are not retained-heap evidence. Occupancy includes concurrent allocations, so compare
 matched traffic windows and calibrated noise; this is not an object census.
 """
 import math
@@ -10,6 +10,25 @@ import statistics
 
 MIB = 1024 * 1024
 METHOD = "jdk21-zgc-nongenerational-periodic-jfr-v1"
+GENERATIONAL_METHOD = "jdk21-zgc-generational-major-periodic-jfr-v1"
+
+
+def collector_method(runtime):
+    arguments = runtime.get("arguments", "").split()
+    generational = "-XX:+ZGenerational" in arguments
+    method, name = (GENERATIONAL_METHOD, "ZGC Major") if generational else (METHOD, "Z")
+    expected = {"ZGC Minor Cycles", "ZGC Minor Pauses", "ZGC Major Cycles", "ZGC Major Pauses"} if generational else {"ZGC Cycles", "ZGC Pauses"}
+    prefix = "-XX:ZCollectionIntervalMajor=" if generational else "-XX:ZCollectionInterval="
+    intervals = [argument.removeprefix(prefix) for argument in arguments if argument.startswith(prefix)]
+    try:
+        valid = len(intervals) == 1 and math.isfinite(float(intervals[0])) and float(intervals[0]) > 0
+    except ValueError:
+        valid = False
+    valid = valid and set(runtime.get("collectors", "").split(",")) == expected
+    if generational and "-XX:-ZGenerational" in arguments:
+        valid = False
+    return method, name, valid
+
 
 
 def evaluate(rows, *, start_ms, end_ms, window_ms, min_span_ms,
@@ -18,18 +37,16 @@ def evaluate(rows, *, start_ms, end_ms, window_ms, min_span_ms,
              baseline_bytes=None):
     reasons, warnings = [], []
     runtime = [r for r in rows if r["kind"] == "runtime"]
-    if len(runtime) != 1 or set(runtime[0].get("collectors", "").split(",")) != {"ZGC Cycles", "ZGC Pauses"}:
-        reasons.append("collector-method-mismatch")
-    if runtime and ("-XX:+ZGenerational" in runtime[0].get("arguments", "")
-                    or "-XX:ZCollectionInterval=" not in runtime[0].get("arguments", "")):
+    method, cycle_name, valid = collector_method(runtime[0] if len(runtime) == 1 else {})
+    if not valid:
         reasons.append("collector-method-mismatch")
     samples = sorted((r for r in rows if r["kind"] == "sample"), key=lambda r: r["time"])
     if any(b["uptimeMs"] <= a["uptimeMs"] for a, b in zip(samples, samples[1:])):
-        return {"status": "failed", "reasons": ["jvm-restarted"], "method": METHOD}
+        return {"status": "failed", "reasons": ["jvm-restarted"], "method": method}
     if any(r["kind"] == "collectorError" for r in rows):
         reasons.append("collector-error")
-    # JMX names the collector "ZGC Cycles"; JFR's name for that completed cycle is "Z".
-    complete = {r["gcId"]: r for r in rows if r["kind"] == "gc" and r["name"] == "Z"}
+    # Minor and unmatched cycles cannot establish full-heap reclamation.
+    complete = {r["gcId"]: r for r in rows if r["kind"] == "gc" and r["name"] == cycle_name}
     reclaimed = sorted((r for r in rows if r["kind"] == "heap" and r["when"] == "After GC"
                         and r["gcId"] in complete and start_ms + exclude_initial_ms <= r["time"] < end_ms), key=lambda r: r["time"])
     # Duplicate or out-of-order inputs cannot manufacture additional observations.
@@ -47,7 +64,7 @@ def evaluate(rows, *, start_ms, end_ms, window_ms, min_span_ms,
     span = reclaimed[-1]["time"] - reclaimed[0]["time"] if reclaimed else 0
     if span < min_span_ms:
         reasons.append("insufficient-reclamation-span")
-    result = {"method": METHOD, "status": "inconclusive" if reasons else "passed",
+    result = {"method": method, "status": "inconclusive" if reasons else "passed",
               "reasons": list(dict.fromkeys(reasons)), "warnings": warnings,
               "windows": windows, "cycles": len(reclaimed), "spanMs": span,
               "observations": [{"time": r["time"], "bytes": r["heapUsed"]} for r in reclaimed]}

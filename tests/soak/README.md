@@ -64,7 +64,7 @@ then verifies child removal, partial recording flush, and a non-passing result.
 From the repository root, with Python 3 and a Java 21 **JDK** (including `javac`):
 
 ```sh
-python3 tests/soak/telemetry/pilot.py
+python3 tests/soak/telemetry/pilot.py --generational
 ```
 
 This runs three fresh JVMs for 90 seconds each: healthy allocation churn,
@@ -105,19 +105,22 @@ local process cleanup, **not yet GitHub matrix cancellation**.
 
 ## Memory measurement method
 
-Method ID: `jdk21-zgc-nongenerational-periodic-jfr-v1`. The provisional runtime
-uses non-generational ZGC with a fixed periodic collection interval, identically
-in baseline and candidate. The pilot uses a 256 MiB heap and a five-second
-interval to validate detection cheaply. The v2 application profile starts with a 2 GiB
-heap and a 15-second interval; those conditions still require calibration.
+Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v3
+runtime uses generational ZGC with a fixed periodic major collection interval,
+identically in baseline and candidate. The pilot uses a 256 MiB heap and a
+five-second major interval to validate detection cheaply. The application uses
+a 2 GiB heap and 15-second major interval; these conditions require calibration.
+The earlier non-generational method remains supported for historical evidence.
 
 An external Java process attaches through the local JMX management agent and
 uses the JDK's `RemoteRecordingStream`. It joins `jdk.GCHeapSummary` **After GC**
-events with completed `jdk.GarbageCollection` events by `gcId`. On this JDK the
-JFR collector name is `Z`; JMX reports `ZGC Cycles` and `ZGC Pauses`. Young-only,
-unmatched, duplicate, or insufficient reclamation observations cannot establish
-retained-heap stability. No explicit GC calls, repeated heap dumps, cache clears,
-or application restarts are part of a measured trial.
+events with completed `jdk.GarbageCollection` events named `ZGC Major` by `gcId`.
+JMX must report all four generational cycle/pause collectors. Minor, unmatched,
+duplicate, or insufficient reclamation observations cannot establish retained
+stability. Concurrent major/minor cycle durations are reported separately;
+they are not added together or treated as stop-the-world pause time. No explicit
+GC calls, repeated heap dumps, cache clears, or application restarts are part
+of a measured trial.
 
 Post-cycle occupancy includes allocations concurrent with reclamation. It is a
 matched-load growth signal, not an exact live-object census. Source references:
@@ -317,8 +320,8 @@ The workflow still needs to select this path when preparation reports no release
 - Integrate verified immutable promotion under repository-wide publication
   concurrency, including full validation of candidates that require no release.
 - Enable exactly one soak row in the release-only fail-fast matrix **after**
-  baseline acceptance, preserve all 23 functional rows, and finish native
-  bidirectional cancellation, explicit cancellation, and all-pass stub evidence.
+  baseline acceptance, preserve all 23 functional rows, reuse the verified native
+  cancellation handoff, and finish the all-pass stub evidence.
 - Deliver full reports and final acceptance evidence. No milestone above can be
   substituted by the short pilot or by the fake-publisher unit tests.
 
@@ -486,7 +489,7 @@ per-operation absolute budgets, and resource recovery. Reused JVMs, changed
 evidence, differing inputs, and incomplete trial windows are rejected. More
 than 10% run-to-run p95 variation or unexplained retained-growth/noise blocks
 proposal readiness. This tool cannot accept a baseline or qualify a release.
-Ninety-seven telemetry/calibration policy tests and twenty-eight package/provider tests pass;
+The telemetry/calibration and package/provider policy suites pass;
 no three-trial proposal has been produced from real full-length runs yet.
 
 Runtime image builds use a fixed `SOURCE_DATE_EPOCH=0` following
@@ -547,8 +550,8 @@ PROBE_MODE=functional-failure python3 tests/soak/matrix_probe.py verify-remote \
 
 The verifier downloads artifacts and checks actual job conclusions, workload
 liveness, owned container/volume/network removal, final collector flush, retained
-recording, and publication-stub execution only for all-pass. Native CI evidence
-is still pending; a local signal test alone cannot prove GitHub fail-fast.
+recording, and publication-stub execution only for all-pass. The terminal native
+proofs and outstanding all-pass evidence are recorded below.
 
 CI diagnostic run `36210905683` retained five-minute warmup and completed every
 request in its late-latency case, with resource recovery. It nevertheless failed:
@@ -621,3 +624,37 @@ accepted, and the release gate remains disabled.
 Baseline acceptance requires a separate `late-latency` detector reference as well
 as sustained latency. A passing sustained-fault proof cannot substitute for the
 required final-window behavior. Missing either reference blocks qualification.
+
+
+The local v2 development run `development-v2-20260925` passed all traffic and
+resource checks: all 901 offered plateau journeys completed. Its separately
+retained coverage verification matches four actual HTTP sequences to every
+repeated journey. This short run does not satisfy retained-memory duration.
+CI capacity `36215259336` failed the first 5/second step after a high-fanout graph
+request timed out. The GC log records 680 individual allocation stalls, up to
+2.55 seconds, and sampled heap occupancy reached the 2 GiB maximum. After load
+stopped it fell to roughly 120 MiB. This supports an allocation-pressure
+investigation, not a retained-leak conclusion. Native all-pass run `36215301275`
+also failed on a 1,000-row report timeout and failed final collector flush;
+publication remained blocked. Both CI runners reported EPYC 7763 processors.
+
+The analyzer now has a separate generational ZGC measurement method,
+`jdk21-zgc-generational-major-periodic-jfr-v1`. It requires the exact generational
+JMX collector set, explicit generational mode and a positive periodic **major**
+collection interval. Only `After GC` summaries joined by ID to completed
+`ZGC Major` events qualify; `ZGC Minor` events cannot fill missing observations
+or hide retained growth. The earlier non-generational method remains available
+for interpreting its historical evidence. The measurement pilot accepts
+`--generational` to exercise the new method on fresh healthy, leaking and
+late-leaking JVMs. Application adoption requires those real detector results.
+
+
+The real `generational-pilot-20260925` passed all three expected outcomes:
+healthy churn passed, sustained retained growth failed, and late growth remained
+inconclusive. The v3 application profiles now select generational ZGC with a
+15-second periodic major interval. CPU, heap, container budgets, workload and
+request timeouts remain as in v2. The capacity workflow verifies the same three
+measurement cases on its CI JVM before starting a fresh sweep and any eligible
+full trials. This is a new calibration profile, not acceptance of the failed v2
+runs. Generational collection targets the observed short-lived allocation pattern;
+its application benefit remains to be measured ([Java 21 generational ZGC](https://inside.java/2023/11/28/gen-zgc-explainer/)).

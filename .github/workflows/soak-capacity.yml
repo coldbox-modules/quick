@@ -42,6 +42,8 @@ jobs:
           version: '6.3.5'
       - name: Verify capacity and measurement policy
         run: python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
+      - name: Prove generational major-cycle measurement before application calibration
+        run: python3 tests/soak/telemetry/pilot.py --generational --output tests/results/soak/measurement-pilot
       - name: Verify the pinned runtime image rebuilds identically
         run: python3 tests/soak/verify_image.py --architecture amd64 --output tests/results/soak/runtime-image-proof
       - name: Sweep the pinned healthy candidate with one application lifecycle

@@ -12,7 +12,7 @@ import subprocess
 import sys
 import time
 
-from memory import evaluate, MIB, METHOD
+from memory import evaluate, MIB, METHOD, GENERATIONAL_METHOD
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
@@ -44,13 +44,14 @@ def stop(process):
             process.wait(timeout=5)
 
 
-def trial(directory, classes, fault, java):
+def trial(directory, classes, fault, java, generational=False):
     directory.mkdir()
     logs, processes = [], []
     result = {"fault": fault, "status": "inconclusive", "releaseQualified": False}
+    method = GENERATIONAL_METHOD if generational else METHOD
+    gc_args = ["-XX:+ZGenerational", "-XX:ZCollectionIntervalMajor=5"] if generational else ["-XX:-ZGenerational", "-XX:ZCollectionInterval=5"]
     try:
-        command = [java, "-Xms256m", "-Xmx256m", "-XX:+UseZGC", "-XX:-ZGenerational",
-                   "-XX:ZCollectionInterval=5", f"-Xlog:gc*:file={directory}/gc.log:time,uptime,level,tags:filecount=3,filesize=8M",
+        command = [java, "-Xms256m", "-Xmx256m", "-XX:+UseZGC", *gc_args, f"-Xlog:gc*:file={directory}/gc.log:time,uptime,level,tags:filecount=3,filesize=8M",
                    "-cp", str(classes), "MeasurementPilot", str(directory), fault]
         log = open(directory / "target.log", "w")
         logs.append(log)
@@ -67,7 +68,7 @@ def trial(directory, classes, fault, java):
         wait_file(directory / "ready", processes)
         start_ms = int(time.time() * 1000)
         write_json(directory / "trial.json", {"startMs": start_ms, "durationSeconds": 90, "fault": fault,
-                                             "method": METHOD, "command": command})
+                                             "method": method, "command": command})
         (directory / "start").touch()
         deadline = time.monotonic() + 90
         while time.monotonic() < deadline:
@@ -133,6 +134,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=ROOT / "tests/results/soak" / ("pilot-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")))
     parser.add_argument("--cases", nargs="+", choices=["healthy", "leak", "late-leak"], default=["healthy", "leak", "late-leak"])
+    parser.add_argument("--generational", action="store_true", help="Prove major-cycle evidence for the separate generational ZGC method")
     args = parser.parse_args()
     directory = args.output.resolve()
     directory.mkdir(parents=True, exist_ok=False)
@@ -144,7 +146,7 @@ def main():
     subprocess.run([javac, "--release", "21", "--add-modules", "jdk.attach,jdk.management.jfr", "-d", str(classes),
                     str(HERE / "Collector.java"), str(HERE / "MeasurementPilot.java")], check=True)
     sources = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in HERE.glob("*") if p.suffix in (".java", ".py")}
-    write_json(directory / "manifest.json", {"sources": sources, "method": METHOD, "releaseQualified": False})
+    write_json(directory / "manifest.json", {"sources": sources, "method": GENERATIONAL_METHOD if args.generational else METHOD, "releaseQualified": False})
     def cancel(signum, frame):
         raise KeyboardInterrupt(f"Canceled by signal {signum}")
     signal.signal(signal.SIGTERM, cancel)
@@ -152,7 +154,7 @@ def main():
     try:
         for fault in args.cases:
             print(f"Running {fault}: {directory / fault}", flush=True)
-            results.append(trial(directory / fault, classes, fault, java))
+            results.append(trial(directory / fault, classes, fault, java, args.generational))
             print(f'{fault}: {results[-1]["status"]} {results[-1].get("reasons", [])}', flush=True)
     finally:
         write_json(directory / "summary.json", {"releaseQualified": False, "complete": len(results) == len(args.cases), "results": results})

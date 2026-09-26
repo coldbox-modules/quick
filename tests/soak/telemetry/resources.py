@@ -41,10 +41,12 @@ def pause_windows(rows, start, end, window_ms, exclude_initial_ms=0):
     for i in range(int((end - start) / window_ms)):
         left, right = max(start + i * window_ms, start + exclude_initial_ms), start + (i + 1) * window_ms
         paused = sum(max(0, min(b, right) - max(a, left)) for a, b in merged)
-        cycles = [r for r in rows if r.get('kind') == 'gc' and r.get('name') == 'Z' and left <= r['time'] < right]
+        cycles = [r for r in rows if r.get('kind') == 'gc' and r.get('name') in ('Z', 'ZGC Major') and left <= r['time'] < right]
+        minor = [r for r in rows if r.get('kind') == 'gc' and r.get('name') == 'ZGC Minor' and left <= r['time'] < right]
         windows.append({'index': i, 'pauseMs': paused, 'observedMs': right - left,
                         'pauseFraction': paused / (right - left), 'completedCycles': len(cycles),
-                        'cycleElapsedMs': sum(r['durationMs'] for r in cycles)})
+                        'cycleElapsedMs': sum(r['durationMs'] for r in cycles),
+                        'minorCycles': len(minor), 'minorCycleElapsedMs': sum(r['durationMs'] for r in minor)})
     return windows
 
 

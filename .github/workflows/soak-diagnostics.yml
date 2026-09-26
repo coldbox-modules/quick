@@ -30,7 +30,7 @@ jobs:
           python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
           python3 -m unittest discover -s tests/soak/release -p 'test_*.py' -v
       - name: Validate measurement on healthy, leaking, and late-leaking JVMs
-        run: python3 tests/soak/telemetry/pilot.py --output tests/results/soak/measurement-pilot
+        run: python3 tests/soak/telemetry/pilot.py --generational --output tests/results/soak/measurement-pilot
       - name: Cancel a live controller and verify its children stop
         run: python3 tests/soak/telemetry/verify_cancellation.py --output tests/results/soak/cancellation-pilot
       - name: Preserve evidence, including failed pilot runs

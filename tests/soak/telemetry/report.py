@@ -112,8 +112,8 @@ def render(directory):
     for field, title, factor, unit in [('heapUsed', 'Heap occupancy', MIB, 'MiB'), ('metaspaceUsed', 'Metaspace', MIB, 'MiB'),
         ('rssBytes', 'Process resident memory (includes ZGC mappings)', MIB, 'MiB'), ('threads', 'JVM threads', 1, 'threads'), ('descriptors', 'Open descriptors', 1, 'descriptors')]:
         parts.append(chart(title, [(r['time'], r[field] / factor) for r in samples if field in r], unit))
-    complete = {r['gcId'] for r in jvm if r.get('kind') == 'gc' and r.get('name') == 'Z'}
-    parts.append(chart('Occupancy after completed ZGC cycles', [(r['time'], r['heapUsed'] / MIB) for r in jvm
+    complete = {r['gcId'] for r in jvm if r.get('kind') == 'gc' and r.get('name') in ('Z', 'ZGC Major')}
+    parts.append(chart('Occupancy after completed full-heap ZGC cycles', [(r['time'], r['heapUsed'] / MIB) for r in jvm
         if r.get('kind') == 'heap' and r.get('when') == 'After GC' and r['gcId'] in complete], 'MiB'))
     parts.append('<p>Post-cycle occupancy includes concurrent allocations. A short chart cannot establish retained-memory stability or replace the required matched-load analysis.</p>')
     for field, title in [('jdbcActive', 'Borrowed JDBC connections'), ('jdbcWaiting', 'Waiting JDBC borrowers'), ('queuedRequests', 'Queued application requests')]:

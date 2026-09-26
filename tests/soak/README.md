@@ -1794,3 +1794,19 @@ The six-trial review, review document and sources pass remote downloaded-byte
 verification, as do three direct detector-review records. Evidence is under
 `baseline-review-v12/`; 129 telemetry/calibration and 61 release tests pass.
 The live release gate remains disabled pending full native integration proof.
+
+### Full native proofs dispatched from the accepted tree
+
+All-pass runs `36267962062` and `36267961934` use commit `b2d8a48` and the accepted
+N2 baseline. Each runs the actual 23 functional combinations plus a full soak.
+Both remain live; the publication stubs cannot run until every validation passes.
+The serialization tags request the bounded three-minute diagnostic guard hold,
+but actual contention and non-overlap still need terminal evidence.
+
+The no-release candidate `ebc795be0323d71cc5a1ab9e77aca5b0e645bb8a` has the same
+accepted source tree `627f438a027bddb09815eaeccf99ddfc5577cdc9`. Real pinned
+preparation returns `noRelease: true`; the 49-file validation package verifies
+and ordinary publication packaging rejects it. Evidence is under
+`no-release-reviewed-baseline-20260926/`. Its full native proof is dispatched
+with tag `soak-release-proof-all-pass-no-release-v12-reviewed`; local preparation
+alone does not satisfy the required full no-release validation.

@@ -1301,3 +1301,22 @@ acceptance thresholds are unchanged. The fixture generator retains explicit
 60 and historical 180 options; the optional large-report profile retains 180.
 Actual generated SQL, manifest counts, determinism and the historical SQL hash
 are checked. Fresh development, capacity and detector evidence is required.
+
+
+V10's half-CPU saturation probe in `36245768374` passed on Neoverse-N2. Raw
+reanalysis reproduces both saved attributions: the generator case is inconclusive
+with `delivery-generator-capacity-exhausted` (47 of 829 offered journeys
+completed); application overload fails with `delivery-application-overloaded`
+and observed response errors (60 of 94 completed before abort). Application
+samples reached roughly 99% of the injected half-CPU allocation while generator
+utilization remained low. Both cases retained flushed JVM telemetry/final JFR,
+restored the diagnostic quota, and passed live CI owned-resource removal checks.
+`ci-36245768374-saturation/raw-evidence-verification.json` records the reanalysis;
+CI cleanup proof is taken from the original runner, not the local Docker daemon.
+
+V11 commit `e458c93` passes 119 telemetry tests and starts fresh calibration
+`36246554787` and diagnostics `36246858832`. The local
+`development-v11-fanout-20260926` run has a direct database fixture check confirming
+45,000 Post comments, 5,000 User comments, hot-post count 30 and empty-post count
+zero. Its workload is still running. The v10 probe does not substitute for
+matching v11 detector evidence, and no full baseline trial has completed.

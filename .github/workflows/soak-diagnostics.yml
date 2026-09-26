@@ -41,6 +41,39 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  saturation-attribution:
+    name: Distinguish live generator and application saturation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Retain environment evidence even if setup fails
+        run: python3 tests/soak/ci_environment.py
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7.0.LTS'
+      - uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          version: '6.3.5'
+      - name: Verify attribution using real application requests and controlled pressure
+        run: python3 tests/soak/verify_saturation.py --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 --output tests/results/soak/saturation-suite
+      - name: Preserve both saturation cases including failures
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-saturation-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tests/results/soak/
+            !tests/results/soak/**/app/coldbox/**
+            !tests/results/soak/**/app/modules/**
+            !tests/results/soak/**/tmp/**
+            !tests/results/soak/**/jvm/stream/**
+          if-no-files-found: error
+          retention-days: 30
+
   application-harness:
     name: Isolated HTTP workload and controller self-tests
     runs-on: ubuntu-24.04-arm

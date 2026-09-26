@@ -539,6 +539,26 @@ capacity loss, joint saturation, or unresolved attribution is inconclusive.
 Wrong responses and unexpected HTTP failures remain hard failures regardless
 of generator pressure. Actual capacity saturation proof remains pending.
 
+`verify_saturation.py` provides separate real-container detector cases:
+
+```sh
+python3 tests/soak/verify_saturation.py \
+  --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 \
+  --output tests/results/soak/saturation-suite
+```
+
+Each case provisions the real application and database and retains the full
+development warmup. The generator case adds bounded CPU work before plateau
+requests in four VUs, retaining actual HTTP assertions. The application case
+reduces its Docker CPU quota from 3 to 1 after warmup. The verifier uses only
+post-injection resource observations and requires the exact attribution,
+non-qualifying result, owned cleanup and final recording. It records the fault
+mechanism, actual quota and generated workload hash. Quotas are restored only
+after measurement for teardown; that restoration is not recovery evidence.
+`--cases generator` or `--cases application` is a partial diagnostic and is
+explicitly marked as an incomplete suite. CI runs both in the separate
+**Distinguish live generator and application saturation** diagnostic job.
+
 CI run `36208965667` passed measurement/promotion tests and verified the healthy,
 held-connection, wrong-contract, and sustained-latency application cases. Its
 late-latency case timed out on a graph request before fault activation, with ZGC

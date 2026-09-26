@@ -105,14 +105,19 @@ def verify(directory, expected_sha):
     return manifest
 
 
-def promote(directory, expected_sha, publisher):
+def promote(directory, expected_sha, publisher, *, expected_manifest=None):
     """Caller must hold the repository publication guard for this whole operation.
 
     The publisher protocol lets tests exercise the real checks with a fake remote.
     The eventual network adapter must not rebuild, retry writes, or select a version.
     """
     manifest = verify(directory, expected_sha)
-    if json.loads((directory / 'prepared.json').read_text()).get('noRelease'):
+    if expected_manifest is not None and manifest != expected_manifest:
+        raise ValueError('Package manifest differs from qualification')
+    prepared = json.loads((directory / 'prepared.json').read_text())
+    if digest(json.dumps(prepared, sort_keys=True).encode()) != manifest['preparedSha256']:
+        raise ValueError('Prepared metadata changed before promotion')
+    if prepared.get('noRelease'):
         raise ValueError('No-release preparation cannot be promoted')
     if manifest["lastRelease"].get("diagnosticOnly"):
         raise ValueError("Diagnostic packages cannot be promoted")
@@ -130,7 +135,7 @@ def promote(directory, expected_sha, publisher):
     downloaded = publisher.download(manifest)
     if digest(downloaded) != manifest["packageSha256"]:
         raise ValueError("Published download differs from tested artifact")
-    publisher.publicize(manifest, json.loads((directory / "prepared.json").read_text())["notes"])
+    publisher.publicize(manifest, prepared["notes"])
     return {"candidateSha": expected_sha, "packageSha256": manifest["packageSha256"],
             "downloadSha256": digest(downloaded), "version": manifest["version"]}
 

@@ -272,7 +272,14 @@ automatically retries writes. API tokens and signed storage URLs are excluded
 from its journal. Fake HTTP integration tests cover these behaviors, including
 corrupt downloads and uncertain partial publication. A live read-only request
 verified the current ForgeBox response/version-inventory shape; no real write
-has been made. Guarded workflow promotion still needs integration. Do not wire
+has been made. `release/promote_qualified.py` now verifies the complete raw
+qualification receipt before creating the provider adapter, freezes its package
+manifest and prepared notes, and binds the final publication receipt to baseline
+and evidence hashes. Its CLI rejects local, PR, tag, and wrong-candidate contexts.
+Those context checks do not replace the required whole-matrix dependency and
+repository-wide native concurrency guard; guarded workflow integration remains
+pending. Fake-provider tests prove rejected evidence causes zero provider calls
+and a rebuilt package cannot replace the qualified ZIP between checks. Do not wire
 the directory publisher behind the new gate.
 
 `qualification.py --baseline ACCEPTED_JSON --profile PROFILE_JSON --package
@@ -471,7 +478,7 @@ per-operation absolute budgets, and resource recovery. Reused JVMs, changed
 evidence, differing inputs, and incomplete trial windows are rejected. More
 than 10% run-to-run p95 variation or unexplained retained-growth/noise blocks
 proposal readiness. This tool cannot accept a baseline or qualify a release.
-Seventy-seven telemetry/calibration policy tests and eleven package tests pass;
+Ninety-seven telemetry/calibration policy tests and twenty-eight package/provider tests pass;
 no three-trial proposal has been produced from real full-length runs yet.
 
 Runtime image builds use a fixed `SOURCE_DATE_EPOCH=0` following
@@ -480,7 +487,8 @@ Two earlier CI runners produced different runtime image IDs from the same
 Dockerfile and pinned inputs. `verify_image.py` now builds twice without cache
 and checks identical image identities before CI capacity work. The local arm64
 proof in `runtime-image-reproducibility-20260925/verification.json` produced
-identical image IDs on both fresh builds; the corresponding CI proof is pending.
+identical image IDs on both fresh builds. CI run `36212346552` also produced
+identical amd64 image IDs on two clean builds.
 
 Delivery analysis aligns shortfall windows with container CPU budgets and
 application/database queues. Proven application saturation fails; generator

@@ -4,10 +4,12 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import Mock, patch
 import urllib.parse
 
 from package import build, promote
 from provider import FORGEBOX, GITHUB, Publisher
+from promote_qualified import promote_qualified, release_context
 
 
 class ProviderHTTP:
@@ -100,6 +102,67 @@ class ProviderTests(unittest.TestCase):
     def writes(self):
         return [call for call in self.http.calls if call[0] in ('PUT', 'POST')]
 
+    def test_missing_qualification_never_instantiates_or_contacts_provider(self):
+        factory = Mock(return_value=self.publisher)
+        with self.assertRaises(FileNotFoundError):
+            promote_qualified(self.root / 'missing-run', self.sha, self.root / 'baseline.json', factory)
+        factory.assert_not_called()
+        self.assertEqual(self.http.calls, [])
+
+    def test_rejected_qualification_never_reaches_provider(self):
+        for reason in ('Qualification assessments did not all pass', 'Accepted baseline changed after validation',
+                       'Qualified evidence changed: k6.ndjson', 'Qualification candidate mismatch'):
+            with self.subTest(reason=reason), patch('promote_qualified.verify_qualification', side_effect=ValueError(reason)):
+                factory = Mock(return_value=self.publisher)
+                with self.assertRaisesRegex(ValueError, reason):
+                    promote_qualified(self.root, self.sha, self.root / 'baseline.json', factory)
+                factory.assert_not_called()
+        self.assertEqual(self.http.calls, [])
+
+    def test_verified_evidence_is_bound_to_actual_adapter_publication_receipt(self):
+        # The qualification verifier is independently exercised on raw evidence;
+        # this test covers orchestration and the real adapter with fake HTTP.
+        run = self.root / 'run'
+        run.mkdir()
+        self.artifact.rename(run / 'package')
+        qualification = dict(packageSha256=self.manifest['packageSha256'], baselineSha256='a'*64, evidenceSha256='b'*64,
+                             files={'package/package-manifest.json': hashlib.sha256((run / 'package/package-manifest.json').read_bytes()).hexdigest()})
+        with patch('promote_qualified.verify_qualification', return_value=qualification) as verify:
+            result = promote_qualified(run, self.sha, self.root / 'baseline.json', lambda: self.publisher)
+        verify.assert_called_once_with(run, self.sha, self.root / 'baseline.json')
+        self.assertEqual(result['packageSha256'], qualification['packageSha256'])
+        self.assertEqual(result['downloadSha256'], qualification['packageSha256'])
+        self.assertEqual(result['evidenceSha256'], qualification['evidenceSha256'])
+        self.assertEqual(json.loads((self.publisher.journal / 'publication-receipt.json').read_text()), result)
+        self.assertEqual(json.loads((self.publisher.journal / '01-qualification-verified.json').read_text())['baselineSha256'], 'a'*64)
+        self.assertEqual(self.http.stored, (run / 'package/quick.zip').read_bytes())
+
+    def test_consistently_rebuilt_artifact_after_qualification_cannot_be_promoted(self):
+        run = self.root / 'run'
+        run.mkdir()
+        self.artifact.rename(run / 'package')
+        qualification = dict(packageSha256=self.manifest['packageSha256'], baselineSha256='a'*64, evidenceSha256='b'*64,
+                             files={'package/package-manifest.json': hashlib.sha256((run / 'package/package-manifest.json').read_bytes()).hexdigest()})
+        def changed_before_promotion():
+            (run / 'package').rename(run / 'original')
+            build(self.repo, {'candidateSha': self.sha, 'version': '1.0.1', 'lastRelease': self.last,
+                             'notes': 'Different notes and ZIP'}, run / 'package')
+            return self.publisher
+        with patch('promote_qualified.verify_qualification', return_value=qualification):
+            with self.assertRaisesRegex(ValueError, 'differs from qualification'):
+                promote_qualified(run, self.sha, self.root / 'baseline.json', changed_before_promotion)
+        self.assertEqual(self.http.calls, [])
+
+    def test_release_context_rejects_local_pr_tag_and_other_candidate(self):
+        env = dict(GITHUB_ACTIONS='true', GITHUB_REPOSITORY='coldbox-modules/quick', GITHUB_EVENT_NAME='push',
+                   GITHUB_REF='refs/heads/main', GITHUB_SHA=self.sha)
+        self.assertEqual(release_context(env, self.sha), 'main')
+        for field, value in (('GITHUB_ACTIONS', 'false'), ('GITHUB_REPOSITORY', 'fork/quick'),
+                             ('GITHUB_EVENT_NAME', 'pull_request'), ('GITHUB_REF', 'refs/tags/v1.0.1'),
+                             ('GITHUB_SHA', 'a'*40)):
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'matching Quick release-branch'):
+                release_context({**env, field: value}, self.sha)
+
     def test_actual_adapter_promotes_exact_zip_without_directory_rebuild(self):
         receipt = promote(self.artifact, self.sha, self.publisher)
         data = (self.artifact / 'quick.zip').read_bytes()
@@ -114,6 +177,17 @@ class ProviderTests(unittest.TestCase):
         stages = [json.loads(path.read_text())['stage'] for path in sorted((self.root / 'journal').glob('*.json'))]
         self.assertEqual(stages, ['before-storage-upload', 'storage-uploaded', 'before-forgebox-publish', 'forgebox-published',
                                  'download-verified', 'before-github-release', 'complete'])
+
+    def test_notes_are_snapshotted_before_any_provider_request(self):
+        notes = json.loads((self.artifact / 'prepared.json').read_text())['notes']
+        def mutate_metadata(method, url):
+            if method == 'PUT':
+                prepared = json.loads((self.artifact / 'prepared.json').read_text())
+                prepared['notes'] = 'Unverified replacement'
+                (self.artifact / 'prepared.json').write_text(json.dumps(prepared))
+        self.http.before_request = mutate_metadata
+        promote(self.artifact, self.sha, self.publisher)
+        self.assertEqual(self.http.release_request['body'], notes)
 
     def test_corrupt_download_prevents_github_publication(self):
         self.http.corrupt = True

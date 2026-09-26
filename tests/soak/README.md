@@ -349,6 +349,33 @@ state under the guard and verifies downloaded package bytes. `actionlint` and
 matrix-structure checks passed for the template; these do not replace actual
 full-matrix rollout and publication-stub evidence.
 
+The staged native entry point **Full release validation proof (no publication)**
+in `.github/workflows/soak-release-proof.yml` uses that exact pending validation
+job (23 real TestBox rows and one full qualification row). Generate/check it with:
+
+```sh
+python3 tests/soak/release/stage_full_probe.py
+python3 tests/soak/release/stage_full_probe.py --check
+```
+
+The generator copies validation verbatim except for the release-marker skip
+condition and replaces the entire publisher job. Diagnostic CI checks that the
+generated workflow remains identical to the pending template. This full proof
+uses manual dispatch or `soak-release-proof-*` tags; dispatch waits for accepted
+baseline availability. It retains the same fail-fast behavior, supervisor,
+receipt checks, package artifact and timeouts. It is not a development fallback.
+
+After every validation succeeds, `release/probe_qualified.py` verifies the full
+downloaded receipt. A publication candidate traverses `promote_qualified()` and
+`package.promote()` with a local-only publisher, retaining the actual ZIP upload,
+readback checksum and checkpoints. A no-release candidate verifies its complete
+validation receipt and never constructs that publisher. The proof has read-only
+repository permissions and no ForgeBox credential. Tags containing
+`-serialization-` hold its dedicated diagnostic publication guard for 180 seconds.
+Artifacts are `release-soak-<SHA>-<attempt>` and
+`full-publication-proof-<run ID>`. Unit checks prove routing and exact-byte local
+promotion; full native receipt/promotion evidence is still pending calibration.
+
 ## Remaining acceptance work
 
 - Obtain an eligible capacity target and validate the complete 60-minute workload

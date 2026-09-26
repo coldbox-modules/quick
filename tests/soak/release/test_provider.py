@@ -10,6 +10,7 @@ import urllib.parse
 from package import build, promote
 from provider import FORGEBOX, GITHUB, Publisher
 from promote_qualified import promote_qualified, release_context
+from probe_qualified import probe
 
 
 class ProviderHTTP:
@@ -108,6 +109,47 @@ class ProviderTests(unittest.TestCase):
             promote_qualified(self.root / 'missing-run', self.sha, self.root / 'baseline.json', factory)
         factory.assert_not_called()
         self.assertEqual(self.http.calls, [])
+
+    def test_full_matrix_probe_rejects_missing_raw_receipt_before_local_write(self):
+        run = self.root / 'run'
+        run.mkdir()
+        self.artifact.rename(run / 'package')
+        output = self.root / 'probe'
+        with self.assertRaises(FileNotFoundError):
+            probe(run, self.sha, self.root / 'baseline.json', output)
+        self.assertFalse(output.exists())
+
+    def test_full_matrix_probe_promotes_the_actual_zip_through_local_publisher(self):
+        # Receipt verification remains an independent prerequisite; this isolates
+        # the full-probe orchestration without inventing a healthy CI baseline.
+        run = self.root / 'run'
+        run.mkdir()
+        self.artifact.rename(run / 'package')
+        qualification = dict(candidateSha=self.sha, packageSha256=self.manifest['packageSha256'],
+            baselineSha256='a'*64, evidenceSha256='b'*64,
+            files={'package/package-manifest.json': hashlib.sha256((run / 'package/package-manifest.json').read_bytes()).hexdigest()})
+        output = self.root / 'probe'
+        with patch('validate_candidate.verify_qualification', return_value=qualification), \
+                patch('promote_qualified.verify_qualification', return_value=qualification):
+            result = probe(run, self.sha, self.root / 'baseline.json', output)
+        self.assertTrue(result['stubPublished'])
+        self.assertFalse(result['published'])
+        self.assertEqual(result['providerWrites'], 0)
+        self.assertEqual((output / 'local-publisher/upload.zip').read_bytes(), (run / 'package/quick.zip').read_bytes())
+        self.assertEqual(result['promotionReceipt']['downloadSha256'], self.manifest['packageSha256'])
+        self.assertEqual(self.http.calls, [])
+
+    def test_full_matrix_probe_no_release_does_not_construct_a_publisher(self):
+        output = self.root / 'probe'
+        with patch('probe_qualified.inspect_artifact', return_value={'publicationRequired': False,
+                'candidateSha': self.sha, 'packageSha256': self.manifest['packageSha256']}), \
+                patch('probe_qualified.LocalPublisher') as publisher:
+            result = probe(self.root / 'run', self.sha, self.root / 'baseline.json', output)
+        publisher.assert_not_called()
+        self.assertFalse(result['stubPublished'])
+        self.assertFalse(result['published'])
+        self.assertIsNone(result['promotionReceipt'])
+        self.assertFalse((output / 'local-publisher').exists())
 
     def test_rejected_qualification_never_reaches_provider(self):
         for reason in ('Qualification assessments did not all pass', 'Accepted baseline changed after validation',

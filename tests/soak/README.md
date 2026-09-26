@@ -443,9 +443,10 @@ tests separately prove rejection when provider state invalidates preparation.
 
 - Obtain an eligible capacity target and validate the complete 60-minute workload
   in CI; only development schedules have completed end to end so far.
-- Verify generator/application saturation attribution in CI and resolve noisy
-  latency detector trials on the final CI profile. Repeat controlled detector
-  proofs after profile changes and retain every unsuccessful attempt.
+- Repeat controlled detector proofs after any further profile change and retain
+  every unsuccessful attempt. The complete v8 CI diagnostics, including
+  generator/application saturation attribution and both latency faults, passed
+  in run `36221908854`; they do not establish an eligible capacity target.
 - Run three full healthy CI trials, investigate noise and hosted-runner variance,
   establish a justified reference, and review an accepted baseline manifest.
 - Integrate verified immutable promotion under repository-wide publication
@@ -1005,3 +1006,40 @@ The current v8 workload remains unaccepted. The repository reports zero
 configured self-hosted runners, and the organization API reports larger hosted
 runners unsupported. Fixture sizing or additional CI capacity must be resolved
 before a fresh complete calibration can establish a release baseline.
+
+### Complete v8 CI detector and interruption evidence
+
+[Run 36221908854](https://github.com/coldbox-modules/quick/actions/runs/36221908854)
+completed successfully on diagnostic commit
+`9c19d0672fe2ef6a747dc1e1c7a02ca59d871fe2`. Its downloaded application artifact
+is retained in `tests/results/soak/ci-36221908854-application/`. The complete
+five-case verifier passed, with raw summaries confirming:
+
+- Healthy control: 901/901 plateau journeys, traffic/resources passed, no reasons.
+- Held connection: 900/900 journeys; the final and idle JDBC-active checks failed.
+- Wrong contract: the exact response-body assertion failed while the HTTP-status
+  metric remained green; the controller stopped before plateau traffic.
+- Sustained latency: 900/900 journeys, healthy resources, and only
+  `sustained-latency-regression:report_100` in the summary reasons.
+- Late latency: 901/901 journeys, healthy resources, and only
+  `late-latency-regression-needs-observation:report_100`; outcome inconclusive.
+
+All five cases retained a final recording and clean collector end marker, used
+the same harness, and passed owned-container, named/anonymous-volume and network
+removal checks. The healthy observer recorded the expected 536,870,912-byte
+configured limit and 518,979,584-byte usable maximum; resource validation passed.
+
+The live controller-cancellation proof also passed: signal 15 produced an
+inconclusive canceled result with a clean end marker and final recording.
+The live observer-loss proof killed the collector with exit 137, produced an
+inconclusive aborted result, explicitly identified observer loss and incomplete
+final recording, retained the earlier 7,538,962-byte recording plus HTTP/JVM
+samples, and verified removal of all owned resources. Both verification JSON
+files passed every check.
+
+The same workflow's separately downloaded measurement and saturation artifacts
+(`ci-36221908854-partial/`) verify healthy/sustained-growth/late-growth outcomes
+and correct generator-versus-application overload attribution. These complete
+the v8 diagnostic evidence. They are development/controlled-fault proofs, not
+full 60-minute healthy trials, an accepted baseline, or full release-matrix
+qualification. The capacity rejection above remains unresolved.

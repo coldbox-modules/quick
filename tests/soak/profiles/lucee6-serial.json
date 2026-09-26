@@ -67,5 +67,15 @@
     "maxDerivedEntries": 96,
     "recoveryThreadAllowance": 8,
     "recoveryDescriptorAllowance": 8
+  },
+  "capacity": {
+    "rates": [
+      5,
+      10,
+      20,
+      40
+    ],
+    "stepSeconds": 180,
+    "idleSeconds": 30
   }
 }

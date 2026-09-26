@@ -10,6 +10,7 @@ import datetime
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import secrets
 import shutil
@@ -142,6 +143,8 @@ class Controller:
         self.env["SOAK_FAULT_MODE"] = self.args.fault
         write_json(self.out / "profile.json", p)
         write_json(self.out / "host.json", {"docker": json.loads(self.docker("info", "--format", "{{json .}}").stdout),
+                   "cpu": json.loads(self.command(["lscpu", "--json"]).stdout) if platform.system() == "Linux" else
+                          {"model": self.command(["sysctl", "-n", "machdep.cpu.brand_string"]).stdout.decode().strip()},
                    "runnerImage": os.environ.get("ImageOS"), "runnerImageVersion": os.environ.get("ImageVersion"),
                    "githubRunId": os.environ.get("GITHUB_RUN_ID"), "githubSha": os.environ.get("GITHUB_SHA")})
         source = self.out / "harness"
@@ -293,6 +296,7 @@ class Controller:
             state = self.inspect(name)["State"]
             if state["OOMKilled"] or not state["Running"]:
                 raise RuntimeError(f"Required process {name} stopped or OOMed")
+        return row
 
     def run(self):
         self.setup()
@@ -310,6 +314,9 @@ class Controller:
             "--user", "0", "-v", f"{self.out}:/work", "-e", "SOAK_TOKEN", "-e", "SOAK_URL", "-e", "SOAK_RUN_ID",
             "-e", "SOAK_PROFILE=/work/profile.json", "-e", "SOAK_FIXTURES=/work/fixtures/fixture-manifest.json", "-e", "SOAK_SUMMARY=/work/k6-summary.json"],
             self.profile["images"]["k6"], ["run", "--no-usage-report", "--out", "json=/work/k6.ndjson", "/work/k6/workload.mjs"])
+        generator = self.inspect(self.generator)
+        write_json(self.out / "generator.json", {"image": generator["Image"], "limits": {
+            key: generator["HostConfig"][key] for key in ("Memory", "MemorySwap", "NanoCpus")}})
         self.summary["state"] = "measuring"
         write_json(self.out / "summary.json", self.summary)
         print("Measuring: " + str(self.out), flush=True)
@@ -465,19 +472,7 @@ class Controller:
         write_json(self.out / "summary.json", self.summary)
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--profile", type=Path, default=HERE / "profiles/lucee6-serial.json")
-    parser.add_argument("--output", type=Path)
-    parser.add_argument("--candidate")
-    parser.add_argument("--package", type=Path, help="Verified prepared package directory; omitted for diagnostic-only builds")
-    parser.add_argument("--development", action="store_true", help="Four-minute local harness validation; cannot qualify releases")
-    parser.add_argument("--fault", choices=("none", "held-connection", "wrong-contract", "latency", "late-latency"),
-                        default="none", help="Controlled diagnostic fault; requires --development")
-    args = parser.parse_args()
-    if args.fault != "none" and not args.development:
-        parser.error("Controlled faults require --development and cannot qualify a release")
-    controller = Controller(args)
+def execute(controller):
     def cancel(signum, frame):
         raise KeyboardInterrupt(f"Canceled by signal {signum}")
     signal.signal(signal.SIGTERM, cancel)
@@ -506,7 +501,22 @@ def main():
                 controller.summary["status"] = "inconclusive"
             write_json(controller.out / "summary.json", controller.summary)
     print(json.dumps(controller.summary, indent=2), flush=True)
-    return 0 if controller.summary["status"] == "development-passed" else 1
+    return 0 if controller.summary["status"] in ("development-passed", "capacity-measured") else 1
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--profile", type=Path, default=HERE / "profiles/lucee6-serial.json")
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--candidate")
+    parser.add_argument("--package", type=Path, help="Verified prepared package directory; omitted for diagnostic-only builds")
+    parser.add_argument("--development", action="store_true", help="Four-minute local harness validation; cannot qualify releases")
+    parser.add_argument("--fault", choices=("none", "held-connection", "wrong-contract", "latency", "late-latency"),
+                        default="none", help="Controlled diagnostic fault; requires --development")
+    args = parser.parse_args()
+    if args.fault != "none" and not args.development:
+        parser.error("Controlled faults require --development and cannot qualify a release")
+    return execute(Controller(args))
 
 
 if __name__ == "__main__":

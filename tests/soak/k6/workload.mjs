@@ -49,7 +49,16 @@ export const options = {
     },
     summaryTrendStats: ['count', 'avg', 'min', 'max', 'p(95)', 'p(99)'],
 };
-if (!w.shortDevelopment) {
+// Capacity probes keep the application/collector alive between stages while
+// using one bounded arrival-rate generator invocation for each rate decision.
+if (profile.mode === 'capacity-warmup') {
+    options.scenarios = {warmup: options.scenarios.warmup};
+    delete options.thresholds['dropped_iterations{scenario:plateau}'];
+    options.thresholds['dropped_iterations{scenario:warmup}'] = ['count==0'];
+} else if (profile.mode === 'capacity-step') {
+    options.scenarios = {plateau: {...options.scenarios.plateau, startTime: '0s'}};
+}
+if (!w.shortDevelopment && profile.mode !== 'capacity-warmup') {
     for (const name of cases) options.thresholds[`expected_failure_verified{case:${name},scenario:plateau}`] = [`count>=${w.minimumFailuresPerCase}`];
 }
 

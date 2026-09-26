@@ -133,7 +133,7 @@ def evaluate(points, workload, baseline=None):
         for journey in JOURNEYS:
             if window['journey_started'][journey] < 1:
                 failures.append(f'missing-journey-window:{i}:{journey}')
-        for bucket in ('browse_25', 'browse_100', 'report_100', 'report_500', 'report_1000', *(f'variant_{i}' for i in range(32) if not workload.get('shortDevelopment'))):
+        for bucket in ('browse_25', 'browse_100', 'report_100', 'report_500', 'report_1000', *(f'variant_{i}' for i in range(32) if not workload.get('shortDevelopment') and not workload.get('capacityProbe'))):
             if window['bucket_completed'][bucket] < 1:
                 failures.append(f'missing-bucket-window:{i}:{bucket}')
     for i in range(32):
@@ -148,7 +148,7 @@ def evaluate(points, workload, baseline=None):
             invalid.append('insufficient-latency-samples:' + operation)
         early = Counter()
         late = Counter()
-        early_windows = max(1, 600 // workload['windowSeconds']) if not workload.get('shortDevelopment') else 1
+        early_windows = max(1, 600 // workload['windowSeconds']) if not workload.get('shortDevelopment') and not workload.get('capacityProbe') else 1
         for histogram in histograms[:early_windows]:
             early.update(histogram)
         for histogram in histograms[-early_windows:]:

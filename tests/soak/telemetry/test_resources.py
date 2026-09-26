@@ -114,4 +114,12 @@ class ResourceTests(unittest.TestCase):
             if r.get('kind') == 'sample': r['rssBytes'] += r['time'] * 100
         self.assertEqual(self.analyze(jvm, rows)['status'], 'passed')
 
+    def test_live_capacity_step_does_not_claim_final_collection(self):
+        jvm, rows = healthy()
+        jvm = [row for row in jvm if row['kind'] != 'collectorEnd']
+        self.assertEqual(self.analyze(jvm, rows)['status'], 'inconclusive')
+        result = self.analyze(jvm, rows, finalized=False)
+        self.assertEqual(result['status'], 'passed')
+        self.assertIs(result['finalized'], False)
+
 if __name__ == '__main__': unittest.main()

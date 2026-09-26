@@ -48,7 +48,7 @@ def pause_windows(rows, start, end, window_ms, exclude_initial_ms=0):
     return windows
 
 
-def evaluate(jvm, observations, profile, timing, *, plateau_start, exits=None):
+def evaluate(jvm, observations, profile, timing, *, plateau_start, exits=None, finalized=True):
     failures, invalid, warnings = [], [], []
     for role, state in (exits or {}).items():
         if state.get('OOMKilled'):
@@ -80,7 +80,7 @@ def evaluate(jvm, observations, profile, timing, *, plateau_start, exits=None):
     runtime = [r for r in jvm if r.get('kind') == 'runtime']
     if len(runtime) != 1 or not runtime[0].get('javaVersion', '').startswith(profile['runtime']['java']):
         invalid.append('runtime-version-mismatch')
-    if any(r.get('kind') == 'collectorError' for r in jvm) or not any(r.get('kind') == 'collectorEnd' for r in jvm):
+    if any(r.get('kind') == 'collectorError' for r in jvm) or (finalized and not any(r.get('kind') == 'collectorEnd' for r in jvm)):
         invalid.append('collector-incomplete')
     for r in jvm:
         if r.get('kind') in ('pause', 'gc') and (not math.isfinite(r.get('durationMs', -1)) or r.get('durationMs', -1) < 0):
@@ -214,4 +214,4 @@ def evaluate(jvm, observations, profile, timing, *, plateau_start, exits=None):
                                   'maxMemoryPercent': max(plateau_memory) if plateau_memory else None,
                                   'saturatedSamples': sum(v >= 0.9 for v in plateau_cpu), 'samples': len(plateau_cpu)}
     return result(failures, invalid, warnings, gcWindows=windows, recovery=recovery, containers=resource_summary,
-                  bootIds=sorted(boot_ids), sampleCount=len(samples), observationCount=len(observations))
+                  bootIds=sorted(boot_ids), sampleCount=len(samples), observationCount=len(observations), finalized=finalized)

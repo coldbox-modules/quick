@@ -52,6 +52,7 @@ def render(directory):
     traffic = document(directory / 'traffic-analysis.json', {})
     resources = document(directory / 'resource-analysis.json', {})
     memory = document(directory / 'memory-analysis.json', {})
+    capacity = document(directory / 'capacity-analysis.json', {})
     jvm, observations = rows(directory / 'jvm/jvm.ndjson'), rows(directory / 'observations.ndjson')
     parts = ['<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">',
              '<title>Quick soak evidence</title><style>body{font:16px/1.5 system-ui;max-width:1050px;margin:35px auto;padding:0 20px;color:#202a36}h2{margin-top:2em;font-size:20px}svg{width:100%;background:#f5f7fa}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:7px;text-align:left;border-bottom:1px solid #ddd}code{overflow-wrap:anywhere}.notice{background:#fff1cc;padding:14px}pre{white-space:pre-wrap}</style>',
@@ -60,6 +61,12 @@ def render(directory):
              f'<p>Run <code>{html.escape(summary.get("runId", directory.name))}</code> · <strong>{html.escape(summary["status"])}</strong></p>',
              f'<p>Profile: <code>{html.escape(profile.get("id", "unknown"))}</code><br>Candidate: <code>{html.escape(package.get("candidateSha", "unknown"))}</code><br>Package SHA-256: <code>{html.escape(package.get("packageSha256", "unknown"))}</code></p>']
     parts += ['<ul>' + ''.join('<li>' + html.escape(reason) + '</li>' for reason in summary.get('reasons', [])) + '</ul>']
+    if capacity:
+        parts.append('<h2>Capacity sweep</h2><p>One application JVM and database remain alive across all stages. Each rate decision precedes the next generator invocation. These short probes do not establish sustained stability.</p><table><tr><th>Journeys/second</th><th>Clean step</th><th>Traffic</th><th>Resources</th><th>Stop reason</th></tr>')
+        for step in capacity['steps']:
+            parts.append(f'<tr><td>{step["rate"]}</td><td>{step["clean"]}</td><td>{html.escape(step["traffic"])}</td><td>{html.escape(step["resources"])}</td><td>{html.escape(step["stopReason"] or "—")}</td></tr>')
+        proposed = capacity['recommendation']
+        parts.append(f'</table><p>Proposed target: {proposed["rate"]} journeys/second. Eligible for full trials: {proposed["trialProfileEligible"]}. Baseline acceptance and release qualification remain separate requirements.</p>')
     for label, assessment in (('Resources and recovery', resources), ('Retained memory', memory)):
         if not assessment:
             continue

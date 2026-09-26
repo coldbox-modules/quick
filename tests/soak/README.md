@@ -353,3 +353,29 @@ reset was used to turn that failed run into a pass.
   detection. That failed run and its thread dump, GC logs, and JFR are retained.
   The injector was subsequently narrowed to borrowing and retaining one validated
   pool connection, removing the running query and CFML thread from this test.
+- `held-pool-connection-20260925/verification.json` verifies that narrowed
+  injector: traffic passed, while final and idle borrowed-connection checks
+  failed for the intended reason. JFR flushed and all owned resources were removed.
+
+### Capacity calibration entry point
+
+Run `python3 tests/soak/capacity.py --candidate <full-healthy-sha>` or the
+independent **Soak capacity calibration (no publication)** workflow. The latter
+also accepts explicit `soak-capacity-*` tags while this workflow is being
+validated before merge. It is absent from ordinary branch, PR, cron, and release
+workflows and has read-only repository permissions.
+
+The sweep keeps one application JVM, database, and collector alive across
+warmup and bounded rate steps. It stops after the first unclean step, observes
+idle resource recovery between clean steps, and proposes 60% of the highest
+clean rate with measured journey-duration headroom. A proposed trial profile is
+written only after successful evidence collection and only if its rate can
+satisfy the full latency sample floor. No baseline is accepted automatically.
+Capacity steps use three one-minute comparison windows; they do not replace the
+full five-minute windows or 60-minute baseline trials.
+
+`capacity-controller-local-20260925/` is development evidence: 5 journeys/second
+passed, while 10 encountered HTTP timeouts and dropped arrivals. The sweep
+stopped, preserved both steps, flushed JFR, and removed its resources. This local
+arm64 run uses shortened warmup and sample requirements and cannot produce a
+qualifying trial profile. CI capacity and full baseline trials remain pending.

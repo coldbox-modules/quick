@@ -61,12 +61,16 @@ def serialization(evidence):
         workflow = read(directory / 'workflow.json')
         jobs = read(directory / 'jobs.json')['jobs']
         guard = next(job for job in jobs if job['name'] == 'Publication stub (no provider calls)')
+        validation = [job for job in jobs if job['name'] in ('probe / soak', 'probe / functional-stub')]
+        if len(validation) != 2 or any(job['conclusion'] != 'success' for job in validation):
+            raise ValueError('Both validation siblings must have completed successfully')
         stubs = list((directory / 'artifacts').rglob('publication-stub.json'))
         if len(stubs) != 1:
             raise ValueError('Expected one native publication stub artifact')
         stub = read(stubs[0])
         records.append({'runId': workflow['id'], 'workflowSha': workflow['head_sha'],
             'workflowStarted': epoch(workflow['run_started_at']), 'workflowFinished': epoch(workflow['updated_at']),
+            'validationFinished': max(epoch(job['completed_at']) for job in validation),
             'guardStarted': epoch(guard['started_at']), 'guardFinished': epoch(guard['completed_at']), 'stub': stub})
     records.sort(key=lambda row: row['guardStarted'])
     first, second = records
@@ -74,6 +78,7 @@ def serialization(evidence):
               'sameHarnessCommit': first['workflowSha'] == second['workflowSha'],
               'workflowsOverlapped': max(row['workflowStarted'] for row in records) < min(row['workflowFinished'] for row in records),
               'providerGuardJobsDidNotOverlap': first['guardFinished'] <= second['guardStarted'],
+              'secondReadyWhileFirstGuardHeld': second['validationFinished'] < first['guardFinished'],
               'stubBodiesDidNotOverlap': first['stub']['guardFinishedAt'] <= second['stub']['guardStartedAt'],
               'sameTestedPackage': first['stub']['packageSha256'] == second['stub']['packageSha256'],
               'samePackageCandidate': first['stub']['packageCandidateSha'] == second['stub']['packageCandidateSha'],

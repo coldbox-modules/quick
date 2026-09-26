@@ -10,7 +10,8 @@ from publication_probe import serialization
 
 
 class NativeSerializationTests(unittest.TestCase):
-    def evidence(self, second_start='2026-09-25T00:13:10Z', second_id=2, corrupt=False):
+    def evidence(self, second_start='2026-09-25T00:13:10Z', second_id=2, corrupt=False,
+                 validation_end='2026-09-25T00:09:50Z'):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
@@ -31,7 +32,9 @@ class NativeSerializationTests(unittest.TestCase):
                 'workflow.json': {'id': run_id, 'head_sha': 'a' * 40,
                                   'run_started_at': '2026-09-25T00:00:00Z', 'updated_at': end},
                 'jobs.json': {'jobs': [{'name': 'Publication stub (no provider calls)',
-                                       'started_at': start, 'completed_at': end}]},
+                                       'started_at': start, 'completed_at': end},
+                                      *({'name': name, 'conclusion': 'success', 'completed_at': validation_end}
+                                        for name in ('probe / soak', 'probe / functional-stub'))]},
                 'artifacts/publication-stub.json': current}
             for name, value in values.items():
                 (directory / name).write_text(json.dumps(value))
@@ -48,3 +51,8 @@ class NativeSerializationTests(unittest.TestCase):
     def test_reusing_one_run_or_changing_readback_cannot_prove_serialization(self):
         self.assertFalse(serialization(self.evidence(second_id=1))['passed'])
         self.assertFalse(serialization(self.evidence(corrupt=True))['passed'])
+
+    def test_nonoverlapping_guards_without_ready_contention_are_insufficient(self):
+        result = serialization(self.evidence(validation_end='2026-09-25T00:14:00Z'))
+        self.assertFalse(result['passed'])
+        self.assertFalse(result['checks']['secondReadyWhileFirstGuardHeld'])

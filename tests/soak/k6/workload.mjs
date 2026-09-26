@@ -12,7 +12,7 @@ const coverageRepeats = w.coverageRepeats ?? 1;
 c.invariant(Number.isInteger(coverageRepeats) && coverageRepeats >= 1 && coverageRepeats <= 4, 'coverage repeats must be an integer from 1 through 4');
 const reportSizes = w.reportSizes ?? [100, 500, 1000];
 c.invariant(Array.isArray(reportSizes) && reportSizes.length === 3 && reportSizes.every((size, i) =>
-    Number.isInteger(size) && [25, 100, 250, 500, 1000].includes(size) && (i === 0 || size > reportSizes[i - 1])),
+    Number.isInteger(size) && [25, 50, 100, 250, 500, 1000].includes(size) && (i === 0 || size > reportSizes[i - 1])),
     'report sizes must be three distinct ascending supported row limits');
 const fixtureRows = new SharedArray('post-fixtures', () => {
     const f = JSON.parse(open(__ENV.SOAK_FIXTURES));

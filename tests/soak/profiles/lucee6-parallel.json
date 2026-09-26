@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "id": "lucee6-parallel-arm64-standard-reports-v9",
+  "id": "lucee6-parallel-arm64-standard-reports-v10",
   "status": "provisional-unaccepted",
   "runner": "ubuntu-24.04-arm",
   "architecture": "arm64",
@@ -61,8 +61,8 @@
     "coverageRepeats": 4,
     "reportSizes": [
       25,
-      100,
-      250
+      50,
+      100
     ]
   },
   "acceptedBaseline": null,

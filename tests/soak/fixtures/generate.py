@@ -83,7 +83,7 @@ CREATE TABLE fixture_manifest (version VARCHAR(20) PRIMARY KEY);
                     yield i, tag, "fixture"
         insert("post_tags", "post_id,tag_id,context", pivot_rows())
         out.write("ALTER TABLE posts AUTO_INCREMENT=1000000;\nINSERT INTO fixture_manifest VALUES ('v1');\n")
-    checksums = {str(limit): hashlib.sha256("|".join(f"{i}:{owner(i)}:post-{i:05}" for i in range(1, limit+1)).encode()).hexdigest() for limit in (25, 100, 250, 500, 1000)}
+    checksums = {str(limit): hashlib.sha256("|".join(f"{i}:{owner(i)}:post-{i:05}" for i in range(1, limit+1)).encode()).hexdigest() for limit in (25, 50, 100, 250, 500, 1000)}
     manifest = {"version": VERSION, "seed": 0, "counts": counts,
                 "highFanoutComments": high_fanout_comments,
                 "postCommentCounts": comments, "postTags": tags, "reportChecksums": checksums,

@@ -35,14 +35,18 @@ def healthy(latencies=None, workload=WORKLOAD):
 
 class TrafficTests(unittest.TestCase):
     def test_selected_report_sizes_each_require_their_own_latency_samples(self):
-        workload = {**WORKLOAD, 'reportSizes': [25, 100, 250]}
-        result = evaluate(healthy(workload=workload), workload)
-        self.assertEqual(result['status'], 'passed')
-        self.assertEqual(result['latency']['report_250']['counts'], [200] * 8)
-        self.assertNotIn('report_1000', result['latency'])
-        missing = (row for row in healthy(workload=workload)
-                   if row['data']['tags'].get('operation') != 'report_250')
-        self.assertIn('insufficient-latency-samples:report_250', evaluate(missing, workload)['invalid'])
+        for sizes in ([25, 100, 250], [25, 50, 100]):
+            with self.subTest(sizes=sizes):
+                workload = {**WORKLOAD, 'reportSizes': sizes}
+                result = evaluate(healthy(workload=workload), workload)
+                self.assertEqual(result['status'], 'passed')
+                self.assertNotIn('report_1000', result['latency'])
+                for size in sizes:
+                    operation = f'report_{size}'
+                    self.assertEqual(result['latency'][operation]['counts'], [200] * 8)
+                    missing = (row for row in healthy(workload=workload)
+                               if row['data']['tags'].get('operation') != operation)
+                    self.assertIn('insufficient-latency-samples:' + operation, evaluate(missing, workload)['invalid'])
 
     def test_report_sizes_are_bounded_unique_and_keep_historical_defaults(self):
         self.assertEqual(report_sizes({}), [100, 500, 1000])

@@ -113,7 +113,7 @@ recorded under **Native matrix cancellation proof** below.
 
 ## Memory measurement method
 
-Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v9
+Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v10
 runtime uses generational ZGC with a fixed periodic major collection interval,
 identically in baseline and candidate. The pilot uses a 256 MiB heap and a
 five-second major interval to validate detection cheaply. The application uses
@@ -1095,3 +1095,28 @@ incorrect responses. Its application case fails with
 `delivery-application-overloaded` and the observed incorrect/error responses.
 Both cases verify their controlled injection, restoration of the diagnostic
 quota, final recording/collector flush and removal of all owned resources.
+
+### V9 capacity result and provisional v10 report calibration
+
+Capacity `36241479101` completed collection cleanly. The 60-comment graph no
+longer crossed the sharp-latency threshold at 10/second: its p95 rose from
+479 to 569 ms (18.8%). Application median CPU was 27.8% of quota at 5/second
+and 71.0% at 10/second; generator medians were 7.4% and 22.1%. Resources passed.
+The remaining rejected operations were the 100-row report (117 to 175 ms) and
+250-row report (283 to 373 ms). Both crossed the relative and absolute latency
+thresholds, leaving the highest clean step at 5/second and the proposed target
+at 3/second. That target provides only 108 rare-operation samples in the first
+window; full-trial preflight rejected it. No full baseline trial started.
+
+Continuing the approved workload reduction for the standard GitHub runner,
+v10 uses **25, 50 and 100** report rows while retaining 60-comment graph fanout.
+The 50-row report still hydrates real Quick entities, validates the complete
+projection and deterministic checksum, and has its own 200-sample latency floor.
+The existing larger report sizes remain available, and the optional larger-report
+profile retains 100/500/1,000 rows with 180-comment fanout. A default-profile pass
+does not establish that larger profile's behavior.
+
+The seeded domain, journey percentages, four real repetitions, exception paths,
+resource budgets, full 60-minute schedule and all acceptance thresholds remain
+unchanged. Fresh capacity and detector evidence are required; failed v9 evidence
+is retained in `tests/results/soak/ci-36241479101/` and is not retried unchanged.

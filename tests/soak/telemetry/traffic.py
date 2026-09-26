@@ -17,7 +17,7 @@ BASE_OPERATIONS = ('browse', 'user_detail', 'graph', 'post_create', 'post_read',
 def report_sizes(workload):
     sizes = workload.get('reportSizes', [100, 500, 1000])
     if (not isinstance(sizes, list) or len(sizes) != 3 or
-            any(type(size) is not int or size not in (25, 100, 250, 500, 1000) for size in sizes)
+            any(type(size) is not int or size not in (25, 50, 100, 250, 500, 1000) for size in sizes)
             or sizes != sorted(set(sizes))):
         raise ValueError('reportSizes requires three distinct ascending supported row limits')
     return sizes

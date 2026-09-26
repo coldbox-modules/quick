@@ -399,6 +399,29 @@ hashes the actual stub-uploaded ZIP; a claimed checksum is insufficient.
 All 23 rows must also retain nonempty, passing TestBox JSON reports. A green
 job cannot hide a failed report.
 
+The no-release native scenario needs a candidate that contains the accepted
+baseline and current harness but prepares no new version. The pinned
+semantic-release filter only removes the version-update marker; a `docs:` or
+`test:` commit does not establish that condition. For this diagnostic, use
+`git commit-tree` to make a separate commit with the accepted source tree,
+the provider-verified last release as its sole parent, and the exact message
+`__SEMANTIC RELEASE VERSION UPDATE__`. Record both source commit/tree and
+diagnostic commit, verify tree equality, then run the ordinary `prepare.py`
+and `validate_candidate.py build` commands. Require `noRelease: true` and
+`validationOnly: true` before dispatching an `all-pass` diagnostic tag.
+Do not move the implementation branch or an existing release tag. The full
+proof deliberately removes the release-marker skip condition, allowing this
+candidate to execute all 23 functional rows and the complete soak; the live
+release workflow keeps its existing skip condition.
+
+The local rehearsal in `no-release-current-tree-20260926/verification.json`
+used source commit `418ee99` with live provider identity reads and the actual
+semantic-release 4.1.0 APIs. It produced a verified 49-file validation package
+and rejected the same preparation through the publication builder. Git refs
+were unchanged. This proves preparation and packaging only; that diagnostic
+commit has no accepted baseline and was not dispatched. Recreate the candidate
+from the accepted tree before running the required full native proof.
+
 Full-matrix modes are `all-pass`, `functional-failure`, `soak-failure` and
 `explicit-cancel`. Functional failure waits for live soak evidence, then adds
 one deliberately failing TestBox assertion in the Lucee 6 / ColdBox 8 / full-null

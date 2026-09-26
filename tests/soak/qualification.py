@@ -75,6 +75,9 @@ class QualificationController(Controller):
         if profile_identity(self.profile) != self.reference['measurementIdentity']['values']['profile']:
             raise Inconclusive('Candidate profile differs from the accepted baseline')
         package = verify(self.args.package, self.args.candidate)
+        self.validation_only = getattr(self.args, 'validation_only', False)
+        prepared = read(self.args.package / 'prepared.json')
+        validate_package_purpose(package, prepared, self.validation_only)
         if package['lastRelease'].get('diagnosticOnly'):
             raise Inconclusive('Diagnostic packages cannot qualify for publication')
         super().setup()
@@ -104,26 +107,55 @@ class QualificationController(Controller):
         if (self.summary['status'] == 'inconclusive'
                 and self.summary.get('assessments') == {'traffic': 'passed', 'resources': 'passed', 'memory': 'passed'}
                 and self.summary['reasons'] == ['accepted-baseline-and-profile-qualification-required']):
-            self.summary.update(status='passed', reasons=[], releaseQualified=True)
+            self.summary.update(status='validation-passed' if self.validation_only else 'passed',
+                                reasons=[], releaseQualified=not self.validation_only)
         write_json(self.out / 'summary.json', self.summary)
 
 
+def validate_package_purpose(package, prepared, validation_only):
+    if validation_only:
+        if package.get('validationOnly') is not True or prepared.get('noRelease') is not True:
+            raise ValueError('Validation-only mode requires a no-release validation package')
+    elif package.get('validationOnly') or prepared.get('noRelease'):
+        raise ValueError('No-release validation packages cannot qualify publication')
+
+
 def seal_qualification(run):
+    return seal_completed_run(run, validation_only=False)
+
+
+def seal_validation(run):
+    return seal_completed_run(run, validation_only=True)
+
+
+def seal_completed_run(run, *, validation_only):
     summary = read(run / 'summary.json')
-    if summary.get('status') != 'passed' or summary.get('releaseQualified') is not True or summary.get('reasons'):
-        raise ValueError('Only a complete qualified run can produce a publication receipt')
+    status = 'validation-passed' if validation_only else 'passed'
+    if summary.get('status') != status or summary.get('releaseQualified') is not (not validation_only) or summary.get('reasons'):
+        raise ValueError('Only a complete qualified run can produce this receipt')
     package = read(run / 'package/package-manifest.json')
     files = {name: sha_file(run / name) for name in QUALIFICATION_EVIDENCE}
-    receipt = {'schema': 1, 'candidateSha': package['candidateSha'], 'packageSha256': package['packageSha256'],
+    receipt = {'schema': 1, 'purpose': 'validation-only' if validation_only else 'publication',
+               'candidateSha': package['candidateSha'], 'packageSha256': package['packageSha256'],
                'baselineSha256': files['accepted-baseline.json'], 'files': files, 'evidenceSha256': digest(files)}
-    write_json(run / 'qualification.json', receipt)
+    write_json(run / ('validation.json' if validation_only else 'qualification.json'), receipt)
     return receipt
 
 
 def verify_qualification(run, candidate, baseline):
-    receipt = read(run / 'qualification.json')
+    return verify_completed_run(run, candidate, baseline, validation_only=False)
+
+
+def verify_validation(run, candidate, baseline):
+    return verify_completed_run(run, candidate, baseline, validation_only=True)
+
+
+def verify_completed_run(run, candidate, baseline, *, validation_only):
+    receipt = read(run / ('validation.json' if validation_only else 'qualification.json'))
     if receipt['schema'] != 1 or receipt['candidateSha'] != candidate:
         raise ValueError('Qualification candidate mismatch')
+    if receipt.get('purpose') != ('validation-only' if validation_only else 'publication'):
+        raise ValueError('Qualification receipt purpose mismatch')
     if set(receipt['files']) != set(QUALIFICATION_EVIDENCE) or digest(receipt['files']) != receipt['evidenceSha256']:
         raise ValueError('Qualification evidence is incomplete or changed')
     for name, expected in receipt['files'].items():
@@ -135,13 +167,15 @@ def verify_qualification(run, candidate, baseline):
     identity = build_identity(run)
     require_match(accepted['proposal']['measurementIdentity'], identity)
     summary = read(run / 'summary.json')
-    if (summary.get('status') != 'passed' or summary.get('releaseQualified') is not True or summary.get('reasons')
+    status = 'validation-passed' if validation_only else 'passed'
+    if (summary.get('status') != status or summary.get('releaseQualified') is not (not validation_only) or summary.get('reasons')
             or summary.get('assessments') != {'traffic': 'passed', 'resources': 'passed', 'memory': 'passed'}):
         raise ValueError('Qualification assessments did not all pass')
     for name in ('traffic', 'delivery', 'resource', 'memory'):
         if read(run / (name + '-analysis.json'))['status'] != 'passed':
             raise ValueError('Qualification assessment failed: ' + name)
     package = verify(run / 'package', candidate)
+    validate_package_purpose(package, read(run / 'package/prepared.json'), validation_only)
     if package['lastRelease'].get('diagnosticOnly') or package['packageSha256'] != receipt['packageSha256']:
         raise ValueError('Qualification package mismatch')
     return receipt
@@ -154,6 +188,7 @@ def main():
     parser.add_argument('--package', required=True, type=Path)
     parser.add_argument('--candidate', required=True)
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--validation-only', action='store_true', help='Full validation for a no-release candidate; never publication qualification')
     args = parser.parse_args()
     args.development, args.fault = False, 'none'
     # Missing acceptance is a preflight rejection, never a report-only fallback.
@@ -163,10 +198,15 @@ def main():
         parser.error(str(error))
     controller = QualificationController(args)
     execute(controller)
-    if controller.summary.get('releaseQualified') and controller.summary['status'] == 'passed':
+    expected_status = 'validation-passed' if args.validation_only else 'passed'
+    if controller.summary['status'] == expected_status:
         try:
-            seal_qualification(controller.out)
-            verify_qualification(controller.out, args.candidate, args.baseline)
+            if args.validation_only:
+                seal_validation(controller.out)
+                verify_validation(controller.out, args.candidate, args.baseline)
+            else:
+                seal_qualification(controller.out)
+                verify_qualification(controller.out, args.candidate, args.baseline)
             return 0
         except (ValueError, KeyError, OSError) as error:
             controller.summary.update(status='inconclusive', releaseQualified=False)

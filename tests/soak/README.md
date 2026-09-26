@@ -296,6 +296,15 @@ baseline, development run, calibration trial, diagnostic package, or changed
 evidence cannot qualify publication. This entry point remains disconnected from
 the live release workflow until baseline and detector acceptance are complete.
 
+No-release preparations use the separate `package.py build-validation` command.
+It retains the original preparation inside the artifact metadata, reuses the last
+released version, and marks the package validation-only. Ordinary `build` still
+rejects no-release input. `qualification.py --validation-only` runs the same full
+schedule and accepted-baseline comparisons, but produces `validation-passed` and
+`validation.json`, with `releaseQualified: false`. Receipt purposes cannot be
+interchanged, and promotion rejects the artifact before any provider calls.
+The workflow still needs to select this path when preparation reports no release.
+
 ## Remaining acceptance work
 
 - Obtain an eligible capacity target and validate the complete 60-minute workload

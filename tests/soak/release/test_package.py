@@ -8,7 +8,7 @@ import time
 import unittest
 import zipfile
 
-from package import build, promote, verify, digest
+from package import build, build_validation, promote, verify, digest
 
 
 class FakePublisher:
@@ -94,6 +94,33 @@ class PromotionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'No-release preparation'):
             build(self.repo, prepared, self.root / 'no-release')
         self.assertFalse((self.root / 'no-release').exists())
+
+    def test_no_release_candidate_has_a_distinct_nonpublishable_validation_package(self):
+        original = {'candidateSha': self.sha, 'lastRelease': self.prepared['lastRelease'], 'noRelease': True}
+        output = self.root / 'validation'
+        manifest = build_validation(self.repo, original, output)
+        self.assertTrue(manifest['validationOnly'])
+        self.assertEqual(manifest['version'], original['lastRelease']['version'])
+        metadata = json.loads((output / 'prepared.json').read_text())
+        self.assertEqual(metadata['sourcePreparation'], original)
+        self.assertNotIn('version', original)
+        self.assertEqual(verify(output, self.sha), manifest)
+        with self.assertRaisesRegex(ValueError, 'No-release preparation'):
+            promote(output, self.sha, self.publisher)
+        self.assertEqual(self.publisher.events, [])
+
+    def test_validation_builder_cannot_consume_a_publishable_preparation(self):
+        with self.assertRaisesRegex(ValueError, 'original no-release'):
+            build_validation(self.repo, self.prepared, self.root / 'invalid-purpose')
+        self.assertFalse((self.root / 'invalid-purpose').exists())
+
+    def test_validation_purpose_cannot_be_removed_from_only_the_manifest(self):
+        output = self.root / 'validation'
+        manifest = build_validation(self.repo, {**self.prepared, 'noRelease': True}, output)
+        del manifest['validationOnly']
+        (output / 'package-manifest.json').write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, 'Validation-only package identity'):
+            verify(output, self.sha)
 
     def test_legacy_no_release_metadata_cannot_reach_publisher(self):
         prepared = {**self.prepared, 'noRelease': True}

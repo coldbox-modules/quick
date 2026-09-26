@@ -7,7 +7,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 from identity import digest, profile_identity
-from qualification import accepted_baseline, seal_qualification, verify_qualification, QUALIFICATION_EVIDENCE
+from qualification import accepted_baseline, seal_qualification, verify_qualification, QUALIFICATION_EVIDENCE, seal_validation, validate_package_purpose
 from traffic import CASES, OPERATIONS
 
 PROFILE = json.loads((Path(__file__).parents[1] / 'profiles/lucee6-serial.json').read_text())
@@ -101,6 +101,31 @@ class QualificationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'complete qualified'):
                 seal_qualification(self.directory)
         self.assertFalse((self.directory / 'qualification.json').exists())
+
+    def test_validation_package_and_publication_mode_cannot_be_interchanged(self):
+        validate_package_purpose({'validationOnly': True}, {'noRelease': True}, True)
+        validate_package_purpose({}, {}, False)
+        for package, prepared, validation in (({'validationOnly': True}, {'noRelease': True}, False),
+                                              ({}, {'noRelease': True}, False), ({}, {}, True),
+                                              ({'validationOnly': True}, {}, True)):
+            with self.subTest(package=package, validation=validation), self.assertRaises(ValueError):
+                validate_package_purpose(package, prepared, validation)
+
+    def test_no_release_validation_receipt_cannot_be_renamed_for_publication(self):
+        for name in QUALIFICATION_EVIDENCE:
+            path = self.directory / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('{}')
+        (self.directory / 'summary.json').write_text(json.dumps({'status': 'validation-passed', 'releaseQualified': False, 'reasons': []}))
+        (self.directory / 'package/package-manifest.json').write_text(json.dumps({'candidateSha': 'a'*40, 'packageSha256': 'b'*64, 'validationOnly': True}))
+        receipt = seal_validation(self.directory)
+        self.assertEqual(receipt['purpose'], 'validation-only')
+        self.assertFalse((self.directory / 'qualification.json').exists())
+        with self.assertRaisesRegex(ValueError, 'complete qualified'):
+            seal_qualification(self.directory)
+        (self.directory / 'validation.json').rename(self.directory / 'qualification.json')
+        with self.assertRaisesRegex(ValueError, 'purpose mismatch'):
+            verify_qualification(self.directory, 'a'*40, self.path)
 
     def test_receipt_binds_candidate_package_and_raw_evidence(self):
         for name in QUALIFICATION_EVIDENCE:

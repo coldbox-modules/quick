@@ -35,6 +35,22 @@ def git(repo, *args):
 def build(repo, prepared, output):
     if prepared.get('noRelease'):
         raise ValueError('No-release preparation must not produce a publication package')
+    if prepared.get('validationOnly'):
+        raise ValueError('Validation-only preparation requires the validation builder')
+    return _build(repo, prepared, output)
+
+
+def build_validation(repo, prepared, output):
+    """Validate a no-release candidate without creating a publishable artifact."""
+    if prepared.get('noRelease') is not True or prepared.get('validationOnly'):
+        raise ValueError('Validation builder requires original no-release preparation')
+    metadata = {**prepared, 'sourcePreparation': prepared, 'validationOnly': True,
+                'version': prepared['lastRelease']['version'],
+                'notes': '## Validation only: no release was prepared'}
+    return _build(repo, metadata, output)
+
+
+def _build(repo, prepared, output):
     sha = prepared["candidateSha"]
     if not re.fullmatch(r"[0-9a-f]{40}", sha):
         raise ValueError("Candidate must be a full commit SHA")
@@ -74,6 +90,8 @@ def build(repo, prepared, output):
                 "preparedSha256": digest(json.dumps(prepared, sort_keys=True).encode()),
                 "packageSha256": digest(package.read_bytes()),
                 "files": {name: digest(data) for name, data in sorted(files.items())}}
+    if prepared.get("validationOnly"):
+        manifest["validationOnly"] = True
     (output / "prepared.json").write_text(json.dumps(prepared, indent=2) + "\n")
     (output / "package-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     verify(output, sha)
@@ -89,6 +107,14 @@ def verify(directory, expected_sha):
         raise ValueError("Prepared metadata changed")
     if prepared["lastRelease"] != manifest["lastRelease"] or prepared["version"] != manifest["version"]:
         raise ValueError("Prepared release identity mismatch")
+    if manifest.get('validationOnly', False) is not prepared.get('validationOnly', False):
+        raise ValueError('Validation-only package identity mismatch')
+    if manifest.get('validationOnly'):
+        source = prepared.get('sourcePreparation', {})
+        if (prepared.get('noRelease') is not True or source.get('noRelease') is not True
+                or source.get('candidateSha') != expected_sha or source.get('lastRelease') != manifest['lastRelease']
+                or manifest['version'] != manifest['lastRelease']['version']):
+            raise ValueError('Validation-only source preparation mismatch')
     data = (directory / "quick.zip").read_bytes()
     if digest(data) != manifest["packageSha256"]:
         raise ValueError("Tested package checksum mismatch")
@@ -147,11 +173,17 @@ if __name__ == "__main__":
     p.add_argument("--repo", type=Path, required=True)
     p.add_argument("--prepared", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
+    p = sub.add_parser("build-validation")
+    p.add_argument("--repo", type=Path, required=True)
+    p.add_argument("--prepared", type=Path, required=True)
+    p.add_argument("--output", type=Path, required=True)
     p = sub.add_parser("verify")
     p.add_argument("--directory", type=Path, required=True)
     p.add_argument("--candidate", required=True)
     args = parser.parse_args()
     if args.command == "build":
         print(json.dumps(build(args.repo, json.loads(args.prepared.read_text()), args.output), indent=2))
+    elif args.command == "build-validation":
+        print(json.dumps(build_validation(args.repo, json.loads(args.prepared.read_text()), args.output), indent=2))
     else:
         print(json.dumps(verify(args.directory, args.candidate), indent=2))

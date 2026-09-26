@@ -1,0 +1,122 @@
+name: Soak diagnostics (no publication)
+
+on:
+  workflow_dispatch:
+  # Explicit diagnostic tags permit validation before this new workflow is on
+  # the default branch. Ordinary branches, PRs and version tags do not run it.
+  push:
+    tags:
+      - 'soak-diagnostics-*'
+      - 'soak-saturation-*'
+
+permissions:
+  contents: read
+
+jobs:
+  measurement-pilot:
+    name: JVM measurement and artifact promotion self-tests
+    if: ${{ !startsWith(github.ref, 'refs/tags/soak-saturation-') }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Retain environment evidence even if setup fails
+        run: python3 tests/soak/ci_environment.py
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7.0.LTS'
+      - name: Verify fail-closed analyzer and fake publisher
+        run: |
+          python3 tests/soak/release/stage_full_probe.py --check
+          python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
+          python3 -m unittest discover -s tests/soak/release -p 'test_*.py' -v
+      - name: Validate measurement on healthy, leaking, and late-leaking JVMs
+        run: python3 tests/soak/telemetry/pilot.py --generational --output tests/results/soak/measurement-pilot
+      - name: Cancel a live controller and verify its children stop
+        run: python3 tests/soak/telemetry/verify_cancellation.py --output tests/results/soak/cancellation-pilot
+      - name: Preserve evidence, including failed pilot runs
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-measurement-${{ github.sha }}-${{ github.run_attempt }}
+          path: tests/results/soak/
+          if-no-files-found: error
+          retention-days: 30
+
+  saturation-attribution:
+    name: Distinguish live generator and application saturation
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Retain environment evidence even if setup fails
+        run: python3 tests/soak/ci_environment.py
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7.0.LTS'
+      - uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          version: '6.3.5'
+      - name: Verify attribution using real application requests and controlled pressure
+        run: python3 tests/soak/verify_saturation.py --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 --output tests/results/soak/saturation-suite
+      - name: Preserve both saturation cases including failures
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-saturation-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tests/results/soak/
+            !tests/results/soak/**/app/coldbox/**
+            !tests/results/soak/**/app/modules/**
+            !tests/results/soak/**/tmp/**
+            !tests/results/soak/**/jvm/stream/**
+          if-no-files-found: error
+          retention-days: 30
+
+  application-harness:
+    name: Isolated HTTP workload and controller self-tests
+    if: ${{ !startsWith(github.ref, 'refs/tags/soak-saturation-') }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Retain environment evidence even if setup fails
+        run: python3 tests/soak/ci_environment.py
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7.0.LTS'
+      - uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          version: '6.3.5'
+      - name: Verify read-only release preparation against disposable Git history
+        run: |
+          box install commandbox-semantic-release@4.1.0 --noSave
+          python3 tests/soak/release/verify_preparation.py -v
+      - name: Prove malformed HTTP responses fail k6 thresholds
+        run: python3 tests/soak/verify_http_contracts.py --output tests/results/soak/http-contracts
+      - name: Verify healthy traffic and controlled connection, contract and latency faults
+        run: python3 tests/soak/verify_faults.py --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 --output tests/results/soak/fault-suite
+      - name: Cancel the live container controller and preserve evidence
+        run: python3 tests/soak/verify_controller_cancellation.py --output tests/results/soak/controller-cancellation
+      - name: Verify observer loss blocks qualification and cleans up
+        run: python3 tests/soak/verify_controller_cancellation.py --mode collector-stop --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 --output tests/results/soak/collector-failure
+      - name: Preserve application evidence, including failed runs
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-application-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tests/results/soak/
+            !tests/results/soak/**/app/coldbox/**
+            !tests/results/soak/**/app/modules/**
+            !tests/results/soak/**/tmp/**
+            !tests/results/soak/**/jvm/stream/**
+          if-no-files-found: error
+          retention-days: 30

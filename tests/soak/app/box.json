@@ -1,0 +1,6 @@
+{
+    "name": "quick-soak-app",
+    "private": true,
+    "dependencies": { "coldbox": "8.2.0" },
+    "installPaths": { "coldbox": "coldbox/", "quick": "modules/quick/" }
+}

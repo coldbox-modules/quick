@@ -1,0 +1,933 @@
+{
+  "schema": 1,
+  "status": "accepted",
+  "proposal": {
+    "schema": 1,
+    "status": "needs-investigation",
+    "accepted": false,
+    "releaseQualified": false,
+    "investigations": [
+      "run-to-run-p95-noise-exceeds-ten-percent:report_100"
+    ],
+    "measurementIdentity": {
+      "sha256": "a66c1deaa941eaa0625396ed9c41a5dc0eab063f538345f7655efef904cdd6c3",
+      "values": {
+        "schema": 2,
+        "profile": {
+          "schema": 1,
+          "runner": "ubuntu-24.04-arm",
+          "architecture": "arm64",
+          "runtime": {
+            "lucee": "6.2.8+20",
+            "coldbox": "8.2.0",
+            "java": "21.0.10+7",
+            "jdbc": "8.0.33",
+            "fullNull": true,
+            "parallelEagerLoading": false,
+            "gcMode": "generational"
+          },
+          "images": {
+            "mysql": "mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b",
+            "k6": "grafana/k6:1.3.0@sha256:3ddc8b1a33a2c3d8edc6e99b6a762ae36cba08788463458f5e6a7703e14eb77d"
+          },
+          "resources": {
+            "application": {
+              "cpus": 3,
+              "memoryMiB": 8192,
+              "heapMiB": 6144,
+              "jdbcPoolLimit": 16
+            },
+            "mysql": {
+              "cpus": 0.5,
+              "memoryMiB": 768,
+              "maxConnections": 32
+            },
+            "generator": {
+              "cpus": 0.25,
+              "memoryMiB": 512
+            },
+            "collector": {
+              "cpus": 0.25,
+              "memoryMiB": 768,
+              "heapMiB": 512
+            }
+          },
+          "workload": {
+            "version": "v3",
+            "seed": 20260925,
+            "rate": 6,
+            "vus": 100,
+            "requestTimeoutSeconds": 10,
+            "drainSeconds": 30,
+            "sampleSeconds": 10,
+            "warmupSeconds": 300,
+            "rampSeconds": 300,
+            "plateauSeconds": 2400,
+            "recoverySeconds": 300,
+            "idleSeconds": 300,
+            "windowSeconds": 300,
+            "minimumFailuresPerCase": 100,
+            "minimumLatencySamples": 200,
+            "coverageRepeats": 4,
+            "reportSizes": [
+              25,
+              50,
+              100
+            ]
+          },
+          "limits": {
+            "maxTelemetryGapSeconds": 15,
+            "maxThreads": 256,
+            "maxDescriptors": 1024,
+            "maxMetaspaceMiB": 256,
+            "maxQueuedRequests": 100,
+            "maxActiveRequests": 128,
+            "maxDefinitions": 6,
+            "maxDerivedBuckets": 6,
+            "maxDerivedEntries": 96,
+            "recoveryThreadAllowance": 8,
+            "recoveryDescriptorAllowance": 8
+          },
+          "fixtures": {
+            "highFanoutComments": 30
+          }
+        },
+        "sources": {
+          "Seed.cfc": "87e458be23fd2d1cd2a5e4f971f445102618bf29ba89fb5e8867c311c9f64760",
+          "app/Application.cfc": "3061de0f1ddb73cc842d975d20a782bbd71a4eaf5848044a3237b53cc4242041",
+          "app/box.json": "6ea037ea03b1c93fd1445851bb56967c8a44bb3cbb10243c9d709c2fcde1443e",
+          "app/config/Coldbox.cfc": "c62f15bf218435dba6c6ccc743cec3be57e9504074f971ba902b1acedf30782e",
+          "app/config/Router.cfc": "d878850042665c0449b934ae9e3c72eb7d774f4916e92d068a40abe4e86a5b8d",
+          "app/handlers/Api.cfc": "ed7b83dea0f30221d8705a635d2bcda522230ac6d92cd6e810325ec02e48a482",
+          "app/handlers/Faults.cfc": "0d2e822e9515e08e7f3693c113f841078fbf40c3b75ddee56e38bdae892b07ee",
+          "app/index.cfm": "59af245fcd53ee1e45a9eb864b568772a0f51f6df96913aa52e121cc91b0d760",
+          "app/models/Comment.cfc": "0f8d9dae975332a285c4e910d919ada60623c63f4df211cb2f638c3677b5f1c6",
+          "app/models/Post.cfc": "66bb413f61eb38790a2ef2b3812b0153244a72c9127bddc65f87d9801cb20afa",
+          "app/models/PostTag.cfc": "e4005a165ee81351cac47ccba580a371da534647c213b69793f3fb4fb67deb94",
+          "app/models/ProfileCast.cfc": "5b47a9d10f4804ddd0842dea6298d815118f4f28d82d3bbefe0ef1977fe85f60",
+          "app/models/Tag.cfc": "a782524347da5db602bbca83965782f3b039fbbb10edbb4fed5f2382c5a16b8c",
+          "app/models/Team.cfc": "e7d265ed14309d42b7c0e25d0fc33815b5433caaa174e8c98a299b96be3f5aab",
+          "app/models/User.cfc": "57edce9828532bb74af071d9f02bb456f2c1fa04abec52221f0cdaaf4e75a5ed",
+          "app/server.json": "0bd5095bf1b7b5f7d3f0f264d8624a61bfd59758e8c3946ac080776886c502da",
+          "app/views/error.cfm": "6dbeba71d70cbfd854c430a1e85428c264318b8c45eed227f1efd10df26764d4",
+          "controller.py": "b35b2e50ee6f8c5a95e81922ab4bf72da3a19bb3abfa6832f0afa0297538c7b5",
+          "docker/Dockerfile": "eebc2196391d74c9223ab5cf969e189d30cb78a53d46f81998e0867e064bcb85",
+          "docker/setup.sh": "a718feed3f9274651a8e6a8cbc2f79758256a6d0ed9ad5f4d55202bf29637b9d",
+          "fixtures/generate.py": "20671169e2704e503fbd6ee6e5f75cf313db476ba7ba00bbf605a4a53574bdc9",
+          "k6/contract-probe.mjs": "7c1effbe95f41391652d45f2e5edbdbbfe362bba8dfef5e4161717e39639debb",
+          "k6/contracts.mjs": "9850c086624e1d3728f8ff83c5b197bb4f0350028bbcf39648cdefbdc241475d",
+          "k6/workload.mjs": "079c495530e92e6f4237ace6ee29621a5fc88c1323b7293e77d3c8b48b0bf74e",
+          "telemetry/Collector.java": "c016f3fc087c1221b7090235ee20166c218e5d2e8392fd6e4a35f85b24948b4a",
+          "telemetry/delivery.py": "ea577bf164543aaa0feea2b7943ec2ac4d2bb5d3a48125d79a1682a036ae4d2d",
+          "telemetry/memory.py": "27a168da863a828f66a4290732a2bf88cef0dd2c29ed017b65c377279c75b037",
+          "telemetry/native.py": "b0e4ec19e4ea280dec08bfc46ef229d09e56824667ec90396a02337b7ce174be",
+          "telemetry/resources.py": "c337e18c66d2801a3922693d1817d53f594e3601be584fe25c6d26ea6a27cc05",
+          "telemetry/traffic.py": "e6974c7ea2804fc46d775818b40dbfd391cf22c2071b3ed9041d65e4ba1c2d7f"
+        },
+        "dependenciesSha256": "2966a8c8ec5ad9a5e497086a984fad926e4031f2ddf5c8b27896dd3c9b065bd2",
+        "fixturesSha256": "a31401bfa0390c80ea711d51fc0551fd93c9499eee251ce549836e3201d3ea62",
+        "runtime": {
+          "javaVersion": "21.0.10+7-LTS",
+          "vm": "OpenJDK 64-Bit Server VM",
+          "os": "Linux",
+          "arch": "aarch64",
+          "processors": 3,
+          "physicalMemoryBytes": 8589934592,
+          "arguments": "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.nio.cs=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.annotation=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.module=ALL-UNNAMED --add-opens=java.base/java.lang.ref=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.math=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.net.spi=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.nio.channels=ALL-UNNAMED --add-opens=java.base/java.nio.channels.spi=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.nio.charset.spi=ALL-UNNAMED --add-opens=java.base/java.nio.file=ALL-UNNAMED --add-opens=java.base/java.nio.file.attribute=ALL-UNNAMED --add-opens=java.base/java.nio.file.spi=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/java.security.cert=ALL-UNNAMED --add-opens=java.base/java.security.interfaces=ALL-UNNAMED --add-opens=java.base/java.security.spec=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.base/java.text.spi=ALL-UNNAMED --add-opens=java.base/java.time=ALL-UNNAMED --add-opens=java.base/java.time.chrono=ALL-UNNAMED --add-opens=java.base/java.time.format=ALL-UNNAMED --add-opens=java.base/java.time.temporal=ALL-UNNAMED --add-opens=java.base/java.time.zone=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED --add-opens=java.base/java.util.function=ALL-UNNAMED --add-opens=java.base/java.util.jar=ALL-UNNAMED --add-opens=java.base/java.util.regex=ALL-UNNAMED --add-opens=java.base/java.util.spi=ALL-UNNAMED --add-opens=java.base/java.util.stream=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED --add-opens=java.base/javax.crypto=ALL-UNNAMED --add-opens=java.base/javax.crypto.interfaces=ALL-UNNAMED --add-opens=java.base/javax.crypto.spec=ALL-UNNAMED --add-opens=java.base/javax.net=ALL-UNNAMED --add-opens=java.base/javax.net.ssl=ALL-UNNAMED --add-opens=java.base/javax.security.auth=ALL-UNNAMED --add-opens=java.base/javax.security.auth.callback=ALL-UNNAMED --add-opens=java.base/javax.security.auth.login=ALL-UNNAMED --add-opens=java.base/javax.security.auth.spi=ALL-UNNAMED --add-opens=java.base/javax.security.auth.x500=ALL-UNNAMED --add-opens=java.base/javax.security.cert=ALL-UNNAMED --add-opens=java.base/sun.net.www.protocol.https=ALL-UNNAMED --add-opens=java.desktop/com.sun.java.swing.plaf.motif=ALL-UNNAMED --add-opens=java.desktop/com.sun.java.swing.plaf.windows=ALL-UNNAMED --add-opens=java.desktop/javax.swing.plaf.nimbus=ALL-UNNAMED --add-opens=java.desktop/sun.java2d=ALL-UNNAMED --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED --add-opens=java.base/sun.security.rsa=ALL-UNNAMED --add-opens=java.base/sun.security.pkcs=ALL-UNNAMED --add-opens=java.base/sun.security.x509=ALL-UNNAMED --add-opens=java.base/sun.security.util=ALL-UNNAMED --add-opens=java.base/sun.util.cldr=ALL-UNNAMED --add-opens=java.base/sun.util=ALL-UNNAMED --add-opens=java.base/sun.util.locale.provider=ALL-UNNAMED --add-opens=java.management/sun.management=ALL-UNNAMED --add-exports=java.desktop/sun.java2d=ALL-UNNAMED --add-exports=java.base/sun.util=ALL-UNNAMED -XX:+UseZGC -XX:+ZGenerational -XX:ZCollectionIntervalMajor=15 -Xlog:gc*:file=/work/jvm/gc.log:time,uptime,level,tags:filecount=4,filesize=16M -Xmx6144m -Xms6144m",
+          "collectors": [
+            "ZGC Major Cycles",
+            "ZGC Major Pauses",
+            "ZGC Minor Cycles",
+            "ZGC Minor Pauses"
+          ]
+        },
+        "application": {
+          "luceeVersion": "6.2.8.20",
+          "coldboxVersion": "8.2.0+35",
+          "appName": "Quick release soak",
+          "exceptionHandler": "Api.onException",
+          "parallelEagerLoading": false
+        },
+        "containers": {
+          "app": {
+            "image": "sha256:98fab1edd431edaff5fdb91b68d587de8a6b53b842e0a22ca311aff179d49616",
+            "limits": {
+              "Memory": 8589934592,
+              "MemorySwap": 8589934592,
+              "NanoCpus": 3000000000
+            }
+          },
+          "mysql": {
+            "image": "sha256:b7e118f56c5963e079252e0d6e2978c9c010eb7fc7aaaec100e367796b5dd08f",
+            "limits": {
+              "Memory": 805306368,
+              "MemorySwap": 1610612736,
+              "NanoCpus": 500000000
+            }
+          },
+          "collector": {
+            "image": "sha256:98fab1edd431edaff5fdb91b68d587de8a6b53b842e0a22ca311aff179d49616",
+            "limits": {
+              "Memory": 805306368,
+              "MemorySwap": 1610612736,
+              "NanoCpus": 250000000
+            }
+          },
+          "k6": {
+            "image": "sha256:bb9d6a44e05b6383398fd19f572b87d29a36aeb5053b9fa2182afbeca27953cb",
+            "limits": {
+              "Memory": 536870912,
+              "MemorySwap": 1073741824,
+              "NanoCpus": 250000000
+            }
+          }
+        },
+        "host": {
+          "docker": {
+            "Architecture": "aarch64",
+            "NCPU": 4,
+            "MemTotal": 16722046976,
+            "KernelVersion": "6.17.0-1022-azure",
+            "ServerVersion": "28.0.4",
+            "CgroupDriver": "systemd",
+            "CgroupVersion": "2",
+            "OperatingSystem": "Ubuntu 24.04.5 LTS",
+            "OSType": "linux"
+          },
+          "cpu": {
+            "Architecture": "aarch64",
+            "CPU(s)": "4",
+            "Vendor ID": "ARM",
+            "Model name": "Neoverse-N2",
+            "CPU family": null,
+            "Model": "0",
+            "Stepping": "r0p0",
+            "Thread(s) per core": "1",
+            "Core(s) per socket": "4",
+            "Socket(s)": "1",
+            "L1d cache": "256 KiB (4 instances)",
+            "L1i cache": "256 KiB (4 instances)",
+            "L2 cache": "4 MiB (4 instances)",
+            "L3 cache": "128 MiB (1 instance)",
+            "NUMA node(s)": "1"
+          },
+          "runnerImage": "ubuntu24-arm64",
+          "runnerImageVersion": "20260920.129.1"
+        },
+        "seedCommandBox": "CommandBox 6.3.5+00887"
+      }
+    },
+    "healthyPackage": {
+      "schema": 1,
+      "candidateSha": "af2c93d2604de73d7ccac23b7bf69c4be221dbb0",
+      "version": "13.0.4",
+      "lastRelease": {
+        "diagnosticOnly": true
+      },
+      "slug": "quick",
+      "preparedSha256": "3767e8f57023681aba6dc8c7a74c2a474733e4809bbcec342d31c8d4dd8a9aac",
+      "packageSha256": "60477d696d1b7e46e72506a59207ec716c4d180fac9b7e4a99c4fc956b48b881",
+      "files": {
+        "CHANGELOG.md": "e85701f2308c84d70d916691fbe5456d2b8ea5db6f6a8234edc8a5e70eff3aa2",
+        "LICENSE": "a49b72699dd212f84033932934729bdea50fc0fea846f4ca63d14dd00003709d",
+        "ModuleConfig.cfc": "bda52f970ff752b5998c66b240ec53cf4d240a570d86e29f9b54c5d420009e24",
+        "README.md": "cf89486b4b2a0e8c19a57ea1b50caea748b70caf3252cb2e73c67417c2fc87b0",
+        "box.json": "30e450db0cc03cb30f7f1eba00ccef6bceefaffa67b343869a9308a3f5514ce6",
+        "dsl/QuickServiceDSL.cfc": "75056c7c0d730c9b2dfd150264319dfb6348099e9a9b99f0607b5742262bf7fe",
+        "extras/QuickCollection.cfc": "5ab9182981dd778a5a092e53e488c1c2a2d1d822510309bc13f50076ed39384c",
+        "models/BaseEntity.cfc": "7f8e28d4e0a1dd43170e40295f803bf933e1095fdd2bdb3a0539921c94e50217",
+        "models/BaseService.cfc": "d89ce0df98f6324d77cfd9c8124d3791c4ae986228e9cfb67ab8349b63e89411",
+        "models/CBORMCompatEntity.cfc": "f3a75fc4d64c67e1e91ecc75e2de9f7184fcb2cf44b560304935027a214af461",
+        "models/CBORMCriteriaBuilderCompat.cfc": "c011a71facc599139d0fb8136a3848a95ddce29660974146ca0a40e35e15e836",
+        "models/Casts/BooleanCast.cfc": "6945f0372bb2e30c4e8eebd2b261f9b5b99f1ae3ba9063c55edc08fabe2d8766",
+        "models/Casts/CastsAttribute.cfc": "38f1f5c53328a45712931f99de2f7603ca857055e802085b38557af51601bedb",
+        "models/Casts/JsonCast.cfc": "31539148fb9a581ac3be8ef9a9313920f768b32fa3b7d270195b93016dc2b80f",
+        "models/EntityDefinitionRegistry.cfc": "5e0a5ff44e0ed8a8669ff373482a9b6aaf143e5cc95adf296c01c8d1368684e6",
+        "models/KeyTypes/AutoIncrementingKeyType.cfc": "93899aea164be23c2974728dcd1041b210b03174c8081fc5abc0df16487f4d23",
+        "models/KeyTypes/GUIDKeyType.cfc": "7a1af96dc241e3e9e0a9c54f15ed8805fd65b4f1121c598634c028675f25481f",
+        "models/KeyTypes/KeyType.cfc": "fe5d091c3a413ab29751112e3cfba96e293389b78ce19c141465be40e107aef9",
+        "models/KeyTypes/NullKeyType.cfc": "e72268bca07f177c0c57d636aa82a8e601387665b8b0f21f1618fb2fd35bb8b6",
+        "models/KeyTypes/ReturningKeyType.cfc": "f767725590b931f705657804ed8d10def6b3982b3a6d9cb7b2c817e6cecdf4c2",
+        "models/KeyTypes/RowIDKeyType.cfc": "580218a28eefab1ec1622fec9929ec2703203abe2e1001f12e3917d290e23704",
+        "models/KeyTypes/UUIDKeyType.cfc": "66a9c8fa57cc3d90c868d515a1dd1ba01db47abf0ebeec14b4aba9ab1644dc48",
+        "models/ParallelEagerLoadingCoordinator.cfc": "3ea3cdcb08dc1d07ed608d5290a2f6273f3b6e516dee7a63607f5df0fae60cbf",
+        "models/ParallelEagerLoadingTask.cfc": "5256c4655d2d77a415957d9fb263de1739302f9eeb18176008c98cfdebabf860",
+        "models/QuickBuilder.cfc": "067b5922c64cb220a4a9e825b63d1cd055261809dba9a15abe70cde5bc80e451",
+        "models/QuickQB.cfc": "b47840d8156f5091f1b344b67486655d1f0c25aa3f2f5a409b550d22354caa84",
+        "models/Relationships/BaseRelationship.cfc": "f0e3378c7f6c4bf32235d894400eb69ec11ed6fbe5d142dc7c2ddc842d65b3e0",
+        "models/Relationships/BelongsTo.cfc": "3057a9b42ba2d2ce8e87108a5526c86280aab4f747c6bfa01b55d6daa6b647b7",
+        "models/Relationships/BelongsToMany.cfc": "9c7204ea1f051348c8f4b67dcf596baa8fa562988c03dbad0b557de06caa9911",
+        "models/Relationships/BelongsToThrough.cfc": "98a3a3b9e337c84cd7b89582def9af1db76887b5e6fe462ad6782fee239f331f",
+        "models/Relationships/Builders/HasManyDeepBuilder.cfc": "69ef14edd456f71ee722d1fdd341d66a85f93df6906b384c2cc091268340fe15",
+        "models/Relationships/HasMany.cfc": "7f1a29853ca33306b5672102992b22163118f5d4ad7a4aebba93c26c19b256fc",
+        "models/Relationships/HasManyDeep.cfc": "69a32333e568ff0789c7c20eb958dd2024f97a10eaa29625fc150695df6a1737",
+        "models/Relationships/HasManyThrough.cfc": "f8927453fd672cc370db36db427b9b42827254cb506ffd96e2787c1d76dbafca",
+        "models/Relationships/HasOne.cfc": "2cabaff51eaf3bf4475b526c20fc1a16aa308ca93aecb04ffe52b45b8056cf7a",
+        "models/Relationships/HasOneOrMany.cfc": "c383151dd0bf1214386c25892cee14f38251e72d4bc4d6907b08caafab68b647",
+        "models/Relationships/HasOneOrManyThrough.cfc": "92e1779cc4309181bdff985597df9ac0cca602beea627034ff31411c77817da2",
+        "models/Relationships/HasOneThrough.cfc": "059e0860715bf473a4f753e5cb2c16c5e81504ec79943f51155319ea5bd94aca",
+        "models/Relationships/IConcatenatableRelationship.cfc": "317c3dcc053c27fee8af6c903aa7b31ef3775304dc79f63318709ce508441850",
+        "models/Relationships/IRelationship.cfc": "ea3be6d6c0e294e0d00708568b8a77b70deb433b81694c148597b5bafe523e53",
+        "models/Relationships/Pivot.cfc": "d6fdfafdb03e926f1f4c4bba85ed8942407c7236574b6baba29aad1daeeca4fb",
+        "models/Relationships/PivotTable.cfc": "ce1ae87ad20d4dd96d84482bea29eca939e87f3c316d35d4814a7042f6e64eac",
+        "models/Relationships/PolymorphicBelongsTo.cfc": "8d8a6e5d9d43d3a07cae8f11ef0f6157fe7cad329d79986cce12236f9ab63803",
+        "models/Relationships/PolymorphicHasMany.cfc": "030174051b00c8ddd8b2a23b5cdc5ed69bab007fb927c5b480addf0cae29567e",
+        "models/Relationships/PolymorphicHasOneOrMany.cfc": "6169637152acbb13e241d037c0fd08db5684b84c1b45707dfa2d31b3a5fb976d",
+        "resources/testing/Factory.cfc": "de1d85858b46d21ac85a9ec57eef9408b5e044dbd521f09c84f5cc8f48b1698d",
+        "resources/testing/FactoryBuilder.cfc": "a76578040a68cf0334250be8c255f1cdf4722fd9ecd7f0c87c78894310234c0f",
+        "resources/testing/FactoryManager.cfc": "c937bb812ad1ec2229aaf631e8a5afbf022f55096c15b7293f2a0199025f300e",
+        "resources/testing/Sequence.cfc": "0d46f87d751007043ca1b22f10eb0ad7713b59db63c1ce6ed4d7857a5ba66f79"
+      }
+    },
+    "profile": {
+      "schema": 1,
+      "id": "lucee6-serial-arm64-continuous-observation-v12",
+      "status": "provisional-unaccepted",
+      "runner": "ubuntu-24.04-arm",
+      "architecture": "arm64",
+      "runtime": {
+        "lucee": "6.2.8+20",
+        "coldbox": "8.2.0",
+        "java": "21.0.10+7",
+        "jdbc": "8.0.33",
+        "fullNull": true,
+        "parallelEagerLoading": false,
+        "gcMode": "generational"
+      },
+      "images": {
+        "mysql": "mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b",
+        "k6": "grafana/k6:1.3.0@sha256:3ddc8b1a33a2c3d8edc6e99b6a762ae36cba08788463458f5e6a7703e14eb77d"
+      },
+      "resources": {
+        "application": {
+          "cpus": 3,
+          "memoryMiB": 8192,
+          "heapMiB": 6144,
+          "jdbcPoolLimit": 16
+        },
+        "mysql": {
+          "cpus": 0.5,
+          "memoryMiB": 768,
+          "maxConnections": 32
+        },
+        "generator": {
+          "cpus": 0.25,
+          "memoryMiB": 512
+        },
+        "collector": {
+          "cpus": 0.25,
+          "memoryMiB": 768,
+          "heapMiB": 512
+        }
+      },
+      "workload": {
+        "version": "v3",
+        "seed": 20260925,
+        "rate": 6,
+        "vus": 100,
+        "requestTimeoutSeconds": 10,
+        "drainSeconds": 30,
+        "sampleSeconds": 10,
+        "warmupSeconds": 300,
+        "rampSeconds": 300,
+        "plateauSeconds": 2400,
+        "recoverySeconds": 300,
+        "idleSeconds": 300,
+        "windowSeconds": 300,
+        "minimumFailuresPerCase": 100,
+        "minimumLatencySamples": 200,
+        "coverageRepeats": 4,
+        "reportSizes": [
+          25,
+          50,
+          100
+        ]
+      },
+      "acceptedBaseline": null,
+      "limits": {
+        "maxTelemetryGapSeconds": 15,
+        "maxThreads": 256,
+        "maxDescriptors": 1024,
+        "maxMetaspaceMiB": 256,
+        "maxQueuedRequests": 100,
+        "maxActiveRequests": 128,
+        "maxDefinitions": 6,
+        "maxDerivedBuckets": 6,
+        "maxDerivedEntries": 96,
+        "recoveryThreadAllowance": 8,
+        "recoveryDescriptorAllowance": 8
+      },
+      "capacity": {
+        "rates": [
+          5,
+          10,
+          20,
+          40
+        ],
+        "stepSeconds": 180,
+        "idleSeconds": 30
+      },
+      "fixtures": {
+        "highFanoutComments": 30
+      },
+      "fault": "none"
+    },
+    "capacityEvidenceSha256": "74b526f1b587c2bf39983b43c401ccac5d9411e15890fcd8cda01280cee63d17",
+    "trials": [
+      {
+        "runId": "r20260926t155801-bbbd6a",
+        "bootId": "9158EEF9-6412-4867-A16F564D0480168D",
+        "jvmStart": 1790438358171,
+        "githubRunId": "36252125924",
+        "evidenceSha256": "806ee3d5782161b680227f05c1368c35e320d4e60d93cf2e79027b563eb5009d"
+      },
+      {
+        "runId": "r20260926t165959-ad8d72",
+        "bootId": "1C6FD9F4-342A-4528-9E3B106ACA126AF1",
+        "jvmStart": 1790442081936,
+        "githubRunId": "36252125924",
+        "evidenceSha256": "02ea2226634d3dbcf30e02200db960042b1c8e2a552205aeaea7ac957861f90c"
+      },
+      {
+        "runId": "r20260926t180202-ebf8bc",
+        "bootId": "184EC811-0C9D-4657-AE12F685FE241167",
+        "jvmStart": 1790445797663,
+        "githubRunId": "36252125924",
+        "evidenceSha256": "47d7406cc4487ef9c6ee380c0e253b869f27244e9bbe7e84415d8ac0930a4595"
+      }
+    ],
+    "latency": {
+      "browse": {
+        "p95Ms": 59,
+        "trialEarlyP95Ms": [
+          60,
+          59,
+          58
+        ],
+        "rangeFraction": 0.03389830508474576,
+        "trialRawEarlyP95Ms": [
+          59.798918,
+          58.087295,
+          57.872379
+        ],
+        "rawRangeFraction": 0.03316627155731728,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 64,
+        "proposedAbsoluteP95Ms": 114
+      },
+      "failure:empty_lookup": {
+        "p95Ms": 9,
+        "trialEarlyP95Ms": [
+          10,
+          9,
+          9
+        ],
+        "rangeFraction": 0.1111111111111111,
+        "trialRawEarlyP95Ms": [
+          9.244816,
+          8.717983,
+          8.668783
+        ],
+        "rawRangeFraction": 0.06607411370267649,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 10,
+        "proposedAbsoluteP95Ms": 60
+      },
+      "failure:invalid_write": {
+        "p95Ms": 4,
+        "trialEarlyP95Ms": [
+          4,
+          3,
+          4
+        ],
+        "rangeFraction": 0.25,
+        "trialRawEarlyP95Ms": [
+          3.237101,
+          2.980558,
+          3.024407
+        ],
+        "rawRangeFraction": 0.08482423165929724,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 4,
+        "proposedAbsoluteP95Ms": 54
+      },
+      "failure:missing_pk": {
+        "p95Ms": 11,
+        "trialEarlyP95Ms": [
+          11,
+          11,
+          11
+        ],
+        "rangeFraction": 0.0,
+        "trialRawEarlyP95Ms": [
+          10.780337,
+          10.108975,
+          10.25708
+        ],
+        "rawRangeFraction": 0.06545352088508623,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 13,
+        "proposedAbsoluteP95Ms": 63
+      },
+      "failure:post_delete": {
+        "p95Ms": 10,
+        "trialEarlyP95Ms": [
+          11,
+          10,
+          10
+        ],
+        "rangeFraction": 0.1,
+        "trialRawEarlyP95Ms": [
+          10.167356,
+          9.399399,
+          9.538682
+        ],
+        "rawRangeFraction": 0.08050976015344669,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 11,
+        "proposedAbsoluteP95Ms": 61
+      },
+      "failure:relationship": {
+        "p95Ms": 20,
+        "trialEarlyP95Ms": [
+          20,
+          19,
+          20
+        ],
+        "rangeFraction": 0.05,
+        "trialRawEarlyP95Ms": [
+          19.531826,
+          18.885051,
+          19.187271
+        ],
+        "rawRangeFraction": 0.033708545629026566,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 21,
+        "proposedAbsoluteP95Ms": 71
+      },
+      "failure:rollback": {
+        "p95Ms": 32,
+        "trialEarlyP95Ms": [
+          33,
+          32,
+          31
+        ],
+        "rangeFraction": 0.0625,
+        "trialRawEarlyP95Ms": [
+          32.061096,
+          31.030565,
+          30.917308
+        ],
+        "rawRangeFraction": 0.036860044282145704,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 35,
+        "proposedAbsoluteP95Ms": 85
+      },
+      "graph": {
+        "p95Ms": 324,
+        "trialEarlyP95Ms": [
+          326,
+          324,
+          316
+        ],
+        "rangeFraction": 0.030864197530864196,
+        "trialRawEarlyP95Ms": [
+          325.543563,
+          323.063168,
+          315.88345
+        ],
+        "rawRangeFraction": 0.029901622830616283,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 332,
+        "proposedAbsoluteP95Ms": 399
+      },
+      "lookup_recovery": {
+        "p95Ms": 10,
+        "trialEarlyP95Ms": [
+          11,
+          10,
+          10
+        ],
+        "rangeFraction": 0.1,
+        "trialRawEarlyP95Ms": [
+          10.172934,
+          9.423536,
+          9.628941
+        ],
+        "rawRangeFraction": 0.07782766557610016,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 11,
+        "proposedAbsoluteP95Ms": 61
+      },
+      "post_create": {
+        "p95Ms": 26,
+        "trialEarlyP95Ms": [
+          28,
+          26,
+          26
+        ],
+        "rangeFraction": 0.07692307692307693,
+        "trialRawEarlyP95Ms": [
+          27.528265,
+          25.259686,
+          25.190818
+        ],
+        "rawRangeFraction": 0.0925366609862055,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 28,
+        "proposedAbsoluteP95Ms": 78
+      },
+      "post_delete": {
+        "p95Ms": 31,
+        "trialEarlyP95Ms": [
+          32,
+          31,
+          31
+        ],
+        "rangeFraction": 0.03225806451612903,
+        "trialRawEarlyP95Ms": [
+          31.669847,
+          30.120248,
+          30.102802
+        ],
+        "rawRangeFraction": 0.05202629805704124,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 33,
+        "proposedAbsoluteP95Ms": 83
+      },
+      "post_read": {
+        "p95Ms": 27,
+        "trialEarlyP95Ms": [
+          28,
+          27,
+          27
+        ],
+        "rangeFraction": 0.037037037037037035,
+        "trialRawEarlyP95Ms": [
+          27.73945,
+          26.169375,
+          26.309749
+        ],
+        "rawRangeFraction": 0.05967654803548307,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 29,
+        "proposedAbsoluteP95Ms": 79
+      },
+      "post_read_updated": {
+        "p95Ms": 27,
+        "trialEarlyP95Ms": [
+          29,
+          27,
+          27
+        ],
+        "rangeFraction": 0.07407407407407407,
+        "trialRawEarlyP95Ms": [
+          28.018715,
+          26.426052,
+          26.236691
+        ],
+        "rawRangeFraction": 0.06743436363479494,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 29,
+        "proposedAbsoluteP95Ms": 79
+      },
+      "post_update": {
+        "p95Ms": 20,
+        "trialEarlyP95Ms": [
+          22,
+          20,
+          20
+        ],
+        "rangeFraction": 0.1,
+        "trialRawEarlyP95Ms": [
+          21.073138,
+          19.990147,
+          19.918612
+        ],
+        "rawRangeFraction": 0.057754752879005875,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 22,
+        "proposedAbsoluteP95Ms": 72
+      },
+      "query_variant": {
+        "p95Ms": 11,
+        "trialEarlyP95Ms": [
+          11,
+          11,
+          10
+        ],
+        "rangeFraction": 0.09090909090909091,
+        "trialRawEarlyP95Ms": [
+          10.188446,
+          10.004699,
+          9.852829
+        ],
+        "rawRangeFraction": 0.03354593676431454,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 11,
+        "proposedAbsoluteP95Ms": 61
+      },
+      "relationship_recovery": {
+        "p95Ms": 20,
+        "trialEarlyP95Ms": [
+          21,
+          20,
+          20
+        ],
+        "rangeFraction": 0.05,
+        "trialRawEarlyP95Ms": [
+          20.611635,
+          19.315319,
+          19.6455
+        ],
+        "rawRangeFraction": 0.06598539105647609,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 22,
+        "proposedAbsoluteP95Ms": 72
+      },
+      "report_100": {
+        "p95Ms": 117,
+        "trialEarlyP95Ms": [
+          126,
+          117,
+          114
+        ],
+        "rangeFraction": 0.10256410256410256,
+        "trialRawEarlyP95Ms": [
+          125.82845,
+          116.307361,
+          113.356936
+        ],
+        "rawRangeFraction": 0.10722893110780837,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 138,
+        "proposedAbsoluteP95Ms": 188
+      },
+      "report_25": {
+        "p95Ms": 35,
+        "trialEarlyP95Ms": [
+          37,
+          35,
+          35
+        ],
+        "rangeFraction": 0.05714285714285714,
+        "trialRawEarlyP95Ms": [
+          36.096151,
+          34.67989,
+          34.949115
+        ],
+        "rawRangeFraction": 0.04052351540232131,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 39,
+        "proposedAbsoluteP95Ms": 89
+      },
+      "report_50": {
+        "p95Ms": 63,
+        "trialEarlyP95Ms": [
+          65,
+          63,
+          62
+        ],
+        "rangeFraction": 0.047619047619047616,
+        "trialRawEarlyP95Ms": [
+          64.455004,
+          62.896023,
+          61.821914
+        ],
+        "rawRangeFraction": 0.04186417319263577,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 68,
+        "proposedAbsoluteP95Ms": 118
+      },
+      "scratch_verify": {
+        "p95Ms": 20,
+        "trialEarlyP95Ms": [
+          21,
+          20,
+          20
+        ],
+        "rangeFraction": 0.05,
+        "trialRawEarlyP95Ms": [
+          20.146627,
+          19.402514,
+          19.464912
+        ],
+        "rawRangeFraction": 0.038228428672063795,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 21,
+        "proposedAbsoluteP95Ms": 71
+      },
+      "user_detail": {
+        "p95Ms": 37,
+        "trialEarlyP95Ms": [
+          39,
+          37,
+          37
+        ],
+        "rangeFraction": 0.05405405405405406,
+        "trialRawEarlyP95Ms": [
+          38.385199,
+          36.19866,
+          36.729617
+        ],
+        "rawRangeFraction": 0.05953067792675332,
+        "noiseComparison": "exact-nearest-rank-p95",
+        "maxObservedWindowP95Ms": 41,
+        "proposedAbsoluteP95Ms": 91
+      }
+    },
+    "memory": {
+      "baselineBytes": 293601280,
+      "noiseBytes": 116391936.0,
+      "trialGrowthBytes": [
+        18874368,
+        48234496,
+        35651584
+      ],
+      "warnings": []
+    },
+    "resourceRecovery": [
+      {
+        "threads": {
+          "earlyMedian": 48.0,
+          "idleMedian": 49,
+          "allowance": 8
+        },
+        "descriptors": {
+          "earlyMedian": 212.0,
+          "idleMedian": 110,
+          "allowance": 8
+        }
+      },
+      {
+        "threads": {
+          "earlyMedian": 49.0,
+          "idleMedian": 50,
+          "allowance": 8
+        },
+        "descriptors": {
+          "earlyMedian": 211.5,
+          "idleMedian": 110,
+          "allowance": 8
+        }
+      },
+      {
+        "threads": {
+          "earlyMedian": 49.0,
+          "idleMedian": 49.0,
+          "allowance": 8
+        },
+        "descriptors": {
+          "earlyMedian": 212.0,
+          "idleMedian": 110.0,
+          "allowance": 8
+        }
+      }
+    ],
+    "reviewRequired": [
+      "Resolve every noise or retained-growth investigation.",
+      "Review each proposed absolute latency budget against the operation requirements.",
+      "Review declared resource bounds and measured recovery before accepting them.",
+      "Retain raw evidence durably and record explicit baseline acceptance in a reviewed update."
+    ]
+  },
+  "proposalSha256": "6951ad19e6477f33dd8b65e6aec11b7b4ff6fff0ed1bcb65c64f6ec0618c6666",
+  "review": {
+    "reviewer": "Codex",
+    "reviewedAt": "2026-09-26T19:57:35.121572+00:00",
+    "url": "https://github.com/coldbox-modules/quick/releases/download/untagged-428fc0de3f77361e1253/baseline-review.md",
+    "documentSha256": "649358f25ddaac702fee5ac883663e1fb84151becdf312ce4bce33f4c006d4f1",
+    "evidenceArchive": "https://github.com/coldbox-modules/quick/releases/tag/untagged-428fc0de3f77361e1253",
+    "investigationResolutions": {
+      "run-to-run-p95-noise-exceeds-ten-percent:report_100": {
+        "disposition": "retain-warning-with-unchanged-gates",
+        "rationale": "The original report-100 range is 12.471514 ms (10.722893%). All six sealed healthy trials across both assigned N2 hosts reproduce and pass the original latency and memory limits. Identity, fixture, warmup, delivery and resource checks pass. Preserve the warning, original median and absolute budget; do not widen any gate. See the reviewed document for observed host variation and the graph/memory margins.",
+        "evidenceUrl": "https://github.com/coldbox-modules/quick/releases/download/untagged-428fc0de3f77361e1253/six-trial-review.json",
+        "evidenceSha256": "43cace6793660585093b36abdbc5860bd69cb89643ba2aa436d264856a51fbbc"
+      }
+    }
+  },
+  "latencyBudgetsMs": {
+    "browse": 114,
+    "failure:empty_lookup": 60,
+    "failure:invalid_write": 54,
+    "failure:missing_pk": 63,
+    "failure:post_delete": 61,
+    "failure:relationship": 71,
+    "failure:rollback": 85,
+    "graph": 399,
+    "lookup_recovery": 61,
+    "post_create": 78,
+    "post_delete": 83,
+    "post_read": 79,
+    "post_read_updated": 79,
+    "post_update": 72,
+    "query_variant": 61,
+    "relationship_recovery": 72,
+    "report_100": 188,
+    "report_25": 89,
+    "report_50": 118,
+    "scratch_verify": 71,
+    "user_detail": 91
+  },
+  "detectors": {
+    "retained-growth": {
+      "url": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/measurement-v12-raw-review.json",
+      "evidenceSha256": "25ea5b356f96d5c79d3dfb6eabca2f3680683595d0c388975e13853d68c5ac32",
+      "githubRunId": "36252126235",
+      "case": "leak",
+      "rawArchive": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/v12-diagnostics-36252126235.tar.gz",
+      "rawArchiveSha256": "22eb95f8fdc39b5ea2a47c2abddd7883cdec33c79216070aca531f2707dd1343"
+    },
+    "wrong-contract": {
+      "url": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/application-v12-raw-review.json",
+      "evidenceSha256": "78ccd2469b3e13d0426b101d5f549d76c996ec93a41a60864c279c3c61a55f06",
+      "githubRunId": "36252126235",
+      "case": "wrong-contract",
+      "rawArchive": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/v12-diagnostics-36252126235.tar.gz",
+      "rawArchiveSha256": "22eb95f8fdc39b5ea2a47c2abddd7883cdec33c79216070aca531f2707dd1343"
+    },
+    "held-connection": {
+      "url": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/application-v12-raw-review.json",
+      "evidenceSha256": "78ccd2469b3e13d0426b101d5f549d76c996ec93a41a60864c279c3c61a55f06",
+      "githubRunId": "36252126235",
+      "case": "held-connection",
+      "rawArchive": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/v12-diagnostics-36252126235.tar.gz",
+      "rawArchiveSha256": "22eb95f8fdc39b5ea2a47c2abddd7883cdec33c79216070aca531f2707dd1343"
+    },
+    "latency": {
+      "url": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/application-v12-raw-review.json",
+      "evidenceSha256": "78ccd2469b3e13d0426b101d5f549d76c996ec93a41a60864c279c3c61a55f06",
+      "githubRunId": "36252126235",
+      "case": "latency",
+      "rawArchive": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/v12-diagnostics-36252126235.tar.gz",
+      "rawArchiveSha256": "22eb95f8fdc39b5ea2a47c2abddd7883cdec33c79216070aca531f2707dd1343"
+    },
+    "late-latency": {
+      "url": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/application-v12-raw-review.json",
+      "evidenceSha256": "78ccd2469b3e13d0426b101d5f549d76c996ec93a41a60864c279c3c61a55f06",
+      "githubRunId": "36252126235",
+      "case": "late-latency",
+      "rawArchive": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/v12-diagnostics-36252126235.tar.gz",
+      "rawArchiveSha256": "22eb95f8fdc39b5ea2a47c2abddd7883cdec33c79216070aca531f2707dd1343"
+    },
+    "saturation": {
+      "url": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/saturation-v12-raw-review.json",
+      "evidenceSha256": "fc85287c9e0175d5b2f5eea76a40f6004642576811623cf38d0f3c679e9c4f25",
+      "githubRunId": "36252126235",
+      "case": "generator/application",
+      "rawArchive": "https://github.com/coldbox-modules/quick/releases/download/untagged-c6b000fea7b0cccd7997/v12-diagnostics-36252126235.tar.gz",
+      "rawArchiveSha256": "22eb95f8fdc39b5ea2a47c2abddd7883cdec33c79216070aca531f2707dd1343"
+    }
+  },
+  "archives": [
+    {
+      "url": "https://github.com/coldbox-modules/quick/releases/download/untagged-428fc0de3f77361e1253/primary-36252125924.zip",
+      "sha256": "67067f6f6945249a3b55a8dd0ee0129a1f23decc819630aed52fb44cef092736"
+    },
+    {
+      "url": "https://github.com/coldbox-modules/quick/releases/download/untagged-428fc0de3f77361e1253/independent-36254251872.zip",
+      "sha256": "fb3eeb59408723ebae27bb07f2bcbe6b55cc6d9b1e5df50eeae17d82e5d5ea9c"
+    }
+  ]
+}

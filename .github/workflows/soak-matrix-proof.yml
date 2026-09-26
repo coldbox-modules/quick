@@ -1,0 +1,95 @@
+name: Soak native matrix proof (no publication)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Native cancellation or all-pass scenario
+        required: true
+        type: choice
+        options: [functional-failure, soak-failure, explicit-cancel, all-pass]
+  push:
+    tags:
+      - 'soak-matrix-*'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PROBE_MODE: ${{ inputs.mode || '' }}
+
+jobs:
+  validation:
+    name: probe / ${{ matrix.kind }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - kind: soak
+          - kind: functional-stub
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4.7.1
+        if: matrix.kind == 'soak'
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7.0.LTS'
+      - uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        if: matrix.kind == 'soak'
+        with:
+          version: '6.3.5'
+      - name: Launch soak and prove live HTTP and JVM telemetry
+        if: matrix.kind == 'soak'
+        run: python3 tests/soak/matrix_probe.py launch --output tests/results/soak/matrix-probe
+      - name: Observe live soak
+        if: matrix.kind == 'soak'
+        run: exec python3 tests/soak/matrix_probe.py observe --output tests/results/soak/matrix-probe
+      - name: Keep functional stub live or fail after soak readiness
+        if: matrix.kind == 'functional-stub'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tests/soak/matrix_probe.py functional --output tests/results/soak/functional-stub
+      - name: Verify controller cleanup and partial evidence
+        if: always() && matrix.kind == 'soak'
+        run: python3 tests/soak/matrix_probe.py verify-cleanup --output tests/results/soak/matrix-probe
+      - name: Preserve cancellation evidence
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: matrix-proof-${{ matrix.kind }}-${{ github.run_id }}
+          path: |
+            tests/results/soak/
+            !tests/results/soak/**/app/coldbox/**
+            !tests/results/soak/**/app/modules/**
+            !tests/results/soak/**/tmp/**
+            !tests/results/soak/**/jvm/stream/**
+          if-no-files-found: error
+          retention-days: 30
+
+  publication-stub:
+    name: Publication stub (no provider calls)
+    needs: validation
+    runs-on: ubuntu-24.04-arm
+    concurrency:
+      group: quick-soak-diagnostic-publication
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          name: matrix-proof-soak-${{ github.run_id }}
+          path: downloaded-soak
+      - name: Verify transported package and stub readback under the guard
+        env:
+          HOLD_SECONDS: ${{ contains(github.ref_name, '-serialization-') && '180' || '0' }}
+        run: python3 tests/soak/publication_probe.py stub --run downloaded-soak/matrix-probe/run --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 --hold-seconds "$HOLD_SECONDS" --output proof
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          name: publication-stub-${{ github.run_id }}
+          path: proof/
+          if-no-files-found: error

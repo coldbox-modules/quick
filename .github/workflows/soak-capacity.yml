@@ -1,0 +1,122 @@
+name: Soak capacity calibration (no publication)
+
+on:
+  workflow_dispatch:
+    inputs:
+      trials:
+        description: Follow eligible capacity with three full 60-minute baseline trials
+        required: true
+        default: false
+        type: boolean
+      candidate:
+        description: Full healthy candidate commit SHA
+        required: true
+        default: af2c93d2604de73d7ccac23b7bf69c4be221dbb0
+        type: string
+  push:
+    tags:
+      - 'soak-capacity-*'
+      - 'soak-calibration-*'
+
+permissions:
+  contents: read
+
+jobs:
+  capacity:
+    name: Measure capacity before selecting the baseline target
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Retain environment evidence even if setup fails
+        run: python3 tests/soak/ci_environment.py
+      - name: Publish runner identity before the long calibration
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-runner-${{ github.sha }}-${{ github.run_attempt }}
+          path: tests/results/soak/ci-environment.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7.0.LTS'
+      - uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          version: '6.3.5'
+      - name: Verify capacity and measurement policy
+        run: python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
+      - name: Prove generational major-cycle measurement before application calibration
+        run: python3 tests/soak/telemetry/pilot.py --generational --output tests/results/soak/measurement-pilot
+      - name: Verify the pinned runtime image rebuilds identically
+        run: python3 tests/soak/verify_image.py --architecture arm64 --output tests/results/soak/runtime-image-proof
+      - name: Sweep the pinned healthy candidate with one application lifecycle
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate || 'af2c93d2604de73d7ccac23b7bf69c4be221dbb0' }}
+        run: python3 tests/soak/capacity.py --candidate "$CANDIDATE_SHA" --output tests/results/soak/capacity
+      - name: Run full baseline trial 1 at the frozen target
+        if: inputs.trials || startsWith(github.ref, 'refs/tags/soak-calibration-')
+        run: python3 tests/soak/calibration.py --capacity tests/results/soak/capacity --output tests/results/soak/trial-1
+      - name: Preserve completed or partial trial 1 immediately
+        if: always() && (inputs.trials || startsWith(github.ref, 'refs/tags/soak-calibration-'))
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-trial-1-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tests/results/soak/trial-1/
+            !tests/results/soak/**/app/coldbox/**
+            !tests/results/soak/**/app/modules/**
+            !tests/results/soak/**/tmp/**
+            !tests/results/soak/**/jvm/stream/**
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Run full baseline trial 2 at the frozen target
+        if: inputs.trials || startsWith(github.ref, 'refs/tags/soak-calibration-')
+        run: python3 tests/soak/calibration.py --capacity tests/results/soak/capacity --output tests/results/soak/trial-2
+      - name: Preserve completed or partial trial 2 immediately
+        if: always() && (inputs.trials || startsWith(github.ref, 'refs/tags/soak-calibration-'))
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-trial-2-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tests/results/soak/trial-2/
+            !tests/results/soak/**/app/coldbox/**
+            !tests/results/soak/**/app/modules/**
+            !tests/results/soak/**/tmp/**
+            !tests/results/soak/**/jvm/stream/**
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Run full baseline trial 3 at the frozen target
+        if: inputs.trials || startsWith(github.ref, 'refs/tags/soak-calibration-')
+        run: python3 tests/soak/calibration.py --capacity tests/results/soak/capacity --output tests/results/soak/trial-3
+      - name: Preserve completed or partial trial 3 immediately
+        if: always() && (inputs.trials || startsWith(github.ref, 'refs/tags/soak-calibration-'))
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-trial-3-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tests/results/soak/trial-3/
+            !tests/results/soak/**/app/coldbox/**
+            !tests/results/soak/**/app/modules/**
+            !tests/results/soak/**/tmp/**
+            !tests/results/soak/**/jvm/stream/**
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Propose a baseline only after three passing full trials
+        if: inputs.trials || startsWith(github.ref, 'refs/tags/soak-calibration-')
+        run: python3 tests/soak/baseline.py --trials tests/results/soak/trial-1 tests/results/soak/trial-2 tests/results/soak/trial-3 --output tests/results/soak/baseline-proposal.json
+      - name: Preserve every step, including the first unclean rate
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: soak-capacity-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tests/results/soak/
+            !tests/results/soak/**/app/coldbox/**
+            !tests/results/soak/**/app/modules/**
+            !tests/results/soak/**/tmp/**
+            !tests/results/soak/**/jvm/stream/**
+          if-no-files-found: error
+          retention-days: 30

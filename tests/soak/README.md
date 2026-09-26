@@ -24,10 +24,10 @@ five minutes of warmup, and 15 seconds each of ramp, recovery, and idle observat
 bounded drain add time. It cannot qualify a release or establish a CI baseline.
 
 The default profile declares the full 60-minute schedule and provisional CI
-budgets. Its rate remains uncalibrated. Without `--development`, the controller
-can collect that schedule but **always returns an inconclusive result** until
-CI calibration, overload attribution, and accepted-baseline identity checks are complete.
-Do not connect it to publication yet.
+budgets. Its repository rate remains unaccepted. Without `--development`, this
+diagnostic command can collect that schedule but cannot qualify a release.
+Accepted-baseline comparisons and receipts use the separate `qualification.py`
+entry point described below; ordinary diagnostic runs never become release passes.
 
 Optional inputs: `--output NEW_DIRECTORY`, `--candidate FULL_SHA`, and
 `--package PREPARED_PACKAGE_DIRECTORY`. Without a prepared package, it builds an
@@ -46,6 +46,8 @@ Each run retains JSON summaries, an offline HTML chart report, fixed-window
 traffic/latency analysis, raw k6 and JVM observations, application/database/container
 samples, rotating logs, and bounded JFR recordings. Cleanup removes only the run's
 owned containers/network/volume. Failures and cancellation retain their evidence.
+The default output is `tests/results/soak/<run-id>/`; `--output` selects a new
+directory instead.
 
 ```sh
 python3 tests/soak/verify_http_contracts.py \
@@ -67,6 +69,41 @@ then kills only the run-owned collector. It requires an inconclusive result with
 the explicit observer-loss and incomplete-recording reasons, preserved partial
 evidence, and removal of every owned resource. It cannot report healthy memory
 after telemetry disappears.
+
+## CI calibration
+
+Use **Soak capacity calibration (no publication)** in
+`.github/workflows/soak-capacity.yml`. It uses the standard four-core
+`ubuntu-24.04-arm` runner and the serial profile in `profiles/lucee6-serial.json`.
+The current workload has 25/50/100-row reports and 30-comment hot-post fanout;
+the five-minute warmup, five-minute ramp, 40-minute plateau, five-minute recovery
+and five-minute idle schedule remains fixed.
+
+Before the workflow reaches the default branch, dispatch the reviewed harness
+commit using a unique diagnostic tag. The tag path uses the workflow's pinned
+healthy candidate, currently `af2c93d2604de73d7ccac23b7bf69c4be221dbb0`:
+
+```sh
+SOAK_CALIBRATION_TAG=soak-calibration-my-reviewed-run
+git tag "$SOAK_CALIBRATION_TAG" HEAD
+git push origin "refs/tags/$SOAK_CALIBRATION_TAG"
+```
+
+Choose a new tag name for each intentionally distinct run; retain failed and
+partial attempts. Manual dispatch exposes `candidate` (a full healthy commit SHA)
+and `trials` (set true for baseline calibration). A `soak-capacity-*` tag runs
+only the sweep; a `soak-calibration-*` tag also runs three full trials, stopping
+on failure. The sweep selects an eligible target with measured headroom and
+coverage. Each trial uses a fresh application and database. Nothing publishes
+or accepts a baseline automatically.
+
+Actions artifacts are `soak-runner-<SHA>-<attempt>`, one
+`soak-trial-<number>-<SHA>-<attempt>` after each trial, and
+`soak-capacity-<SHA>-<attempt>` with the complete retained evidence. The last
+artifact contains `capacity/`, available `trial-1/` through `trial-3/`, and a
+baseline proposal only when all three trials permit it. Artifacts have 30-day
+retention; accepted evidence must be archived before expiry. Current run handles
+and verification scope are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 ## Measurement pilot
 
@@ -98,7 +135,8 @@ and container cancellation proof.
 The diagnostic workflow also accepts explicit `soak-diagnostics-*` tags so it can
 be validated before the new workflow exists on the default branch. These tags
 have no publication capability and do not add soak traffic to branch/PR/cron
-workflows. An eligible capacity result and full application calibration remain pending.
+workflows. Capacity selection and full baseline trials use the separate CI
+calibration entry point above; completed full calibration remains pending.
 
 ```sh
 python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
@@ -141,8 +179,8 @@ The pilot's 16 MiB detector threshold and ten-second windows are detector-test
 inputs. They are not accepted release thresholds. The application analyzer now applies early/late ten-minute medians, five-minute
 windows, a minimum 20-minute reclamation span, sustained and late growth rules,
 and unsettled-reference checks. It can compare calibrated noise and absolute
-baseline occupancy, but those inputs remain unaccepted and are not wired into
-release qualification. The short development plateau correctly leaves this
+baseline occupancy through `qualification.py`, but no accepted reference exists
+yet. The short development plateau correctly leaves this
 memory assessment inconclusive.
 
 The resource analyzer checks telemetry coverage, stable lifecycle identity,
@@ -277,7 +315,8 @@ python3 tests/soak/release/prepare.py --repo . --candidate FULL_SHA --output NEW
 Preparation requires CommandBox 6.3.5, installed `commandbox-semantic-release@4.1.0`,
 an authenticated read-only-capable `gh` session, and a full Git checkout with tags.
 It currently supports stable versions. A `noRelease: true` result has no proposed
-version and must not be packaged or published. The integration verifier uses
+version and must not produce a publishable package. The separate validation
+builder below preserves full testing without permitting publication. The integration verifier uses
 actual disposable Git history and the actual plugins, with provider identities
 supplied locally; it proves patch/minor/breaking/no-change/skip behavior and rejects
 stale provider state or mismatched tags without altering the repository.
@@ -297,8 +336,8 @@ qualification receipt before creating the provider adapter, freezes its package
 manifest and prepared notes, and binds the final publication receipt to baseline
 and evidence hashes. Its CLI rejects local, PR, tag, and wrong-candidate contexts.
 Those context checks do not replace the required whole-matrix dependency and
-repository-wide native concurrency guard; guarded workflow integration remains
-pending. Fake-provider tests prove rejected evidence causes zero provider calls
+repository-wide native concurrency guard; the staged integration still requires
+full native proof and activation. Fake-provider tests prove rejected evidence causes zero provider calls
 and a rebuilt package cannot replace the qualified ZIP between checks. Do not wire
 the directory publisher behind the new gate.
 
@@ -323,7 +362,8 @@ rejects no-release input. `qualification.py --validation-only` runs the same ful
 schedule and accepted-baseline comparisons, but produces `validation-passed` and
 `validation.json`, with `releaseQualified: false`. Receipt purposes cannot be
 interchanged, and promotion rejects the artifact before any provider calls.
-The workflow still needs to select this path when preparation reports no release.
+The staged workflow selects this path when preparation reports no release;
+full native no-release validation remains an acceptance requirement.
 
 ## Disabled release integration template
 
@@ -479,8 +519,10 @@ tests separately prove rejection when provider state invalidates preparation.
 - Complete fresh v12 calibration with continuous observation on the standard
   GitHub runner. V11 trial `36246554787` completed all 14,401 journeys and passed
   retained-memory checks, but a 15.222-second application telemetry gap made
-  resources inconclusive. Its failed evidence is retained. Independent v11 run
-  `36248290534` remains in its first full trial.
+  resources inconclusive. Independent v11 run `36248290534` reproduced that
+  outcome with a 15.239-second gap. Both inconclusive trials remain retained.
+  Primary v12 run `36252125924` is in its first full trial; independent host
+  calibration `36254251872` uses the same measured source and profile.
 - Verify matching v12 diagnostics after the controller timing change. V11
   diagnostics `36246858832` passed completely, including measurement, saturation,
   all application faults, cancellation and observer loss. Retain every attempt;
@@ -497,6 +539,11 @@ tests separately prove rejection when provider state invalidates preparation.
   substituted by the short pilot or by the fake-publisher unit tests.
 
 ## Local milestone evidence (2026-09-25)
+
+The following entries are chronological history, including superseded profiles
+and the observations that prompted each change. Their pending-state statements
+describe that milestone. Use [ACCEPTANCE.md](ACCEPTANCE.md) for current status and
+the operational sections above for current commands.
 
 These observations are development evidence on macOS/aarch64, not CI calibration:
 

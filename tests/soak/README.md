@@ -221,7 +221,7 @@ Deterministic ZIP metadata permits repeated builds to be compared byte for byte.
 the ZIP checksum, all member hashes, metadata, version, and source identity.
 The promotion protocol revalidates candidate and last-release identity, uploads
 those exact bytes, checks the downloaded bytes, then publicizes. Its tests use a
-fake publisher; there is no real provider adapter connected yet.
+fake publisher; no real provider adapter is connected to the release workflow yet.
 
 The inspected CommandBox semantic-release 4.1.0 publisher calls `package version`
 and then `forgebox publish`, which rebuilds from the directory. CommandBox 6.3.5
@@ -246,8 +246,18 @@ actual disposable Git history and the actual plugins, with provider identities
 supplied locally; it proves patch/minor/breaking/no-change/skip behavior and rejects
 stale provider state or mismatched tags without altering the repository.
 
-The real immutable provider adapter and guarded workflow promotion still need
-implementation. Do not wire the directory publisher behind the new gate.
+`release/provider.py` implements the ForgeBox storage/publish protocol inspected
+in CommandBox 6.3.5 and the [GitHub releases API](https://docs.github.com/en/rest/releases/releases).
+It submits the exact tested ZIP, verifies the downloaded SHA-256, creates the
+release at the full candidate SHA, and verifies the resulting tag. It rechecks
+candidate/provider state at the upload boundary, rejects existing versions and
+partial uploads, records durable checkpoints before each write, and never
+automatically retries writes. API tokens and signed storage URLs are excluded
+from its journal. Fake HTTP integration tests cover these behaviors, including
+corrupt downloads and uncertain partial publication. A live read-only request
+verified the current ForgeBox response/version-inventory shape; no real write
+has been made. Guarded workflow promotion still needs integration. Do not wire
+the directory publisher behind the new gate.
 
 `qualification.py --baseline ACCEPTED_JSON --profile PROFILE_JSON --package
 PREPARED_DIRECTORY --candidate FULL_SHA` is the explicit candidate gate entry

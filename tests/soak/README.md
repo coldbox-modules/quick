@@ -512,3 +512,41 @@ the same 1 GiB heap. New per-sample cgroup memory categories distinguish anonymo
 file/shared, and kernel usage; they are overlapping categories and are not summed.
 This is a diagnostic/calibration change requiring fresh capacity and baseline
 trials, not acceptance of the failed run or an explanation of the growth.
+
+### Native matrix cancellation proof
+
+`soak-matrix-proof.yml` is an isolated, read-only diagnostic workflow with one
+real development soak and one explicitly labeled functional stub. It proves
+Actions scheduling/cancellation and the whole-matrix publication dependency;
+it does not claim TestBox coverage or replace the eventual 23 functional rows.
+Its soak row is first, `fail-fast` is true, and no concurrency cap is set.
+The publication stub only records a JSON marker and has no provider calls.
+
+Select `functional-failure`, `soak-failure`, `explicit-cancel`, or `all-pass`
+through workflow dispatch, or an explicit `soak-matrix-<mode>-<suffix>` tag.
+The functional-failure mode waits until the soak has completed HTTP work and
+collected at least three JVM samples before failing. The soak-failure mode
+uses the actual wrong-contract fault while its functional sibling is live.
+For explicit cancellation, wait for the **Observe live soak** step, then cancel
+the workflow normally. Cleanup checks and evidence uploads use `always()`.
+
+After terminal workflow state, run:
+
+```sh
+PROBE_MODE=functional-failure python3 tests/soak/matrix_probe.py verify-remote \
+  --run-id <github-run-id> --output <new-evidence-directory>
+```
+
+The verifier downloads artifacts and checks actual job conclusions, workload
+liveness, owned container/volume/network removal, final collector flush, retained
+recording, and publication-stub execution only for all-pass. Native CI evidence
+is still pending; a local signal test alone cannot prove GitHub fail-fast.
+
+CI diagnostic run `36210905683` retained five-minute warmup and completed every
+request in its late-latency case, with resource recovery. It nevertheless failed:
+`report_100` and rollback latency crossed sustained comparison bands before the
+late injection, so it did not prove the intended late-only detector. Its earlier
+healthy, held-connection, wrong-contract and sustained-latency cases passed their
+specific checks. The overall run remains failed. Hosted runners in these probes
+reported EPYC 9V45, 9V74 and 7763 models; their recorded measurement identities
+remain distinct. Full capacity and baseline evidence must resolve this variance.

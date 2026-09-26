@@ -82,14 +82,14 @@ samples, GC cycles, rotating GC logs, bounded JFR recordings, child exit codes,
 
 The manual GitHub Actions entry point is **Soak diagnostics (no publication)**
 in `.github/workflows/soak-diagnostics.yml`. It pins Ubuntu 24.04, Temurin
-21.0.10+7, and x64, has only read permission, and uploads evidence even on failure.
+21.0.10+7, and ARM64, has only read permission, and uploads evidence even on failure.
 It runs measurement/package self-tests and a separate isolated-application job
 with HTTP contract probes, all controlled-fault cases, read-only release preparation,
 and container cancellation proof.
 The diagnostic workflow also accepts explicit `soak-diagnostics-*` tags so it can
 be validated before the new workflow exists on the default branch. These tags
 have no publication capability and do not add soak traffic to branch/PR/cron
-workflows. Capacity sweeps and full application calibration remain pending.
+workflows. An eligible capacity result and full application calibration remain pending.
 
 ```sh
 python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
@@ -101,15 +101,16 @@ python3 tests/soak/telemetry/verify_cancellation.py \
 The cancellation test waits for a live target, live collector, and actual JVM
 observations, then terminates the controller. It checks both children are gone,
 partial telemetry and JFR survive, and the canceled run cannot pass. This proves
-local process cleanup, **not yet GitHub matrix cancellation**.
+local process cleanup. Separate verified native matrix cancellation runs are
+recorded under **Native matrix cancellation proof** below.
 
 ## Memory measurement method
 
-Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v3
+Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v5
 runtime uses generational ZGC with a fixed periodic major collection interval,
 identically in baseline and candidate. The pilot uses a 256 MiB heap and a
 five-second major interval to validate detection cheaply. The application uses
-a 2 GiB heap and 15-second major interval; these conditions require calibration.
+a 6 GiB heap and 15-second major interval; these conditions require calibration.
 The earlier non-generational method remains supported for historical evidence.
 
 An external Java process attaches through the local JMX management agent and
@@ -710,3 +711,22 @@ and runner identity remain part of calibration; no x64 evidence is reused as an
 ARM baseline. Fresh image reproducibility, measurement pilots, capacity, full
 trials and application detectors are required. The release workflow template
 selects ARM only for its soak row; its 23 functional rows are unchanged.
+
+
+### Provisional v5 allocation headroom calibration
+
+ARM capacity `36217622384` failed its first 5/second step; the repaired all-pass
+probe `36217735768` timed out on a 1,000-row report. The latter recorded 249
+allocation stalls, up to 1.19 seconds, and reached its 2 GiB heap limit. Its
+Neoverse-N2 runner, generator headroom and completed cleanup are retained. ARM
+alone did not resolve the capacity failure, and neither run is accepted.
+
+V5 changes only the application memory budget from v4: a fixed 6 GiB heap inside
+an 8 GiB container on the 16 GiB runner. CPU allocations, collector method,
+request timeouts, sample floors and actual work remain fixed. This tests the
+allocation headroom needed while concurrent collection runs, following the
+[ZGC heap-sizing guidance](https://docs.oracle.com/en/java/javase/21/gctuning/z-garbage-collector2.html).
+It is an explicit calibration experiment on the pinned diagnostic candidate;
+release candidates never trigger automatic budget increases. All memory and
+latency acceptance still requires fresh capacity and three full healthy trials
+under the new immutable profile. The live release gate remains disabled.

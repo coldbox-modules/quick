@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "id": "lucee6-parallel-arm64-generational-zgc-v4",
+  "id": "lucee6-parallel-arm64-generational-zgc-v5",
   "status": "provisional-unaccepted",
   "runner": "ubuntu-24.04-arm",
   "architecture": "arm64",
@@ -23,8 +23,8 @@
   "resources": {
     "application": {
       "cpus": 3,
-      "memoryMiB": 4096,
-      "heapMiB": 2048,
+      "memoryMiB": 8192,
+      "heapMiB": 6144,
       "jdbcPoolLimit": 16
     },
     "mysql": {

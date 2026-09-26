@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
-from identity import (CPU_FIELDS, DOCKER_FIELDS, JVM_FIELDS, build_identity, digest,
+from identity import (CPU_FIELDS, DOCKER_FIELDS, JVM_FIELDS, build_identity,
                       measured_source, profile_identity, require_match, sha_file)
 from calibration import validate_trial_profile
 

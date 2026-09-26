@@ -1,5 +1,7 @@
 import concurrent.futures
 import json
+import os
+import sys
 from pathlib import Path
 import subprocess
 import tempfile
@@ -74,6 +76,49 @@ class PromotionTests(unittest.TestCase):
 
     def git(self, *args):
         return subprocess.check_output(["git", "-C", str(self.repo), *args], stderr=subprocess.STDOUT).decode()
+
+    def test_release_build_entrypoint_selects_distinct_validation_artifact(self):
+        script = Path(__file__).with_name('validate_candidate.py')
+        for validation in (False, True):
+            with self.subTest(validation=validation):
+                prepared = self.prepared if not validation else {
+                    'candidateSha': self.sha, 'lastRelease': self.prepared['lastRelease'], 'noRelease': True}
+                source = self.root / ('prepared-' + str(validation) + '.json')
+                source.write_text(json.dumps(prepared))
+                output = self.root / ('cli-package-' + str(validation))
+                subprocess.run([sys.executable, str(script), 'build', '--repo', str(self.repo),
+                    '--prepared', str(source), '--output', str(output)], check=True, capture_output=True)
+                manifest = verify(output, self.sha)
+                self.assertEqual(manifest.get('validationOnly', False), validation)
+                self.assertEqual(manifest['version'], '1.0.0' if validation else '1.0.1')
+
+    def test_publication_inspection_needs_complete_evidence_before_emitting_output(self):
+        run = self.root / 'unqualified-run'
+        build(self.repo, self.prepared, run / 'package')
+        output = self.root / 'github-output'
+        result = subprocess.run([sys.executable, str(Path(__file__).with_name('validate_candidate.py')),
+            'inspect', '--run', str(run), '--candidate', self.sha, '--baseline', str(self.root / 'missing-baseline')],
+            env={**os.environ, 'GITHUB_OUTPUT': str(output)}, capture_output=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(output.exists())
+
+    def test_independent_supervisor_rejects_missing_baseline_before_provisioning(self):
+        script = Path(__file__).with_name('supervisor.py')
+        output = self.root / 'supervision'
+        result = subprocess.run([sys.executable, str(script), 'launch', '--output', str(output),
+            '--candidate', self.sha, '--baseline', str(self.root / 'missing-baseline'),
+            '--profile', str(Path(__file__).parents[1] / 'profiles/lucee6-serial.json'),
+            '--package', str(self.output)], capture_output=True, timeout=15)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotEqual(json.loads((output / 'exit.json').read_text())['code'], 0)
+        self.assertFalse((output / 'run').exists())
+        subprocess.run([sys.executable, str(script), 'cleanup', '--output', str(output)],
+                       check=True, capture_output=True, timeout=10)
+        cleanup = json.loads((output / 'cleanup-verification.json').read_text())
+        self.assertEqual(cleanup, {'passed': True, 'provisioned': False})
+        pid = json.loads((output / 'process.json').read_text())['pid']
+        with self.assertRaises(ProcessLookupError):
+            os.kill(pid, 0)
 
     def test_exact_tested_bytes_are_promoted_and_downloaded(self):
         receipt = promote(self.output, self.sha, self.publisher)

@@ -308,6 +308,37 @@ schedule and accepted-baseline comparisons, but produces `validation-passed` and
 interchanged, and promotion rejects the artifact before any provider calls.
 The workflow still needs to select this path when preparation reports no release.
 
+## Disabled release integration template
+
+`release/release.yml.pending` is a reviewable replacement for the release workflow;
+GitHub does not execute it from that location. The live `.github/workflows/release.yml`
+remains unchanged. Before activation, finish the acceptance work below, freeze the
+capacity-selected profile and review `baselines/lucee6-serial.json`, then install
+the template as the live release workflow in that reviewed update.
+
+The template retains the main/master trigger and version-update skip rule. Its
+explicit matrix has one soak row first and the same 23 functional combinations,
+native fail-fast and no concurrency cap. Only functional rows receive the legacy
+MySQL service; the soak owns its isolated database. Preparation and package build
+occur inside the soak row, so functional work starts independently.
+
+`release/validate_candidate.py` selects the publication or no-release validation
+builder from the prepared metadata. `release/supervisor.py` launches the full
+qualification independently, reuses the native-tested single-signal handoff,
+and allows up to 90 minutes for observation. Always-run cleanup waits for owned
+resources to disappear. A missing baseline stops before provisioning; it cannot
+select a report-only fallback. Full native validation with this wrapper remains
+pending accepted-baseline availability.
+
+The publisher depends on the entire validation matrix and holds one repository
+publication concurrency group with cancellation disabled. After artifact download,
+inspection verifies the full receipt before emitting publication eligibility.
+No-release validation emits false; only a verified publication receipt reaches
+the immutable provider adapter. The adapter rechecks release-branch/provider
+state under the guard and verifies downloaded package bytes. `actionlint` and
+matrix-structure checks passed for the template; these do not replace actual
+full-matrix rollout and publication-stub evidence.
+
 ## Remaining acceptance work
 
 - Obtain an eligible capacity target and validate the complete 60-minute workload

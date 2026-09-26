@@ -1,0 +1,286 @@
+# Disabled integration template. Install as .github/workflows/release.yml only
+# after reviewed baseline acceptance and complete diagnostic evidence.
+name: Release
+
+on:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    name: Validation / ${{ matrix.kind }} / ${{ matrix.cfengine }} / ${{ matrix.coldbox }} / null=${{ matrix.fullNull }}
+    if: "!contains(github.event.head_commit.message, '__SEMANTIC RELEASE VERSION UPDATE__')"
+    runs-on: ${{ matrix.kind == 'soak' && 'ubuntu-24.04' || 'ubuntu-latest' }}
+    timeout-minutes: ${{ matrix.kind == 'soak' && 90 || 360 }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - kind: soak
+          - kind: functional
+            cfengine: "lucee@5"
+            coldbox: "coldbox@^7"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "lucee@5"
+            coldbox: "coldbox@^7"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "lucee@5"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "lucee@5"
+            coldbox: "coldbox@^8"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "lucee@6"
+            coldbox: "coldbox@^7"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "lucee@6"
+            coldbox: "coldbox@^7"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "lucee@6"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "lucee@6"
+            coldbox: "coldbox@^8"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "adobe@2021"
+            coldbox: "coldbox@^7"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "adobe@2021"
+            coldbox: "coldbox@^7"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "adobe@2021"
+            coldbox: "coldbox@^8"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "adobe@2023"
+            coldbox: "coldbox@^7"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "adobe@2023"
+            coldbox: "coldbox@^7"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "adobe@2023"
+            coldbox: "coldbox@^8"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "adobe@2025"
+            coldbox: "coldbox@^7"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "adobe@2025"
+            coldbox: "coldbox@^7"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "adobe@2025"
+            coldbox: "coldbox@^8"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "boxlang@1"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "boxlang@1"
+            coldbox: "coldbox@^8"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "boxlang-cfml@1"
+            coldbox: "coldbox@^7"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "boxlang-cfml@1"
+            coldbox: "coldbox@^7"
+            fullNull: "false"
+          - kind: functional
+            cfengine: "boxlang-cfml@1"
+            coldbox: "coldbox@^8"
+            fullNull: "true"
+          - kind: functional
+            cfengine: "boxlang-cfml@1"
+            coldbox: "coldbox@^8"
+            fullNull: "false"
+    services:
+      mysql:
+        image: ${{ matrix.kind == 'functional' && 'mysql:5.7' || '' }}
+        env:
+          MYSQL_RANDOM_ROOT_PASSWORD: yes
+          MYSQL_USER: quick
+          MYSQL_PASSWORD: quick
+          MYSQL_DATABASE: quick
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Setup Java JDK
+        if: matrix.kind == 'functional'
+        uses: actions/setup-java@v4.7.1
+        with:
+          distribution: 'temurin'
+          java-version: 21
+
+      - name: Set Up CommandBox
+        if: matrix.kind == 'functional'
+        uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          install: commandbox-boxlang
+
+      - name: Install dependencies
+        if: matrix.kind == 'functional'
+        run: |
+          box install
+          git apply --unidiff-zero .github/patches/mementifier-full-null.patch
+          box config set modules.commandbox-dotenv.checkEnvPreServerStart=false
+          box install ${{ matrix.coldbox }} --noSave
+          # ColdBox 8.2 includes these full-null fixes; only ColdBox 7 needs the patches.
+          if [ "${{ matrix.coldbox }}" = "coldbox@^7" ]; then
+            git apply --unidiff-zero .github/patches/coldbox-full-null.patch
+            git apply --unidiff-zero .github/patches/coldbox7-full-null.patch
+          fi
+
+      - name: Start server
+        if: matrix.kind == 'functional'
+        env:
+          FULL_NULL: ${{ matrix.fullNull }}
+          DB_HOST: localhost
+          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
+          DB_NAME: quick
+          DB_USER: quick
+          DB_PASSWORD: quick
+        run: |
+          box server start serverConfigFile="server-${{ matrix.cfengine }}.json" --noSaveSettings --debug
+          curl http://127.0.0.1:60299
+
+      - name: Run TestBox Tests
+        if: matrix.kind == 'functional'
+        env:
+          FULL_NULL: ${{ matrix.fullNull }}
+          DB_HOST: localhost
+          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
+          DB_NAME: quick
+          DB_USER: quick
+          DB_PASSWORD: quick
+        run: box testbox run
+
+      - name: Record soak runner identity
+        if: matrix.kind == 'soak'
+        run: python3 tests/soak/ci_environment.py
+      - name: Set up the pinned soak JDK
+        if: matrix.kind == 'soak'
+        uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7.0.LTS'
+          architecture: x64
+      - name: Set up the pinned soak preparation runtime
+        if: matrix.kind == 'soak'
+        uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          version: '6.3.5'
+      - name: Prepare candidate release metadata without publishing
+        if: matrix.kind == 'soak'
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          box install commandbox-semantic-release@4.1.0 --noSave
+          python3 tests/soak/release/prepare.py --repo . --candidate "$CANDIDATE_SHA" --output tests/results/soak/release-candidate/preparation
+          python3 tests/soak/release/validate_candidate.py build --repo . --prepared tests/results/soak/release-candidate/preparation/prepared.json --output tests/results/soak/release-candidate/package
+      - name: Launch exact-package qualification and prove live work
+        if: matrix.kind == 'soak'
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          exec python3 tests/soak/release/supervisor.py launch \
+            --baseline tests/soak/baselines/lucee6-serial.json \
+            --profile tests/soak/profiles/lucee6-serial.json \
+            --package tests/results/soak/release-candidate/package \
+            --candidate "$CANDIDATE_SHA" \
+            --output tests/results/soak/release-candidate/supervision
+      - name: Observe the complete required soak
+        if: matrix.kind == 'soak'
+        run: exec python3 tests/soak/release/supervisor.py observe --output tests/results/soak/release-candidate/supervision
+      - name: Finish owned-resource teardown after completion or cancellation
+        if: always() && matrix.kind == 'soak' && hashFiles('tests/results/soak/release-candidate/supervision/request.json') != ''
+        run: python3 tests/soak/release/supervisor.py cleanup --output tests/results/soak/release-candidate/supervision
+      - name: Retain qualification and failure evidence
+        if: always() && matrix.kind == 'soak'
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: release-soak-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            tests/results/soak/release-candidate/
+            !tests/results/soak/release-candidate/**/app/coldbox/**
+            !tests/results/soak/release-candidate/**/app/modules/**
+            !tests/results/soak/release-candidate/**/tmp/**
+            !tests/results/soak/release-candidate/**/jvm/stream/**
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Promote the qualified immutable package
+    if: "!contains(github.event.head_commit.message, '__SEMANTIC RELEASE VERSION UPDATE__')"
+    needs: validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    concurrency:
+      group: quick-release-publication
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          name: release-soak-${{ github.sha }}-${{ github.run_attempt }}
+          path: tests/results/soak/downloaded-candidate
+      - name: Verify the complete receipt and determine publication eligibility
+        id: eligibility
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          python3 tests/soak/release/validate_candidate.py inspect \
+            --run tests/results/soak/downloaded-candidate/supervision/run \
+            --candidate "$CANDIDATE_SHA" \
+            --baseline tests/soak/baselines/lucee6-serial.json
+      - name: Revalidate provider state and promote only the tested bytes
+        if: steps.eligibility.outputs.publish == 'true'
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEBOX_TOKEN: ${{ secrets.FORGEBOX_TOKEN }}
+        run: |
+          python3 tests/soak/release/promote_qualified.py \
+            --run tests/results/soak/downloaded-candidate/supervision/run \
+            --candidate "$CANDIDATE_SHA" \
+            --baseline tests/soak/baselines/lucee6-serial.json \
+            --journal tests/results/soak/publication-journal
+      - name: Retain publication checkpoints, including partial failures
+        if: always() && steps.eligibility.outputs.publish == 'true'
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: publication-journal-${{ github.sha }}-${{ github.run_attempt }}
+          path: tests/results/soak/publication-journal/
+          if-no-files-found: warn
+          retention-days: 90

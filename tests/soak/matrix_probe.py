@@ -95,7 +95,7 @@ def launch(output):
     raise RuntimeError('Live-soak readiness deadline exceeded')
 
 
-def observe(output):
+def observe(output, timeout_seconds=1200):
     if read(output / 'live.json').get('live') is not True:
         raise RuntimeError('Live-work proof is missing')
     def cancel(signum, frame):
@@ -103,7 +103,7 @@ def observe(output):
     signal.signal(signal.SIGTERM, cancel)
     canceled = False
     try:
-        deadline = time.monotonic() + 1200
+        deadline = time.monotonic() + timeout_seconds
         while time.monotonic() < deadline:
             result = read(output / 'exit.json')
             if result:
@@ -128,7 +128,7 @@ def functional(output):
     output.mkdir(parents=True, exist_ok=False)
     selected = mode()
     write(output / 'started.json', {'mode': selected, 'time': time.time()})
-    deadline = time.monotonic() + 1200
+    deadline = time.monotonic() + timeout_seconds
     # Only read Actions metadata. The functional stub never touches the soak
     # runner, database, token, or HTTP server.
     while time.monotonic() < deadline:

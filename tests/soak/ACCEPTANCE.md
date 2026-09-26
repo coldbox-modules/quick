@@ -56,7 +56,8 @@ GitHub Actions artifacts have finite retention.
 | `ci-36244968012/` | Repeated v10 capacity was ineligible after graph latency degradation. The failed attempt remains retained and is not replaced by an earlier eligible result. |
 | `ci-36246554787/raw-trial-diagnosis.json` | V11 full trial at 6 journeys/second completed 14,401/14,401 journeys and passed retained memory. One 15.222-second telemetry gap at idle transition made resources inconclusive. Raw reanalysis exactly matches all assessments; the trial is not accepted. |
 | `ci-36248290534/raw-trial-diagnosis.json` | Independent v11 full trial also completed 14,401/14,401 journeys and passed retained memory. Its only resource invalidity is a 15.239-second gap at idle transition. All three raw analyses match; this second inconclusive trial is retained and not accepted. |
-| `v11-full-trial-comparison.json` | Early per-operation p95 values are compared across both inconclusive v11 trials. Only empty-lookup failure exceeds 10% spread (9 versus 10 ms); retained-memory growth is +36 versus -36 MiB. These are diagnostic noise observations, not an accepted baseline or waived limits. |
+| `v11-full-trial-comparison.json` | Rounded early per-operation p95 values are compared across both inconclusive v11 trials. Only empty-lookup failure exceeds 10% spread (9 versus 10 ms); retained-memory growth is +36 versus -36 MiB. These are diagnostic noise observations, not an accepted baseline or waived limits. |
+| `v11-latency-quantization-investigation.json` | Raw nearest-rank p95 reproduces all 21 saved sample counts and rounded values in both trials. Empty-lookup spread is 9.80% raw versus 10.53% rounded; relationship-failure spread is 10.70% raw versus 9.52% rounded. Baseline review must inspect both representations; neither trial is accepted and the 10% criterion is unchanged. |
 | `controller-cadence-regression-20260926/` | The delayed-analysis regression reproduces that gap on the old controller and passes after the v12 change. All 123 telemetry and 57 release tests pass. Live v12 evidence remains required. |
 | `v11-ci-host-policy-verification.json` | The bounded 64 KiB host-memory policy matches four actual N2 records with up to 40 KiB variation and rejects V3. Unit coverage rejects changed CPU/cache/heap and altered receipt bounds. |
 | `v12-independent-early-host-comparison.json` | The independent v12 allocation is another four-core N2 with matching recorded CPU, image and kernel; usable RAM differs by 36 KiB within the fixed bound. This is early host evidence only; full runtime identity and workload results remain pending. |
@@ -85,7 +86,7 @@ the draft is editable and does not accept a baseline or publish Quick.
 Current CI handles, checked on 2026-09-26:
 
 - [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): capacity selection passed; the first full-trial step started at 15:57:59 UTC with the corrected controller. No full trial verified yet.
-- [Independent v12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36254251872): assigned another four-core N2 and running the measurement pilot. Measured source files and profiles match the primary v12 run exactly; all results will be retained. Dispatch rationale is recorded in `v12-independent-host-plan.json`.
+- [Independent v12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36254251872): capacity selection passed on another four-core N2; the first full-trial step started at 16:34:33 UTC. Measured source files and profiles match the primary v12 run exactly; all results will be retained. Dispatch rationale is recorded in `v12-independent-host-plan.json`.
 - [V12 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36252126235): terminal success; all three jobs passed, and measurement, saturation and application raw evidence independently reanalyzed.
 - [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): terminal failure after one full, inconclusive trial; raw diagnosis retained.
 - [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): terminal failure after its first full trial repeated the idle-transition telemetry gap; complete raw diagnosis retained.
@@ -97,7 +98,8 @@ Current CI handles, checked on 2026-09-26:
    have passed and their raw evidence is verified. Retain every failure or partial run. Keep
    the independent v11 result as evidence of the earlier controller behavior.
 2. Establish three healthy full trials, resolve noise and hardware differences,
-   archive the evidence durably and review the baseline manifests and budgets.
+   inspect raw and rounded latency variation, archive the evidence durably and
+   review the baseline manifests and budgets.
 3. Execute and verify every staged full-matrix scenario, including no-release
    validation and two overlapping all-pass runs contending for the publication
    guard. Verify actual tested/uploaded ZIP bytes and raw qualification receipts.

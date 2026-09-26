@@ -1554,9 +1554,19 @@ the idle marker. Synchronous analysis took 5.162 seconds. All three saved
 assessments match raw reanalysis in `ci-36248290534/raw-trial-diagnosis.json`.
 Its memory growth was -36 MiB across 155 usable major cycles. Both v11 trials
 remain inconclusive. `v11-full-trial-comparison.json` retains their early p95
-comparison: the only operation above 10% spread is empty-lookup failure at
+comparison: the only rounded operation above 10% spread is empty-lookup failure at
 9 versus 10 ms. This diagnostic comparison does not accept a baseline or waive
 the required investigation of fresh v12 trial variation.
+
+`v11-latency-quantization-investigation.json` separately derives nearest-rank p95
+from the original request timings, using the same two early plateau windows and
+boundary exclusions. All 21 operations reproduce their saved sample counts and
+rounded p95 values. Rounding to whole milliseconds crosses the 10% noise boundary
+in both directions: empty-lookup spread is 9.80% raw versus 10.53% rounded, while
+relationship-failure spread is 10.70% raw versus 9.52% rounded. Review of fresh
+baseline trials must inspect both representations and investigate discrepancies.
+This observation changes neither the automated proposal criteria nor the 10%
+limit, and does not rehabilitate either inconclusive trial.
 
 The regression test inserts a 20-second analyzer delay: it reproduces the exact
 telemetry-gap failure on the old controller and passes on the corrected one. It

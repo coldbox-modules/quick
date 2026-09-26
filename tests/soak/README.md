@@ -375,6 +375,18 @@ repository permissions and no ForgeBox credential. Tags containing
 Artifacts are `release-soak-<SHA>-<attempt>` and
 `full-publication-proof-<run ID>`. Unit checks prove routing and exact-byte local
 promotion; full native receipt/promotion evidence is still pending calibration.
+After a full proof run reaches a terminal state, download and inspect it with:
+
+```sh
+python3 tests/soak/release/verify_full_probe.py --run-id RUN_ID \
+  --output tests/results/soak/full-matrix-RUN_ID
+```
+
+This verifier loads the baseline and matrix template from the tested commit,
+requires all 23 exact functional combinations plus the soak, checks real TestBox
+execution overlaps soak observation, verifies the raw receipt against that
+baseline, and checks publication starts after every validation finishes. It
+hashes the actual stub-uploaded ZIP; a claimed checksum is insufficient.
 
 ## Remaining acceptance work
 

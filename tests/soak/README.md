@@ -464,6 +464,21 @@ hashes the actual stub-uploaded ZIP; a claimed checksum is insufficient.
 All 23 rows must also retain nonempty, passing TestBox JSON reports. A green
 job cannot hide a failed report.
 
+Independently recompute all four candidate assessments from the downloaded raw
+observations and accepted baseline:
+
+```sh
+python3 tests/soak/review_qualification.py \
+  --run PATH_TO_DOWNLOADED_SUPERVISION_RUN \
+  --baseline PATH_TO_DOWNLOADED_CANDIDATE_BASELINE_JSON \
+  --candidate FULL_TESTED_SHA --output NEW_REVIEW_JSON
+```
+
+This verifies the existing publication or validation-only receipt first, checks
+the recorded analyzer versions, and exactly reproduces traffic, delivery,
+resource and retained-memory assessments. It cannot issue or repair a receipt.
+Its output retains every recomputed assessment and the input/source hashes.
+
 The no-release native scenario needs a candidate that contains the accepted
 baseline and current harness but prepares no new version. The pinned
 semantic-release filter only removes the version-update marker; a `docs:` or

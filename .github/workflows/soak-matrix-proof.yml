@@ -79,10 +79,15 @@ jobs:
       group: quick-soak-diagnostic-publication
       cancel-in-progress: false
     steps:
-      - name: Record all-validation success without publishing
-        run: |
-          mkdir -p proof
-          python3 -c 'import json,os; open("proof/publication-stub.json","w").write(json.dumps({"stubExecuted":True,"published":False,"candidateSha":os.environ["GITHUB_SHA"],"runId":os.environ["GITHUB_RUN_ID"]}))'
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          name: matrix-proof-soak-${{ github.run_id }}
+          path: downloaded-soak
+      - name: Verify transported package and stub readback under the guard
+        env:
+          HOLD_SECONDS: ${{ contains(github.ref_name, '-serialization-') && '180' || '0' }}
+        run: python3 tests/soak/publication_probe.py stub --run downloaded-soak/matrix-probe/run --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 --hold-seconds "$HOLD_SECONDS" --output proof
       - uses: actions/upload-artifact@v4.6.2
         with:
           name: publication-stub-${{ github.run_id }}

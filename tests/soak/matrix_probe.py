@@ -236,6 +236,10 @@ def verify_remote(output, run_id):
     if stubs:
         stub = read(stubs[0])
         checks['noActualPublication'] = stub.get('published') is False and stub.get('stubExecuted') is True and stub.get('candidateSha') == metadata['head_sha']
+        if 'packageSha256' in stub:
+            manifest = artifact('package-manifest.json')
+            checks['transportedPackageIdentity'] = (stub['packageCandidateSha'] == manifest['candidateSha']
+                and stub['packageSha256'] == stub['downloadSha256'] == manifest['packageSha256'])
     result = {'passed': all(checks.values()), 'mode': selected, 'runId': run_id,
               'workflowSha': metadata['head_sha'], 'releaseQualified': False, 'checks': checks}
     write(output / 'verification.json', result)

@@ -81,7 +81,10 @@ def verify_failure(output, mode):
         'neverQualified': summary.get('releaseQualified') is False,
         'publicationBlocked': publisher['conclusion'] in ('skipped', 'cancelled'),
         'noPublicationArtifact': not list(artifacts.rglob('qualified-publication-stub.json')),
-        'ownedResourcesRemoved': all(cleanup.get('checks', {}).get(key) is True for key in
+        'noUnexpectedFunctionalFailure': mode == 'functional-failure' or all(
+            j['conclusion'] in ('success', 'cancelled', 'skipped') for j in functional),
+        'ownedResourcesRemoved': bool(summary.get('runId')) and cleanup.get('runId') == summary['runId'] and all(
+            cleanup.get('checks', {}).get(key) is True for key in
             ('containersRemoved', 'volumesRemoved', 'networksRemoved', 'anonymousDatabaseVolumeRemoved')),
         'httpAndJvmEvidenceRetained': (run / 'k6.ndjson').stat().st_size > 0 and (run / 'jvm/jvm.ndjson').stat().st_size > 0,
     }

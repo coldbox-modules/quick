@@ -127,8 +127,8 @@ class FullMatrixEvidenceTests(unittest.TestCase):
         self.jobs[-2]['conclusion'] = 'cancelled'
         self.jobs[-1]['conclusion'] = 'skipped'
         self.write('jobs.json', {'jobs': self.jobs})
-        self.write(run + '/summary.json', {'status': 'inconclusive', 'state': 'canceled', 'releaseQualified': False})
-        self.write('artifacts/release-soak-123-1/supervision/cleanup-verification.json', {'passed': True, 'checks': {
+        self.write(run + '/summary.json', {'runId': 'full-trial', 'status': 'inconclusive', 'state': 'canceled', 'releaseQualified': False})
+        self.write('artifacts/release-soak-123-1/supervision/cleanup-verification.json', {'runId': 'full-trial', 'passed': True, 'checks': {
             key: True for key in ('containersRemoved', 'volumesRemoved', 'networksRemoved', 'anonymousDatabaseVolumeRemoved')}})
         self.write('artifacts/release-soak-123-1/supervision/live.json', {'live': True, 'time': epoch('2026-01-01T00:05:00Z')})
         for name in ('k6.ndjson', 'jvm/jvm.ndjson', 'jvm/recording-final.jfr'):
@@ -163,6 +163,31 @@ class FullMatrixEvidenceTests(unittest.TestCase):
             '2026-01-01T00:06:00Z', '2026-01-01T00:07:00Z'))
         self.write('jobs.json', {'jobs': self.jobs})
         self.assertFalse(verify_failure(self.root, 'functional-failure')['passed'])
+
+    def test_failure_cannot_use_cleanup_from_another_trial(self):
+        self.prepare_functional_failure()
+        cleanup = json.loads((self.root / self.cleanup).read_text())
+        cleanup['runId'] = 'another-trial'
+        self.write(self.cleanup, cleanup)
+        self.assertFalse(verify_failure(self.root, 'functional-failure')['passed'])
+
+    def test_soak_failure_cannot_hide_an_unrelated_functional_failure(self):
+        self.prepare_functional_failure()
+        from verify_full_probe import epoch
+        run = 'artifacts/release-soak-123-1/supervision/run'
+        self.jobs[6]['conclusion'] = self.jobs[6]['steps'][0]['conclusion'] = 'cancelled'
+        self.jobs[-2]['conclusion'] = 'failure'
+        self.write('jobs.json', {'jobs': self.jobs})
+        self.write(run + '/summary.json', {'runId': 'full-trial', 'status': 'failed', 'releaseQualified': False})
+        self.write(run + '/app-exit.json', {'ExitCode': 137})
+        (self.root / run / 'jvm/recording.jfr').write_bytes(b'partial recording')
+        self.write('artifacts/release-soak-123-1/probe/soak-injected.json', {
+            'injected': True, 'runId': 'full-trial', 'functionalJobId': self.jobs[6]['id'],
+            'time': epoch('2026-01-01T00:06:00Z')})
+        self.assertTrue(verify_failure(self.root, 'soak-failure')['passed'])
+        self.jobs[0]['conclusion'] = 'failure'
+        self.write('jobs.json', {'jobs': self.jobs})
+        self.assertFalse(verify_failure(self.root, 'soak-failure')['passed'])
 
 
 if __name__ == '__main__':

@@ -1810,3 +1810,17 @@ and ordinary publication packaging rejects it. Evidence is under
 `no-release-reviewed-baseline-20260926/`. Its full native proof is dispatched
 with tag `soak-release-proof-all-pass-no-release-v12-reviewed`; local preparation
 alone does not satisfy the required full no-release validation.
+
+### Full failure proofs and stricter evidence verification
+
+Functional-failure run `36268372100`, soak-failure run `36268372501` and explicit
+cancellation run `36268509885` use the accepted `b2d8a48` source. The bounded
+cancellation helper waits for concurrent live soak and TestBox work in the tagged
+run before requesting cancellation. No terminal outcome is claimed yet.
+No-release run `36268277722` uses the separately verified same-tree candidate.
+
+The failure verifier now rejects cleanup evidence from another trial and any
+unexpected functional failure in soak-failure or explicit-cancel modes. Both
+false-acceptance cases reproduce before the fix; all 63 release tests pass after
+it. Proofs are in `full-failure-verifier-20260926/`. This changes only offline
+verification and tests, not the workload, staged workflow or live CI jobs.

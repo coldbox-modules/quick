@@ -75,8 +75,10 @@ after telemetry disappears.
 Use **Soak capacity calibration (no publication)** in
 `.github/workflows/soak-capacity.yml`. It uses the standard four-core
 `ubuntu-24.04-arm` runner and the serial profile in `profiles/lucee6-serial.json`.
-The current workload has 25/50/100-row reports and 30-comment hot-post fanout;
-the five-minute warmup, five-minute ramp, 40-minute plateau, five-minute recovery
+The current workload has 25/50/100-row reports and 30-comment hot-post fanout.
+The default arrival rate is 6 journeys/second, matching both v12 capacity
+selections and all six healthy full-hour trials on standard GitHub runners.
+The five-minute warmup, five-minute ramp, 40-minute plateau, five-minute recovery
 and five-minute idle schedule remains fixed.
 
 Before the workflow reaches the default branch, dispatch the reviewed harness
@@ -1748,3 +1750,29 @@ rules, with warnings retained. It is investigation evidence only. No threshold
 was widened and no baseline is accepted. Raw comparisons, host/resource evidence
 and replay are under `ci-36252125924-complete/`; precision-fix evidence is under
 `baseline-precision-20260926/`.
+
+### Six healthy v12 hours on the standard runner
+
+The independent calibration `36254251872` completed all three full trials; its
+final trial `r20260926t183841-2ea10a` independently reproduces traffic, delivery,
+resources and retained-memory assessments and verifies its seal. Both calibration
+jobs ended at baseline proposal review with noise investigations. The corrected
+independent proposal still flags invalid-write, missing-key, relationship and
+rollback failures, query variants and report-25; raw spreads range from 10.3% to
+19.1%. These observations remain unresolved, not waived.
+
+All six trials pass counterfactual raw replay against the primary proposal's
+unchanged comparative bands and absolute budgets, with warnings retained. The
+standard profile now defaults to the measured 6 journeys/second instead of the
+old provisional 24. Its complete measured profile and measurement-source hashes
+match every trial, so this default change introduces no new measured conditions.
+Calibration still selects its rate from actual capacity evidence; the 60-minute
+schedule, coverage floors and failure criteria remain unchanged.
+
+Both complete original Actions ZIPs, including rejected original proposals, plus
+raw reviews, corrected proposals and replay evidence are retained in draft
+evidence release `397323222`. Local evidence and archive manifests are under
+`calibration-archive-v12-complete/`; the two ZIPs contain 930 and 932 independently
+verified files. All five new assets also pass remote downloaded-byte hashing
+against both local files and GitHub digests (`remote-verification.json`).
+No baseline is accepted and the release gate remains disabled.

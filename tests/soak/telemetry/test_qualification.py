@@ -60,24 +60,26 @@ class QualificationTests(unittest.TestCase):
         return self.path
 
     def test_selects_reviewed_hardware_and_only_its_calibrated_rate(self):
+        provisional = copy.deepcopy(PROFILE)
+        provisional['workload']['rate'] = 24
         first, host = self.cohort('n2.json', 'Neoverse-N2', 6)
         second, _ = self.cohort('v3.json', 'Neoverse-V3', 9)
         self.catalog([first.name, second.name])
         host['docker']['MemTotal'] += 4096
-        selected, profile = select_baseline(self.path, host, PROFILE)
+        selected, profile = select_baseline(self.path, host, provisional)
         self.assertEqual(selected, first.resolve())
         self.assertEqual(profile['workload']['rate'], 6)
-        self.assertNotEqual(PROFILE['workload']['rate'], 6)
+        self.assertEqual(provisional['workload']['rate'], 24)
         self.assertEqual(resolve_artifact_baseline(self.path, sha_file(second)), second.resolve())
-        changed = copy.deepcopy(PROFILE)
+        changed = copy.deepcopy(provisional)
         changed['fixtures']['highFanoutComments'] = 180
         with self.assertRaisesRegex(ValueError, 'profile differs'):
             select_baseline(self.path, host, changed)
         host['cpu']['Model name'] = 'unknown'
         with self.assertRaisesRegex(ValueError, 'found 0'):
-            select_baseline(self.path, host, PROFILE)
+            select_baseline(self.path, host, provisional)
         host['cpu']['Model name'] = 'Neoverse-V3'
-        selected, profile = select_baseline(self.path, host, PROFILE)
+        selected, profile = select_baseline(self.path, host, provisional)
         self.assertEqual(selected, second.resolve())
         self.assertEqual(profile['workload']['rate'], 9)
 

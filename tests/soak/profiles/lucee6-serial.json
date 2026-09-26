@@ -42,7 +42,7 @@
   "workload": {
     "version": "v3",
     "seed": 20260925,
-    "rate": 24,
+    "rate": 6,
     "vus": 100,
     "requestTimeoutSeconds": 10,
     "drainSeconds": 30,

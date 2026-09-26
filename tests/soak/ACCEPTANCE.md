@@ -19,24 +19,25 @@ Hardware comparison permits a fixed 64 KiB difference in reported host usable
 RAM, covering the observed 40 KiB spread on otherwise identical N2 hosts. Raw
 values and the comparison bound remain recorded; all other inputs stay exact.
 
-All three primary v12 full-hour trials are independently verified healthy at
-the capacity-selected 6 journeys/second. The first two trials on the independent
-host also pass raw traffic, delivery, resource and memory reanalysis and seal
-verification; its third trial is running. Baseline acceptance remains pending:
-the primary proposal requires investigation of 10.7% raw p95 variation for the
-100-row report, and variation between the two hosts is materially larger.
-Replaying all five healthy trials against the original proposed references and
-budgets passes the unchanged release-blocking rules, while retaining warnings.
+All six v12 full-hour trials across the primary and independent hosts are
+independently verified healthy at 6 journeys/second. The standard profile now
+defaults to that measured rate instead of the old provisional 24; its complete
+measured profile and source hashes match all six trials. Both calibration jobs
+stopped at baseline proposal review. The primary proposal flags report-100
+variation of 10.7%; the independent proposal flags six operations at 10.3–19.1%.
+Replaying all six against the primary proposal's unchanged references and budgets
+passes the release-blocking rules with warnings. Baseline review remains open,
+and the release gate is disabled.
 
 ## Requirements and proof boundaries
 
-| Plan item | Implementation and available evidence | Still required for completion |
+| Plan item | Implementation and available evidence | Acceptance state and remaining work |
 |---|---|---|
-| 1. Persistent isolated application | `app/Application.cfc` uses normal ColdBox bootstrap, a four-hour application timeout, sessionless requests and lifecycle identifiers. The controller provisions isolated application, database and generator containers with recorded budgets and package/dependency identities. The v12 development run passed lifecycle/resource checks. | Matching full-hour CI trials must establish continuous lifecycle and healthy behavior under the final load. |
-| 2. Deterministic domain | `fixtures/generate.py`, `Seed.cfc` and six domain entities preserve the domain and separate scratch IDs. V11's live SQL check and manifest verify 45,000 Post comments, 5,000 User comments, 30 on the hot post and zero on the reserved empty post. | Full trials must retain fixture identity and scratch cleanup throughout sustained work and recovery. |
-| 3. Real HTTP assertions and exceptions | `app/handlers/Api.cfc` and `k6/` exercise reads, relations, writes, rollback, reports, derived-cache variants and real Quick `findOrFail`/`firstOrFail` paths. V12 CI passed malformed contracts and all five application cases; raw traffic, resource and memory reanalysis matches every available saved assessment. Healthy traffic completed 901/901 plateau journeys. | Full-trial evidence must prove all failure cases, follow-ups and per-window coverage at the calibrated rate. Development diagnostics do not prove the full schedule. |
-| 4. Continuous external load | Profiles declare 5-minute warmup, 5-minute ramp, 40-minute plateau, 5-minute recovery and 5-minute idle observation. Calibration freezes an eligible rate; it never reduces candidate load automatically. V12 saturation diagnostics distinguish generator exhaustion from application overload. | Complete full-hour traffic delivery, VU headroom, sample coverage and recovery at the capacity-selected rate. |
-| 5. Measurement and reports | External JVM/JFR collection, database query/lock counters, application diagnostics and container measurements feed traffic, resource and retained-memory analyzers. V12 measurement pilots independently reproduce healthy, retained-growth and late-growth classifications. Development reports include journey/HTTP rates, per-operation counts/p95/p99 and active requests. | Usable retained-memory observations across the full plateau, complete raw reports and durable storage of accepted evidence. Short development memory remains inconclusive. |
+| 1. Persistent isolated application | `app/Application.cfc` uses normal ColdBox bootstrap, a four-hour application timeout, sessionless requests and lifecycle identifiers. The controller provisions isolated application, database and generator containers with recorded budgets and package/dependency identities. The v12 development run passed lifecycle/resource checks. | All six v12 full-hour trials pass lifecycle and resource checks; accepted-baseline review remains tracked under item 6. |
+| 2. Deterministic domain | `fixtures/generate.py`, `Seed.cfc` and six domain entities preserve the domain and separate scratch IDs. V11's live SQL check and manifest verify 45,000 Post comments, 5,000 User comments, 30 on the hot post and zero on the reserved empty post. | All six full trials retain matching fixture identity and pass scratch cleanup/recovery checks. |
+| 3. Real HTTP assertions and exceptions | `app/handlers/Api.cfc` and `k6/` exercise reads, relations, writes, rollback, reports, derived-cache variants and real Quick `findOrFail`/`firstOrFail` paths. V12 CI passed malformed contracts and all five application cases; raw traffic, resource and memory reanalysis matches every available saved assessment. Healthy traffic completed 901/901 plateau journeys. | All six full trials pass raw traffic coverage and follow-up checks at 6 journeys/second. Development diagnostics remain separate detector evidence. |
+| 4. Continuous external load | Profiles declare 5-minute warmup, 5-minute ramp, 40-minute plateau, 5-minute recovery and 5-minute idle observation. Calibration freezes an eligible rate; it never reduces candidate load automatically. V12 saturation diagnostics distinguish generator exhaustion from application overload. | All six full trials pass raw delivery, coverage and recovery assessments at the capacity-selected 6 journeys/second. |
+| 5. Measurement and reports | External JVM/JFR collection, database query/lock counters, application diagnostics and container measurements feed traffic, resource and retained-memory analyzers. V12 measurement pilots independently reproduce healthy, retained-growth and late-growth classifications. Development reports include journey/HTTP rates, per-operation counts/p95/p99 and active requests. | All six full trials pass retained-memory analysis and retain complete reports in remotely verified draft archives. Baseline acceptance remains open; short development memory remains inconclusive. |
 | 6. Calibrated gate | `capacity.py`, `calibration.py`, `baseline.py`, `identity.py` and `qualification.py` implement capacity selection, sealed trials, noise investigation, reviewed baseline requirements and exact candidate receipts. No accepted baseline JSON exists. | Three healthy full trials per accepted hardware cohort, investigation of every retained attempt and runner variation, reviewed absolute latency/resource/memory references, matching detector evidence and durable archive references. |
 | 7. Parallel release validation and cancellation | `release/release.yml.pending` and the generated full-proof workflow stage 23 functional rows plus one soak row, native fail-fast, unchanged release triggers/skip semantics, immutable promotion and guarded publication. Smaller native diagnostic proofs and provider tests are retained separately. The live release workflow is not enabled. | Actual full-matrix all-pass, both directions of failure cancellation, explicit cancellation, no-release validation and overlapping serialized publication-stub runs. Then install the verified release workflow. |
 | 8. Reviewable delivery and entire-path verification | The README documents local development, measurement, diagnostics, calibration, qualification and full-proof commands plus artifact locations. Diagnostic workflows have no publication capability. | Deliver accepted manifests, full reports, full-matrix/stub evidence and a final requirement-by-requirement audit of the activated gate. |
@@ -54,8 +55,12 @@ GitHub Actions artifacts have finite retention.
 | `ci-36252125924-trial-1/profile-source-coverage-verification.json` | Current measured sources and calibrated profile match exactly. Each of five expected failure cases has 2,304 attempts, verifications and successful follow-ups; the minimum operation/window latency count is 212 against the 200 floor. Boot identity and final resource release checks pass. Retained growth is 18 MiB across 155 major cycles, with no memory warnings. |
 | `calibration-archive-v12-36252125924/trial-1-remote-verification.json` | Original Actions ZIP matches GitHub's digest and all 212 members match the reviewed download. All five assets in draft evidence release `397323222` pass remote readback hashing. Replaying the archived analyzer sources reproduces the complete review. The draft remains editable; latest product release v13.0.4 is unchanged. |
 | `ci-36252125924-complete/trial-2-review.json`, `trial-3-review.json` | The remaining primary trials pass all four raw assessments and seal verification. The original three-trial proposal reproduces exactly and remains retained with its original noise investigations. |
-| `ci-36254251872-trials/trial-1-review.json`, `trial-2-review.json` | The first two independent-host full trials pass all four raw assessments and seal verification. The third trial remains live. |
+| `ci-36254251872-trials/trial-1-review.json`, `trial-2-review.json` | The first two independent-host full trials pass all four raw assessments and seal verification. The third trial also passes independent raw reanalysis and seal verification in `ci-36254251872-complete/trial-3-review.json`. |
 | `ci-36252125924-complete/five-trial-noise-investigation.json`, `five-trial-host-resource-investigation.json`, `proposed-baseline-replay.json` | Recorded measurement identities match under the fixed host-memory policy. Primary report-100 raw p95 spread is 10.7%; independent-host timings are broadly slower. All five trials pass counterfactual replay against the original proposal's unchanged references/budgets. This is investigation evidence, not acceptance; physical-host contention and CPU frequency were not directly observed. |
+| `ci-36254251872-complete/trial-3-review.json`, `corrected-proposal.json` | The sixth full trial passes all four raw assessments and seal verification. Exact raw p95 comparison retains six independent-host noise investigations; neither proposal is accepted. |
+| `ci-36252125924-complete/six-trial-proposed-baseline-replay.json` | All six full trials pass counterfactual replay against the original primary proposal without changing bands or budgets. Warnings remain; this is not qualification. |
+| `calibration-archive-v12-complete/remote-verification.json` | Both complete original Actions ZIPs and three combined review/manifest assets pass downloaded-byte SHA-256 and size checks against local files and GitHub digests. Draft release `397323222` now retains all six trials and original rejected proposals outside Actions expiry; it remains editable and does not qualify a release. |
+| `calibration-archive-v12-complete/default-profile-verification.json` | The new default rate of 6 journeys/second yields the exact measured profile and source hashes of all six full trials. |
 | `baseline-precision-20260926/verification.json` | Baseline noise comparison now uses exact raw p95 while preserving rounded references and budgets. Three regressions reproduce before the fix; 126 telemetry/calibration and 61 release tests pass. Primary empty-lookup and invalid-write spreads are 6.6% and 8.5% raw, instead of rounding-inflated 11.1% and 25%. The real report-100 investigation remains blocking at 10.7%; the 10% criterion is unchanged. |
 | `development-v12-cadence-20260926/development-verification.json` | All 901/901 journeys completed, traffic/resources passed, maximum application observation gap was 5.183 seconds and idle began 26 ms after generator completion. Final JFR, collector flush and live owned-resource cleanup checks passed. Short-schedule memory remains inconclusive. |
 | `ci-36252126235-measurement/raw-evidence-verification.json` | V12 raw JVM reanalysis reproduces healthy, retained-growth and late-growth classifications. Final recordings and all child exits verified; cancellation retained partial evidence and could not qualify. |
@@ -107,13 +112,15 @@ The first healthy full trial is retained in a separate
 `5f8266d1df796f78303dd627b9f42ef110b095dd6459a6dc197aef2c5ceffd20`.
 Its five assets include the member manifest, review source/results and archive
 reproduction proof. Remote readback verification is recorded separately above.
-This retains one healthy trial outside Actions expiry; baseline acceptance and
-remaining trials are still pending.
+The draft now also retains both complete calibration ZIPs and the combined
+review bundle; all 1,862 original ZIP members match the reviewed downloads.
+Complete archive evidence is under `calibration-archive-v12-complete/`. Baseline
+acceptance remains pending; all six full trials are now verified.
 
 Current CI handles, checked on 2026-09-26:
 
 - [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): terminal failure at baseline proposal after all three full trials passed. All three trials and the original proposal are independently reproduced. Noise investigation remains open; the original result is retained.
-- [Independent v12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36254251872): capacity and two full trials passed on another four-core N2; trial three started at 18:38:40 UTC. Full measured identities match the primary v12 run under the fixed host-memory policy. Dispatch rationale is recorded in `v12-independent-host-plan.json`.
+- [Independent v12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36254251872): terminal failure at baseline proposal after all three full trials passed on another four-core N2. Full measured identities match the primary v12 run under the fixed host-memory policy. Dispatch rationale is recorded in `v12-independent-host-plan.json`.
 - [V12 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36252126235): terminal success; all three jobs passed, and measurement, saturation and application raw evidence independently reanalyzed.
 - [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): terminal failure after one full, inconclusive trial; raw diagnosis retained.
 - [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): terminal failure after its first full trial repeated the idle-transition telemetry gap; complete raw diagnosis retained.
@@ -121,9 +128,9 @@ Current CI handles, checked on 2026-09-26:
 
 ## Acceptance order
 
-1. Finish the independent v12 calibration; three primary healthy trials and
-   matching diagnostics are verified. Retain every failure or partial run,
-   including the primary proposal rejection and both earlier v11 trials.
+1. All six v12 full trials and matching diagnostics are verified. Retain every
+   failure or partial run, including both proposal rejections and the earlier
+   inconclusive v11 trials.
 2. Resolve noise and hardware differences across the complete trial evidence,
    inspect raw and rounded latency variation, archive the evidence durably and
    review the baseline manifests and budgets.

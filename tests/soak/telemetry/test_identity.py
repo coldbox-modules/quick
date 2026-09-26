@@ -67,6 +67,11 @@ class IdentityTests(unittest.TestCase):
         host['cpu']['lscpu'].append({'field': 'CPU MHz:', 'data': 'variable'})
         self.write('host.json', host)
         (self.run / 'harness/README.md').write_text('Reviewed baseline instructions')
+        # Release tooling is audited in the complete snapshot. Its exact ZIP
+        # output is bound separately; it does not execute during measurement.
+        release = self.run / 'harness/release'
+        release.mkdir(exist_ok=True)
+        (release / 'package.py').write_text('changed publication validation')
         runtime = self.read('jvm/jvm.ndjson')
         runtime.update(pid='999', time=100000, startTime=5000)
         self.write('jvm/jvm.ndjson', runtime)

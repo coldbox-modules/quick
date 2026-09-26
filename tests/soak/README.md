@@ -430,6 +430,9 @@ image, executable harness sources, runtime, fixture data, dependencies, budgets,
 or workload before arrivals. Actual Lucee/ColdBox versions and JVM arguments are
 recorded. The complete source snapshot is retained; review metadata and baseline
 pointers are excluded from the comparison digest to avoid self-reference.
+Preparation/publication tooling also remains in the complete audit snapshot,
+while exact package bytes are bound separately. Changing a publisher does not
+change the measured runtime identity; changing workload or measurement code does.
 
 The capacity workflow's `trials` option (or explicit `soak-calibration-*` tag)
 runs three trials sequentially on the same runner, creating a fresh application

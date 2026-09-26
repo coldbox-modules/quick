@@ -8,7 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 
-SOURCE_FILES = {'controller.py', 'Seed.cfc', 'release/package.py',
+SOURCE_FILES = {'controller.py', 'Seed.cfc',
                 'telemetry/Collector.java', 'telemetry/memory.py',
                 'telemetry/resources.py', 'telemetry/traffic.py', 'telemetry/delivery.py', 'telemetry/native.py'}
 SOURCE_DIRS = {'app', 'k6', 'fixtures', 'docker'}
@@ -98,7 +98,7 @@ def build_identity(run, *, profile=None, generator=None):
     if set(containers) != {'app', 'mysql', 'collector'}:
         raise ValueError('Runtime container identity is incomplete')
     containers['k6'] = generator or read(run / 'generator.json')
-    values = {'schema': 1, 'profile': profile_identity(profile),
+    values = {'schema': 2, 'profile': profile_identity(profile),
               'sources': source_identity(run), 'dependenciesSha256': digest(dependencies),
               'fixturesSha256': digest(read(run / 'fixtures/fixture-manifest.json')),
               'runtime': runtime, 'application': application, 'containers': containers,

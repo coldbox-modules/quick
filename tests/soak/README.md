@@ -550,3 +550,15 @@ healthy, held-connection, wrong-contract and sustained-latency cases passed thei
 specific checks. The overall run remains failed. Hosted runners in these probes
 reported EPYC 9V45, 9V74 and 7763 models; their recorded measurement identities
 remain distinct. Full capacity and baseline evidence must resolve this variance.
+
+The first native runs confirmed the required failure directions: `36213861303`
+(soak failure) passed the downloaded-evidence verifier; `36213859780`
+(functional failure) and `36213862382` (explicit cancellation) removed owned
+resources and preserved JFR but failed the probe's signal-receipt check. The
+runner signaled the shell entry process, so the observation step now uses
+`exec python3` and immediately hands cancellation to its independently supervised
+controller. The always-run cleanup step waits for completion. This follows
+[GitHub's documented cancellation signal sequence](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-cancellation).
+The original incomplete proofs remain retained. Also, whole-workflow cancellation
+can mark an unstarted publication job `cancelled`; verification requires that it
+has no executed steps and no publication-stub artifact.

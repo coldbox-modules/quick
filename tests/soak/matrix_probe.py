@@ -59,13 +59,15 @@ def child(output):
     return code
 
 
-def stop(output):
+def stop(output, *, wait=True):
     process = read(output / 'process.json')
     if process and not (output / 'exit.json').exists():
         try:
             os.kill(process['pid'], signal.SIGTERM)
         except ProcessLookupError:
             pass
+    if not wait:
+        return
     deadline = time.monotonic() + 90
     while process and not (output / 'exit.json').exists() and time.monotonic() < deadline:
         time.sleep(1)
@@ -96,6 +98,7 @@ def observe(output):
     def cancel(signum, frame):
         raise KeyboardInterrupt('Native matrix cancellation')
     signal.signal(signal.SIGTERM, cancel)
+    canceled = False
     try:
         deadline = time.monotonic() + 1200
         while time.monotonic() < deadline:
@@ -105,6 +108,7 @@ def observe(output):
             time.sleep(1)
         raise RuntimeError('Soak observation deadline exceeded')
     except KeyboardInterrupt:
+        canceled = True
         write(output / 'native-signal.json', {'received': True, 'time': time.time()})
         return 130
     finally:
@@ -112,7 +116,9 @@ def observe(output):
         # handoff to the independent controller's bounded cleanup.
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-        stop(output)
+        # Exit within the runner's 7.5-second SIGINT grace period. The always
+        # cleanup step waits for the independently supervised controller.
+        stop(output, wait=not canceled)
 
 
 def functional(output):
@@ -179,6 +185,16 @@ def verify_cleanup(output):
     return 0 if report['passed'] else 1
 
 
+def publication_blocked(job, selected):
+    if selected == 'all-pass':
+        return job['conclusion'] == 'success'
+    if selected == 'explicit-cancel':
+        # GitHub marks an unstarted dependent job cancelled on whole-workflow
+        # cancellation. Require no executed steps as well as no stub artifact.
+        return job['conclusion'] in ('skipped', 'cancelled') and not job['steps']
+    return job['conclusion'] == 'skipped' and not job['steps']
+
+
 def verify_remote(output, run_id):
     selected = mode()
     repository = 'coldbox-modules/quick'
@@ -196,7 +212,7 @@ def verify_remote(output, run_id):
     checks = {'workflowConclusion': metadata['conclusion'] == ('success' if selected == 'all-pass' else 'cancelled' if selected == 'explicit-cancel' else 'failure'),
               'soakConclusion': by_name['probe / soak']['conclusion'] == expected[0],
               'functionalConclusion': by_name['probe / functional-stub']['conclusion'] == expected[1],
-              'publicationGated': by_name['Publication stub (no provider calls)']['conclusion'] == ('success' if selected == 'all-pass' else 'skipped')}
+              'publicationGated': publication_blocked(by_name['Publication stub (no provider calls)'], selected)}
     def artifact(name):
         found = list((output / 'artifacts').rglob(name))
         if len(found) != 1:

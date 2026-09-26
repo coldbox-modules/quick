@@ -49,7 +49,7 @@ jobs:
         run: python3 tests/soak/matrix_probe.py launch --output tests/results/soak/matrix-probe
       - name: Observe live soak
         if: matrix.kind == 'soak'
-        run: python3 tests/soak/matrix_probe.py observe --output tests/results/soak/matrix-probe
+        run: exec python3 tests/soak/matrix_probe.py observe --output tests/results/soak/matrix-probe
       - name: Keep functional stub live or fail after soak readiness
         if: matrix.kind == 'functional-stub'
         env:

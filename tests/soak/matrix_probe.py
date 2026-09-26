@@ -236,6 +236,10 @@ def verify_remote(output, run_id):
     if stubs:
         stub = read(stubs[0])
         checks['noActualPublication'] = stub.get('published') is False and stub.get('stubExecuted') is True and stub.get('candidateSha') == metadata['head_sha']
+        checks['allValidationFinishedBeforePublication'] = max(
+            datetime.datetime.fromisoformat(by_name[name]['completed_at'].replace('Z', '+00:00'))
+            for name in ('probe / soak', 'probe / functional-stub')) <= datetime.datetime.fromisoformat(
+                by_name['Publication stub (no provider calls)']['started_at'].replace('Z', '+00:00'))
         if 'packageSha256' in stub:
             manifest = artifact('package-manifest.json')
             checks['transportedPackageIdentity'] = (stub['packageCandidateSha'] == manifest['candidateSha']

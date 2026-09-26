@@ -78,6 +78,7 @@ def serialization(evidence):
               'sameHarnessCommit': first['workflowSha'] == second['workflowSha'],
               'workflowsOverlapped': max(row['workflowStarted'] for row in records) < min(row['workflowFinished'] for row in records),
               'providerGuardJobsDidNotOverlap': first['guardFinished'] <= second['guardStarted'],
+              'validationCompletedBeforeEachGuard': all(row['validationFinished'] <= row['guardStarted'] for row in records),
               'secondReadyWhileFirstGuardHeld': second['validationFinished'] < first['guardFinished'],
               'stubBodiesDidNotOverlap': first['stub']['guardFinishedAt'] <= second['stub']['guardStartedAt'],
               'sameTestedPackage': first['stub']['packageSha256'] == second['stub']['packageSha256'],

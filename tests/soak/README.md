@@ -1636,8 +1636,14 @@ reanalysis, the reanalysis helper source and GitHub provenance. Every one of its
 1,953 source files was read back from the archive and SHA-256 verified. The
 106,316,566-byte bundle has SHA-256
 `22eb95f8fdc39b5ea2a47c2abddd7883cdec33c79216070aca531f2707dd1343`.
-It is prepared locally; durable remote storage and baseline acceptance remain
-pending. Actions artifact expiry is retained in `github-provenance.json`.
+The bundle, manifest, provenance and local archive verification are also retained
+in [draft evidence release 397309485](https://github.com/coldbox-modules/quick/releases/tag/untagged-c6b000fea7b0cccd7997).
+`remote-verification.json` records matching SHA-256 values for all four downloaded
+assets and GitHub digests, the exact measured target commit, and unchanged latest
+product release v13.0.4. The bundle asset ID is `591005637`. The draft is a retained
+remote copy requiring repository permission; it remains editable and does not
+accept a baseline or publish Quick. Actions artifact expiry remains recorded in
+`github-provenance.json`.
 
 Independent calibration `36254251872` was dispatched once on the same standard
 runner label to measure between-host variation with v12. Before dispatch,

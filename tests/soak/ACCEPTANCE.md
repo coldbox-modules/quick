@@ -67,7 +67,7 @@ records the original run SHA and artifact digests and retention dates.
 
 Current CI handles, checked on 2026-09-26:
 
-- [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): running the corrected controller; no full trial verified yet.
+- [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): capacity selection passed; the first full-trial step started at 15:57:59 UTC with the corrected controller. No full trial verified yet.
 - [V12 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36252126235): measurement and saturation jobs passed and raw evidence reanalyzed; application diagnostics running.
 - [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): terminal failure after one full, inconclusive trial; raw diagnosis retained.
 - [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): terminal failure after its first full trial repeated the idle-transition telemetry gap; complete raw diagnosis retained.

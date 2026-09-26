@@ -115,7 +115,7 @@ recorded under **Native matrix cancellation proof** below.
 
 ## Memory measurement method
 
-Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v11
+Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v12
 runtime uses generational ZGC with a fixed periodic major collection interval,
 identically in baseline and candidate. The pilot uses a 256 MiB heap and a
 five-second major interval to validate detection cheaply. The application uses
@@ -448,15 +448,15 @@ tests separately prove rejection when provider state invalidates preparation.
 
 ## Remaining acceptance work
 
-- Complete v11 calibration on the standard GitHub runner with 25/50/100-row
-  reports and 30-comment hot-post fanout. Run `36246554787` has entered the full
-  trial step; independent run `36248290534` is measuring capacity on a fresh
-  Neoverse-N2 runner. No full trial has been verified yet. The repeated v10
-  capacity rejection remains part of the evidence.
-- Matching v11 diagnostics in `36246858832` passed completely, including
-  measurement, saturation, all application fault cases, controller cancellation
-  and observer loss. Retain their raw evidence for baseline review alongside
-  every unsuccessful attempt; diagnostic success is not full-trial qualification.
+- Complete fresh v12 calibration with continuous observation on the standard
+  GitHub runner. V11 trial `36246554787` completed all 14,401 journeys and passed
+  retained-memory checks, but a 15.222-second application telemetry gap made
+  resources inconclusive. Its failed evidence is retained. Independent v11 run
+  `36248290534` remains in its first full trial.
+- Verify matching v12 diagnostics after the controller timing change. V11
+  diagnostics `36246858832` passed completely, including measurement, saturation,
+  all application faults, cancellation and observer loss. Retain every attempt;
+  those results do not establish v12 or full-trial qualification.
 - Run three full healthy CI trials, investigate noise and hosted-runner variance,
   establish a justified reference, and review an accepted baseline manifest.
 - Integrate verified immutable promotion under repository-wide publication
@@ -1452,3 +1452,30 @@ the original runner, not repeated against the local Docker daemon.
 Together with the previously reanalyzed measurement and saturation artifacts,
 this completes matching v11 detector proof. Full calibration, accepted baselines
 and the native full release-matrix proofs remain outstanding.
+
+### V11 full-trial result and v12 continuous observation
+
+Run `36246554787` selected 6 journeys/second from a clean 10/second capacity step
+on Neoverse-N2. Its first full trial completed 14,401/14,401 plateau journeys,
+including the permitted completed boundary arrival. Traffic passed; retained
+memory passed with 155 usable major cycles and 36 MiB late-versus-early growth,
+below the unchanged 307.2 MiB band. Raw reanalysis reproduces traffic, memory and
+resource results exactly in `ci-36246554787/raw-trial-diagnosis.json`.
+
+The trial remains inconclusive: one application observation gap was 15.222 seconds
+against the declared 15-second maximum. Every other gap was at most 10.020 seconds.
+The gap ended at idle start, after 5.146 seconds of synchronous traffic-file
+analysis followed the normal ten-second sample interval. The controller now
+starts idle observation immediately after successful generation and defers full
+traffic analysis until idle sampling and final diagnostics finish. Failed
+generation is still classified and aborted promptly. Delivery classification
+uses the original workload observations, excluding subsequent quiet idle samples.
+
+The regression test inserts a 20-second analyzer delay: it reproduces the exact
+telemetry-gap failure on the old controller and passes on the corrected one. It
+also verifies immediate failed-generator handling and unchanged delivery inputs.
+All 123 telemetry tests and 57 release tests pass, with Pyflakes clean. The new
+standard and parallel profile IDs are v12; resource budgets, workload, schedule,
+sample floors and thresholds are unchanged. Controller identity changed, so
+fresh calibration and matching diagnostics are required. The live local
+development check is `development-v12-cadence-20260926/`.

@@ -371,21 +371,13 @@ class Controller:
             time.sleep(max(0, sample_started + w["sampleSeconds"] - time.monotonic()))
         self.docker("logs", self.generator, log="k6.log")
         self.timing["generatorEndedMs"] = int(time.time() * 1000)
-        with (self.out / "k6.ndjson").open() as stream:
-            traffic = evaluate_traffic((json.loads(line) for line in stream if line.strip()), w, self.latency_baseline)
-        write_json(self.out / "traffic-analysis.json", traffic)
-        self.timing["warmupStartMs"] = traffic["phaseStartsMs"].get("warmup")
-        self.timing["phaseStartsMs"] = traffic["phaseStartsMs"]
         write_json(self.out / "timing.json", self.timing)
         state = self.inspect(self.generator)["State"]
+        # Freeze workload observations before idle so its quiet samples cannot
+        # dilute CPU pressure used to attribute incomplete delivery.
         observations = [json.loads(line) for line in (self.out / "observations.ndjson").read_text().splitlines()]
-        delivery = evaluate_delivery(traffic, observations, self.profile, state)
-        write_json(self.out / "delivery-analysis.json", delivery)
         if state["ExitCode"] != 0 or state["OOMKilled"]:
-            reason = "; ".join(delivery["reasons"])
-            if delivery["status"] == "failed":
-                raise RuntimeError(reason)
-            raise Inconclusive(reason)
+            self.analyze_traffic(state, observations)  # Classify and abort failed generation promptly.
         self.summary["state"] = "idle-observation"
         self.timing["idleStartedMs"] = int(time.time() * 1000)
         write_json(self.out / "timing.json", self.timing)
@@ -399,6 +391,9 @@ class Controller:
         self.timing["idleFinishedMs"] = int(time.time() * 1000)
         write_json(self.out / "timing.json", self.timing)
         write_json(self.out / "final-diagnostics.json", final)
+        # A full traffic file takes seconds to analyze. Keep that work outside
+        # the observation interval so it cannot interrupt application sampling.
+        delivery = self.analyze_traffic(state, observations)
         self.summary.update(status="development-passed" if self.args.development else "inconclusive", state="complete",
                             reasons=[] if self.args.development else ["accepted-baseline-and-profile-qualification-required"])
         if delivery["status"] != "passed":
@@ -407,6 +402,23 @@ class Controller:
             if final[field] != 0:
                 self.summary["status"] = "failed"
                 self.summary["reasons"].append("final-resource-not-released:" + field)
+
+    def analyze_traffic(self, state, observations):
+        with (self.out / "k6.ndjson").open() as stream:
+            traffic = evaluate_traffic((json.loads(line) for line in stream if line.strip()),
+                                       self.profile["workload"], self.latency_baseline)
+        write_json(self.out / "traffic-analysis.json", traffic)
+        self.timing["warmupStartMs"] = traffic["phaseStartsMs"].get("warmup")
+        self.timing["phaseStartsMs"] = traffic["phaseStartsMs"]
+        write_json(self.out / "timing.json", self.timing)
+        delivery = evaluate_delivery(traffic, observations, self.profile, state)
+        write_json(self.out / "delivery-analysis.json", delivery)
+        if state["ExitCode"] != 0 or state["OOMKilled"]:
+            reason = "; ".join(delivery["reasons"])
+            if delivery["status"] == "failed":
+                raise RuntimeError(reason)
+            raise Inconclusive(reason)
+        return delivery
 
     def analyze_resources(self):
         if self.summary.get("state") != "complete":

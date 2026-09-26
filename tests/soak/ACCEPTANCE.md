@@ -5,13 +5,16 @@ Current assessment: **incomplete**. This checklist maps the numbered
 remaining acceptance work. It is an evidence index, not an accepted baseline.
 See [README.md](README.md) for commands and the retained calibration history.
 
-The current standard profile is v11: Lucee 6, ColdBox 8, Java 21, MySQL,
+The current standard profile is v12: Lucee 6, ColdBox 8, Java 21, MySQL,
 serial eager loading, 25/50/100-row reports and 30-comment hot-post fanout on
 the standard four-core GitHub ARM runner. The dataset remains 20 teams,
 1,000 users, 10,000 posts, 50,000 comments, 100 tags and 17,144 pivots.
 The 60-minute schedule, exception mix, sample floors and blocking criteria
 remain unchanged. The separate parallel and larger-report profiles are not
 qualified by standard-profile evidence.
+V12 moves traffic-file analysis after idle observation to preserve sampling
+cadence. This changes controller identity and requires fresh calibration and
+matching diagnostics; the retained v11 results below remain prior evidence.
 
 ## Requirements and proof boundaries
 
@@ -41,6 +44,8 @@ GitHub Actions artifacts have finite retention.
 | `ci-36246858832-application/raw-evidence-verification.json` | All five v11 application cases match raw k6 reanalysis, with flushed JVM data and final JFR present. Original CI checks passed malformed HTTP contracts, controller cancellation, observer loss and owned-resource cleanup. |
 | `ci-36245768374-application/raw-evidence-verification.json` | All five v10 application cases match raw k6 reanalysis. Original CI checks passed HTTP contracts, controller cancellation and observer loss. This is historical v10 evidence. |
 | `ci-36244968012/` | Repeated v10 capacity was ineligible after graph latency degradation. The failed attempt remains retained and is not replaced by an earlier eligible result. |
+| `ci-36246554787/raw-trial-diagnosis.json` | V11 full trial at 6 journeys/second completed 14,401/14,401 journeys and passed retained memory. One 15.222-second telemetry gap at idle transition made resources inconclusive. Raw reanalysis exactly matches all assessments; the trial is not accepted. |
+| `controller-cadence-regression-20260926/` | The delayed-analysis regression reproduces that gap on the old controller and passes after the v12 change. All 123 telemetry and 57 release tests pass. Live v12 evidence remains required. |
 | `ci-36248290534-runner/` | Independent v11 host identity: four-core Neoverse-N2, Ubuntu ARM image `20260920.129.1`. This proves identity, not workload completion. |
 | `diagnostic-archive-v11-36246858832/archive-verification.json` | Local archive contains all three v11 diagnostic artifacts, raw reanalysis and GitHub provenance. All 1,908 files passed SHA-256 archive readback verification. This prepares diagnostic evidence for durable storage; it does not establish remote archival. |
 
@@ -52,14 +57,15 @@ records the original run SHA and artifact digests and retention dates.
 
 Current CI handles, checked on 2026-09-26:
 
-- [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): full-trial step running; no full trial verified yet.
+- [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): terminal failure after one full, inconclusive trial; raw diagnosis retained.
 - [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): first full-trial step started at 14:50:31 UTC on another standard runner; no full trial verified yet.
 - [V11 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36246858832): all three jobs passed; measurement, saturation and application raw evidence independently reanalyzed.
 
 ## Acceptance order
 
-1. Inspect complete raw evidence from both current calibration attempts. Retain
-   failures and partial runs alongside the verified matching diagnostic suite.
+1. Run fresh v12 calibration and matching diagnostics after the cadence fix.
+   Inspect complete raw evidence and retain every failure or partial run. Keep
+   the independent v11 result as evidence of the earlier controller behavior.
 2. Establish three healthy full trials, resolve noise and hardware differences,
    archive the evidence durably and review the baseline manifests and budgets.
 3. Execute and verify every staged full-matrix scenario, including no-release

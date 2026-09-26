@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "id": "lucee6-serial-arm64-standard-reports-v11",
+  "id": "lucee6-serial-arm64-continuous-observation-v12",
   "status": "provisional-unaccepted",
   "runner": "ubuntu-24.04-arm",
   "architecture": "arm64",

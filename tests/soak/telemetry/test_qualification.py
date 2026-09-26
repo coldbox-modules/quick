@@ -26,7 +26,7 @@ def reviewed():
                    'url': 'https://example.invalid/review', 'evidenceArchive': 'https://example.invalid/evidence'},
         'latencyBudgetsMs': {key: 200 for key in operations},
         'detectors': {key: {'url': 'https://example.invalid/detector', 'evidenceSha256': 'b'*64}
-                      for key in ('retained-growth', 'wrong-contract', 'held-connection', 'latency', 'saturation')}}
+                      for key in ('retained-growth', 'wrong-contract', 'held-connection', 'latency', 'late-latency', 'saturation')}}
 
 
 class QualificationTests(unittest.TestCase):
@@ -76,10 +76,12 @@ class QualificationTests(unittest.TestCase):
         del data['latencyBudgetsMs']['report_1000']
         with self.assertRaisesRegex(ValueError, 'Every operation'):
             self.load(data)
-        data = reviewed()
-        del data['detectors']['saturation']
-        with self.assertRaisesRegex(ValueError, 'detector evidence'):
-            self.load(data)
+        for detector in reviewed()['detectors']:
+            with self.subTest(detector=detector):
+                data = reviewed()
+                del data['detectors'][detector]
+                with self.assertRaisesRegex(ValueError, 'detector evidence'):
+                    self.load(data)
 
     def test_unbounded_latency_and_development_profiles_block(self):
         for value in (float('nan'), float('inf'), -1, 10001):

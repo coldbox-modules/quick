@@ -60,7 +60,7 @@ def accepted_baseline(path):
     if any(not isinstance(memory[key], (int, float)) or not math.isfinite(memory[key]) or not 0 <= memory[key] <= maximum
            for key in ('baselineBytes', 'noiseBytes')):
         raise ValueError('Invalid calibrated memory reference')
-    required = {'retained-growth', 'wrong-contract', 'held-connection', 'latency', 'saturation'}
+    required = {'retained-growth', 'wrong-contract', 'held-connection', 'latency', 'late-latency', 'saturation'}
     proofs = accepted['detectors']
     if set(proofs) != required or any(not p.get('url', '').startswith('https://') or not SHA256.fullmatch(p.get('evidenceSha256', '')) for p in proofs.values()):
         raise ValueError('Reviewed detector evidence is incomplete')

@@ -617,3 +617,7 @@ actual window counts still decide validity. The full schedule and failure checks
 are unchanged. This workload/resource revision invalidates prior calibration:
 fresh capacity, full trials and detector proofs are required. No v2 baseline is
 accepted, and the release gate remains disabled.
+
+Baseline acceptance requires a separate `late-latency` detector reference as well
+as sustained latency. A passing sustained-fault proof cannot substitute for the
+required final-window behavior. Missing either reference blocks qualification.

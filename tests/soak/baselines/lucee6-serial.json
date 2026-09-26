@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "status": "accepted-catalog",
+  "baselines": [
+    "lucee6-serial-n2-v12.json"
+  ]
+}

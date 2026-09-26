@@ -1,9 +1,9 @@
 # Release soak harness
 
 Implementation of [the release soak plan](../../docs/release-soak-testing-plan.md).
-This is under construction. The required release gate is **not enabled** and no
-accepted baseline exists yet. A short local pilot or HTTP smoke pass does not
-qualify a package for publication.
+The required release gate is **not enabled**. The standard N2 cohort has a
+[reviewed baseline](baselines/REVIEW.md); full native integration proofs remain.
+A short local pilot or HTTP smoke pass does not qualify a package for publication.
 The [acceptance checklist](ACCEPTANCE.md) maps all nine plan items to current
 evidence and outstanding requirements.
 
@@ -23,8 +23,8 @@ uses the host Docker architecture, 5 journeys/second for a three-minute plateau,
 five minutes of warmup, and 15 seconds each of ramp, recovery, and idle observation. Setup and
 bounded drain add time. It cannot qualify a release or establish a CI baseline.
 
-The default profile declares the full 60-minute schedule and provisional CI
-budgets. Its repository rate remains unaccepted. Without `--development`, this
+The default profile declares the full 60-minute schedule and reviewed N2 CI
+budgets at 6 journeys/second. Without `--development`, this
 diagnostic command can collect that schedule but cannot qualify a release.
 Accepted-baseline comparisons and receipts use the separate `qualification.py`
 entry point described below; ordinary diagnostic runs never become release passes.
@@ -198,16 +198,15 @@ The pilot's 16 MiB detector threshold and ten-second windows are detector-test
 inputs. They are not accepted release thresholds. The application analyzer now applies early/late ten-minute medians, five-minute
 windows, a minimum 20-minute reclamation span, sustained and late growth rules,
 and unsettled-reference checks. It can compare calibrated noise and absolute
-baseline occupancy through `qualification.py`, but no accepted reference exists
-yet. The short development plateau correctly leaves this
-memory assessment inconclusive.
+baseline occupancy through `qualification.py` and the reviewed N2 reference.
+The short development plateau correctly leaves this memory assessment inconclusive.
 
 The resource analyzer checks telemetry coverage, stable lifecycle identity,
 declared heap/pool/cache/OS bounds, sustained container headroom, stop-the-world
 GC pause windows, and idle connection/queue/scratch recovery. It compares idle
-threads and descriptors with the early plateau. Profile `limits` are provisional
-engineering bounds requiring CI calibration; they are not measured healthy-run
-limits. RSS and total concurrent collection elapsed time do not substitute for
+threads and descriptors with the early plateau. The standard N2 profile limits
+are reviewed against all six healthy full trials; optional profile limits remain
+provisional pending their own calibration. RSS and total concurrent collection elapsed time do not substitute for
 retained heap or stop-the-world pauses.
 
 ```sh
@@ -252,7 +251,7 @@ readiness. Diagnostics record worker activity, completed tasks, and queue depth;
 resource analysis requires actual worker completions during sustained traffic
 and zero active/queued work after drain. Serial and parallel measurements have
 different profile identities and require separate calibration and acceptance.
-Neither profile has an accepted release baseline yet. The first live opt-in run
+The serial N2 cohort has a reviewed baseline; this optional parallel profile does not. The first live opt-in run
 (`tests/results/soak/parallel-bounded-20260925`, pinned Quick `af2c93d`) loaded
 four-worker/64-queue settings but failed its first graph request with
 `QuickParallelEagerLoadingException: Datasource [quick_soak] doesn't exist`.
@@ -362,11 +361,14 @@ the directory publisher behind the new gate.
 
 `qualification.py --baseline ACCEPTED_JSON --profile PROFILE_JSON --package
 PREPARED_DIRECTORY --candidate FULL_SHA` is the explicit candidate gate entry
-point. There is no accepted baseline checked in yet. It requires a reviewed
+point. `baselines/lucee6-serial.json` selects the reviewed N2 baseline. It requires a reviewed
 proposal with three distinct sealed CI trials, durable evidence and detector
 references, and an absolute budget for every operation. It verifies matching
 measurement inputs before load, applies the accepted latency and memory
-references, and verifies the generator again after the complete run. Only all
+references, and verifies the generator again after the complete run. Explicit
+latency-noise resolutions preserve the original proposal and require a rationale
+and hashed evidence for every finding. They cannot resolve memory-growth findings
+or change the traffic analyzer thresholds. Only all
 passing assessments can produce `qualification.json`; its receipt binds the
 candidate SHA, exact ZIP, accepted-baseline checksum, and raw evidence. Promotion
 must call `verify_qualification` after downloading the artifacts. A missing
@@ -535,28 +537,25 @@ tests separately prove rejection when provider state invalidates preparation.
 
 ## Remaining acceptance work
 
-- Complete fresh v12 calibration with continuous observation on the standard
-  GitHub runner. V11 trial `36246554787` completed all 14,401 journeys and passed
-  retained-memory checks, but a 15.222-second application telemetry gap made
-  resources inconclusive. Independent v11 run `36248290534` reproduced that
-  outcome with a 15.239-second gap. Both inconclusive trials remain retained.
-  Primary v12 run `36252125924` is in its first full trial; independent host
-  calibration `36254251872` uses the same measured source and profile.
-- Review the completed v12 diagnostic evidence alongside full-trial results
-  before accepting a baseline. Run `36252126235` passed measurement, saturation,
-  all application faults, cancellation and observer loss; independent raw
-  reanalysis matches. Short diagnostic results do not establish full-trial
-  qualification, and every earlier attempt remains retained.
-- Run three full healthy CI trials, investigate noise and hosted-runner variance,
-  establish a justified reference, and review an accepted baseline manifest.
-- Integrate verified immutable promotion under repository-wide publication
-  concurrency, including full validation of candidates that require no release.
-- Enable exactly one soak row in the release-only fail-fast matrix **after**
-  baseline acceptance, preserve all 23 functional rows, reuse the verified native
-  cancellation handoff, and verify the full release matrix with a publication
-  stub. The two-row diagnostic all-pass proof has passed (`36218396157`).
-- Deliver full reports and final acceptance evidence. No milestone above can be
-  substituted by the short pilot or by the fake-publisher unit tests.
+The original primary v12 proposal is now explicitly reviewed and accepted for
+its measured N2 cohort. All six full-hour trials replay successfully against
+its unchanged latency and memory limits. The original latency warning remains
+recorded and resolved through [the review](baselines/REVIEW.md), with durable
+hashed evidence and matching detector references. Neither calibration job's
+original proposal rejection is rewritten.
+
+- Run the full 23-row TestBox matrix plus one exact-package qualification row.
+- Verify both fail-fast directions, explicit cancellation, no-release validation,
+  and two overlapping all-pass runs using the native publication guard.
+- Enable the staged release workflow only after those proofs pass, preserving
+  all 23 functional rows, one soak row, existing triggers and skip semantics.
+- Deliver the accepted manifests, full reports, promotion/cancellation evidence,
+  and final requirement-by-requirement audit. Product publication remains a
+  separate normal release action.
+
+Unknown runner hardware or images still require matching calibration. Optional
+parallel and larger-report profiles remain unaccepted. Short development runs
+and fake-publisher unit tests cannot replace the required native proofs.
 
 ## Local milestone evidence (2026-09-25)
 
@@ -1776,3 +1775,22 @@ evidence release `397323222`. Local evidence and archive manifests are under
 verified files. All five new assets also pass remote downloaded-byte hashing
 against both local files and GitHub digests (`remote-verification.json`).
 No baseline is accepted and the release gate remains disabled.
+
+### Reviewed N2 baseline and preserved latency warnings
+
+`baselines/lucee6-serial.json` is an accepted catalog selecting
+`lucee6-serial-n2-v12.json`. Its [review](baselines/REVIEW.md) records the original
+primary three-trial proposal, independent-host observations, every absolute
+endpoint budget, memory/resource bounds and all six detector references.
+The report-100 noise finding remains in the original proposal and has an explicit
+hashed resolution in the review metadata. Unknown or missing resolutions and
+memory-growth findings cannot use this latency-only review path.
+
+`review_baseline.py --proposal PROPOSAL --trials PRIMARY_1 PRIMARY_2 PRIMARY_3
+INDEPENDENT_1 INDEPENDENT_2 INDEPENDENT_3 --output NEW_JSON` reproduces the primary
+proposal exactly, reanalyzes all raw trials and replays unchanged latency and
+memory references. It cannot accept a baseline or create a candidate receipt.
+The six-trial review, review document and sources pass remote downloaded-byte
+verification, as do three direct detector-review records. Evidence is under
+`baseline-review-v12/`; 129 telemetry/calibration and 61 release tests pass.
+The live release gate remains disabled pending full native integration proof.

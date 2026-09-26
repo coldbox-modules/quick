@@ -25,6 +25,32 @@ QUALIFICATION_EVIDENCE = tuple(name for name in EVIDENCE if name != 'capacity-re
 SHA256 = re.compile(r'[0-9a-f]{64}')
 
 
+def reviewed_investigations(proposal, review):
+    """Keep warning evidence intact while requiring an explicit reviewed disposition.
+
+    This path only resolves latency-noise investigations. It cannot change the
+    traffic analyzer's warning/blocking bands or resolve retained-growth risks.
+    """
+    investigations = proposal['investigations']
+    resolutions = review.get('investigationResolutions', {})
+    expected_status = 'needs-investigation' if investigations else 'proposed-for-review'
+    if (proposal['status'] != expected_status or proposal['accepted'] or proposal['releaseQualified']
+            or not isinstance(resolutions, dict) or set(resolutions) != set(investigations)
+            or len(set(investigations)) != len(investigations)):
+        raise ValueError('Baseline investigations require complete explicit review')
+    prefix = 'run-to-run-p95-noise-exceeds-ten-percent:'
+    for finding in investigations:
+        resolution = resolutions[finding]
+        operation = finding.removeprefix(prefix)
+        if (not finding.startswith(prefix) or operation not in proposal['latency']
+                or not isinstance(resolution, dict)
+                or resolution.get('disposition') != 'retain-warning-with-unchanged-gates'
+                or not isinstance(resolution.get('rationale'), str) or not resolution['rationale'].strip()
+                or not resolution.get('evidenceUrl', '').startswith('https://')
+                or not SHA256.fullmatch(resolution.get('evidenceSha256', ''))):
+            raise ValueError('Baseline investigations need supported, evidence-backed latency review')
+
+
 def accepted_baseline(path):
     accepted = read(path)
     if accepted.get('schema') != 1 or accepted.get('status') != 'accepted':
@@ -38,8 +64,7 @@ def accepted_baseline(path):
     proposal = accepted['proposal']
     if digest(proposal) != accepted['proposalSha256']:
         raise ValueError('Reviewed baseline proposal changed')
-    if proposal['status'] != 'proposed-for-review' or proposal['investigations'] or proposal['accepted'] or proposal['releaseQualified']:
-        raise ValueError('Baseline investigations must be resolved before acceptance')
+    reviewed_investigations(proposal, review)
     trials = proposal['trials']
     if len(trials) != 3 or any(len({item[key] for item in trials}) != 3 for key in ('runId', 'bootId', 'jvmStart')):
         raise ValueError('Three distinct complete baseline trials are required')

@@ -158,6 +158,55 @@ class QualificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'proposal changed'):
             self.load(data)
 
+    def latency_noise_review(self):
+        data = copy.deepcopy(reviewed())
+        finding = 'run-to-run-p95-noise-exceeds-ten-percent:report_100'
+        data['proposal']['status'] = 'needs-investigation'
+        data['proposal']['investigations'] = [finding]
+        data['proposalSha256'] = digest(data['proposal'])
+        data['review']['investigationResolutions'] = {finding: {
+            'disposition': 'retain-warning-with-unchanged-gates',
+            'rationale': 'Independent healthy trials pass unchanged blocking bands; retain measured warnings.',
+            'evidenceUrl': 'https://example.invalid/raw-noise-review',
+            'evidenceSha256': 'c' * 64}}
+        return data, finding
+
+    def test_explicit_latency_review_preserves_warning_and_proposal(self):
+        data, finding = self.latency_noise_review()
+        result = self.load(data)
+        self.assertEqual(result['proposal'], data['proposal'])
+        self.assertEqual(result['proposal']['investigations'], [finding])
+        self.assertEqual(result['proposal']['status'], 'needs-investigation')
+        self.assertFalse(result['proposal']['releaseQualified'])
+
+    def test_latency_review_rejects_missing_extra_or_unsupported_resolutions(self):
+        for mutation in ('missing', 'extra', 'memory', 'unknown-operation', 'wrong-status'):
+            with self.subTest(mutation=mutation):
+                data, finding = self.latency_noise_review()
+                resolutions = data['review']['investigationResolutions']
+                if mutation == 'missing':
+                    resolutions.clear()
+                elif mutation == 'extra':
+                    resolutions['unobserved'] = resolutions[finding]
+                elif mutation in ('memory', 'unknown-operation'):
+                    new = ('healthy-retained-growth-requires-investigation' if mutation == 'memory'
+                           else 'run-to-run-p95-noise-exceeds-ten-percent:unobserved')
+                    data['proposal']['investigations'] = [new]
+                    resolutions[new] = resolutions.pop(finding)
+                else:
+                    data['proposal']['status'] = 'proposed-for-review'
+                data['proposalSha256'] = digest(data['proposal'])
+                with self.assertRaisesRegex(ValueError, 'investigations'):
+                    self.load(data)
+
+    def test_latency_review_requires_evidence_and_unchanged_gate_disposition(self):
+        for field in ('disposition', 'rationale', 'evidenceUrl', 'evidenceSha256'):
+            with self.subTest(field=field):
+                data, finding = self.latency_noise_review()
+                data['review']['investigationResolutions'][finding][field] = ''
+                with self.assertRaisesRegex(ValueError, 'investigations'):
+                    self.load(data)
+
     def test_unresolved_noise_cannot_be_accepted_by_status_alone(self):
         data = reviewed()
         data['proposal']['investigations'] = ['run-to-run-noise']

@@ -1071,3 +1071,19 @@ Resource budgets, the 60-minute schedule, sample floors, latency/memory rules,
 and the 60%-of-clean capacity policy are unchanged. Fresh capacity, three full
 trials and detector proofs are required before acceptance. No previous v8 pass
 is reused as a v9 baseline, and the live release gate remains disabled.
+
+The local `development-v9-fixture-20260926` run completed all 900 offered
+plateau journeys with traffic/resources passing. Its real MySQL query confirms
+45,000 Post comments, 5,000 User comments, 60 comments on the hot post and zero
+on the empty post. `development-verification.json` verifies the declared fanout,
+final recording, clean collector end marker and removal of owned containers,
+named/anonymous volumes and network. Memory remains inconclusive for the short
+development schedule. The earlier `development-v9-20260926` attempt supplied a
+mistyped candidate SHA and stopped before provisioning; it is retained separately.
+
+V9 CI calibration `36241479101` and diagnostics `36241478992` test commit
+`cc695d76f3ba9eeaf19c9f8f3b756a2a893c70c7`. The completed measurement artifact
+(`ci-36241478992-measurement/`) confirms healthy memory passed, sustained retained
+growth failed, late growth was inconclusive, and live cancellation stopped both
+children while retaining partial evidence. Capacity, full trials and application
+detector results remain pending; this completed job is not a full workflow pass.

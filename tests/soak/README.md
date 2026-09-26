@@ -1824,3 +1824,16 @@ unexpected functional failure in soak-failure or explicit-cancel modes. Both
 false-acceptance cases reproduce before the fix; all 63 release tests pass after
 it. Proofs are in `full-failure-verifier-20260926/`. This changes only offline
 verification and tests, not the workload, staged workflow or live CI jobs.
+
+### Rejected v11 full trials retained beyond Actions expiry
+
+The original complete v11 artifacts from `36246554787` and `36248290534` are now
+retained in draft evidence release `397323222`, alongside their original reviews
+and analyzer source. All 994 ZIP members match the reviewed downloads and both
+ZIPs match GitHub's original digests. Replaying the archived analyzer reproduces
+both original inconclusive reviews exactly. All five remote assets pass downloaded
+SHA-256/size verification. Evidence is under `retained-v11-full-trials/`.
+
+These two trials remain inconclusive because of the proven idle-transition
+telemetry gaps. The archive preserves failures and investigation history; it
+does not replace them with the six healthy v12 trials or accept them as baselines.

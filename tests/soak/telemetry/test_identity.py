@@ -146,6 +146,26 @@ class IdentityTests(unittest.TestCase):
         historical.pop('fixtures')
         self.assertNotIn('fixtures', profile_identity(historical))
 
+    def test_first_commandbox_initialization_does_not_change_version_identity(self):
+        before = build_identity(self.run)
+        log = self.run / 'seed-commandbox-version.log'
+        log.write_text('Configuring CommandBox home: /home/runner/.CommandBox (change with -CommandBox_home=/path/to/dir)\n'
+                       'Library path: /home/runner/.CommandBox/lib\n'
+                       'Initializing libraries -- this will only happen once, and takes a few seconds...\n'
+                       '...\nLibraries initialized\nCommandBox 6.3.5+00887\n')
+        require_match(before, build_identity(self.run))
+        self.assertIn('Libraries initialized', log.read_text())
+        log.write_text('CommandBox 6.3.6+00999\n')
+        with self.assertRaisesRegex(ValueError, 'recalibration required: seedCommandBox'):
+            require_match(before, build_identity(self.run))
+
+    def test_commandbox_version_must_be_unambiguous(self):
+        for text in ('Libraries initialized\n', 'CommandBox 6.3.5+00887\nCommandBox 6.3.6+00999\n'):
+            with self.subTest(text=text):
+                (self.run / 'seed-commandbox-version.log').write_text(text)
+                with self.assertRaisesRegex(ValueError, 'exactly one seed CommandBox version'):
+                    build_identity(self.run)
+
     def test_full_trial_cannot_be_shortened_or_weakened(self):
         validate_trial_profile(PROFILE)
         for key, value in (('plateauSeconds', 180), ('minimumLatencySamples', 199),

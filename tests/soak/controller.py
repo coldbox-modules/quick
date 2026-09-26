@@ -109,9 +109,13 @@ class Controller:
         return name
 
     def http(self, path, timeout=10, method="GET"):
-        result = self.docker("exec", self.app, "curl", "--fail", "--silent", "--show-error",
-                             "--max-time", str(timeout), "-X", method, "-H", "X-Soak-Token: " + self.env["SOAK_TOKEN"],
-                             "http://127.0.0.1:8080" + path, check=False, timeout=timeout + 2)
+        try:
+            result = self.docker("exec", self.app, "curl", "--fail", "--silent", "--show-error",
+                                 "--max-time", str(timeout), "-X", method, "-H", "X-Soak-Token: " + self.env["SOAK_TOKEN"],
+                                 "http://127.0.0.1:8080" + path, check=False, timeout=timeout + 2)
+        except subprocess.TimeoutExpired:
+            # TimeoutExpired renders its argv, including the private HTTP token.
+            raise urllib.error.URLError(f"Diagnostic request exceeded its {timeout + 2}-second process deadline") from None
         if result.returncode:
             raise urllib.error.URLError("Diagnostic request failed: " + result.stderr.decode(errors="replace")[:300])
         return json.loads(result.stdout)

@@ -92,6 +92,8 @@ class SaturationController(Controller):
 def verify(run, role, code):
     injection = read(run / 'saturation-injection.json')
     summary, traffic = read(run / 'summary.json'), read(run / 'traffic-analysis.json')
+    if not traffic:
+        raise ValueError('Controller stopped before traffic analysis; inspect summary.json and observations.ndjson')
     expected = 'inconclusive' if role == 'generator' else 'failed'
     reason = 'delivery-generator-capacity-exhausted' if role == 'generator' else 'delivery-application-overloaded'
     rows = [json.loads(line) for line in (run / 'observations.ndjson').read_text().splitlines()]

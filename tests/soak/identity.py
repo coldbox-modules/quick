@@ -7,6 +7,7 @@ source snapshots remain in the evidence independently of this comparison key.
 import hashlib
 import json
 from pathlib import Path
+import re
 from fixtures.generate import fixture_settings
 
 SOURCE_FILES = {'controller.py', 'Seed.cfc',
@@ -68,6 +69,16 @@ def profile_identity(profile):
     return result
 
 
+def seed_commandbox_identity(path):
+    # The first host invocation prints home/library initialization before the
+    # version. Preserve that raw log as evidence, but compare the actual version.
+    versions = re.findall(r'^CommandBox (\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)\s*$',
+                          path.read_text(), re.MULTILINE)
+    if len(versions) != 1:
+        raise ValueError('Expected exactly one seed CommandBox version')
+    return 'CommandBox ' + versions[0]
+
+
 def cpu_identity(cpu):
     if 'lscpu' not in cpu:
         raise ValueError('CI CPU identity is missing')
@@ -114,7 +125,7 @@ def build_identity(run, *, profile=None, generator=None):
               'host': {'docker': {key: host['docker'][key] for key in DOCKER_FIELDS},
                        'cpu': cpu_identity(host['cpu']), 'runnerImage': host['runnerImage'],
                        'runnerImageVersion': host['runnerImageVersion']},
-              'seedCommandBox': (run / 'seed-commandbox-version.log').read_text().strip()}
+              'seedCommandBox': seed_commandbox_identity(run / 'seed-commandbox-version.log')}
     return {'sha256': digest(values), 'values': values}
 
 

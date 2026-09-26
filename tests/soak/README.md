@@ -1159,3 +1159,28 @@ helper is outside measured-source identity; the existing v10 capacity run remain
 valid for its recorded inputs. `soak-saturation-*` tags run only the saturation
 job in the diagnostic workflow so this controlled-fault correction can be tested
 without restarting healthy calibration or the unrelated detector jobs.
+
+### V10 eligible capacity and setup-identity correction
+
+Calibration `36242953744` measured clean 5/second and 10/second steps, then
+stopped increasing at the unclean 20/second step. Complete collection produced
+an eligible **6 journeys/second** target (60% of 10), 216 expected samples for the
+rarest first-window operation, and a 12-VU double-headroom requirement within
+the declared 100 VUs. This is capacity evidence, not sustained-stability proof.
+
+The first full trial provisioned a fresh application but stopped before workload
+arrivals on `seedCommandBox` identity mismatch. Both runs used
+`CommandBox 6.3.5+00887`; only the first invocation printed its one-time home/library
+initialization banner. Identity now extracts exactly one version line while
+retaining the original raw log. Missing/ambiguous versions are rejected, and real
+version changes still require recalibration. Reanalysis of both actual setup
+identities matches after this correction; the failed trial remains failed in
+`ci-36242953744/`, with a separate `seed-version-identity-reanalysis.json`.
+
+The local quarter-CPU overload probe ended on a diagnostic HTTP process timeout
+before traffic analysis, so it supplies no passing attribution proof. Its raw
+evidence remains in `saturation-v10-quarter-cpu-20260926/`. Diagnostic process
+timeouts now omit authentication headers from exception output; they still fail
+the run. This controller-source change requires fresh calibration and matching
+detector evidence. No workload, resource budget, duration or acceptance threshold
+has changed, and no full baseline trial has completed.

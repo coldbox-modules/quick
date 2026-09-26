@@ -167,10 +167,26 @@ report-latency rule produced an inconclusive result. CI proof is still pending.
 
 `app/` is a separate persistent, sessionless ColdBox application. Its engine is
 Lucee 6.2.8+20, ColdBox is 8.2.0, JDBC is MySQL Connector/J 8.0.33, full-null
-support is enabled, and Quick eager loading is serial. The dedicated server
+support is enabled, and Quick eager loading is serial by default. The dedicated server
 binds to loopback port 60399 when run directly; the container controller uses
 private port 8080. `SOAK_TOKEN` must be at least 32 characters;
 every harness HTTP request requires it in `X-Soak-Token`.
+
+The separate `--profile tests/soak/profiles/lucee6-parallel.json` opt-in profile
+requests parallel eager loading on the relationship graph through Quick's public
+`with(..., true)` API. It uses four workers, a 64-task bounded queue, and an
+8-second worker timeout. The executor is configured once during boot before
+readiness. Diagnostics record worker activity, completed tasks, and queue depth;
+resource analysis requires actual worker completions during sustained traffic
+and zero active/queued work after drain. Serial and parallel measurements have
+different profile identities and require separate calibration and acceptance.
+Neither profile has an accepted release baseline yet. The first live opt-in run
+(`tests/results/soak/parallel-bounded-20260925`, pinned Quick `af2c93d`) loaded
+four-worker/64-queue settings but failed its first graph request with
+`QuickParallelEagerLoadingException: Datasource [quick_soak] doesn't exist`.
+Quick's worker context did not resolve this application's datasource. The run
+retains the actual HTTP 500 and application log; it provides no passing parallel
+coverage. The harness does not replace that failure with a serial fallback.
 
 `fixtures/generate.py OUTPUT_DIRECTORY` generates immutable SQL and a manifest
 for 20 teams, 1,000 users, 10,000 posts, 50,000 polymorphic comments, 100 tags,

@@ -60,6 +60,18 @@ component extends="coldbox.system.EventHandler" {
 		for ( var label in application.soakErrors ) {
 			errors[ label ] = application.soakErrors[ label ].get();
 		}
+		var executorStats = {};
+		if ( application.soakParallel ) {
+			var executor  = getInstance( "AsyncManager@coldbox" ).getExecutor( "quick-parallel-eager-loading" );
+			executorStats = {
+				"maxThreads"    : executor.getMaximumPoolSize(),
+				"poolSize"      : executor.getPoolSize(),
+				"active"        : executor.getActiveCount(),
+				"queued"        : executor.getQueue().size(),
+				"queueCapacity" : application.soakExecutorCapacity,
+				"completed"     : executor.getCompletedTaskCount()
+			};
+		}
 		var runtime = createObject( "java", "java.lang.management.ManagementFactory" ).getRuntimeMXBean();
 		var scratch = queryExecute(
 			"SELECT COUNT(*) AS n FROM posts WHERE owner_token IS NOT NULL",
@@ -69,23 +81,25 @@ component extends="coldbox.system.EventHandler" {
 		json(
 			event,
 			{
-				"appName"             : getSetting( "appName" ),
-				"luceeVersion"        : server.lucee.version,
-				"coldboxVersion"      : controller.getColdBoxVersion(),
-				"exceptionHandler"    : getSetting( "exceptionHandler" ),
-				"bootId"              : application.soakBootId,
-				"applicationStarts"   : application.soakStartCount,
-				"uptimeMs"            : runtime.getUptime(),
-				"pid"                 : runtime.getPid(),
-				"scratchPosts"        : scratch.n[ 1 ],
-				"registry"            : registry.getStats(),
-				"errors"              : errors,
-				"jdbcActive"          : engine.activeDatasourceConnections,
-				"jdbcIdle"            : engine.idleDatasourceConnections,
-				"jdbcWaiting"         : engine.waitingForConn,
-				"activeRequests"      : engine.activeRequests,
-				"queuedRequests"      : engine.queueRequests,
-				"applicationContexts" : engine.applicationContextCount
+				"appName"              : getSetting( "appName" ),
+				"parallelEagerLoading" : application.soakParallel,
+				"executor"             : executorStats,
+				"luceeVersion"         : server.lucee.version,
+				"coldboxVersion"       : controller.getColdBoxVersion(),
+				"exceptionHandler"     : getSetting( "exceptionHandler" ),
+				"bootId"               : application.soakBootId,
+				"applicationStarts"    : application.soakStartCount,
+				"uptimeMs"             : runtime.getUptime(),
+				"pid"                  : runtime.getPid(),
+				"scratchPosts"         : scratch.n[ 1 ],
+				"registry"             : registry.getStats(),
+				"errors"               : errors,
+				"jdbcActive"           : engine.activeDatasourceConnections,
+				"jdbcIdle"             : engine.idleDatasourceConnections,
+				"jdbcWaiting"          : engine.waitingForConn,
+				"activeRequests"       : engine.activeRequests,
+				"queuedRequests"       : engine.queueRequests,
+				"applicationContexts"  : engine.applicationContextCount
 			}
 		);
 	}
@@ -170,7 +184,7 @@ component extends="coldbox.system.EventHandler" {
 		var start      = max( 1, min( 9996, val( rc.start ) ) );
 		var posts      = entity( "Post" )
 			.whereBetween( "id", start, start + 4 )
-			.with( [ "author", "comments.author", "tags" ] )
+			.with( [ "author", "comments.author", "tags" ], application.soakParallel )
 			.orderBy( "id" )
 			.get();
 		json(

@@ -18,7 +18,7 @@ def healthy():
                         threads=44, descriptors=120, metaspaceUsed=70*1024*1024,
                         rssBytes=2000*1024*1024, processCpuTimeNs=t*1000))
         observations.append({'time': t, 'application': dict(bootId='one', applicationStarts=1, uptimeMs=t+1,
-            jdbcActive=0, jdbcIdle=4, jdbcWaiting=0, activeRequests=1, queuedRequests=0, scratchPosts=0,
+            parallelEagerLoading=False, executor={}, jdbcActive=0, jdbcIdle=4, jdbcWaiting=0, activeRequests=1, queuedRequests=0, scratchPosts=0,
             registry=dict(definitionCount=6, derivedBucketCount=6, derivedEntryCount=22), errors={'unexpected':0}),
             'database': dict(queries=t, queryTimePicoseconds=t*100000, locks=0, lockWaits=0),
             'containers': [dict(Name='run-' + role, MemPerc='60%', CPUPerc='10%') for role in ('app','mysql','k6','collector')]})
@@ -121,5 +121,44 @@ class ResourceTests(unittest.TestCase):
         result = self.analyze(jvm, rows, finalized=False)
         self.assertEqual(result['status'], 'passed')
         self.assertIs(result['finalized'], False)
+
+class ParallelResourceTests(unittest.TestCase):
+    def analyze(self, mutation=None):
+        profile = json.loads((Path(__file__).parents[1] / 'profiles/lucee6-parallel.json').read_text())
+        jvm, rows = healthy()
+        for row in rows:
+            row['application'].update(parallelEagerLoading=True, executor=dict(
+                maxThreads=4, poolSize=4, active=0, queued=0, queueCapacity=64, completed=row['time']//1000))
+        if mutation:
+            mutation(rows)
+        return evaluate(jvm, rows, profile, TIMING, plateau_start=PLATEAU)
+
+    def test_parallel_work_completes_and_drains(self):
+        self.assertEqual(self.analyze()['status'], 'passed')
+
+    def test_enabling_module_without_exercising_workers_does_not_pass(self):
+        def mutate(rows):
+            for row in rows: row['application']['executor']['completed'] = 0
+        self.assertIn('parallel-work-not-observed', self.analyze(mutate)['invalid'])
+
+    def test_serial_fallback_does_not_claim_parallel_coverage(self):
+        def mutate(rows):
+            for row in rows: row['application']['parallelEagerLoading'] = False
+        self.assertIn('eager-loading-mode-mismatch', self.analyze(mutate)['invalid'])
+
+    def test_unbounded_executor_or_queue_blocks(self):
+        def mutate(rows):
+            rows[10]['application']['executor']['queueCapacity'] = 2147483647
+        self.assertIn('executor-configuration-mismatch', self.analyze(mutate)['failures'])
+
+    def test_pending_work_at_idle_blocks(self):
+        def mutate(rows):
+            rows[-1]['application']['executor']['queued'] = 1
+        self.assertIn('idle-executor-not-released:queued', self.analyze(mutate)['failures'])
+
+    def test_missing_executor_observation_is_inconclusive(self):
+        def mutate(rows):
+            rows[10]['application']['executor'].pop('completed')
+        self.assertIn('missing-executor-metric', self.analyze(mutate)['invalid'])
 
 if __name__ == '__main__': unittest.main()

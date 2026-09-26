@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "id": "lucee6-parallel-zgc-v1",
+  "status": "provisional-unaccepted",
+  "runner": "ubuntu-24.04",
+  "architecture": "amd64",
+  "runtime": {
+    "lucee": "6.2.8+20",
+    "coldbox": "8.2.0",
+    "java": "21.0.10+7",
+    "jdbc": "8.0.33",
+    "fullNull": true,
+    "parallelEagerLoading": true,
+    "parallelEagerLoadingMaxThreads": 4,
+    "parallelEagerLoadingQueueCapacity": 64,
+    "parallelEagerLoadingTimeout": 8000
+  },
+  "images": {
+    "mysql": "mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b",
+    "k6": "grafana/k6:1.3.0@sha256:3ddc8b1a33a2c3d8edc6e99b6a762ae36cba08788463458f5e6a7703e14eb77d"
+  },
+  "resources": {
+    "application": {
+      "cpus": 2,
+      "memoryMiB": 3072,
+      "heapMiB": 1024,
+      "jdbcPoolLimit": 16
+    },
+    "mysql": {
+      "cpus": 1,
+      "memoryMiB": 768,
+      "maxConnections": 32
+    },
+    "generator": {
+      "cpus": 0.75,
+      "memoryMiB": 512
+    },
+    "collector": {
+      "cpus": 0.25,
+      "memoryMiB": 256
+    }
+  },
+  "workload": {
+    "version": "v1",
+    "seed": 20260925,
+    "rate": 24,
+    "vus": 100,
+    "requestTimeoutSeconds": 10,
+    "drainSeconds": 30,
+    "sampleSeconds": 10,
+    "warmupSeconds": 300,
+    "rampSeconds": 300,
+    "plateauSeconds": 2400,
+    "recoverySeconds": 300,
+    "idleSeconds": 300,
+    "windowSeconds": 300,
+    "minimumFailuresPerCase": 100,
+    "minimumLatencySamples": 200
+  },
+  "acceptedBaseline": null,
+  "limits": {
+    "maxTelemetryGapSeconds": 15,
+    "maxThreads": 256,
+    "maxDescriptors": 1024,
+    "maxMetaspaceMiB": 256,
+    "maxQueuedRequests": 100,
+    "maxActiveRequests": 128,
+    "maxDefinitions": 6,
+    "maxDerivedBuckets": 6,
+    "maxDerivedEntries": 96,
+    "recoveryThreadAllowance": 8,
+    "recoveryDescriptorAllowance": 8
+  },
+  "capacity": {
+    "rates": [
+      5,
+      10,
+      20,
+      40
+    ],
+    "stepSeconds": 180,
+    "idleSeconds": 30
+  }
+}

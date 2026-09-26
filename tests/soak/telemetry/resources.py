@@ -113,6 +113,20 @@ def evaluate(jvm, observations, profile, timing, *, plateau_start, exits=None, f
         boot_ids.add(app['bootId']); starts.add(app['applicationStarts'])
         if app['errors'].get('unexpected', 0):
             failures.append('unexpected-application-exception')
+        if app.get('parallelEagerLoading') is not profile['runtime']['parallelEagerLoading']:
+            invalid.append('eager-loading-mode-mismatch')
+        if profile['runtime']['parallelEagerLoading']:
+            executor = app.get('executor', {})
+            fields = ('maxThreads', 'poolSize', 'active', 'queued', 'queueCapacity', 'completed')
+            if any(type(executor.get(key)) not in (int, float) or not math.isfinite(executor[key]) or executor[key] < 0 for key in fields):
+                invalid.append('missing-executor-metric')
+            else:
+                threads = profile['runtime']['parallelEagerLoadingMaxThreads']
+                capacity = profile['runtime']['parallelEagerLoadingQueueCapacity']
+                if executor['maxThreads'] != threads or executor['queueCapacity'] != capacity:
+                    failures.append('executor-configuration-mismatch')
+                if executor['poolSize'] > threads or executor['active'] > threads or executor['queued'] > capacity:
+                    failures.append('executor-resource-bound')
         pool = profile['resources']['application']['jdbcPoolLimit']
         if app['jdbcActive'] + app['jdbcIdle'] > pool:
             failures.append('jdbc-pool-bound')
@@ -175,8 +189,19 @@ def evaluate(jvm, observations, profile, timing, *, plateau_start, exits=None, f
                 failures.append('idle-resource-not-released:' + field)
         if app.get('activeRequests', 1) > 1:
             failures.append('idle-requests-did-not-drain')
+        if profile['runtime']['parallelEagerLoading']:
+            for field in ('active', 'queued'):
+                if app.get('executor', {}).get(field, 0):
+                    failures.append('idle-executor-not-released:' + field)
         if row.get('database', {}).get('lockWaits', 0):
             failures.append('idle-database-lock-waits')
+    if profile['runtime']['parallelEagerLoading']:
+        parallel_rows = [r['application'].get('executor', {}) for r in app_rows if plateau_start <= r['time'] <= plateau_end]
+        completed = [r['completed'] for r in parallel_rows if isinstance(r.get('completed'), (int, float))]
+        if len(completed) < 2 or completed[-1] <= completed[0]:
+            invalid.append('parallel-work-not-observed')
+        elif any(b < a for a, b in zip(completed, completed[1:])):
+            failures.append('executor-counter-reset')
     reference_end = plateau_start + min(600000, w['plateauSeconds'] * 1000 / 2)
     early = [r for r in samples if plateau_start + w['drainSeconds'] * 1000 <= r['time'] < reference_end]
     idle_jvm = [r for r in samples if idle_start <= r['time'] <= end]

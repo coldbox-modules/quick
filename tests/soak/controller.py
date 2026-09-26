@@ -133,8 +133,12 @@ class Controller:
         p = self.profile
         supported_runtime = {"lucee": "6.2.8+20", "coldbox": "8.2.0", "java": "21.0.10+7",
                              "jdbc": "8.0.33", "fullNull": True, "parallelEagerLoading": False}
-        if p["runtime"] != supported_runtime:
-            raise Inconclusive("This harness revision supports only the recorded Lucee 6 serial runtime")
+        parallel_runtime = {**supported_runtime, "parallelEagerLoading": True,
+                            "parallelEagerLoadingMaxThreads": 4, "parallelEagerLoadingQueueCapacity": 64,
+                            "parallelEagerLoadingTimeout": 8000}
+        if p["runtime"] not in (supported_runtime, parallel_runtime):
+            raise Inconclusive("Unsupported runtime or eager-loading configuration")
+        self.env["SOAK_PARALLEL"] = "true" if p["runtime"]["parallelEagerLoading"] else "false"
         if self.args.development:
             arch = self.docker("info", "--format", "{{.Architecture}}").stdout.decode().strip()
             p["architecture"] = {"aarch64": "arm64", "x86_64": "amd64"}.get(arch, arch)
@@ -246,13 +250,15 @@ class Controller:
             "--cpus", str(resources["application"]["cpus"]), "--memory", f'{resources["application"]["memoryMiB"]}m',
             "--memory-swap", f'{resources["application"]["memoryMiB"]}m',
             "-v", f"{self.out}:/work", "-v", f"{self.prefix}:/app", "-v", f"{app / 'logs'}:/app/logs", "-v", f"{self.out / 'tmp'}:/tmp",
-            "-e", "SOAK_TOKEN", "-e", "SOAK_FAULT_MODE", "-e", "SOAK_FAULT_DELAY_MS", "-e", "SOAK_DB_PASSWORD", "-e", "SOAK_DB_HOST=mysql", "-e", "SOAK_DB_PORT=3306",
+            "-e", "SOAK_TOKEN", "-e", "SOAK_PARALLEL", "-e", "SOAK_FAULT_MODE", "-e", "SOAK_FAULT_DELAY_MS", "-e", "SOAK_DB_PASSWORD", "-e", "SOAK_DB_HOST=mysql", "-e", "SOAK_DB_PORT=3306",
             "-e", "SOAK_DB_POOL_LIMIT=" + str(resources["application"]["jdbcPoolLimit"])], image)
         self.wait_for(self.app, lambda: self.http("/health/ready").get("ready"), 240)
         self.initial_diag = self.http("/diagnostics")
         write_json(self.out / "initial-diagnostics.json", self.initial_diag)
         if self.initial_diag.get("appName") != "Quick release soak" or self.initial_diag.get("exceptionHandler") != "Api.onException":
             raise RuntimeError("The dedicated ColdBox configuration was not loaded")
+        if self.initial_diag.get("parallelEagerLoading") != p["runtime"]["parallelEagerLoading"]:
+            raise RuntimeError("Actual eager-loading mode differs from profile")
         self.app_pid = self.initial_diag["pid"]
         self.observer = self.start_container("collector", ["--pid", "container:" + self.app, "--network", "container:" + self.app,
             "--volumes-from", self.app, "--cpus", str(resources["collector"]["cpus"]), "--memory", f'{resources["collector"]["memoryMiB"]}m'], image,

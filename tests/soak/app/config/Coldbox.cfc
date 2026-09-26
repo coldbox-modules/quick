@@ -21,8 +21,10 @@ component {
 		modules        = { autoReload : false };
 		moduleSettings = {
 			quick : {
-				defaultGrammar       : "MySQLGrammar@qb",
-				parallelEagerLoading : false
+				defaultGrammar                 : "MySQLGrammar@qb",
+				parallelEagerLoading           : application.soakParallel,
+				parallelEagerLoadingMaxThreads : 4,
+				parallelEagerLoadingTimeout    : 8000
 			},
 			mementifier : { convertToTimezone : "UTC" }
 		};

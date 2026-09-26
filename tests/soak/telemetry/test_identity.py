@@ -37,7 +37,7 @@ class IdentityTests(unittest.TestCase):
         runtime = {key: 'fixed-' + key for key in JVM_FIELDS}
         runtime.update(kind='runtime', collectors='ZGC Cycles,ZGC Pauses')
         self.write('jvm/jvm.ndjson', runtime)
-        self.write('initial-diagnostics.json', {'luceeVersion': '6.2.8.20', 'coldboxVersion': '8.2.0+35',
+        self.write('initial-diagnostics.json', {'parallelEagerLoading': False, 'luceeVersion': '6.2.8.20', 'coldboxVersion': '8.2.0+35',
                    'appName': 'Quick release soak', 'exceptionHandler': 'Api.onException'})
         self.write('dependency-files.json', {'coldbox/Controller.cfc': 'hash-a'})
         self.write('dependency-identity.json', {'sha256': sha_file(self.run / 'dependency-files.json')})

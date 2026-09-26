@@ -84,6 +84,9 @@ def build_identity(run, *, profile=None, generator=None):
     runtime = {**{key: runtime[key] for key in JVM_FIELDS}, 'collectors': sorted(runtime['collectors'].split(','))}
     initial = read(run / 'initial-diagnostics.json')
     application = {key: initial[key] for key in ('luceeVersion', 'coldboxVersion', 'appName', 'exceptionHandler')}
+    if initial.get('parallelEagerLoading') is not profile['runtime']['parallelEagerLoading']:
+        raise ValueError('Actual eager-loading mode differs from profile')
+    application['parallelEagerLoading'] = initial['parallelEagerLoading']
     if application['luceeVersion'] != profile['runtime']['lucee'].replace('+', '.'):
         raise ValueError('Installed Lucee version differs from profile')
     dependencies = read(run / 'dependency-files.json')

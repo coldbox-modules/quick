@@ -38,6 +38,7 @@ component {
 			}
 			application.soakStartCount = server.quickSoakStarts.incrementAndGet();
 		}
+		application.soakParallel     = env( "SOAK_PARALLEL", "false" ) == "true";
 		application.soakBootId       = createUUID();
 		application.soakFaultMode    = env( "SOAK_FAULT_MODE", "none" );
 		application.soakFaultStarted = 0;
@@ -65,6 +66,24 @@ component {
 		}
 		application.cbBootstrap = new coldbox.system.Bootstrap( "", getDirectoryFromPath( getCurrentTemplatePath() ) );
 		application.cbBootstrap.loadColdBox();
+		if ( application.soakParallel ) {
+			// Bound both workers and pending work before readiness or workload requests.
+			// Quick owns this executor and shuts down its native pool on unload.
+			var manager = application[ application.cbBootstrap.getCOLDBOX_APP_KEY() ]
+				.getWireBox()
+				.getInstance( "AsyncManager@coldbox" );
+			var executor = manager.getExecutor( "quick-parallel-eager-loading" );
+			var native   = createObject( "java", "java.util.concurrent.ThreadPoolExecutor" ).init(
+				javacast( "int", 4 ),
+				javacast( "int", 4 ),
+				javacast( "long", 0 ),
+				createObject( "java", "java.util.concurrent.TimeUnit" ).SECONDS,
+				createObject( "java", "java.util.concurrent.ArrayBlockingQueue" ).init( javacast( "int", 64 ) )
+			);
+			executor.getNative().shutdown();
+			executor.setNative( native );
+			application.soakExecutorCapacity = native.getQueue().remainingCapacity();
+		}
 		return true;
 	}
 

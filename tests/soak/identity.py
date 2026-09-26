@@ -22,7 +22,9 @@ CPU_FIELDS = ('Architecture', 'CPU(s)', 'Vendor ID', 'Model name', 'CPU family',
               'L1d cache', 'L1i cache', 'L2 cache', 'L3 cache', 'NUMA node(s)')
 JVM_FIELDS = ('javaVersion', 'vm', 'os', 'arch', 'processors', 'physicalMemoryBytes', 'arguments')
 PROFILE_FIELDS = ('schema', 'runner', 'architecture', 'runtime', 'images', 'resources', 'workload', 'limits')
-HOST_MEMORY_TOLERANCE_BYTES = 4096
+# Identical standard N2 hosts report up to 40 KiB of usable-RAM variation.
+# Bound that host-only difference; keep raw bytes and every container budget.
+HOST_MEMORY_TOLERANCE_BYTES = 64 * 1024
 
 
 def read(path):
@@ -146,7 +148,8 @@ def matching_host(expected, actual):
 def require_match(expected, actual):
     if digest(expected['values']) != expected['sha256'] or digest(actual['values']) != actual['sha256']:
         raise ValueError('Measurement identity checksum mismatch')
-    comparison = {'policy': 'exact-inputs-with-one-host-memory-page-v1', 'hostMemoryDifferenceBytes': 0}
+    comparison = {'policy': 'exact-inputs-with-bounded-host-memory-v2',
+                  'hostMemoryToleranceBytes': HOST_MEMORY_TOLERANCE_BYTES, 'hostMemoryDifferenceBytes': 0}
     if expected['sha256'] != actual['sha256']:
         before, after = expected['values'], actual['values']
         if 'host' in before and 'host' in after and matching_host(before['host'], after['host']):

@@ -166,22 +166,25 @@ class IdentityTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'exactly one seed CommandBox version'):
                     build_identity(self.run)
 
-    def test_only_one_page_of_host_memory_reporting_variance_is_allowed(self):
+    def test_bounded_host_memory_variance_preserves_raw_identity_and_other_inputs(self):
         host = self.read('host.json')
         host['docker']['MemTotal'] = 16722006016
         self.write('host.json', host)
         before = build_identity(self.run)
-        for difference in (-4096, 0, 4096):
+        for difference in (-65536, -40960, -4096, 0, 4096, 40960, 65536):
             host['docker']['MemTotal'] = 16722006016 + difference
             self.write('host.json', host)
             after = build_identity(self.run)
-            self.assertEqual(require_match(before, after)['hostMemoryDifferenceBytes'], difference)
+            comparison = require_match(before, after)
+            self.assertEqual(comparison['hostMemoryDifferenceBytes'], difference)
+            self.assertEqual(comparison['hostMemoryToleranceBytes'], 65536)
             self.assertEqual(after['values']['host']['docker']['MemTotal'], 16722006016 + difference)
-        host['docker']['MemTotal'] += 1
-        self.write('host.json', host)
-        with self.assertRaisesRegex(ValueError, 'recalibration required: host'):
-            require_match(before, build_identity(self.run))
-        host['docker']['MemTotal'] = 16722006016 + 4096
+        for difference in (-65537, 65537):
+            host['docker']['MemTotal'] = 16722006016 + difference
+            self.write('host.json', host)
+            with self.assertRaisesRegex(ValueError, 'recalibration required: host'):
+                require_match(before, build_identity(self.run))
+        host['docker']['MemTotal'] = 16722006016 + 40960
         for key in ('Model name', 'L2 cache', 'L3 cache'):
             changed = copy.deepcopy(host)
             next(row for row in changed['cpu']['lscpu'] if row['field'] == key + ':')['data'] = 'different'

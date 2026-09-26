@@ -1479,3 +1479,24 @@ standard and parallel profile IDs are v12; resource budgets, workload, schedule,
 sample floors and thresholds are unchanged. Controller identity changed, so
 fresh calibration and matching diagnostics are required. The live local
 development check is `development-v12-cadence-20260926/`.
+
+### Bounded usable-memory variation on standard runners
+
+`v11-ci-host-comparison.json` adds the full trial's Neoverse-N2 host to the earlier
+records. Every recorded CPU, cache, topology, image, kernel and Docker field
+matches the N2 reference except usable memory: the observed spread is 40 KiB.
+[Linux documents MemTotal](https://docs.kernel.org/filesystems/proc.html) as usable
+RAM after reserved memory and kernel code, rather than an installed-DIMM identity.
+The current comparison policy allows at most **64 KiB** difference in that single
+host field, replacing the earlier one-page allowance. It preserves original
+values and hashes and records both the bound and signed difference in the receipt.
+Every other measurement input, including container limits and JVM heap, remains
+exact. The bound does not grow automatically and does not change resource,
+latency, retained-memory or coverage gates.
+
+`v11-ci-host-policy-verification.json` confirms all four recorded N2 hosts match
+while V3 still fails. Regression tests cover both 64 KiB boundaries, rejection
+one byte beyond either boundary, observed 40 KiB variation, CPU/cache/heap drift,
+and tampering with the receipt's difference or bound. All 123 telemetry and 57
+release tests pass. Identity policy is outside measured workload source, so this
+comparison correction does not change the active v12 measurement conditions.

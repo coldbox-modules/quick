@@ -106,7 +106,7 @@ class QualificationTests(unittest.TestCase):
         accepted = json.loads(leaf.read_text())
         expected = accepted['proposal']['measurementIdentity']
         actual = copy.deepcopy(expected)
-        actual['values']['host']['docker']['MemTotal'] += 4096
+        actual['values']['host']['docker']['MemTotal'] += 40960
         actual['sha256'] = digest(actual['values'])
         run = self.directory / 'run'
         for name in QUALIFICATION_EVIDENCE:
@@ -127,10 +127,13 @@ class QualificationTests(unittest.TestCase):
         seal_qualification(run)
         with patch('qualification.build_identity', return_value=actual), patch('qualification.verify', return_value=package):
             self.assertEqual(verify_qualification(run, 'a' * 40, self.path)['baselineSha256'], sha_file(leaf))
-            write('baseline-comparison.json', {'policy': 'exact-inputs-with-one-host-memory-page-v1', 'hostMemoryDifferenceBytes': 0})
-            seal_qualification(run)
-            with self.assertRaisesRegex(ValueError, 'Recorded baseline comparison changed'):
-                verify_qualification(run, 'a' * 40, self.path)
+            for key, value in (('hostMemoryDifferenceBytes', 0), ('hostMemoryToleranceBytes', 65537)):
+                comparison = require_match(expected, actual)
+                comparison[key] = value
+                write('baseline-comparison.json', comparison)
+                seal_qualification(run)
+                with self.assertRaisesRegex(ValueError, 'Recorded baseline comparison changed'):
+                    verify_qualification(run, 'a' * 40, self.path)
             replacement, _ = self.cohort('v3.json', 'Neoverse-V3')
             self.catalog([replacement.name])
             with self.assertRaisesRegex(ValueError, 'absent from the catalog'):

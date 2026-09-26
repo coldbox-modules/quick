@@ -15,6 +15,9 @@ qualified by standard-profile evidence.
 V12 moves traffic-file analysis after idle observation to preserve sampling
 cadence. This changes controller identity and requires fresh calibration and
 matching diagnostics; the retained v11 results below remain prior evidence.
+Hardware comparison permits a fixed 64 KiB difference in reported host usable
+RAM, covering the observed 40 KiB spread on otherwise identical N2 hosts. Raw
+values and the comparison bound remain recorded; all other inputs stay exact.
 
 ## Requirements and proof boundaries
 
@@ -46,6 +49,7 @@ GitHub Actions artifacts have finite retention.
 | `ci-36244968012/` | Repeated v10 capacity was ineligible after graph latency degradation. The failed attempt remains retained and is not replaced by an earlier eligible result. |
 | `ci-36246554787/raw-trial-diagnosis.json` | V11 full trial at 6 journeys/second completed 14,401/14,401 journeys and passed retained memory. One 15.222-second telemetry gap at idle transition made resources inconclusive. Raw reanalysis exactly matches all assessments; the trial is not accepted. |
 | `controller-cadence-regression-20260926/` | The delayed-analysis regression reproduces that gap on the old controller and passes after the v12 change. All 123 telemetry and 57 release tests pass. Live v12 evidence remains required. |
+| `v11-ci-host-policy-verification.json` | The bounded 64 KiB host-memory policy matches four actual N2 records with up to 40 KiB variation and rejects V3. Unit coverage rejects changed CPU/cache/heap and altered receipt bounds. |
 | `ci-36248290534-runner/` | Independent v11 host identity: four-core Neoverse-N2, Ubuntu ARM image `20260920.129.1`. This proves identity, not workload completion. |
 | `diagnostic-archive-v11-36246858832/archive-verification.json` | Local archive contains all three v11 diagnostic artifacts, raw reanalysis and GitHub provenance. All 1,908 files passed SHA-256 archive readback verification. This prepares diagnostic evidence for durable storage; it does not establish remote archival. |
 
@@ -57,6 +61,8 @@ records the original run SHA and artifact digests and retention dates.
 
 Current CI handles, checked on 2026-09-26:
 
+- [V12 calibration](https://github.com/coldbox-modules/quick/actions/runs/36252125924): running the corrected controller; no full trial verified yet.
+- [V12 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36252126235): matching detector suite running.
 - [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): terminal failure after one full, inconclusive trial; raw diagnosis retained.
 - [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): first full-trial step started at 14:50:31 UTC on another standard runner; no full trial verified yet.
 - [V11 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36246858832): all three jobs passed; measurement, saturation and application raw evidence independently reanalyzed.

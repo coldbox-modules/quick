@@ -48,6 +48,8 @@ jobs:
     timeout-minutes: 65
     steps:
       - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
       - name: Retain environment evidence even if setup fails
         run: python3 tests/soak/ci_environment.py
       - uses: actions/setup-java@v4.7.1

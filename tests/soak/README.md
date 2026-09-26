@@ -453,10 +453,10 @@ tests separately prove rejection when provider state invalidates preparation.
   trial step; independent run `36248290534` is measuring capacity on a fresh
   Neoverse-N2 runner. No full trial has been verified yet. The repeated v10
   capacity rejection remains part of the evidence.
-- Finish matching v11 application diagnostics in `36246858832`; its measurement
-  and saturation jobs passed. The complete v10 detector workflow `36245768374`
-  passed, including cancellation and observer loss, but has different fixtures.
-  Retain every unsuccessful attempt as well as successful diagnostics.
+- Matching v11 diagnostics in `36246858832` passed completely, including
+  measurement, saturation, all application fault cases, controller cancellation
+  and observer loss. Retain their raw evidence for baseline review alongside
+  every unsuccessful attempt; diagnostic success is not full-trial qualification.
 - Run three full healthy CI trials, investigate noise and hosted-runner variance,
   establish a justified reference, and review an accepted baseline manifest.
 - Integrate verified immutable promotion under repository-wide publication
@@ -1432,3 +1432,23 @@ runner; local raw-data reanalysis does not repeat them. Evidence is retained in
 `ci-36245768374-application/`, including `raw-evidence-verification.json`.
 This completes v10 detector evidence; v11 still requires its matching application
 result and full calibration.
+
+### Completed v11 detector evidence
+
+Diagnostic workflow `36246858832` passed all three jobs. Downloaded application
+evidence under `ci-36246858832-application/` contains the matching 30-comment,
+25/50/100-row profile in every case. Raw k6 reanalysis with the recorded analyzer
+source reproduces every saved traffic-analysis field. Healthy traffic completed
+901/901 journeys. The held-connection case completed 900/900 and failed only
+final/idle JDBC-active checks. Wrong-contract detection stopped during warmup.
+Sustained latency completed 900/900 and failed for the intended report regression;
+late latency completed 901/901 and was inconclusive for its intended final-window
+regression. Flushed JVM data and nonempty final JFR files are present for all five
+cases. Original CI verifications passed malformed HTTP contracts, controller
+cancellation, observer loss, partial evidence retention and owned-resource
+cleanup. The raw-data verification records that remote cleanup was checked on
+the original runner, not repeated against the local Docker daemon.
+
+Together with the previously reanalyzed measurement and saturation artifacts,
+this completes matching v11 detector proof. Full calibration, accepted baselines
+and the native full release-matrix proofs remain outstanding.

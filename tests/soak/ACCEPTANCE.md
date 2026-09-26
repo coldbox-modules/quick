@@ -19,7 +19,7 @@ qualified by standard-profile evidence.
 |---|---|---|
 | 1. Persistent isolated application | `app/Application.cfc` uses normal ColdBox bootstrap, a four-hour application timeout, sessionless requests and lifecycle identifiers. The controller provisions isolated application, database and generator containers with recorded budgets and package/dependency identities. The v11 development run passed lifecycle/resource checks. | Matching full-hour CI trials must establish continuous lifecycle and healthy behavior under the final load. |
 | 2. Deterministic domain | `fixtures/generate.py`, `Seed.cfc` and six domain entities preserve the domain and separate scratch IDs. V11's live SQL check and manifest verify 45,000 Post comments, 5,000 User comments, 30 on the hot post and zero on the reserved empty post. | Full trials must retain fixture identity and scratch cleanup throughout sustained work and recovery. |
-| 3. Real HTTP assertions and exceptions | `app/handlers/Api.cfc` and `k6/` exercise reads, relations, writes, rollback, reports, derived-cache variants and real Quick `findOrFail`/`firstOrFail` paths. The local v11 run completed 901/901 plateau journeys with traffic/resources passing. Earlier v10 CI proved malformed contracts and all application fault cases. | Matching v11 application diagnostics and full-trial evidence must prove all failure cases, follow-ups and per-window coverage. Historical fixture profiles are not substitutes. |
+| 3. Real HTTP assertions and exceptions | `app/handlers/Api.cfc` and `k6/` exercise reads, relations, writes, rollback, reports, derived-cache variants and real Quick `findOrFail`/`firstOrFail` paths. V11 CI passed malformed contracts and all five application cases; raw k6 reanalysis matches every saved result. Healthy traffic completed 901/901 plateau journeys. | Full-trial evidence must prove all failure cases, follow-ups and per-window coverage at the calibrated rate. Development diagnostics do not prove the full schedule. |
 | 4. Continuous external load | Profiles declare 5-minute warmup, 5-minute ramp, 40-minute plateau, 5-minute recovery and 5-minute idle observation. Calibration freezes an eligible rate; it never reduces candidate load automatically. V11 saturation diagnostics distinguish generator exhaustion from application overload. | Complete full-hour traffic delivery, VU headroom, sample coverage and recovery at the capacity-selected rate. |
 | 5. Measurement and reports | External JVM/JFR collection, database query/lock counters, application diagnostics and container measurements feed traffic, resource and retained-memory analyzers. V11 measurement pilots independently reproduce healthy, retained-growth and late-growth classifications. Development reports include journey/HTTP rates, per-operation counts/p95/p99 and active requests. | Usable retained-memory observations across the full plateau, complete raw reports and durable storage of accepted evidence. Short development memory remains inconclusive. |
 | 6. Calibrated gate | `capacity.py`, `calibration.py`, `baseline.py`, `identity.py` and `qualification.py` implement capacity selection, sealed trials, noise investigation, reviewed baseline requirements and exact candidate receipts. No accepted baseline JSON exists. | Three healthy full trials per accepted hardware cohort, investigation of every retained attempt and runner variation, reviewed absolute latency/resource/memory references, matching detector evidence and durable archive references. |
@@ -38,6 +38,7 @@ GitHub Actions artifacts have finite retention.
 | `development-v11-fanout-20260926/development-verification.json` | All development checks passed, including direct SQL fixture verification, 901/901 journeys, selected report coverage, collector flush, final recording and owned-resource cleanup. Memory remains inconclusive on this short schedule. |
 | `ci-36246858832-measurement/raw-evidence-verification.json` | Raw JVM reanalysis matches all three saved detector results; child exits and final JFR verified. Canceled pilot retained partial evidence and did not qualify. |
 | `ci-36246858832-saturation/raw-evidence-verification.json` | Raw attribution matches generator-capacity inconclusive and application-overload failure. Cleanup evidence comes from live checks on the original CI runner. |
+| `ci-36246858832-application/raw-evidence-verification.json` | All five v11 application cases match raw k6 reanalysis, with flushed JVM data and final JFR present. Original CI checks passed malformed HTTP contracts, controller cancellation, observer loss and owned-resource cleanup. |
 | `ci-36245768374-application/raw-evidence-verification.json` | All five v10 application cases match raw k6 reanalysis. Original CI checks passed HTTP contracts, controller cancellation and observer loss. This is historical v10 evidence. |
 | `ci-36244968012/` | Repeated v10 capacity was ineligible after graph latency degradation. The failed attempt remains retained and is not replaced by an earlier eligible result. |
 | `ci-36248290534-runner/` | Independent v11 host identity: four-core Neoverse-N2, Ubuntu ARM image `20260920.129.1`. This proves identity, not workload completion. |
@@ -46,12 +47,12 @@ Current CI handles, checked on 2026-09-26:
 
 - [Primary v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36246554787): full-trial step running; no full trial verified yet.
 - [Independent v11 calibration](https://github.com/coldbox-modules/quick/actions/runs/36248290534): capacity sweep running on another standard runner.
-- [V11 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36246858832): measurement and saturation passed; application diagnostics running.
+- [V11 diagnostics](https://github.com/coldbox-modules/quick/actions/runs/36246858832): all three jobs passed; measurement, saturation and application raw evidence independently reanalyzed.
 
 ## Acceptance order
 
-1. Inspect complete raw evidence from both current calibration attempts and the
-   matching application diagnostic suite. Retain failures and partial runs.
+1. Inspect complete raw evidence from both current calibration attempts. Retain
+   failures and partial runs alongside the verified matching diagnostic suite.
 2. Establish three healthy full trials, resolve noise and hardware differences,
    archive the evidence durably and review the baseline manifests and budgets.
 3. Execute and verify every staged full-matrix scenario, including no-release

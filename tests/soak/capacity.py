@@ -72,6 +72,15 @@ def step_profile(base, rate):
     return profile
 
 
+def warmup_profile(base):
+    profile = copy.deepcopy(base)
+    profile['mode'] = 'capacity-warmup'
+    # The provisional release target has not been measured yet. Warm at ten
+    # percent of the first sweep rate, not ten percent of that unknown target.
+    profile['workload']['rate'] = base.get('capacity', {}).get('rates', [5, 10, 20, 40])[0]
+    return profile
+
+
 class CapacityController(Controller):
     def run_generator(self, label, profile):
         stage = self.out / 'capacity' / label
@@ -130,19 +139,18 @@ class CapacityController(Controller):
         if not rates or rates != sorted(set(rates)) or any(not isinstance(rate, int) or rate < 1 for rate in rates):
             raise ValueError('Capacity rates must be distinct, positive, increasing integers')
         self.measured_start = time.time()
-        warmup = copy.deepcopy(base)
-        warmup['mode'] = 'capacity-warmup'
+        warmup = warmup_profile(base)
         stage, stop = self.run_generator('warmup', warmup)
         warmup_rows = complete_rows(stage / 'k6.ndjson')
         starts = [row['data'] for row in warmup_rows if row.get('type') == 'Point' and row['metric'] == 'journey_started']
         completed = sum(row['data']['value'] for row in warmup_rows if row.get('type') == 'Point' and row['metric'] == 'journey_completed')
         if stop or not starts:
             raise Inconclusive('Capacity warmup did not complete: ' + (stop or 'missing-starts'))
-        nominal = base['workload']['rate'] * base['workload']['warmupSeconds'] / 10
+        nominal = warmup['workload']['rate'] * warmup['workload']['warmupSeconds'] / 10
         if not nominal <= len(starts) <= nominal + 1 or completed != len(starts):
             raise Inconclusive('Capacity warmup traffic did not complete')
         self.warmup_epoch = float(starts[0]['tags']['phaseStart'])
-        if timestamp(starts[-1]['time']) < self.warmup_epoch + base['workload']['warmupSeconds'] * 1000 - 10000 / base['workload']['rate'] - 1000:
+        if timestamp(starts[-1]['time']) < self.warmup_epoch + base['workload']['warmupSeconds'] * 1000 - 10000 / warmup['workload']['rate'] - 1000:
             raise Inconclusive('Capacity warmup was abbreviated')
         self.steps = []
         reference = None

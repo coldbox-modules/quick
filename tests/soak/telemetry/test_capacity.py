@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
-from capacity import complete_rows, recommendation, step_profile
+from capacity import complete_rows, recommendation, step_profile, warmup_profile
 
 PROFILE = json.loads((Path(__file__).parents[1] / 'profiles/lucee6-serial.json').read_text())
 
@@ -14,6 +14,15 @@ PROFILE = json.loads((Path(__file__).parents[1] / 'profiles/lucee6-serial.json')
 class CapacityTests(unittest.TestCase):
     def step(self, rate, clean=True, p99=500):
         return {'rate': rate, 'clean': clean, 'journeyP99Ms': p99}
+
+    def test_warmup_precedes_first_sweep_rate_not_unmeasured_release_target(self):
+        profile = copy.deepcopy(PROFILE)
+        profile['workload']['rate'] = 100
+        warmup = warmup_profile(profile)
+        self.assertEqual(warmup['mode'], 'capacity-warmup')
+        self.assertEqual(warmup['workload']['rate'], 5)
+        self.assertEqual(warmup['workload']['warmupSeconds'], 300)
+        self.assertEqual(profile['workload']['rate'], 100)
 
     def test_sixty_percent_of_highest_clean_step(self):
         result = recommendation([self.step(n) for n in (5, 10, 20, 40)], PROFILE)

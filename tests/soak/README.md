@@ -414,7 +414,9 @@ validated before merge. It is absent from ordinary branch, PR, cron, and release
 workflows and has read-only repository permissions.
 
 The sweep keeps one application JVM, database, and collector alive across
-warmup and bounded rate steps. It stops after the first unclean step, observes
+warmup and bounded rate steps. The five-minute capacity warmup runs at 10% of
+the first sweep rate (0.5 journeys/second for a 5/second first step), independently
+of the as-yet unmeasured release target. It stops after the first unclean step, observes
 idle resource recovery between clean steps, and proposes 60% of the highest
 clean rate with measured journey-duration headroom. A proposed trial profile is
 written only after successful evidence collection and only if its rate can
@@ -435,7 +437,13 @@ CI run `36209974082` preserved an inconclusive first capacity attempt. All
 offered work completed at 5/second and resources recovered, but report latency
 crossed the late-window band with only 5-10 observations. The revised sweep
 requires 200 per operation before comparing rates; the original inconclusive
-evidence is retained. Its first run and full baseline trials remain pending.
+evidence is retained. Run `36210905572` then reached the 2 GiB container's
+headroom limit during that longer first step. Run `36212346552`, using the
+provisional 3 GiB container, failed on a cold 1,000-row report during warmup;
+it also verified two clean image builds produced identical amd64 image IDs.
+The warmup had been running at 2.4/second based on the unmeasured release target,
+which is now corrected to the first sweep rate above. These failed observations
+remain preserved; neither provides a capacity target or a baseline.
 
 ### Full baseline bootstrap and input matching
 

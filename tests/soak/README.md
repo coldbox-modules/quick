@@ -113,7 +113,7 @@ recorded under **Native matrix cancellation proof** below.
 
 ## Memory measurement method
 
-Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v10
+Method ID: `jdk21-zgc-generational-major-periodic-jfr-v1`. The provisional v11
 runtime uses generational ZGC with a fixed periodic major collection interval,
 identically in baseline and candidate. The pilot uses a 256 MiB heap and a
 five-second major interval to validate detection cheaply. The application uses
@@ -446,13 +446,15 @@ tests separately prove rejection when provider state invalidates preparation.
 
 ## Remaining acceptance work
 
-- Complete fresh v10 capacity calibration and validate the full 60-minute workload
-  in CI. An earlier v10 sweep established an eligible 6/second target, but its
-  first trial stopped during setup; no full trial has completed yet.
-- Finish the current v10 detector run and retain every unsuccessful attempt.
-  Current-source measurement/cancellation proofs passed in `36245768374`; its
-  application and saturation jobs are still running. Earlier v10 application
-  fault proofs passed, but the one-CPU and quarter-CPU overload attempts did not.
+- Complete v11 calibration on the standard GitHub runner with 25/50/100-row
+  reports and 30-comment hot-post fanout. Run `36246554787` has entered the full
+  trial step; independent run `36248290534` is measuring capacity on a fresh
+  Neoverse-N2 runner. No full trial has been verified yet. The repeated v10
+  capacity rejection remains part of the evidence.
+- Finish matching v11 application diagnostics in `36246858832`; its measurement
+  and saturation jobs passed. The complete v10 detector workflow `36245768374`
+  passed, including cancellation and observer loss, but has different fixtures.
+  Retain every unsuccessful attempt as well as successful diagnostics.
 - Run three full healthy CI trials, investigate noise and hosted-runner variance,
   establish a justified reference, and review an accepted baseline manifest.
 - Integrate verified immutable promotion under repository-wide publication
@@ -1412,3 +1414,19 @@ under `ci-36248290534-runner/`. The first calibration remains in its three-trial
 step. Neither run has completed a full trial yet; the independent attempt is
 additional evidence for runner variation, and every outcome remains part of
 acceptance review.
+
+### Completed v10 application diagnostic evidence
+
+The full v10 diagnostic workflow `36245768374` passed. Downloaded raw k6 data for
+all five application cases reproduces every field of the saved traffic analysis
+with the identical recorded analyzer source. Healthy and held-connection cases
+completed 900/900 plateau journeys; only the held connection failed final/idle
+JDBC-active checks. The wrong response contract failed during warmup. Sustained
+and late latency cases each completed 901/901 journeys and produced their exact
+blocking and inconclusive reasons respectively. Original CI verification also
+passed HTTP contracts, controller cancellation, observer loss, recording
+retention and owned-resource cleanup. Those cleanup checks ran on the original
+runner; local raw-data reanalysis does not repeat them. Evidence is retained in
+`ci-36245768374-application/`, including `raw-evidence-verification.json`.
+This completes v10 detector evidence; v11 still requires its matching application
+result and full calibration.

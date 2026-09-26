@@ -568,3 +568,17 @@ received the signal but exposed a second termination from the always-run cleanup
 step, which interrupted the controller's teardown. The probe now records one
 shared stop request; subsequent cleanup invocations wait rather than sending a
 second signal. That failed run remains preserved and requires a fresh proof.
+
+The first all-pass scenario, `36213863486`, did not pass: the real development
+workload timed out during its plateau, and aligned delivery evidence classified
+application overload. The functional stub succeeded, the soak failed, and the
+publication stub was skipped. This is retained as failed workload evidence;
+there is still no successful all-pass native publication-stub proof.
+
+The idempotent handoff passed explicit cancellation in `36214387610`: the live
+observation received the runner signal, the controller remained inconclusive,
+all owned resources were removed, JFR/HTTP evidence was retained, and the unstarted
+publication stub had no steps or artifact. Native cancellation now has terminal
+verified evidence for functional failure (`36214152174`), soak failure
+(`36213861303`), and explicit cancellation (`36214387610`). The all-pass scenario
+and final release-workflow integration remain outstanding.

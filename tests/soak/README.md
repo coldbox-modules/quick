@@ -249,6 +249,20 @@ stale provider state or mismatched tags without altering the repository.
 The real immutable provider adapter and guarded workflow promotion still need
 implementation. Do not wire the directory publisher behind the new gate.
 
+`qualification.py --baseline ACCEPTED_JSON --profile PROFILE_JSON --package
+PREPARED_DIRECTORY --candidate FULL_SHA` is the explicit candidate gate entry
+point. There is no accepted baseline checked in yet. It requires a reviewed
+proposal with three distinct sealed CI trials, durable evidence and detector
+references, and an absolute budget for every operation. It verifies identical
+measurement inputs before load, applies the accepted latency and memory
+references, and verifies the generator again after the complete run. Only all
+passing assessments can produce `qualification.json`; its receipt binds the
+candidate SHA, exact ZIP, accepted-baseline checksum, and raw evidence. Promotion
+must call `verify_qualification` after downloading the artifacts. A missing
+baseline, development run, calibration trial, diagnostic package, or changed
+evidence cannot qualify publication. This entry point remains disconnected from
+the live release workflow until baseline and detector acceptance are complete.
+
 ## Remaining acceptance work
 
 - Validate the complete 60-minute workload in CI and finish capacity-sweep

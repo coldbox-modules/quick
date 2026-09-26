@@ -74,6 +74,8 @@ class Controller:
         self.last_diag = None
         self.sample_number = 0
         self.memory_pressure_since = None
+        self.latency_baseline = None
+        self.memory_baseline = {}
 
     def command(self, args, *, timeout=120, input=None, log=None, check=True):
         if log:
@@ -336,7 +338,7 @@ class Controller:
         self.docker("logs", self.generator, log="k6.log")
         self.timing["generatorEndedMs"] = int(time.time() * 1000)
         with (self.out / "k6.ndjson").open() as stream:
-            traffic = evaluate_traffic((json.loads(line) for line in stream if line.strip()), w)
+            traffic = evaluate_traffic((json.loads(line) for line in stream if line.strip()), w, self.latency_baseline)
         write_json(self.out / "traffic-analysis.json", traffic)
         self.timing["warmupStartMs"] = traffic["phaseStartsMs"].get("warmup")
         self.timing["phaseStartsMs"] = traffic["phaseStartsMs"]
@@ -393,7 +395,8 @@ class Controller:
         memory = evaluate_memory(jvm, start_ms=start, end_ms=start + w["plateauSeconds"] * 1000,
             window_ms=w["windowSeconds"] * 1000, min_span_ms=1200000, reference_ms=600000,
             min_cycles=10, heap_max_bytes=self.profile["resources"]["application"]["heapMiB"] * 1024 * 1024,
-            exclude_initial_ms=w["drainSeconds"] * 1000)
+            exclude_initial_ms=w["drainSeconds"] * 1000,
+            noise_bytes=self.memory_baseline.get("noiseBytes", 0), baseline_bytes=self.memory_baseline.get("baselineBytes"))
         write_json(self.out / "memory-analysis.json", memory)
         if not self.args.development and memory["status"] != "passed":
             if self.summary["status"] != "failed":
@@ -512,6 +515,9 @@ def execute(controller):
             if controller.summary["status"] != "failed":
                 controller.summary["status"] = "inconclusive"
             write_json(controller.out / "summary.json", controller.summary)
+    if controller.summary['status'] != 'passed':
+        controller.summary['releaseQualified'] = False
+        write_json(controller.out / 'summary.json', controller.summary)
     print(json.dumps(controller.summary, indent=2), flush=True)
     return 0 if controller.summary["status"] in ("development-passed", "capacity-measured") else 1
 

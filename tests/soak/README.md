@@ -1372,3 +1372,15 @@ remain under `/tmp/quick-soak-report-v11-*`. Physical mobile devices and other
 browser engines remain untested. This post-measurement report work changes no
 workload, instrumentation or acceptance threshold and leaves active calibration
 comparable.
+
+
+V11 saturation attribution in `36246858832` passes on Neoverse-N2. Raw reanalysis
+reproduces the generator-capacity classification (47 of 828 offered journeys
+completed) and application-overload failure (58 of 94 completed before the hard
+response-error abort). The application injection was 0.5 CPU; the generator
+probe used bounded CPU work at its normal 0.25 CPU allocation. Both cases restored
+the recorded quota, retained flushed JVM telemetry and final JFR, and passed
+original-runner cleanup checks. The downloaded evidence and independent
+attribution comparison are under `ci-36246858832-saturation/`. This completes
+matching v11 saturation proof; full application diagnostics and calibration
+remain in progress.

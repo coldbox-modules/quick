@@ -1,7 +1,11 @@
 """Offline, dependency-free run report from persisted evidence only."""
+from collections import Counter
 import html
+import math
 import json
 from pathlib import Path
+
+from traffic import percentile
 
 MIB = 1024 * 1024
 
@@ -10,19 +14,52 @@ def document(path, default):
     return json.loads(path.read_text()) if path.exists() else default
 
 
-def rows(path):
+def records(path):
     if not path.exists():
-        return []
-    # Cancellation can leave one unfinished final line. Preserve the raw file;
-    # charts may show complete earlier observations without declaring a pass.
-    result = []
+        return
+    # A canceled stream can have an unfinished final line. This report never
+    # determines qualification; raw evidence and analyzer results stay intact.
     with path.open() as stream:
         for line in stream:
             try:
-                result.append(json.loads(line))
+                yield json.loads(line)
             except json.JSONDecodeError:
                 continue
-    return result
+
+
+def rows(path):
+    return list(records(path))
+
+
+def plateau_latency(path, operations, timeout_ms):
+    # Stream request observations into bounded 1 ms histograms, never retaining
+    # response bodies or one object per request. Fixed labels come from analysis.
+    histograms = {name: Counter() for name in operations}
+    excluded = 0
+    for row in records(path):
+        if row.get('type') != 'Point' or row.get('metric') not in ('successful_latency', 'expected_failure_latency'):
+            continue
+        data = row['data']
+        tags = data.get('tags', {})
+        if tags.get('scenario') != 'plateau':
+            continue
+        name = tags.get('operation') if row['metric'] == 'successful_latency' else 'failure:' + tags.get('case', '')
+        value = data['value']
+        if (name not in histograms or type(value) not in (int, float)
+                or not math.isfinite(value) or not 0 <= value <= timeout_ms):
+            excluded += 1
+            continue
+        histograms[name][math.ceil(value)] += 1
+    return {'operations': {name: {'count': sum(hist.values()), 'p99Ms': percentile(hist, 99)}
+                           for name, hist in histograms.items()}, 'excluded': excluded}
+
+
+def window_rates(traffic, workload, complete):
+    seconds = workload.get('windowSeconds', 0)
+    return [{'window': index + 1,
+             'journeysPerSecond': sum(window.get('journey_completed', {}).values()) / seconds if complete and seconds > 0 else None,
+             'httpPerSecond': sum(window.get('http_reqs', {}).values()) / seconds if complete and seconds > 0 else None}
+            for index, window in enumerate(traffic.get('windows', []))]
 
 
 def chart(title, points, unit):
@@ -89,6 +126,23 @@ def render(directory):
         parts.append('</table>')
     if traffic:
         parts.append(f'<h2>Delivered sustained load</h2><p>Offered: {traffic["offeredJourneys"]:,} journeys. Started: {traffic["startedJourneys"]:,}. Completed: {traffic["completedJourneys"]:,}. Traffic assessment: {html.escape(traffic["status"])}.</p>')
+        workload = profile.get('workload', {})
+        http_count = sum(traffic['totals'].get('http_reqs', {}).values())
+        parts.append(f'<p>Configured target: {workload.get("rate", "unknown")} journeys/second. HTTP requests from plateau journeys, including drain: {http_count:,}.</p>')
+        parts.append(f'<p>Rates below count completions inside each {workload.get("windowSeconds", "unknown")}-second plateau window, excluding drain. Rates are unavailable for incomplete runs.</p><table><tr><th>Window</th><th>Journey completions/s</th><th>HTTP completions/s</th></tr>')
+        for row in window_rates(traffic, workload, summary.get('state') == 'complete'):
+            journey_rate = 'unavailable' if row['journeysPerSecond'] is None else f'{row["journeysPerSecond"]:.2f}'
+            http_rate = 'unavailable' if row['httpPerSecond'] is None else f'{row["httpPerSecond"]:.2f}'
+            parts.append(f'<tr><td>{row["window"]}</td><td>{journey_rate}</td><td>{http_rate}</td></tr>')
+        parts.append('</table>')
+        details = plateau_latency(directory / 'k6.ndjson', traffic['latency'], workload.get('requestTimeoutSeconds', 10) * 1000)
+        parts.append('<h2>Verified request totals and p99</h2><p>Counts and p99 include all plateau-tagged verified requests, including drain. Successful operations and expected failures remain separate. P99 is descriptive and does not gate release; small sample counts limit its usefulness. Histograms round upward to 1 ms.</p><table><tr><th>Operation</th><th>Verified requests</th><th>p99 (ms)</th></tr>')
+        for name, row in details['operations'].items():
+            p99 = 'unavailable' if row['p99Ms'] is None else str(row['p99Ms'])
+            parts.append(f'<tr><td>{html.escape(name)}</td><td>{row["count"]:,}</td><td>{p99}</td></tr>')
+        parts.append('</table>')
+        if details['excluded']:
+            parts.append(f'<p>Invalid or unknown latency observations excluded from this descriptive table: {details["excluded"]}. See the traffic assessment and raw evidence.</p>')
         parts.append('<h2>Expected failures and recovery</h2><table><tr><th>Case</th><th>Attempted</th><th>Verified</th><th>Recovered</th></tr>')
         for case, count in sorted(traffic['totals'].get('expected_failure_attempted', {}).items()):
             verified = traffic['totals'].get('expected_failure_verified', {}).get(case, 0)
@@ -117,7 +171,7 @@ def render(directory):
     parts.append(chart('Occupancy after completed full-heap ZGC cycles', [(r['time'], r['heapUsed'] / MIB) for r in jvm
         if r.get('kind') == 'heap' and r.get('when') == 'After GC' and r['gcId'] in complete], 'MiB'))
     parts.append('<p>Post-cycle occupancy includes concurrent allocations. A short chart cannot establish retained-memory stability or replace the required matched-load analysis.</p>')
-    for field, title in [('jdbcActive', 'Borrowed JDBC connections'), ('jdbcWaiting', 'Waiting JDBC borrowers'), ('queuedRequests', 'Queued application requests')]:
+    for field, title in [('activeRequests', 'Active application requests (sampled; includes diagnostics)'), ('jdbcActive', 'Borrowed JDBC connections'), ('jdbcWaiting', 'Waiting JDBC borrowers'), ('queuedRequests', 'Queued application requests')]:
         parts.append(chart(title, [(r['time'], r['application'][field]) for r in observations if field in r.get('application', {})], 'count'))
     parts.append('<h2>Raw evidence</h2><p><a href="summary.json">Summary</a> · <a href="traffic-analysis.json">Traffic analysis</a> · <a href="resource-analysis.json">Resource analysis</a> · <a href="memory-analysis.json">Memory analysis</a> · <a href="profile.json">Profile</a> · <a href="harness-manifest.json">Harness identity</a> · <a href="dependencies.json">Dependencies</a> · <a href="jvm/jvm.ndjson">JVM telemetry</a> · <a href="observations.ndjson">Application and resources</a> · <a href="k6.ndjson">k6 observations</a> · <a href="jvm/recording-final.jfr">Final JFR</a></p></html>')
     (directory / 'report.html').write_text('\n'.join(parts))

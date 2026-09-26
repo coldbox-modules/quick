@@ -1346,3 +1346,29 @@ while generator use rose only from 22.0% to 23.9%. Both were Neoverse-N2 with
 passing resource assessments. `v10-repeated-capacity-comparison.json` retains
 these values and graph p95 evidence. The earlier green step is not used to
 dismiss the repeat's latency failure or justify accepting v10 unchanged.
+
+
+### Readable traffic report coverage
+
+The report now exposes the plan's previously raw-only traffic evidence: configured
+journey rate, total HTTP requests from plateau journeys including drain,
+windowed journey/HTTP completion rates, per-operation verified-request totals and
+descriptive p99, and sampled active application requests (including diagnostics).
+P99 uses streamed, bounded 1 ms histograms; success and expected-failure labels
+remain separate. It does not add a release gate. Incomplete runs show rates as
+unavailable instead of dividing partial traffic by the planned full duration.
+
+On the actual v11 development artifact, all 5,122 HTTP requests match both the
+verified-operation totals and descriptive latency sample counts. The six
+30-second windows record 5.00 journey completions/second and alternating
+28.40/28.50 HTTP completions/second. `report-traffic-verification.json` preserves
+this cross-check. All 121 telemetry tests pass, including phase separation and
+incomplete-run reporting. Pyflakes and the Impeccable detector pass.
+
+Rendered Chromium checks at 1440×1000 and 390×844 confirm meaningful page content,
+readable rates/p99 tables and active-request charts, no overflow or browser errors,
+and a working Summary evidence link. Screenshots and the temporary browser check
+remain under `/tmp/quick-soak-report-v11-*`. Physical mobile devices and other
+browser engines remain untested. This post-measurement report work changes no
+workload, instrumentation or acceptance threshold and leaves active calibration
+comparable.

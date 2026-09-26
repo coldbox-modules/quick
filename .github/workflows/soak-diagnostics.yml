@@ -101,6 +101,8 @@ jobs:
         run: python3 tests/soak/verify_faults.py --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 --output tests/results/soak/fault-suite
       - name: Cancel the live container controller and preserve evidence
         run: python3 tests/soak/verify_controller_cancellation.py --output tests/results/soak/controller-cancellation
+      - name: Verify observer loss blocks qualification and cleans up
+        run: python3 tests/soak/verify_controller_cancellation.py --mode collector-stop --candidate af2c93d2604de73d7ccac23b7bf69c4be221dbb0 --output tests/results/soak/collector-failure
       - name: Preserve application evidence, including failed runs
         if: always()
         uses: actions/upload-artifact@v4.6.2

@@ -50,6 +50,8 @@ python3 tests/soak/verify_http_contracts.py \
   --output tests/results/soak/http-contracts
 python3 tests/soak/verify_controller_cancellation.py \
   --output tests/results/soak/controller-cancellation
+python3 tests/soak/verify_controller_cancellation.py --mode collector-stop \
+  --output tests/results/soak/collector-failure
 ```
 
 The HTTP proof checks actual k6 exit codes and metric summaries: wrong error
@@ -58,6 +60,11 @@ and wrong validation fields must fail. Several cases deliberately keep the HTTP
 status metric green to prove response-body assertions independently block them.
 The container cancellation proof waits for completed HTTP work and JVM samples,
 then verifies child removal, partial recording flush, and a non-passing result.
+The observer-loss mode waits for live HTTP, JVM samples and a retained recording,
+then kills only the run-owned collector. It requires an inconclusive result with
+the explicit observer-loss and incomplete-recording reasons, preserved partial
+evidence, and removal of every owned resource. It cannot report healthy memory
+after telemetry disappears.
 
 ## Measurement pilot
 
@@ -835,3 +842,24 @@ qualification. Application/DB process failures retain their failure outcome.
 The application workload, application resources and acceptance thresholds are
 unchanged from v6. This measurement-resource change requires fresh capacity,
 full trials and detector evidence before baseline acceptance.
+
+CI capacity `36219732077` independently reproduced the v6 observer heap OOM:
+the 5/second step passed, then the observer stopped during 10/second. The
+completed 5/second step used a median 33.9% of the application's CPU budget,
+but incomplete observer evidence prevents selecting a calibration target.
+Local development evidence `development-v7-20260925` completed all 901 offered
+plateau journeys with traffic/resources passing, a final recording and cleanup.
+Its collector peaked at 194.9 MiB of Java heap. This run used the v7 resource
+draft before the final observer-loss classification/heap-validation edits;
+its retained source snapshot records that distinction. It is neither a full
+memory qualification nor CI baseline evidence.
+
+The live `collector-failure-v7-20260925` probe passed every check after sending
+SIGKILL to its owned collector during completed HTTP work. The controller
+returned inconclusive, identified observer loss and the incomplete final
+recording, retained the earlier recording/HTTP/JVM samples and removed owned
+containers, named/anonymous volumes and network. The same probe is included in
+future diagnostic CI runs through `--mode collector-stop`.
+The paired `controller-cancellation-v7-20260925` run also passed the normal
+SIGTERM path, including a clean collector end marker, final recording and full
+owned-resource cleanup.

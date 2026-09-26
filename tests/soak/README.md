@@ -1120,3 +1120,18 @@ The seeded domain, journey percentages, four real repetitions, exception paths,
 resource budgets, full 60-minute schedule and all acceptance thresholds remain
 unchanged. Fresh capacity and detector evidence are required; failed v9 evidence
 is retained in `tests/results/soak/ci-36241479101/` and is not retried unchanged.
+
+The local `development-v10-reports-20260926` run passed all 900 offered plateau
+journeys with traffic/resources passing and no summary reasons. All three report
+sizes received samples in all six development windows; the new 50-row report
+passed the same projection/checksum contract. `development-verification.json`
+confirms the declared 60-comment fixture, report-window coverage, final recording,
+clean collector flush and removal of owned containers, named/anonymous volumes
+and network. Its short memory assessment remains inconclusive.
+
+V10 calibration `36242953744` and diagnostics `36242953890` test commit
+`fe1eb954ba735c1e1a0bad03b76a32daa0762a14`. The downloaded measurement artifact
+(`ci-36242953890-measurement/`) confirms the expected healthy, sustained-growth
+and late-growth outcomes, plus successful live cancellation and retained partial
+evidence. Capacity/full trials and application detectors remain pending; the
+release gate is still disabled.

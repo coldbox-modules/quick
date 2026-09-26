@@ -1320,3 +1320,14 @@ V11 commit `e458c93` passes 119 telemetry tests and starts fresh calibration
 45,000 Post comments, 5,000 User comments, hot-post count 30 and empty-post count
 zero. Its workload is still running. The v10 probe does not substitute for
 matching v11 detector evidence, and no full baseline trial has completed.
+
+
+The local v11 development run subsequently passed all 901 offered plateau
+journeys. Traffic and resource assessments pass with no summary reasons; memory
+remains inconclusive on the short schedule. Each selected report size has
+samples in every development comparison window and meets its development sample
+floor. `development-verification.json` confirms real SQL fixture counts,
+manifest/profile agreement, preserved domain size, complete arrivals, clean
+collector flush/final recording, and removal of owned containers, named/anonymous
+volumes and network. This is development proof only; v11 CI calibration and
+matching diagnostics are still running.

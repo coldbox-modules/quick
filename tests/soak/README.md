@@ -512,8 +512,9 @@ the named publication stub: a missing stub or an unexpected extra job cannot
 establish blocked publication. Both malformed evidence cases reproduced before
 the verifier fix; all 59 release tests pass afterward, with Pyflakes and generated
 workflow drift checks clean. Evidence is in `full-proof-verifier-20260926/`.
-These full-matrix scenarios are staged and unit
-checked; their real native executions remain pending baseline acceptance.
+Both failure directions and explicit cancellation now pass full native
+verification; their current run IDs and archive are recorded below. All-pass,
+no-release and serialization acceptance remain pending the live full-hour runs.
 The isolated CommandBox/TestBox probe
 `full-fault-assertion-20260926/verification.json` executes the actual injected CFC
 and verifies exactly one intended failed assertion, zero errors and the precise
@@ -1837,3 +1838,31 @@ SHA-256/size verification. Evidence is under `retained-v11-full-trials/`.
 These two trials remain inconclusive because of the proven idle-transition
 telemetry gaps. The archive preserves failures and investigation history; it
 does not replace them with the six healthy v12 trials or accept them as baselines.
+
+### Full native interruption proofs verified and archived
+
+All three full-matrix interruption proofs pass the stricter offline verifier:
+
+- Functional failure `36268372100`: 680 passing tests, exactly one intended
+  failure, zero errors and four skips. Native fail-fast canceled the live soak;
+  the controller retained its final JFR and removed all owned resources.
+- Soak failure `36268372501`: the run-owned application exited 137 while real
+  TestBox work was active. The observed functional sibling was canceled and
+  publication was skipped. All owned resources were removed. Missing final
+  diagnostics remain recorded failures after the deliberate SIGKILL; a partial
+  JFR is retained and no successful telemetry flush is claimed.
+- Explicit cancellation `36268509885`: the bounded helper captured concurrent
+  live soak/TestBox work, canceled that run, and verified the signal-driven
+  inconclusive outcome, final recording, resource removal and blocked publication.
+
+All proofs account for the real 23 functional rows, one soak and the publication
+stub. None produced a qualification or validation receipt. Evidence directories
+are `full-matrix-<run ID>/`. The combined 759-file archive and recorded verifier
+reproduce all three exact verification results after extraction.
+
+The [draft native evidence release](https://github.com/coldbox-modules/quick/releases/tag/untagged-7af98221844592317af5)
+(ID `397383313`) retains the 23,389,032-byte bundle, manifest and reproduction
+proof. All three assets pass remote downloaded-byte hashing. Evidence is under
+`full-native-interruption-archive-v12/`; GitHub and ForgeBox product identity
+remains v13.0.4. Both all-pass runs and the no-release run have all 23 functional
+jobs passing, but their full soaks and publication/serialization proofs remain live.

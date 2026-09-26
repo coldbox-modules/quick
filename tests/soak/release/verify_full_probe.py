@@ -11,6 +11,7 @@ import shutil
 
 from package import digest
 from validate_candidate import inspect_artifact
+from qualification import catalog_names
 
 REPOSITORY = 'coldbox-modules/quick'
 
@@ -197,6 +198,12 @@ def main():
                           ('tests/soak/baselines/lucee6-serial.json', 'candidate-baseline.json')):
         source = api(f'contents/{remote}?ref={workflow["head_sha"]}')
         (args.output / local).write_bytes(base64.b64decode(source['content']))
+    names = catalog_names(read(args.output / 'candidate-baseline.json'))
+    for name in names or []:
+        if name == 'candidate-baseline.json':
+            raise ValueError('Baseline leaf conflicts with the downloaded catalog filename')
+        source = api(f'contents/tests/soak/baselines/{name}?ref={workflow["head_sha"]}')
+        (args.output / name).write_bytes(base64.b64decode(source['content']))
     subprocess.run(['gh', 'run', 'download', str(args.run_id), '--repo', REPOSITORY,
                     '--dir', str(args.output / 'artifacts')], check=True)
     result = verify(args.output) if args.mode == 'all-pass' else verify_failure(args.output, args.mode)

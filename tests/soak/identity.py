@@ -6,6 +6,7 @@ source snapshots remain in the evidence independently of this comparison key.
 """
 import hashlib
 import json
+import copy
 from pathlib import Path
 import re
 from fixtures.generate import fixture_settings
@@ -21,6 +22,7 @@ CPU_FIELDS = ('Architecture', 'CPU(s)', 'Vendor ID', 'Model name', 'CPU family',
               'L1d cache', 'L1i cache', 'L2 cache', 'L3 cache', 'NUMA node(s)')
 JVM_FIELDS = ('javaVersion', 'vm', 'os', 'arch', 'processors', 'physicalMemoryBytes', 'arguments')
 PROFILE_FIELDS = ('schema', 'runner', 'architecture', 'runtime', 'images', 'resources', 'workload', 'limits')
+HOST_MEMORY_TOLERANCE_BYTES = 4096
 
 
 def read(path):
@@ -129,10 +131,30 @@ def build_identity(run, *, profile=None, generator=None):
     return {'sha256': digest(values), 'values': values}
 
 
+def matching_host(expected, actual):
+    if expected == actual:
+        return True
+    left = expected.get('docker', {}).get('MemTotal')
+    right = actual.get('docker', {}).get('MemTotal')
+    if type(left) is not int or type(right) is not int or min(left, right) <= 0 or abs(left - right) > HOST_MEMORY_TOLERANCE_BYTES:
+        return False
+    adjusted = copy.deepcopy(actual)
+    adjusted['docker']['MemTotal'] = left
+    return adjusted == expected
+
+
 def require_match(expected, actual):
     if digest(expected['values']) != expected['sha256'] or digest(actual['values']) != actual['sha256']:
         raise ValueError('Measurement identity checksum mismatch')
+    comparison = {'policy': 'exact-inputs-with-one-host-memory-page-v1', 'hostMemoryDifferenceBytes': 0}
     if expected['sha256'] != actual['sha256']:
+        before, after = expected['values'], actual['values']
+        if 'host' in before and 'host' in after and matching_host(before['host'], after['host']):
+            adjusted = {**after, 'host': before['host']}
+            if adjusted == before:
+                comparison['hostMemoryDifferenceBytes'] = after['host']['docker']['MemTotal'] - before['host']['docker']['MemTotal']
+                return comparison
         changed = sorted(key for key in expected['values'].keys() | actual['values'].keys()
                          if expected['values'].get(key) != actual['values'].get(key))
         raise ValueError('Measurement inputs changed; recalibration required: ' + ', '.join(changed))
+    return comparison

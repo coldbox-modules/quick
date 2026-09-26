@@ -6,8 +6,8 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
-from identity import digest, profile_identity
-from qualification import accepted_baseline, seal_qualification, verify_qualification, QUALIFICATION_EVIDENCE, seal_validation, validate_package_purpose
+from identity import digest, profile_identity, sha_file
+from qualification import baseline_paths, select_baseline, resolve_artifact_baseline, accepted_baseline, seal_qualification, verify_qualification, QUALIFICATION_EVIDENCE, seal_validation, validate_package_purpose
 from traffic import CASES, operation_names
 
 PROFILE = json.loads((Path(__file__).parents[1] / 'profiles/lucee6-serial.json').read_text())
@@ -39,6 +39,65 @@ class QualificationTests(unittest.TestCase):
     def load(self, data):
         self.path.write_text(json.dumps(data))
         return accepted_baseline(self.path)
+
+    def cohort(self, name, model, rate=6):
+        data = copy.deepcopy(reviewed())
+        host = {'docker': {'MemTotal': 16722006016, 'NCPU': 4},
+                'cpu': {'Model name': model, 'L2 cache': 'fixed'},
+                'runnerImage': 'ubuntu24', 'runnerImageVersion': '20260921.1'}
+        proposal = data['proposal']
+        proposal['profile']['workload']['rate'] = rate
+        values = {'profile': profile_identity(proposal['profile']), 'host': host}
+        proposal['measurementIdentity'] = {'values': values, 'sha256': digest(values)}
+        data['proposalSha256'] = digest(proposal)
+        path = self.directory / name
+        path.write_text(json.dumps(data))
+        return path, host
+
+    def catalog(self, names):
+        self.path.write_text(json.dumps({'schema': 1, 'status': 'accepted-catalog', 'baselines': names}))
+        return self.path
+
+    def test_selects_reviewed_hardware_and_only_its_calibrated_rate(self):
+        first, host = self.cohort('n2.json', 'Neoverse-N2', 6)
+        second, _ = self.cohort('v3.json', 'Neoverse-V3', 9)
+        self.catalog([first.name, second.name])
+        host['docker']['MemTotal'] += 4096
+        selected, profile = select_baseline(self.path, host, PROFILE)
+        self.assertEqual(selected, first.resolve())
+        self.assertEqual(profile['workload']['rate'], 6)
+        self.assertNotEqual(PROFILE['workload']['rate'], 6)
+        self.assertEqual(resolve_artifact_baseline(self.path, sha_file(second)), second.resolve())
+        changed = copy.deepcopy(PROFILE)
+        changed['fixtures']['highFanoutComments'] = 180
+        with self.assertRaisesRegex(ValueError, 'profile differs'):
+            select_baseline(self.path, host, changed)
+        host['cpu']['Model name'] = 'unknown'
+        with self.assertRaisesRegex(ValueError, 'found 0'):
+            select_baseline(self.path, host, PROFILE)
+        host['cpu']['Model name'] = 'Neoverse-V3'
+        selected, profile = select_baseline(self.path, host, PROFILE)
+        self.assertEqual(selected, second.resolve())
+        self.assertEqual(profile['workload']['rate'], 9)
+
+    def test_catalog_rejects_ambiguity_unsafe_names_and_unaccepted_members(self):
+        first, host = self.cohort('n2.json', 'Neoverse-N2')
+        second, _ = self.cohort('duplicate.json', 'Neoverse-N2')
+        self.catalog([first.name, second.name])
+        with self.assertRaisesRegex(ValueError, 'found 2'):
+            select_baseline(self.path, host, PROFILE)
+        for names in ([], ['../escape.json'], ['/tmp/escape.json'], ['a/b.json'], [first.name, first.name], [self.path.name]):
+            self.catalog(names)
+            with self.assertRaises(ValueError):
+                baseline_paths(self.path)
+        self.catalog([first.name])
+        with self.assertRaisesRegex(ValueError, 'absent from the catalog'):
+            resolve_artifact_baseline(self.path, 'f' * 64)
+        data = json.loads(first.read_text())
+        data['status'] = 'proposed-for-review'
+        first.write_text(json.dumps(data))
+        with self.assertRaisesRegex(ValueError, 'explicitly accepted'):
+            baseline_paths(self.path)
 
     def test_reviewed_complete_manifest_loads_without_accepting_any_candidate(self):
         result = self.load(reviewed())

@@ -5,6 +5,9 @@ This entry point has no publishing capability. Missing acceptance, mismatched
 inputs, incomplete evidence, or any failed assessment cannot produce a receipt.
 """
 import argparse
+import copy
+import json
+import os
 import datetime
 import math
 from pathlib import Path
@@ -14,11 +17,11 @@ import shutil
 from baseline import EVIDENCE
 from calibration import validate_trial_profile
 from controller import Controller, Inconclusive, execute, write_json
-from identity import build_identity, digest, profile_identity, read, require_match, sha_file
+from identity import DOCKER_FIELDS, build_identity, cpu_identity, digest, matching_host, profile_identity, read, require_match, sha_file
 from package import verify
 from traffic import CASES, operation_names
 
-QUALIFICATION_EVIDENCE = tuple(name for name in EVIDENCE if name != 'capacity-reference.json') + ('accepted-baseline.json',)
+QUALIFICATION_EVIDENCE = tuple(name for name in EVIDENCE if name != 'capacity-reference.json') + ('accepted-baseline.json', 'baseline-comparison.json')
 SHA256 = re.compile(r'[0-9a-f]{64}')
 
 
@@ -67,9 +70,59 @@ def accepted_baseline(path):
     return accepted
 
 
+def catalog_names(data):
+    if data.get('status') != 'accepted-catalog':
+        return None
+    names = data.get('baselines')
+    if (data.get('schema') != 1 or not isinstance(names, list) or not names
+            or any(not isinstance(name, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]*\.json', name) for name in names)
+            or len(set(names)) != len(names)):
+        raise ValueError('Baseline catalog requires unique safe sibling JSON filenames')
+    return names
+
+
+def baseline_paths(path):
+    path = Path(path).resolve()
+    names = catalog_names(read(path))
+    paths = [path] if names is None else [path.parent / name for name in names]
+    if any(item.resolve().parent != path.parent or item.resolve() == path for item in paths) and names is not None:
+        raise ValueError('Baseline catalog entries must be sibling leaf files')
+    for item in paths:
+        accepted_baseline(item)
+    return paths
+
+
+def select_baseline(path, host, profile):
+    matches = [item for item in baseline_paths(path)
+               if matching_host(accepted_baseline(item)['proposal']['measurementIdentity']['values'].get('host', {}), host)]
+    if len(matches) != 1:
+        raise ValueError('Exactly one reviewed baseline must match the actual runner hardware; found ' + str(len(matches)))
+    selected = matches[0]
+    reference = accepted_baseline(selected)['proposal']
+    # Capacity chooses rate; it cannot silently change the workload or budgets.
+    measured = copy.deepcopy(profile)
+    measured['workload']['rate'] = reference['profile']['workload']['rate']
+    validate_trial_profile(measured)
+    if profile_identity(measured) != reference['measurementIdentity']['values']['profile']:
+        raise ValueError('Candidate profile differs from the accepted baseline')
+    return selected, measured
+
+
+def resolve_artifact_baseline(path, expected_sha):
+    matches = [item for item in baseline_paths(path) if sha_file(item) == expected_sha]
+    if len(matches) != 1:
+        raise ValueError('Accepted baseline changed after validation or is absent from the catalog')
+    return matches[0]
+
+
 class QualificationController(Controller):
     def setup(self):
-        self.accepted = accepted_baseline(self.args.baseline)
+        host = {'docker': json.loads(self.docker('info', '--format', '{{json .}}').stdout),
+                'cpu': cpu_identity(json.loads(self.command(['lscpu', '--json']).stdout)),
+                'runnerImage': os.environ.get('ImageOS'), 'runnerImageVersion': os.environ.get('ImageVersion')}
+        host['docker'] = {key: host['docker'][key] for key in DOCKER_FIELDS}
+        self.baseline_path, self.profile = select_baseline(self.args.baseline, host, self.profile)
+        self.accepted = accepted_baseline(self.baseline_path)
         self.reference = self.accepted['proposal']
         validate_trial_profile(self.profile)
         if profile_identity(self.profile) != self.reference['measurementIdentity']['values']['profile']:
@@ -81,7 +134,7 @@ class QualificationController(Controller):
         if package['lastRelease'].get('diagnosticOnly'):
             raise Inconclusive('Diagnostic packages cannot qualify for publication')
         super().setup()
-        shutil.copyfile(self.args.baseline, self.out / 'accepted-baseline.json')
+        shutil.copyfile(self.baseline_path, self.out / 'accepted-baseline.json')
         # A bounded version command resolves and inspects the real generator
         # before workload starts; final generator identity is checked again.
         r = self.profile['resources']['generator']
@@ -92,7 +145,8 @@ class QualificationController(Controller):
                      for key in ('Memory', 'MemorySwap', 'NanoCpus')}}
         identity = build_identity(self.out, generator=generator)
         write_json(self.out / 'measurement-identity.json', identity)
-        require_match(self.reference['measurementIdentity'], identity)
+        comparison = require_match(self.reference['measurementIdentity'], identity)
+        write_json(self.out / 'baseline-comparison.json', comparison)
         self.latency_baseline = {operation: {'p95Ms': data['p95Ms'], 'absoluteBudgetMs': self.accepted['latencyBudgetsMs'][operation]}
                                  for operation, data in self.reference['latency'].items()}
         self.memory_baseline = self.reference['memory']
@@ -102,7 +156,8 @@ class QualificationController(Controller):
         if self.summary.get('state') != 'complete':
             return
         identity = build_identity(self.out)
-        require_match(self.reference['measurementIdentity'], identity)
+        comparison = require_match(self.reference['measurementIdentity'], identity)
+        write_json(self.out / 'baseline-comparison.json', comparison)
         write_json(self.out / 'measurement-identity.json', identity)
         if (self.summary['status'] == 'inconclusive'
                 and self.summary.get('assessments') == {'traffic': 'passed', 'resources': 'passed', 'memory': 'passed'}
@@ -161,11 +216,14 @@ def verify_completed_run(run, candidate, baseline, *, validation_only):
     for name, expected in receipt['files'].items():
         if sha_file(run / name) != expected:
             raise ValueError('Qualified evidence changed: ' + name)
-    if sha_file(baseline) != receipt['baselineSha256'] or sha_file(run / 'accepted-baseline.json') != receipt['baselineSha256']:
+    baseline = resolve_artifact_baseline(baseline, receipt['baselineSha256'])
+    if sha_file(run / 'accepted-baseline.json') != receipt['baselineSha256']:
         raise ValueError('Accepted baseline changed after validation')
     accepted = accepted_baseline(baseline)
     identity = build_identity(run)
-    require_match(accepted['proposal']['measurementIdentity'], identity)
+    comparison = require_match(accepted['proposal']['measurementIdentity'], identity)
+    if read(run / 'baseline-comparison.json') != comparison:
+        raise ValueError('Recorded baseline comparison changed')
     summary = read(run / 'summary.json')
     status = 'validation-passed' if validation_only else 'passed'
     if (summary.get('status') != status or summary.get('releaseQualified') is not (not validation_only) or summary.get('reasons')
@@ -193,7 +251,7 @@ def main():
     args.development, args.fault = False, 'none'
     # Missing acceptance is a preflight rejection, never a report-only fallback.
     try:
-        accepted_baseline(args.baseline)
+        baseline_paths(args.baseline)
     except (ValueError, KeyError, OSError) as error:
         parser.error(str(error))
     controller = QualificationController(args)

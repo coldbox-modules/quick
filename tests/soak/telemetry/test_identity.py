@@ -166,6 +166,34 @@ class IdentityTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'exactly one seed CommandBox version'):
                     build_identity(self.run)
 
+    def test_only_one_page_of_host_memory_reporting_variance_is_allowed(self):
+        host = self.read('host.json')
+        host['docker']['MemTotal'] = 16722006016
+        self.write('host.json', host)
+        before = build_identity(self.run)
+        for difference in (-4096, 0, 4096):
+            host['docker']['MemTotal'] = 16722006016 + difference
+            self.write('host.json', host)
+            after = build_identity(self.run)
+            self.assertEqual(require_match(before, after)['hostMemoryDifferenceBytes'], difference)
+            self.assertEqual(after['values']['host']['docker']['MemTotal'], 16722006016 + difference)
+        host['docker']['MemTotal'] += 1
+        self.write('host.json', host)
+        with self.assertRaisesRegex(ValueError, 'recalibration required: host'):
+            require_match(before, build_identity(self.run))
+        host['docker']['MemTotal'] = 16722006016 + 4096
+        for key in ('Model name', 'L2 cache', 'L3 cache'):
+            changed = copy.deepcopy(host)
+            next(row for row in changed['cpu']['lscpu'] if row['field'] == key + ':')['data'] = 'different'
+            self.write('host.json', changed)
+            with self.assertRaisesRegex(ValueError, 'recalibration required: host'):
+                require_match(before, build_identity(self.run))
+        self.write('host.json', host)
+        profile = copy.deepcopy(PROFILE)
+        profile['resources']['application']['heapMiB'] += 1
+        with self.assertRaisesRegex(ValueError, 'recalibration required'):
+            require_match(before, build_identity(self.run, profile=profile))
+
     def test_full_trial_cannot_be_shortened_or_weakened(self):
         validate_trial_profile(PROFILE)
         for key, value in (('plateauSeconds', 180), ('minimumLatencySamples', 199),

@@ -17,9 +17,9 @@ from controller import Controller, HERE, execute, write_json, sha_file
 from delivery import evaluate
 from verify_faults import read, verify as verify_cleanup_evidence
 
-# The reduced standard workload remains healthy at one CPU. A quarter CPU is
-# deliberate overload for this detector probe, never a calibration budget.
-QUOTAS = {'generator': 0.25, 'application': 0.25}
+# One CPU stayed healthy; a quarter CPU starved diagnostic HTTP collection.
+# Probe overload at half a CPU without changing the normal calibration budget.
+QUOTAS = {'generator': 0.25, 'application': 0.5}
 
 GENERATOR_WORK = '''import exec from 'k6/execution';
 import {options as normalOptions, setup as normalSetup, mixedJourney as original} from './workload.mjs';

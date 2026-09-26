@@ -304,7 +304,7 @@ the directory publisher behind the new gate.
 PREPARED_DIRECTORY --candidate FULL_SHA` is the explicit candidate gate entry
 point. There is no accepted baseline checked in yet. It requires a reviewed
 proposal with three distinct sealed CI trials, durable evidence and detector
-references, and an absolute budget for every operation. It verifies identical
+references, and an absolute budget for every operation. It verifies matching
 measurement inputs before load, applies the accepted latency and memory
 references, and verifies the generator again after the complete run. Only all
 passing assessments can produce `qualification.json`; its receipt binds the
@@ -1184,3 +1184,43 @@ timeouts now omit authentication headers from exception output; they still fail
 the run. This controller-source change requires fresh calibration and matching
 detector evidence. No workload, resource budget, duration or acceptance threshold
 has changed, and no full baseline trial has completed.
+
+
+### Standard-runner hardware and reviewed baseline selection
+
+Recorded `ubuntu-24.04-arm` hosts include both Neoverse-N2 and Neoverse-V3.
+Their model/stepping and L2/L3 cache sizes differ; the label alone does not prove
+comparable hardware. `v10-ci-host-comparison.json` retains the comparison of four
+actual CI host records. N2 hosts otherwise matching the recorded runner image,
+Docker/kernel identity and core count also differed by exactly 4,096 bytes in
+Docker's host memory total (16,722,006,016 versus 16,722,010,112 bytes).
+
+Identity comparison preserves and checksums every raw value. It permits only a
+4,096-byte host-memory reporting difference when every other measured value is
+identical. Container memory, JVM heap, CPU model/caches, image version, workload,
+resources, dependencies and executed sources still match exactly. Qualification
+records the signed difference and comparison policy in the sealed
+`baseline-comparison.json`; verification recomputes that record.
+
+The baseline entry point can be one accepted leaf or a catalog with schema 1,
+status `accepted-catalog`, and `baselines` listing unique sibling JSON filenames.
+Every leaf must independently contain three complete matching trials and the
+existing explicit review, durable evidence, budgets and detector records. A
+catalog selects exactly one reviewed leaf using the actual host identity before
+provisioning; unknown hardware and ambiguous matches stop validation. Only the
+selected leaf's calibrated arrival rate can replace the provisional profile rate.
+All other workload and budget settings must already match. Artifact verification
+requires that exact leaf checksum to remain a catalog member. The native release
+proof verifier downloads the catalog and its leaves from the exact tested commit.
+
+No catalog or accepted leaf has been created yet. The current v10 calibration
+continues collecting evidence for its actual hardware; it cannot accept another
+CPU model. This selection/comparison work does not change normal measured sources
+or invalidate that running calibration.
+
+The targeted quarter-CPU CI probe `36244253719` reproduced the local problem:
+generator exhaustion was attributed correctly, but application diagnostic HTTP
+timed out before traffic analysis. The failed attempt is retained under
+`ci-36244253719-saturation/`. The next diagnostic injection uses half a CPU after
+warmup, restoring the original allocation before cleanup. Its result is pending;
+no application overload proof is claimed from the quarter-CPU attempt.

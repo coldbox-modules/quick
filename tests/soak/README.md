@@ -1500,3 +1500,20 @@ one byte beyond either boundary, observed 40 KiB variation, CPU/cache/heap drift
 and tampering with the receipt's difference or bound. All 123 telemetry and 57
 release tests pass. Identity policy is outside measured workload source, so this
 comparison correction does not change the active v12 measurement conditions.
+
+### V12 development and measurement evidence
+
+`development-v12-cadence-20260926/development-verification.json` passes after the
+controller correction: 901/901 plateau journeys completed, traffic and resources
+passed, maximum application observation gap was 5.183 seconds and idle began
+26 ms after generator completion. The full declared development idle period,
+recorded controller source, collector flush, final JFR and live removal of owned
+containers, named/anonymous volumes and network were verified. Its short-schedule
+memory result remains inconclusive; this is not full calibration evidence.
+
+The measurement job in v12 diagnostic run `36252126235` passed. Downloaded raw
+JVM data independently reproduces healthy, retained-growth and late-growth
+classifications, with all child exit codes zero and final recordings retained.
+The canceled pilot preserved partial evidence, stopped both children and never
+qualified. Its evidence is under `ci-36252126235-measurement/`. Matching
+application/saturation diagnostics and calibration `36252125924` remain running.

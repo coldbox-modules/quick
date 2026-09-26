@@ -150,6 +150,8 @@ class Controller:
         p["fault"] = self.args.fault
         self.env["SOAK_FAULT_MODE"] = self.args.fault
         w = p["workload"]
+        if type(w.get("coverageRepeats", 1)) is not int or not 1 <= w.get("coverageRepeats", 1) <= 4:
+            raise Inconclusive("coverageRepeats must be an integer from 1 through 4")
         delay = w["warmupSeconds"] + w["rampSeconds"] + (w["plateauSeconds"] - 20 if self.args.fault == "late-latency" else 60)
         self.env["SOAK_FAULT_DELAY_MS"] = str(delay * 1000)
         write_json(self.out / "profile.json", p)

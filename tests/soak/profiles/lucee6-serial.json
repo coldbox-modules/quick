@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "id": "lucee6-serial-zgc-v1",
+  "id": "lucee6-serial-zgc-v2",
   "status": "provisional-unaccepted",
   "runner": "ubuntu-24.04",
   "architecture": "amd64",
@@ -18,18 +18,18 @@
   },
   "resources": {
     "application": {
-      "cpus": 2,
-      "memoryMiB": 3072,
-      "heapMiB": 1024,
+      "cpus": 3,
+      "memoryMiB": 4096,
+      "heapMiB": 2048,
       "jdbcPoolLimit": 16
     },
     "mysql": {
-      "cpus": 1,
+      "cpus": 0.5,
       "memoryMiB": 768,
       "maxConnections": 32
     },
     "generator": {
-      "cpus": 0.75,
+      "cpus": 0.25,
       "memoryMiB": 512
     },
     "collector": {
@@ -38,7 +38,7 @@
     }
   },
   "workload": {
-    "version": "v1",
+    "version": "v2",
     "seed": 20260925,
     "rate": 24,
     "vus": 100,
@@ -52,7 +52,8 @@
     "idleSeconds": 300,
     "windowSeconds": 300,
     "minimumFailuresPerCase": 100,
-    "minimumLatencySamples": 200
+    "minimumLatencySamples": 200,
+    "coverageRepeats": 4
   },
   "acceptedBaseline": null,
   "limits": {

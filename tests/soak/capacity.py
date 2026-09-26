@@ -24,6 +24,15 @@ def complete_rows(path):
     return [json.loads(line) for line in data[:data.rfind(b'\n') + 1].splitlines() if line]
 
 
+def rarest_operation_fraction(workload):
+    repeats = workload.get('coverageRepeats', 1)
+    if type(repeats) is not int or not 1 <= repeats <= 4:
+        raise ValueError('coverageRepeats must be an integer from 1 through 4')
+    # Reports rotate three sizes; graph and standalone detail each have 15%.
+    # Every repeated sample requires a distinct, asserted HTTP request.
+    return min(0.1 / 3 * repeats, 0.15)
+
+
 def recommendation(steps, profile):
     clean = []
     for step in steps:
@@ -37,8 +46,8 @@ def recommendation(steps, profile):
     w = profile['workload']
     required_vus = max(1, math.ceil(rate * highest['journeyP99Ms'] / 1000 * 2))
     # This is a feasibility check, not a waiver of actual per-window counts.
-    # The rarest operation is one of three equally rotated report sizes.
-    expected_minimum = rate * (w['windowSeconds'] - w['drainSeconds']) * 0.1 / 3
+    # Use the declared request coverage, without changing the arrival mix.
+    expected_minimum = rate * (w['windowSeconds'] - w['drainSeconds']) * rarest_operation_fraction(w)
     reasons = []
     if w.get('shortDevelopment'):
         reasons.append('development-capacity-cannot-qualify-trials')
@@ -60,12 +69,12 @@ def step_profile(base, rate):
         minimumLatencySamples=3, capacityProbe=True)
     if not base['workload'].get('shortDevelopment'):
         w = profile['workload']
-        # Rare reports receive 1/30 of arrivals. Compare aggregate step p95s
+        # Rare reports rotate within 10% of arrivals. Compare aggregate step p95s
         # only after each operation has >=200 samples; a three-minute low-rate
         # probe had only 5-10 and could mistake one slow response for a trend.
         # Full trials retain independent five-minute windows and trend rules.
         minimum = base['workload']['minimumLatencySamples']
-        seconds = math.ceil((minimum * 30 / rate + w['drainSeconds'] + w['requestTimeoutSeconds']) / 60) * 60
+        seconds = math.ceil((minimum / (rate * rarest_operation_fraction(w)) + w['drainSeconds'] + w['requestTimeoutSeconds'] * w.get('coverageRepeats', 1)) / 60) * 60
         seconds = max(seconds, config.get('stepSeconds', 180))
         w.update(plateauSeconds=seconds, windowSeconds=seconds, minimumLatencySamples=minimum,
                  minimumFailuresPerCase=base['workload']['minimumFailuresPerCase'])

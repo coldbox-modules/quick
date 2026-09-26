@@ -108,7 +108,7 @@ local process cleanup, **not yet GitHub matrix cancellation**.
 Method ID: `jdk21-zgc-nongenerational-periodic-jfr-v1`. The provisional runtime
 uses non-generational ZGC with a fixed periodic collection interval, identically
 in baseline and candidate. The pilot uses a 256 MiB heap and a five-second
-interval to validate detection cheaply. The application starts with a 1 GiB
+interval to validate detection cheaply. The v2 application profile starts with a 2 GiB
 heap and a 15-second interval; those conditions still require calibration.
 
 An external Java process attaches through the local JMX management agent and
@@ -438,7 +438,7 @@ written only after successful evidence collection and only if its rate can
 satisfy the full latency sample floor. No baseline is accepted automatically.
 CI capacity steps collect at least 200 observations per operation and compare
 aggregate step p95s before increasing the rate. Low-rate steps consequently take
-longer (the initial 5/second step takes 21 minutes). They do not replace the
+longer (the v2 5/second step takes seven minutes). They do not replace the
 independent five-minute windows or 60-minute baseline trials. Development probes
 remain short and cannot produce a qualifying profile.
 
@@ -591,3 +591,29 @@ publication stub had no steps or artifact. Native cancellation now has terminal
 verified evidence for functional failure (`36214152174`), soak failure
 (`36213861303`), and explicit cancellation (`36214387610`). The all-pass scenario
 and final release-workflow integration remain outstanding.
+
+
+### Provisional v2 coverage and resource calibration
+
+Capacity run `36213189453` completed a clean 21-minute step at 5 journeys/second
+on v1, then lost application responsiveness at 10/second and failed final
+collection. Its 3/second recommendation could provide only 27 observations for
+the rarest operation in the first comparison window; it is ineligible for
+baseline trials. The failure and raw measurements remain retained.
+
+The provisional v2 profile assigns the application 3 CPUs, 2 GiB heap and 4 GiB
+container memory, MySQL 0.5 CPU, the generator 0.25 CPU and the collector 0.25 CPU.
+The earlier clean step showed low database/generator CPU consumption and substantial
+application work. These revised allocations still require measured headroom.
+The journey mix stays fixed. Each report, query-variant and expected-failure
+journey executes four actual request sequences, with independent assertions and
+unique ownership tokens for each repeated write/recovery. Journey counters still
+count one arrival; operation counters count only completed requests. Historical
+profiles without `coverageRepeats` retain one sequence.
+
+The latency floor stays at 200 observations per operation per comparison window.
+The capacity feasibility check now accounts for those real repeated operations;
+actual window counts still decide validity. The full schedule and failure checks
+are unchanged. This workload/resource revision invalidates prior calibration:
+fresh capacity, full trials and detector proofs are required. No v2 baseline is
+accepted, and the release gate remains disabled.

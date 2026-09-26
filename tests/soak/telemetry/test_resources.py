@@ -14,7 +14,7 @@ def healthy():
     jvm = [{'kind': 'runtime', 'javaVersion': '21.0.10+7-LTS'}]
     observations = []
     for t in range(START, FINISH + 1, 10000):
-        jvm.append(dict(kind='sample', time=t, uptimeMs=t+1, heapMax=1024*1024*1024,
+        jvm.append(dict(kind='sample', time=t, uptimeMs=t+1, heapMax=PROFILE['resources']['application']['heapMiB']*1024*1024,
                         threads=44, descriptors=120, metaspaceUsed=70*1024*1024,
                         rssBytes=2000*1024*1024, processCpuTimeNs=t*1000))
         observations.append({'time': t, 'application': dict(bootId='one', applicationStarts=1, uptimeMs=t+1,

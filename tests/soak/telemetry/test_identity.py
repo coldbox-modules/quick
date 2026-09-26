@@ -101,7 +101,7 @@ class IdentityTests(unittest.TestCase):
 
     def test_budget_runner_and_fixture_changes_each_block_comparison(self):
         for name, change in (
-            ('profile.json', lambda x: x['resources']['application'].update(heapMiB=2048)),
+            ('profile.json', lambda x: x['resources']['application'].update(heapMiB=x['resources']['application']['heapMiB'] + 512)),
             ('host.json', lambda x: x.update(runnerImageVersion='20261001.1')),
             ('fixtures/fixture-manifest.json', lambda x: x.update(sqlSha256='seed-b')),
             ('generator.json', lambda x: x.update(image='sha256:new-k6')),

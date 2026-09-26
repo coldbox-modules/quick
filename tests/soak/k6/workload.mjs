@@ -8,6 +8,8 @@ import * as c from './contracts.mjs';
 
 const profile = JSON.parse(open(__ENV.SOAK_PROFILE));
 const w = profile.workload;
+const coverageRepeats = w.coverageRepeats ?? 1;
+c.invariant(Number.isInteger(coverageRepeats) && coverageRepeats >= 1 && coverageRepeats <= 4, 'coverage repeats must be an integer from 1 through 4');
 const fixtureRows = new SharedArray('post-fixtures', () => {
     const f = JSON.parse(open(__ENV.SOAK_FIXTURES));
     return Array.from({length: 10000}, (_, i) => ({comments: f.postCommentCounts[String(i+1)], tags: f.postTags[String(i+1)]}));
@@ -151,36 +153,43 @@ export function mixedJourney() {
         write(token);
     } else if (journey === 'report') {
         const limit = [100, 500, 1000][(Math.floor(n / 100) * 10 + slot - 65) % 3];
-        request('GET', `/api/reports/posts?limit=${limit}`, `report_${limit}`,
-            (b, r) => c.report(b, limit, r.body.length, {reportChecksums: fixtureMeta}, v => crypto.sha256(v, 'hex')));
-        samples.add(1, {bucket: `report_${limit}`});
+        for (let repeat = 0; repeat < coverageRepeats; repeat++) {
+            request('GET', `/api/reports/posts?limit=${limit}`, `report_${limit}`,
+                (b, r) => c.report(b, limit, r.body.length, {reportChecksums: fixtureMeta}, v => crypto.sha256(v, 'hex')));
+            samples.add(1, {bucket: `report_${limit}`});
+        }
     } else if (journey === 'variant') {
         const variant = (Math.floor(n / 100) * 5 + slot - 75) % 32;
-        request('GET', `/api/query-variants/${variant}`, 'query_variant', b => c.variant(b, variant));
-        samples.add(1, {bucket: `variant_${variant}`});
-    } else {
-        if (journey === 'missing_pk') {
-            missing(`/api/users/${2000000000 + pick(10000)}`, 'missing_pk', journey);
-            detail(3);
-        } else if (journey === 'empty_lookup') {
-            missing(`/api/users/lookup?message=${['default', 'custom', 'callback'][pick(3)]}`, 'empty_lookup', journey);
-            request('GET', '/api/users/lookup?email=user-3@example.invalid', 'lookup_recovery', b => c.user(b.data, 3));
-        } else if (journey === 'relationship') {
-            missing(pick(2) ? '/api/users/2/posts/1' : '/api/users/1/posts/2000000000', 'relationship_missing', journey);
-            request('GET', '/api/users/1/posts/1', 'relationship_recovery', b => c.post(b.data, 1));
-        } else if (journey === 'invalid_write') {
-            attempted.add(1, {case: journey});
-            request('POST', '/api/posts', 'invalid_write', (b,r) => c.invalid(r.status, b), 422, {ownerToken: token, title: ''}, journey);
-            scratch(token);
-            write(token);
-        } else if (journey === 'rollback') {
-            missing('/api/transactions/rollback', 'rollback', journey, 'POST', {ownerToken: token, title: 'rollback'});
-            scratch(token);
-            write(token);
+        for (let repeat = 0; repeat < coverageRepeats; repeat++) {
+            request('GET', `/api/query-variants/${variant}`, 'query_variant', b => c.variant(b, variant));
+            samples.add(1, {bucket: `variant_${variant}`});
         }
-        // Count verification only after persistence assertions and the recovery sequence succeed.
-        verified.add(1, {case: journey});
-        recovered.add(1, {case: journey});
+    } else {
+        for (let repeat = 0; repeat < coverageRepeats; repeat++) {
+            const repeatToken = `${token}_${repeat}`;
+            if (journey === 'missing_pk') {
+                missing(`/api/users/${2000000000 + pick(10000)}`, 'missing_pk', journey);
+                detail(3);
+            } else if (journey === 'empty_lookup') {
+                missing(`/api/users/lookup?message=${['default', 'custom', 'callback'][pick(3)]}`, 'empty_lookup', journey);
+                request('GET', '/api/users/lookup?email=user-3@example.invalid', 'lookup_recovery', b => c.user(b.data, 3));
+            } else if (journey === 'relationship') {
+                missing(pick(2) ? '/api/users/2/posts/1' : '/api/users/1/posts/2000000000', 'relationship_missing', journey);
+                request('GET', '/api/users/1/posts/1', 'relationship_recovery', b => c.post(b.data, 1));
+            } else if (journey === 'invalid_write') {
+                attempted.add(1, {case: journey});
+                request('POST', '/api/posts', 'invalid_write', (b,r) => c.invalid(r.status, b), 422, {ownerToken: repeatToken, title: ''}, journey);
+                scratch(repeatToken);
+                write(repeatToken);
+            } else if (journey === 'rollback') {
+                missing('/api/transactions/rollback', 'rollback', journey, 'POST', {ownerToken: repeatToken, title: 'rollback'});
+                scratch(repeatToken);
+                write(repeatToken);
+            }
+            // Count verification only after persistence assertions and the recovery sequence succeed.
+            verified.add(1, {case: journey});
+            recovered.add(1, {case: journey});
+        }
     }
     completed.add(1, {journey});
     duration.add(Date.now() - begin, {journey});

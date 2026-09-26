@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
-from capacity import complete_rows, recommendation, step_profile, warmup_profile
+from capacity import complete_rows, recommendation, rarest_operation_fraction, step_profile, warmup_profile
 
 PROFILE = json.loads((Path(__file__).parents[1] / 'profiles/lucee6-serial.json').read_text())
 
@@ -34,6 +34,8 @@ class CapacityTests(unittest.TestCase):
         result = recommendation([self.step(5), self.step(10), self.step(20, False)], PROFILE)
         self.assertEqual(result['rate'], 6)
         self.assertEqual(result['highestCleanRate'], 10)
+        self.assertEqual(result['expectedRarestOperationSamplesInFirstWindow'], 216)
+        self.assertTrue(result['trialProfileEligible'])
 
     def test_slow_journeys_require_vu_headroom_without_silent_rate_reduction(self):
         result = recommendation([self.step(40, p99=5000)], PROFILE)
@@ -44,9 +46,22 @@ class CapacityTests(unittest.TestCase):
     def test_low_rate_cannot_waive_production_latency_sample_floor(self):
         result = recommendation([self.step(5)], PROFILE)
         self.assertEqual(result['rate'], 3)
+        self.assertEqual(result['expectedRarestOperationSamplesInFirstWindow'], 108)
         self.assertFalse(result['trialProfileEligible'])
         self.assertIn('selected-rate-cannot-meet-latency-sample-floor-revise-coverage-and-recalibrate', result['reasons'])
         self.assertEqual(PROFILE['workload']['minimumLatencySamples'], 200)
+
+    def test_old_coverage_does_not_gain_samples_from_new_profile_defaults(self):
+        profile = copy.deepcopy(PROFILE)
+        del profile['workload']['coverageRepeats']
+        result = recommendation([self.step(10)], profile)
+        self.assertEqual(result['expectedRarestOperationSamplesInFirstWindow'], 54)
+        self.assertFalse(result['trialProfileEligible'])
+
+    def test_unbounded_or_invalid_repetition_is_rejected(self):
+        for value in (0, 5, 1.5, True, '4'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                rarest_operation_fraction({'coverageRepeats': value})
 
     def test_no_clean_step_is_inconclusive(self):
         result = recommendation([self.step(5, False)], PROFILE)
@@ -80,8 +95,8 @@ class CapacityTests(unittest.TestCase):
                 stage = step_profile(PROFILE, rate)['workload']
                 self.assertEqual(stage['minimumLatencySamples'], 200)
                 self.assertEqual(stage['windowSeconds'], stage['plateauSeconds'])
-                usable = stage['plateauSeconds'] - stage['drainSeconds'] - stage['requestTimeoutSeconds']
-                self.assertGreaterEqual(usable * rate / 30, 200)
+                usable = stage['plateauSeconds'] - stage['drainSeconds'] - stage['requestTimeoutSeconds'] * stage['coverageRepeats']
+                self.assertGreaterEqual(usable * rate * rarest_operation_fraction(stage), 200)
         self.assertEqual(PROFILE['workload']['windowSeconds'], 300)
 
 

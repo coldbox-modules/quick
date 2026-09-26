@@ -18,9 +18,9 @@ def traffic():
 def rows(generator=10, application=10, mysql=10, start=100000):
     return [{'time': start + i * 10000, 'application': {'jdbcWaiting': 0, 'queuedRequests': 0},
              'database': {'lockWaits': 0}, 'containers': [
-                 {'Name': 'run-k6', 'CPUPerc': str(generator) + '%'},
-                 {'Name': 'run-app', 'CPUPerc': str(application) + '%'},
-                 {'Name': 'run-mysql', 'CPUPerc': str(mysql) + '%'}]} for i in range(4)]
+                 {'Name': 'run-k6', 'CPUPerc': str(generator * PROFILE['resources']['generator']['cpus']) + '%'},
+                 {'Name': 'run-app', 'CPUPerc': str(application * PROFILE['resources']['application']['cpus']) + '%'},
+                 {'Name': 'run-mysql', 'CPUPerc': str(mysql * PROFILE['resources']['mysql']['cpus']) + '%'}]} for i in range(4)]
 
 
 class DeliveryTests(unittest.TestCase):
@@ -29,13 +29,13 @@ class DeliveryTests(unittest.TestCase):
                         state or {'ExitCode': 99, 'OOMKilled': False})
 
     def test_generator_saturation_is_inconclusive_not_a_missing_exception_bug(self):
-        result = self.assess(observations=rows(generator=75))
+        result = self.assess(observations=rows(generator=100))
         self.assertEqual(result['status'], 'inconclusive')
         self.assertEqual(result['reasons'], ['delivery-generator-capacity-exhausted'])
         self.assertEqual(result['missingCoverage'], ['insufficient-failure-coverage:rollback'])
 
     def test_application_saturation_at_offered_load_fails(self):
-        result = self.assess(observations=rows(application=190))
+        result = self.assess(observations=rows(application=95))
         self.assertEqual(result['status'], 'failed')
         self.assertIn('delivery-application-overloaded', result['reasons'])
 
@@ -45,7 +45,7 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(self.assess(observations=observations)['status'], 'failed')
 
     def test_both_saturated_or_no_proven_cause_are_inconclusive(self):
-        result = self.assess(observations=rows(generator=75, application=200))
+        result = self.assess(observations=rows(generator=100, application=100))
         self.assertEqual(result['status'], 'inconclusive')
         self.assertIn('delivery-both-application-and-generator-saturated', result['reasons'])
         self.assertIn('delivery-cause-unresolved', self.assess()['reasons'])
@@ -59,7 +59,7 @@ class DeliveryTests(unittest.TestCase):
             with self.subTest(reason=reason):
                 data = traffic()
                 data['failures'].append(reason)
-                result = self.assess(data=data, observations=rows(generator=75))
+                result = self.assess(data=data, observations=rows(generator=100))
                 self.assertEqual(result['status'], 'failed')
                 self.assertIn(reason, result['reasons'])
 
@@ -72,20 +72,20 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(self.assess(data=data)['status'], 'failed')
 
     def test_pressure_outside_shortfall_window_cannot_explain_it(self):
-        result = self.assess(observations=rows(application=200, start=900000))
+        result = self.assess(observations=rows(application=100, start=900000))
         self.assertEqual(result['status'], 'inconclusive')
         self.assertEqual(result['reasons'], ['delivery-cause-unresolved'])
 
     def test_a_cpu_spike_or_gapped_samples_do_not_prove_sustained_overload(self):
-        observations = rows(application=200)
+        observations = rows(application=100)
         observations[1]['containers'][1]['CPUPerc'] = '10%'
         self.assertEqual(self.assess(observations=observations)['status'], 'inconclusive')
-        observations = rows(application=200)
+        observations = rows(application=100)
         for i, row in enumerate(observations): row['time'] = 100000 + i * 30000
         self.assertEqual(self.assess(observations=observations)['status'], 'inconclusive')
 
     def test_missing_generator_metrics_cannot_prove_application_only_saturation(self):
-        observations = rows(application=200)
+        observations = rows(application=100)
         for row in observations: row['containers'].pop(0)
         self.assertEqual(self.assess(observations=observations)['status'], 'inconclusive')
 

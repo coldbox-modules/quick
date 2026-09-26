@@ -46,6 +46,11 @@ class FullMatrixEvidenceTests(unittest.TestCase):
             self.write(f'artifacts/full-functional-{index}-123/testbox.json', {'totalPass': 10, 'totalFail': 0, 'totalError': 0})
         receipt = dict(candidateSha=self.sha, packageSha256=self.package_hash, baselineSha256='b'*64, evidenceSha256='c'*64)
         self.write('artifacts/release-soak-123-1/supervision/run/qualification.json', receipt)
+        self.write('artifacts/release-soak-123-1/supervision/run/summary.json', {'runId': 'full-trial'})
+        self.cleanup = 'artifacts/release-soak-123-1/supervision/cleanup-verification.json'
+        self.write(self.cleanup, {'passed': True, 'runId': 'full-trial', 'checks': {
+            key: True for key in ('controllerCleanupComplete', 'containersRemoved', 'volumesRemoved',
+                                 'networksRemoved', 'anonymousDatabaseVolumeRemoved')}})
         self.stub = 'artifacts/full-publication-proof-123/qualified-publication-stub.json'
         self.write(self.stub, {**self.eligibility, 'fullReceiptVerified': True, 'workflowRunId': '123',
             'published': False, 'providerWrites': 0, 'stubPublished': True,
@@ -94,6 +99,21 @@ class FullMatrixEvidenceTests(unittest.TestCase):
     def test_green_job_does_not_hide_a_failed_testbox_report(self):
         self.write('artifacts/full-functional-0-123/testbox.json', {'totalPass': 9, 'totalFail': 1, 'totalError': 0})
         self.assertFalse(verify(self.root)['checks']['everyActualTestBoxReportPassed'])
+
+    def test_success_requires_retained_cleanup_evidence(self):
+        (self.root / self.cleanup).unlink()
+        with self.assertRaises(FileNotFoundError):
+            verify(self.root)
+
+    def test_green_success_cannot_hide_leaked_resources_or_another_runs_cleanup(self):
+        proof = json.loads((self.root / self.cleanup).read_text())
+        proof['checks']['anonymousDatabaseVolumeRemoved'] = False
+        self.write(self.cleanup, proof)
+        self.assertFalse(verify(self.root)['passed'])
+        proof['checks']['anonymousDatabaseVolumeRemoved'] = True
+        proof['runId'] = 'another-trial'
+        self.write(self.cleanup, proof)
+        self.assertFalse(verify(self.root)['passed'])
 
     def prepare_functional_failure(self):
         from verify_full_probe import epoch

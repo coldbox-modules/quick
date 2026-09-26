@@ -137,6 +137,7 @@ def verify(output):
     test_steps = [step(job, 'Run TestBox Tests') for job in functional]
     artifacts = output / 'artifacts'
     run = one(artifacts.glob('release-soak-*/supervision/run'), 'full qualified run')
+    cleanup, summary = read(run.parent / 'cleanup-verification.json'), read(run / 'summary.json')
     stub_path = one(artifacts.rglob('qualified-publication-stub.json'), 'full publication proof')
     baseline = output / 'candidate-baseline.json'
     eligibility = inspect_artifact(run, workflow['head_sha'], baseline)
@@ -149,6 +150,9 @@ def verify(output):
         'exactFunctionalMatrix': len(functional) == len(expected) == 23 and {j['name'] for j in functional} == expected,
         'exactJobCount': len(jobs) == 25,
         'everyValidationPassed': all(j['conclusion'] == 'success' for j in validations),
+        'ownedResourcesRemoved': cleanup.get('passed') is True and bool(summary.get('runId'))
+            and cleanup.get('runId') == summary['runId'] and all(cleanup.get('checks', {}).get(key) is True for key in
+                ('controllerCleanupComplete', 'containersRemoved', 'volumesRemoved', 'networksRemoved', 'anonymousDatabaseVolumeRemoved')),
         'everyActualTestBoxReportPassed': len(reports) == 23 and {row['name'] for row, _ in reports} == expected and all(
             str(row.get('workflowRunId')) == str(workflow['id']) and report.get('totalFail') == 0
             and report.get('totalError') == 0 and report.get('totalPass', 0) > 0 for row, report in reports),

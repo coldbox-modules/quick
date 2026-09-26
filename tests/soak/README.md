@@ -1700,7 +1700,13 @@ with 18 MiB late-versus-early growth and no warnings. Collector flush and the
 30,055,461-byte final JFR are retained. Evidence is under
 `ci-36252125924-trial-1/`, including `raw-trial-review.json`,
 `profile-source-coverage-verification.json` and original GitHub artifact metadata.
-Artifact `10911465944` expires on 2026-10-26; it is not yet a durable trial archive.
+Artifact `10911465944` expires on 2026-10-26. A separate copy now exists in the
+[draft calibration evidence release](https://github.com/coldbox-modules/quick/releases/tag/untagged-428fc0de3f77361e1253)
+(release ID `397323222`). The original ZIP's digest matches GitHub, all 212
+members match the reviewed download, and all five remote assets passed readback
+hashing. Replay from the archived sources reproduces the full review exactly.
+Proofs are in `calibration-archive-v12-36252125924/`. This editable draft retains
+evidence beyond Actions expiry without publishing Quick or accepting a baseline.
 
 Trial two started at 16:59:57 UTC on 2026-09-26. Baseline acceptance still requires
 the remaining matching full trials, independent-host/noise review, durable

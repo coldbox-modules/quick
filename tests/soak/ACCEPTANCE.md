@@ -49,6 +49,7 @@ GitHub Actions artifacts have finite retention.
 |---|---|
 | `ci-36252125924-trial-1/raw-trial-review.json` | First v12 full trial is `calibration-passed`: 14,401/14,401 journeys at 6/second, all four raw assessments reproduce and the evidence seal verifies. Maximum application sample gap is 10.099 seconds; idle starts 23 ms after generator completion. Collector flush and a 30,055,461-byte final JFR are retained. This is one healthy trial, not an accepted baseline. |
 | `ci-36252125924-trial-1/profile-source-coverage-verification.json` | Current measured sources and calibrated profile match exactly. Each of five expected failure cases has 2,304 attempts, verifications and successful follow-ups; the minimum operation/window latency count is 212 against the 200 floor. Boot identity and final resource release checks pass. Retained growth is 18 MiB across 155 major cycles, with no memory warnings. |
+| `calibration-archive-v12-36252125924/trial-1-remote-verification.json` | Original Actions ZIP matches GitHub's digest and all 212 members match the reviewed download. All five assets in draft evidence release `397323222` pass remote readback hashing. Replaying the archived analyzer sources reproduces the complete review. The draft remains editable; latest product release v13.0.4 is unchanged. |
 | `development-v12-cadence-20260926/development-verification.json` | All 901/901 journeys completed, traffic/resources passed, maximum application observation gap was 5.183 seconds and idle began 26 ms after generator completion. Final JFR, collector flush and live owned-resource cleanup checks passed. Short-schedule memory remains inconclusive. |
 | `ci-36252126235-measurement/raw-evidence-verification.json` | V12 raw JVM reanalysis reproduces healthy, retained-growth and late-growth classifications. Final recordings and all child exits verified; cancellation retained partial evidence and could not qualify. |
 | `ci-36252126235-saturation/raw-evidence-verification.json` | Both v12 traffic and attribution results exactly match raw reanalysis: generator exhaustion is inconclusive (48/829 journeys), application overload fails (59/94). Final recordings and collector flush verified; original CI cleanup checks passed. |
@@ -92,6 +93,15 @@ GitHub artifact digests. A separate copy is retained in the
 (release ID `397309485`, bundle asset ID `591005637`). All four archive assets
 passed downloaded-byte verification. Draft access requires repository permission;
 the draft is editable and does not accept a baseline or publish Quick.
+
+The first healthy full trial is retained in a separate
+[draft calibration evidence release](https://github.com/coldbox-modules/quick/releases/tag/untagged-428fc0de3f77361e1253)
+(release ID `397323222`). The original ZIP is 27,383,873 bytes, SHA-256
+`5f8266d1df796f78303dd627b9f42ef110b095dd6459a6dc197aef2c5ceffd20`.
+Its five assets include the member manifest, review source/results and archive
+reproduction proof. Remote readback verification is recorded separately above.
+This retains one healthy trial outside Actions expiry; baseline acceptance and
+remaining trials are still pending.
 
 Current CI handles, checked on 2026-09-26:
 

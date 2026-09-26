@@ -419,6 +419,21 @@ Every failure verifier requires blocked publication, retained HTTP/JVM evidence,
 and owned-resource cleanup. These full-matrix scenarios are staged and unit
 checked; their real native executions remain pending baseline acceptance.
 
+For two complete `all-pass` runs whose tags contain `-serialization-`, run:
+
+```sh
+python3 tests/soak/release/verify_full_serialization.py \
+  --evidence tests/results/soak/full-matrix-FIRST tests/results/soak/full-matrix-SECOND \
+  --output tests/results/soak/full-serialization
+```
+
+It re-verifies each raw full receipt and actual uploaded ZIP, then requires real
+contention (the second validation is ready while the first guard is held),
+nonoverlapping guard jobs/promotion bodies, and both three-minute holds. Separate
+preparations may embed different timestamped notes; each uploaded ZIP must match
+its own tested receipt. The native proof establishes guard behavior; adapter
+tests separately prove rejection when provider state invalidates preparation.
+
 ## Remaining acceptance work
 
 - Obtain an eligible capacity target and validate the complete 60-minute workload

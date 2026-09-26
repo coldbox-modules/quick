@@ -40,6 +40,8 @@ def recommendation(steps, profile):
     # The rarest operation is one of three equally rotated report sizes.
     expected_minimum = rate * (w['windowSeconds'] - w['drainSeconds']) * 0.1 / 3
     reasons = []
+    if w.get('shortDevelopment'):
+        reasons.append('development-capacity-cannot-qualify-trials')
     if required_vus > w['vus']:
         reasons.append('increase-generator-allocation-and-repeat-capacity-calibration')
     if expected_minimum < w['minimumLatencySamples']:

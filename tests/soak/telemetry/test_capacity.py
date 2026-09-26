@@ -44,6 +44,13 @@ class CapacityTests(unittest.TestCase):
         self.assertIsNone(result['rate'])
         self.assertFalse(result['trialProfileEligible'])
 
+    def test_development_capacity_is_never_labeled_trial_eligible(self):
+        profile = copy.deepcopy(PROFILE)
+        profile['workload'].update(shortDevelopment=True, minimumLatencySamples=1)
+        result = recommendation([self.step(5)], profile)
+        self.assertFalse(result['trialProfileEligible'])
+        self.assertIn('development-capacity-cannot-qualify-trials', result['reasons'])
+
     def test_a_later_clean_step_cannot_erase_an_earlier_failure(self):
         result = recommendation([self.step(5), self.step(10, False), self.step(40)], PROFILE)
         self.assertEqual(result['highestCleanRate'], 5)

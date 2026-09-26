@@ -124,7 +124,7 @@ def observe(output, timeout_seconds=1200):
         stop(output, wait=not canceled)
 
 
-def functional(output):
+def functional(output, timeout_seconds=1200):
     output.mkdir(parents=True, exist_ok=False)
     selected = mode()
     write(output / 'started.json', {'mode': selected, 'time': time.time()})

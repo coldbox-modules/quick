@@ -188,7 +188,8 @@ class Controller:
         server["JVM"]["args"] += " -Xlog:gc*:file=/work/jvm/gc.log:time,uptime,level,tags:filecount=4,filesize=16M"
         write_json(app / "server.json", server)
         image = "quick-soak-runtime:" + p["architecture"]
-        self.docker("build", "--platform", "linux/" + p["architecture"], "-t", image, source / "docker", log="image-build.log", timeout=600)
+        self.docker("build", "--platform", "linux/" + p["architecture"], "--build-arg", "SOURCE_DATE_EPOCH=0",
+                    "-t", image, source / "docker", log="image-build.log", timeout=600)
         self.image = image
         resources = p["resources"]
         self.network = True

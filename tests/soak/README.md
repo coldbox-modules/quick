@@ -159,6 +159,9 @@ encountered allocation stalls before fault activation. Latency injection delays
 are derived from the declared warmup/ramp schedule, so they still begin at the
 intended sustained or final plateau windows. This changes diagnostic timing,
 not the already-declared full release schedule.
+`late-latency-full-warmup-20260925/verification.json` verifies the revised local
+timing: all offered work completed, resources recovered, and the exact late
+report-latency rule produced an inconclusive result. CI proof is still pending.
 
 ## Application contracts
 
@@ -419,6 +422,14 @@ than 10% run-to-run p95 variation or unexplained retained-growth/noise blocks
 proposal readiness. This tool cannot accept a baseline or qualify a release.
 Seventy-seven telemetry/calibration policy tests and eleven package tests pass;
 no three-trial proposal has been produced from real full-length runs yet.
+
+Runtime image builds use a fixed `SOURCE_DATE_EPOCH=0` following
+[Docker's reproducible-build guidance](https://docs.docker.com/build/cache/invalidation/).
+Two earlier CI runners produced different runtime image IDs from the same
+Dockerfile and pinned inputs. `verify_image.py` now builds twice without cache
+and checks identical image identities before CI capacity work. The local arm64
+proof in `runtime-image-reproducibility-20260925/verification.json` produced
+identical image IDs on both fresh builds; the corresponding CI proof is pending.
 
 Delivery analysis aligns shortfall windows with container CPU budgets and
 application/database queues. Proven application saturation fails; generator

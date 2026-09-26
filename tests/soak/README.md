@@ -446,12 +446,13 @@ tests separately prove rejection when provider state invalidates preparation.
 
 ## Remaining acceptance work
 
-- Obtain an eligible capacity target and validate the complete 60-minute workload
-  in CI; only development schedules have completed end to end so far.
-- Repeat controlled detector proofs after any further profile change and retain
-  every unsuccessful attempt. The complete v8 CI diagnostics, including
-  generator/application saturation attribution and both latency faults, passed
-  in run `36221908854`; they do not establish an eligible capacity target.
+- Complete fresh v10 capacity calibration and validate the full 60-minute workload
+  in CI. An earlier v10 sweep established an eligible 6/second target, but its
+  first trial stopped during setup; no full trial has completed yet.
+- Finish the current v10 detector run and retain every unsuccessful attempt.
+  Current-source measurement/cancellation proofs passed in `36245768374`; its
+  application and saturation jobs are still running. Earlier v10 application
+  fault proofs passed, but the one-CPU and quarter-CPU overload attempts did not.
 - Run three full healthy CI trials, investigate noise and hosted-runner variance,
   establish a justified reference, and review an accepted baseline manifest.
 - Integrate verified immutable promotion under repository-wide publication
@@ -1265,3 +1266,13 @@ the temporary Playwright check are retained outside the repository under
 `/tmp/quick-soak-report-*`; physical mobile devices and other browser engines were
 not tested. Rendering occurs after measurement and is outside measured-source
 identity, so this presentation-only change does not invalidate active calibration.
+
+
+The measurement job in `36245768374` completed successfully. Raw JVM telemetry
+was reanalyzed locally with the recorded pilot windows and matches every saved
+assessment field: healthy passes, sustained growth fails, and late growth is
+inconclusive with its exact expected reason. All six child exit codes are zero,
+and each final recording is nonempty. Cancellation stopped both children,
+retained partial evidence and never qualified the interrupted run. This proof
+is saved in `ci-36245768374-measurement/raw-evidence-verification.json` and does
+not stand in for the still-running application or full calibration work.

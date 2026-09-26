@@ -155,7 +155,8 @@ The diagnostic workflow also accepts explicit `soak-diagnostics-*` tags so it ca
 be validated before the new workflow exists on the default branch. These tags
 have no publication capability and do not add soak traffic to branch/PR/cron
 workflows. Capacity selection and full baseline trials use the separate CI
-calibration entry point above; completed full calibration remains pending.
+calibration entry point above. Six v12 full trials and matching detectors support
+the reviewed N2 baseline; full native release integration remains pending.
 
 ```sh
 python3 -m unittest discover -s tests/soak/telemetry -p 'test_*.py' -v
@@ -297,7 +298,8 @@ It exercises actual HTTP contracts, concurrent committed writes and re-queries,
 real Quick not-found paths, rollback, cleanup, deterministic reads, cache
 eviction, and stable lifecycle identity. The controller now provisions those
 dependencies automatically and exercises the endpoints with arrival-rate k6
-traffic. Resource and memory analysis are integrated; CI calibration and release qualification remain pending.
+traffic. Resource and memory analysis are integrated, and the N2 CI baseline is
+accepted. Full native candidate qualification remains pending.
 
 ## Package identity and promotion
 
@@ -374,7 +376,7 @@ candidate SHA, exact ZIP, accepted-baseline checksum, and raw evidence. Promotio
 must call `verify_qualification` after downloading the artifacts. A missing
 baseline, development run, calibration trial, diagnostic package, or changed
 evidence cannot qualify publication. This entry point remains disconnected from
-the live release workflow until baseline and detector acceptance are complete.
+the live release workflow until full native integration acceptance is complete.
 
 No-release preparations use the separate `package.py build-validation` command.
 It retains the original preparation inside the artifact metadata, reuses the last
@@ -390,9 +392,10 @@ full native no-release validation remains an acceptance requirement.
 
 `release/release.yml.pending` is a reviewable replacement for the release workflow;
 GitHub does not execute it from that location. The live `.github/workflows/release.yml`
-remains unchanged. Before activation, finish the acceptance work below, freeze the
-capacity-selected profile and review `baselines/lucee6-serial.json`, then install
-the template as the live release workflow in that reviewed update.
+remains unchanged. The capacity-selected profile and
+`baselines/lucee6-serial.json` are reviewed. Before activation, finish the native
+integration acceptance below, then install the verified template as the live
+release workflow.
 
 The template retains the main/master trigger and version-update skip rule. Its
 explicit matrix has one soak row first and the same 23 functional combinations,
@@ -405,8 +408,9 @@ builder from the prepared metadata. `release/supervisor.py` launches the full
 qualification independently, reuses the native-tested single-signal handoff,
 and allows up to 90 minutes for observation. Always-run cleanup waits for owned
 resources to disappear. A missing baseline stops before provisioning; it cannot
-select a report-only fallback. Full native validation with this wrapper remains
-pending accepted-baseline availability.
+select a report-only fallback. Full native validation with this wrapper is
+running against the accepted baseline; current handles are in
+[ACCEPTANCE.md](ACCEPTANCE.md).
 
 The publisher depends on the entire validation matrix and holds one repository
 publication concurrency group with cancellation disabled. After artifact download,
@@ -430,8 +434,8 @@ The generator preserves every validation row, workload command and qualification
 step. It removes the release-marker skip condition, adds diagnostic fault hooks
 and TestBox JSON output retention, and replaces the entire publisher job.
 Diagnostic CI checks these explicit transformations against the pending template.
-This full proof uses manual dispatch or `soak-release-proof-<mode>-*` tags;
-dispatch waits for accepted baseline availability. It retains the same fail-fast
+This full proof uses manual dispatch or `soak-release-proof-<mode>-*` tags and
+requires an accepted baseline. It retains the same fail-fast
 behavior, supervisor, receipt checks, package artifact and timeouts. It is not
 a development fallback.
 
@@ -444,7 +448,7 @@ repository permissions and no ForgeBox credential. Tags containing
 `-serialization-` hold its dedicated diagnostic publication guard for 180 seconds.
 Artifacts are `release-soak-<SHA>-<attempt>` and
 `full-publication-proof-<run ID>`. Unit checks prove routing and exact-byte local
-promotion; full native receipt/promotion evidence is still pending calibration.
+promotion; full native receipt/promotion evidence awaits the active full-hour runs.
 After a full proof run reaches a terminal state, download and inspect it with:
 
 ```sh
@@ -480,8 +484,10 @@ used source commit `418ee99` with live provider identity reads and the actual
 semantic-release 4.1.0 APIs. It produced a verified 49-file validation package
 and rejected the same preparation through the publication builder. Git refs
 were unchanged. This proves preparation and packaging only; that diagnostic
-commit has no accepted baseline and was not dispatched. Recreate the candidate
-from the accepted tree before running the required full native proof.
+commit has no accepted baseline and was not dispatched. The subsequent rehearsal
+in `no-release-reviewed-baseline-20260926/verification.json` uses the accepted
+source tree and produced a verified validation-only package. Its native proof is
+run `36268277722`; full receipt verification remains pending completion.
 
 Full-matrix modes are `all-pass`, `functional-failure`, `soak-failure` and
 `explicit-cancel`. Functional failure waits for live soak evidence, then adds
@@ -545,9 +551,11 @@ recorded and resolved through [the review](baselines/REVIEW.md), with durable
 hashed evidence and matching detector references. Neither calibration job's
 original proposal rejection is rewritten.
 
-- Run the full 23-row TestBox matrix plus one exact-package qualification row.
-- Verify both fail-fast directions, explicit cancellation, no-release validation,
-  and two overlapping all-pass runs using the native publication guard.
+- Complete and verify the active full 23-row TestBox matrix plus one
+  exact-package qualification row in each all-pass and no-release run.
+- Verify no-release validation and actual publication-guard contention between
+  the two all-pass runs. Both fail-fast directions and explicit cancellation
+  are already verified and archived.
 - Enable the staged release workflow only after those proofs pass, preserving
   all 23 functional rows, one soak row, existing triggers and skip semantics.
 - Deliver the accepted manifests, full reports, promotion/cancellation evidence,

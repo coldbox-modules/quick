@@ -1,3 +1,12 @@
+# v13.0.6
+## 15 Oct 2026 — 21:32:15 UTC
+
+### fix
+
++ __refresh:__ replace stale attribute cast caches ([39432e8](https://github.com/coldbox-modules/quick/commit/39432e88af75e39cd5644245eca3d4bd5a9eb9db))
++ __refresh:__ hydrate projected rows with aliased primary keys ([4c05182](https://github.com/coldbox-modules/quick/commit/4c051823abf43da40b703bfe64c906140edb0753))
+
+
 # v13.0.5
 ## 15 Oct 2026 — 18:39:56 UTC
 

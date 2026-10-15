@@ -2,6 +2,21 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Result-set refresh snapshots", function() {
+			it( "retrieves fresh projected entities with aliased primary keys", function() {
+				var user = getInstance( "AliasedPrimaryKeyUser" ).withFullName().findOrFail( 1 );
+				queryExecute( "UPDATE `users` SET `first_name` = ? WHERE `id` = ?", [ "Aliased", 1 ] );
+
+				var fresh = user.fresh();
+				expect( fresh.getUserID() ).toBe( 1 );
+				expect( fresh.getFullName() ).toBe( "Aliased Peterson" );
+				expect( fresh.isLoaded() ).toBeTrue();
+				expect( fresh.isDirty( "userID" ) ).toBeFalse();
+				expect( fresh.isDirty( "firstName" ) ).toBeFalse();
+				expect( fresh.get_refreshQuery() ).toBeSameInstanceAs( user.get_refreshQuery() );
+				expect( fresh.fresh().getUserID() ).toBe( 1 );
+				expect( user.getFirstName() ).toBe( "Eric" );
+			} );
+
 			it( "shares an isolated projection snapshot across get results", function() {
 				assertSharedSnapshot( "get" );
 			} );

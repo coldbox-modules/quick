@@ -1569,7 +1569,10 @@ component accessors="true" {
 			return scopedQuery;
 		}
 		var globalQuery  = scopedQuery.activateGlobalScopes().getQB();
-		var refreshQuery = variables._refreshQuery.clone().offset( 0 );
+		var refreshQuery = structKeyExists( variables._refreshQuery, "cloneWithoutWheres" )
+		 ? variables._refreshQuery.cloneWithoutWheres()
+		 : variables._refreshQuery.clone();
+		refreshQuery.offset( 0 );
 		refreshQuery.setWheres( globalQuery.getWheres() );
 		var refreshBindings   = refreshQuery.getRawBindings();
 		refreshBindings.where = globalQuery.getRawBindings().where;

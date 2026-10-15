@@ -42,6 +42,33 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				var secondRead = query.get();
 				expect( firstRead[ 1 ].get_refreshQuery() ).notToBeSameInstanceAs( secondRead[ 1 ].get_refreshQuery() );
 			} );
+
+			it( "refreshes stale nested filters while retaining bound global projections and snapshot isolation", function() {
+				var user = getInstance( "UserWithGlobalScope" )
+					.whereUsername( "elpete" )
+					.where( function( query ) {
+						query
+							.where( "id", 1 )
+							.orWhere( function( nested ) {
+								nested.where( "id", 2 ).orWhere( "id", 3 );
+							} );
+					} )
+					.firstOrFail();
+				var snapshot         = user.get_refreshQuery();
+				var snapshotSQL      = snapshot.toSQL();
+				var snapshotBindings = duplicate( snapshot.getBindings() );
+				queryExecute( "UPDATE `users` SET `username` = ? WHERE `id` = ?", [ "refreshed_user", user.getId() ] );
+
+				user.refresh();
+				expect( user.getUsername() ).toBe( "refreshed_user" );
+				expect( user.getBoundCountryName() ).toBe( "United States" );
+				var fresh = user.fresh();
+				expect( fresh.getUsername() ).toBe( "refreshed_user" );
+				expect( fresh.getCountryName() ).toBe( "United States" );
+				expect( fresh.getBoundCountryName() ).toBe( "United States" );
+				expect( snapshot.toSQL() ).toBe( snapshotSQL );
+				expect( snapshot.getBindings() ).toBe( snapshotBindings );
+			} );
 		} );
 	}
 

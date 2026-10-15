@@ -493,11 +493,7 @@ component accessors="true" transientCache="false" {
 		if ( variables._asQuery ) {
 			return results;
 		}
-		var entities = [];
-		for ( var result in results ) {
-			entities.append( variables.loadEntity( result ) );
-		}
-		return entities;
+		return hydrateEagerRows( results );
 	}
 
 
@@ -537,10 +533,24 @@ component accessors="true" transientCache="false" {
 		if ( variables._asQuery ) {
 			return arguments.results;
 		}
-		var refreshQuery = variables.qb.clone();
-		var entities     = [];
+		// Every row in this result set uses the same projections. Keep one isolated
+		// query snapshot for refresh(), rather than cloning the graph for each row.
+		// refresh() clones this snapshot before applying an entity's key constraints.
+		var refreshQuery      = javacast( "null", "" );
+		var virtualAttributes = getEntity().get_virtualAttributes();
+		var entities          = [];
 		for ( var result in arguments.results ) {
-			entities.append( variables.loadEntity( result, refreshQuery ) );
+			if ( isNull( refreshQuery ) ) {
+				for ( var attribute in virtualAttributes ) {
+					if ( result.keyExists( attribute ) ) {
+						refreshQuery = variables.qb.clone();
+						break;
+					}
+				}
+			}
+			entities.append(
+				variables.loadEntity( result, isNull( refreshQuery ) ? javacast( "null", "" ) : refreshQuery )
+			);
 		}
 		return entities;
 	}
@@ -2014,10 +2024,7 @@ component accessors="true" transientCache="false" {
 			}
 			var entities = rows;
 			if ( !variables._asQuery ) {
-				entities = [];
-				for ( var row in rows ) {
-					entities.append( variables.loadEntity( row ) );
-				}
+				entities = hydrateEagerRows( rows );
 			}
 			var collection     = getEntity().newCollection( handleTransformations( eagerLoadRelations( entities ) ) );
 			var shouldContinue = arguments.callback( collection );
@@ -2053,11 +2060,7 @@ component accessors="true" transientCache="false" {
 			arguments.options
 		);
 		if ( !variables._asQuery ) {
-			var entities = [];
-			for ( var result in p.results ) {
-				entities.append( variables.loadEntity( result ) );
-			}
-			p.results = entities;
+			p.results = hydrateEagerRows( p.results );
 		}
 		p.results = handleTransformations( eagerLoadRelations( p.results ) );
 		return p;
@@ -2087,11 +2090,7 @@ component accessors="true" transientCache="false" {
 			arguments.options
 		);
 		if ( !variables._asQuery ) {
-			var entities = [];
-			for ( var result in p.results ) {
-				entities.append( variables.loadEntity( result ) );
-			}
-			p.results = entities;
+			p.results = hydrateEagerRows( p.results );
 		}
 		p.results = handleTransformations( eagerLoadRelations( p.results ) );
 		return p;

@@ -10,7 +10,8 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( fresh.getUserID() ).toBe( 1 );
 				expect( fresh.getFullName() ).toBe( "Aliased Peterson" );
 				expect( fresh.isLoaded() ).toBeTrue();
-				expect( fresh.isDirty() ).toBeFalse();
+				expect( fresh.isDirty( "userID" ) ).toBeFalse();
+				expect( fresh.isDirty( "firstName" ) ).toBeFalse();
 				expect( fresh.get_refreshQuery() ).toBeSameInstanceAs( user.get_refreshQuery() );
 				expect( fresh.fresh().getUserID() ).toBe( 1 );
 				expect( user.getFirstName() ).toBe( "Eric" );

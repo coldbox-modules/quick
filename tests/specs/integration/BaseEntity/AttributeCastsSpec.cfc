@@ -106,6 +106,57 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 				expect( pn.isNullAttribute( "confirmed" ) ).toBeTrue( "[confirmed] should remain null after saving" );
 			} );
 
+			it( "refreshes cached boolean casts after external updates", () => {
+				var pn = getInstance( "PhoneNumber" ).findOrFail( 3 );
+				expect( pn.isNullAttribute( "confirmed" ) ).toBeTrue();
+
+				queryExecute( "UPDATE `phone_numbers` SET `confirmed` = 1 WHERE `number` = ?", [ pn.getNumber() ] );
+				pn.refresh();
+				expect( pn.getConfirmed() ).toBeTrue();
+
+				queryExecute( "UPDATE `phone_numbers` SET `confirmed` = 0 WHERE `number` = ?", [ pn.getNumber() ] );
+				pn.refresh();
+				expect( pn.isNullAttribute( "confirmed" ) ).toBeFalse();
+				expect( pn.getConfirmed() ).toBeFalse();
+
+				queryExecute( "UPDATE `phone_numbers` SET `confirmed` = NULL WHERE `number` = ?", [ pn.getNumber() ] );
+				pn.refresh();
+				expect( pn.isNullAttribute( "confirmed" ) ).toBeTrue();
+			} );
+
+			it( "refreshes cached object casts from raw database values", () => {
+				var theme = getInstance( "Theme" ).create( {
+					"slug"    : "refresh-cast-cache",
+					"version" : "1.0.0",
+					"config"  : { "primaryColor" : "orange" }
+				} );
+				expect( theme.getConfig().primaryColor ).toBe( "orange" );
+				queryExecute(
+					"UPDATE `themes` SET `config` = ? WHERE `slug` = ?",
+					[
+						serializeJSON( { "primaryColor" : "blue" } ),
+						theme.getSlug()
+					]
+				);
+				theme.refresh();
+				expect( theme.getConfig().primaryColor ).toBe( "blue" );
+			} );
+
+			it( "refreshes cached casts through a stored projection snapshot", () => {
+				var pn = getInstance( "PhoneNumber" )
+					.appendVirtualAttribute( "refreshMarker" )
+					.selectRaw( "1 AS refreshMarker" )
+					.findOrFail( 3 );
+				queryExecute( "UPDATE `phone_numbers` SET `confirmed` = 1 WHERE `number` = ?", [ pn.getNumber() ] );
+				pn.refresh();
+				expect( pn.getConfirmed() ).toBeTrue();
+				queryExecute( "UPDATE `phone_numbers` SET `confirmed` = 0 WHERE `number` = ?", [ pn.getNumber() ] );
+				pn.refresh();
+				expect( pn.isNullAttribute( "confirmed" ) ).toBeFalse();
+				expect( pn.getConfirmed() ).toBeFalse();
+				expect( pn.getRefreshMarker() ).toBe( 1 );
+			} );
+
 			it( "allows custom casts to handle null database values", () => {
 				var pn = getInstance( "CustomCastPhoneNumber" ).find( 3 );
 

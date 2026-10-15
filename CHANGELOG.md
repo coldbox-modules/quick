@@ -1,3 +1,25 @@
+# v13.0.5
+## 15 Oct 2026 — 18:39:56 UTC
+
+### fix
+
++ __relationships:__ infer caller names outside lazy param defaults
+ ([d0f5551](https://github.com/coldbox-modules/quick/commit/d0f55513beeff798a1f062319ff341f8a3f57099))
++ __deps:__ require qb 14.1.1 allocation fixes
+ ([b3428e3](https://github.com/coldbox-modules/quick/commit/b3428e37f5bf4ae5fda603fac4547eeb6199fcef))
+
+### other
+
++ __\*:__ style: normalize BaseEntity argument spacing
+ ([c4c709f](https://github.com/coldbox-modules/quick/commit/c4c709f7dc6aec18ee7a75d41a974d58ef6bece0))
++ __\*:__ perf: omit stale filters from stored refresh snapshots
+ ([232e0ad](https://github.com/coldbox-modules/quick/commit/232e0ad063a124ff94fdc38888c20803f2a0cf3e))
++ __\*:__ perf: skip obsolete filters when cloning refresh queries
+ ([c50c879](https://github.com/coldbox-modules/quick/commit/c50c879d0a4388912b4b233a33dab065dff1144c))
++ __\*:__ fix: share refresh snapshots within result sets
+ ([be53a5e](https://github.com/coldbox-modules/quick/commit/be53a5edb475a5cfd1877c4a2983409d335ab72b))
+
+
 # v13.0.4
 ## 25 Sep 2026 — 19:25:07 UTC
 

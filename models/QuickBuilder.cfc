@@ -543,7 +543,7 @@ component accessors="true" transientCache="false" {
 			if ( isNull( refreshQuery ) ) {
 				for ( var attribute in virtualAttributes ) {
 					if ( result.keyExists( attribute ) ) {
-						refreshQuery = variables.qb.clone();
+						refreshQuery = newRefreshQuerySnapshot();
 						break;
 					}
 				}
@@ -553,6 +553,16 @@ component accessors="true" transientCache="false" {
 			);
 		}
 		return entities;
+	}
+
+	/**
+	 * Refresh reuses projections under current scopes, so original root filters
+	 * do not need to be copied into the stored snapshot.
+	 */
+	private any function newRefreshQuerySnapshot() {
+		return structKeyExists( variables.qb, "cloneWithoutWheres" )
+		 ? variables.qb.cloneWithoutWheres()
+		 : variables.qb.clone();
 	}
 
 	/**
@@ -2325,7 +2335,7 @@ component accessors="true" transientCache="false" {
 			}
 		}
 		if ( hasVirtualData && isNull( arguments.refreshQuery ) ) {
-			arguments.refreshQuery = variables.qb.clone();
+			arguments.refreshQuery = newRefreshQuerySnapshot();
 		}
 
 		if (

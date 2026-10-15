@@ -32,8 +32,24 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 			it( "does not clone snapshots when rows have no virtual result data", function() {
 				var query = getInstance( "User" ).whereIn( "id", [ 1, 2 ] );
 				prepareMock( query.getQB() ).$( "clone" ).$throws( type = "UnexpectedRefreshSnapshot" );
+				if ( structKeyExists( query.getQB(), "cloneWithoutWheres" ) ) {
+					prepareMock( query.getQB() ).$( "cloneWithoutWheres" ).$throws( type = "UnexpectedRefreshSnapshot" );
+				}
 				var users = query.get();
 				expect( users ).toHaveLength( 2 );
+			} );
+
+			it( "preserves bound projections and refresh behavior for directly hydrated entities", function() {
+				var query       = getInstance( "UserWithGlobalScope" ).whereUsername( "elpete" ).activateGlobalScopes();
+				var rows        = query.getQB().get();
+				var user        = query.loadEntity( rows[ 1 ] );
+				var snapshotSQL = user.get_refreshQuery().toSQL();
+				query.where( "id", -1 );
+				expect( user.get_refreshQuery().toSQL() ).toBe( snapshotSQL );
+				queryExecute( "UPDATE `users` SET `username` = ? WHERE `id` = ?", [ "direct_hydration", user.getId() ] );
+				user.refresh();
+				expect( user.getUsername() ).toBe( "direct_hydration" );
+				expect( user.getBoundCountryName() ).toBe( "United States" );
 			} );
 
 			it( "does not reuse snapshots between separate reads", function() {

@@ -20,11 +20,11 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	property name="cacheMetadata" persistent="false";
 
 	property
-		name      ="address"
-		casts     ="AddressCast"
-		virtual   ="true"
-		getter    ="false"
-		setter    ="false";
+		name   ="address"
+		casts  ="AddressCast"
+		virtual="true"
+		getter ="false"
+		setter ="false";
 	property name="streetOne";
 	property name="streetTwo";
 	property name="city";
@@ -32,7 +32,7 @@ component extends="quick.models.BaseEntity" accessors="true" {
 	property name="zip";
 
 	this.memento = {
-		"neverInclude": [
+		"neverInclude" : [
 			"streetOne",
 			"streetTwo",
 			"city",
@@ -207,6 +207,22 @@ component extends="quick.models.BaseEntity" accessors="true" {
 
 	function posts() {
 		return hasMany( "Post", "user_id" ).latest();
+	}
+
+	function postsWithExplicitRelationName() {
+		return hasMany(
+			relationName       = "Post",
+			foreignKey         = "user_id",
+			relationMethodName = "explicitPosts"
+		);
+	}
+
+	function postsWithNullRelationName() {
+		return hasMany(
+			relationName       = "Post",
+			foreignKey         = "user_id",
+			relationMethodName = javacast( "null", "" )
+		);
 	}
 
 	function publishedPosts() {

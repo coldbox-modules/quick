@@ -2,6 +2,25 @@ component extends="tests.resources.ModuleIntegrationSpec" {
 
 	function run() {
 		describe( "Has Many Spec", function() {
+			it( "infers the relationship method name instead of its factory", function() {
+				var user = getInstance( "User" ).findOrFail( 1 );
+				expect( user.posts().getRelationMethodName() ).toBe( "posts" );
+				expect( user.publishedPosts().getRelationMethodName() ).toBe( "publishedposts" );
+				expect( user.country().getRelationMethodName() ).toBe( "country" );
+				expect( user.latestPost().getRelationMethodName() ).toBe( "latestpost" );
+				expect( user.roles().getRelationMethodName() ).toBe( "roles" );
+			} );
+
+			it( "preserves an explicitly provided relationship method name", function() {
+				var user = getInstance( "User" ).findOrFail( 1 );
+				expect( user.postsWithExplicitRelationName().getRelationMethodName() ).toBe( "explicitPosts" );
+			} );
+
+			it( "infers a relationship method name when its optional name is null", function() {
+				var user = getInstance( "User" ).findOrFail( 1 );
+				expect( user.postsWithNullRelationName().getRelationMethodName() ).toBe( "postswithnullrelationname" );
+			} );
+
 			it( "can get the owned entities", function() {
 				var user  = getInstance( "User" ).find( 1 );
 				var posts = user.getPosts();

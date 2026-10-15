@@ -2548,7 +2548,10 @@ component accessors="true" {
 		any localKey,
 		string relationMethodName
 	) {
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -2607,7 +2610,10 @@ component accessors="true" {
 		any localKey,
 		string relationMethodName
 	) {
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -2663,7 +2669,10 @@ component accessors="true" {
 		any localKey,
 		string relationMethodName
 	) {
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -2736,7 +2745,10 @@ component accessors="true" {
 		any relatedKey,
 		string relationMethodName
 	) {
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -2838,8 +2850,11 @@ component accessors="true" {
 			);
 		}
 
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-		arguments.nested                   = shouldSkipRelationshipConstraints( arguments.relationMethodName );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
+		arguments.nested = shouldSkipRelationshipConstraints( arguments.relationMethodName );
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -2921,7 +2936,10 @@ component accessors="true" {
 			);
 		}
 
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -2991,7 +3009,10 @@ component accessors="true" {
 			);
 		}
 
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationships[ arguments.relationships.len() ]#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -3015,7 +3036,10 @@ component accessors="true" {
 			previousEntity               = relationship.getRelated();
 		}
 
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 
 		return variables._wirebox.getInstance(
 			name          = "BelongsToThrough@quick",
@@ -3064,7 +3088,10 @@ component accessors="true" {
 		any localKey,
 		string relationMethodName
 	) {
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the [#arguments.relationName#] entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -3119,8 +3146,11 @@ component accessors="true" {
 		any localKey,
 		string relationMethodName
 	) {
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
-		param arguments.name               = arguments.relationMethodName;
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
+		param arguments.name = arguments.relationMethodName;
 
 		guardAgainstNotLoaded(
 			"This instance is not loaded so it cannot access the [#arguments.relationMethodName#] relationship.  Either load the entity from the database using a query executor (like `first`) or base your query off of the related polymorphic entity directly and use the `has` or `whereHas` methods to constrain it based on data in [#entityName()#]."
@@ -3174,7 +3204,10 @@ component accessors="true" {
 		boolean nested = false,
 		string relationMethodName
 	) {
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 
 		var related = "";
 		if (
@@ -3261,7 +3294,10 @@ component accessors="true" {
 	}
 
 	private HasManyDeepBuilder function newHasManyDeepBuilder( string relationMethodName ) {
-		param arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		// Evaluate the caller directly; lazy param defaults add a frame on BoxLang.
+		if ( isNull( arguments.relationMethodName ) ) {
+			arguments.relationMethodName = lCase( callStackGet()[ 2 ][ "Function" ] );
+		}
 		return variables._wirebox.getInstance(
 			"HasManyDeepBuilder@quick",
 			{

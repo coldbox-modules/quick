@@ -1555,7 +1555,12 @@ component accessors="true" {
 			refreshConstraints.where( this.qualifyColumn( entityKeyNames[ i ] ), entityKeyValues[ i ] );
 		}
 		refreshQB.addNestedWhereQuery( refreshConstraints );
-		var refreshedData = refreshedEntity.first();
+		if ( structKeyExists( refreshedEntity, "isQuickBuilder" ) ) {
+			refreshedEntity.asQuery( false );
+		}
+		var refreshedData    = refreshedEntity.first();
+		// Cast the new database values on this entity instead of reusing cached values.
+		variables._castCache = {};
 		assignAttributesData(
 			isStruct( refreshedData ) && !structKeyExists( refreshedData, "isQuickEntity" )
 			 ? refreshedData

@@ -1527,7 +1527,12 @@ component accessors="true" {
 		if ( !isStruct( freshData ) || structKeyExists( freshData, "isQuickEntity" ) ) {
 			return freshData;
 		}
-		var entity = newEntity().hydrate( freshData );
+		// Snapshot rows use database column names, while hydrate() requires aliased keys.
+		// Use the same database-row hydration path as QuickBuilder.loadEntity().
+		var entity = newEntity()
+			.assignAttributesData( freshData )
+			.assignOriginalAttributes( freshData )
+			.markLoaded();
 		return hasRefreshQuery ? entity.set_refreshQuery( variables._refreshQuery ) : entity;
 	}
 

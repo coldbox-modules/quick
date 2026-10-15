@@ -1555,12 +1555,12 @@ component accessors="true" {
 			refreshConstraints.where( this.qualifyColumn( entityKeyNames[ i ] ), entityKeyValues[ i ] );
 		}
 		refreshQB.addNestedWhereQuery( refreshConstraints );
-		if ( structKeyExists( refreshedEntity, "isQuickBuilder" ) ) {
-			refreshedEntity.asQuery( false );
-		}
 		var refreshedData    = refreshedEntity.first();
-		// Cast the new database values on this entity instead of reusing cached values.
-		variables._castCache = {};
+		// Raw snapshots need new casts; hydrated reads already contain the new cast values.
+		// Copy only the cache map so its entries remain isolated without copying cast objects.
+		variables._castCache = isStruct( refreshedData ) && !structKeyExists( refreshedData, "isQuickEntity" )
+		 ? {}
+		 : structCopy( refreshedData.get_castCache() );
 		assignAttributesData(
 			isStruct( refreshedData ) && !structKeyExists( refreshedData, "isQuickEntity" )
 			 ? refreshedData
